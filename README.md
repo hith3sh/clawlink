@@ -2,25 +2,42 @@
 
 **One command. Every API. Zero config.**
 
-ClawLink is an open-source MCP server that gives [OpenClaw](https://github.com/openclaw/openclaw) instant access to 40+ API integrations — Gmail, Slack, Stripe, GitHub, Notion, and more. No boilerplate, no config files, no OAuth headaches.
+ClawLink is an open-source platform that gives [OpenClaw](https://github.com/openclaw/openclaw) instant access to 40+ API integrations — Gmail, Slack, Stripe, GitHub, Notion, and more. Connect once from the dashboard, and every API call is proxied securely through our edge network.
 
-```bash
-npx clawlink@latest init
-```
-
-That's it. Paste that into OpenClaw and start using any integration.
+**Website:** [claw-link.dev](https://claw-link.dev)
 
 ## How it works
 
-1. Run `npx clawlink@latest init`
-2. Pick your integrations and paste your API keys when prompted
-3. ClawLink spins up a local MCP server that OpenClaw connects to automatically
+```
+OpenClaw (your machine)
+    │
+    │  MCP protocol
+    ▼
+ClawLink Edge (Cloudflare Workers — 300+ locations)
+    ├── Authenticates you
+    ├── Decrypts your credentials
+    ├── Calls Gmail / Slack / Stripe / etc.
+    ├── Logs the request
+    └── Returns the result
+```
+
+1. **Sign up** at [claw-link.dev](https://claw-link.dev) and connect your integrations
+2. **Copy** your personal MCP command
+3. **Paste** it into OpenClaw — done
 
 Then just ask OpenClaw things like:
 - "Send an email to sarah@example.com"
 - "Create a Slack message in #general"
 - "Add a row to my Google Sheet"
 - "Create a new GitHub issue"
+
+## Why ClawLink proxies every call
+
+- **OAuth handled for you** — click "Connect Gmail," we handle the entire OAuth dance. No tokens, no refresh logic.
+- **Credentials never touch your machine** — encrypted at rest, decrypted only at execution time on the edge.
+- **Request logs** — see every API call, success/failure, latency. Debug from the dashboard.
+- **Rate limiting and retries** — built-in reliability so your agent doesn't get throttled.
+- **Usage-based pricing** — free tier included, pay only when you scale.
 
 ## Supported integrations
 
@@ -38,6 +55,39 @@ Then just ask OpenClaw things like:
 | E-commerce | Shopify, WooCommerce |
 | AI & ML | OpenAI, Replicate, ElevenLabs |
 
+## Architecture
+
+```
+claw-link.dev (Cloudflare)
+│
+├── /dashboard          Cloudflare Pages (Next.js)
+│   ├── Auth            Clerk
+│   ├── Connect integrations
+│   ├── View request logs
+│   └── Manage account
+│
+├── /api/mcp/*          Cloudflare Worker (MCP proxy)
+│   ├── Durable Objects   Per-user MCP session state
+│   ├── KV                Credential cache
+│   └── Proxy             Third-party API calls
+│
+├── D1                  Database (users, integrations, logs)
+└── Rate Limiting       Built-in Cloudflare
+```
+
+### Tech stack
+
+| Layer | Technology |
+|---|---|
+| Frontend / Dashboard | Next.js on Cloudflare Pages |
+| Auth | Clerk |
+| API Proxy / MCP Server | Cloudflare Workers |
+| Session State | Cloudflare Durable Objects |
+| Database | Cloudflare D1 (SQLite at edge) |
+| Credential Cache | Cloudflare Workers KV |
+| Credential Encryption | AES-256-GCM |
+| DNS + CDN | Cloudflare |
+
 ## Local development
 
 ```bash
@@ -48,21 +98,30 @@ cd clawlink
 # Install dependencies
 npm install
 
-# Run the dev server (landing page)
+# Run the landing page
 npm run dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) to see the landing page.
+# Run the worker locally
+npx wrangler dev
+```
 
 ## Project structure
 
 ```
 clawlink/
 ├── src/
-│   ├── app/              # Next.js app router pages
-│   ├── components/       # React components (hero, search, FAQ, etc.)
+│   ├── app/              # Next.js app router (dashboard + landing)
+│   ├── components/       # React components
 │   └── data/             # Integration definitions
-├── public/               # Static assets (logos, icons)
+├── worker/
+│   ├── index.ts          # Cloudflare Worker entry (MCP proxy)
+│   ├── integrations/     # Per-integration API handlers
+│   ├── auth.ts           # Clerk JWT verification
+│   ├── crypto.ts         # Credential encryption/decryption
+│   └── logger.ts         # Request logging to D1
+├── migrations/           # D1 database migrations
+├── public/               # Static assets
+├── wrangler.toml         # Cloudflare Worker config
 └── package.json
 ```
 
@@ -70,33 +129,38 @@ clawlink/
 
 ### v1 — MVP (current)
 - [x] Landing page with integration search
-- [ ] CLI tool (`npx clawlink@latest init`)
-- [ ] MCP server with config store
-- [ ] 10 integrations using API keys (Gmail, Slack, GitHub, Stripe, Notion, Google Sheets, WordPress, YouTube, Discord, HubSpot)
-- [ ] Local encrypted credential storage
+- [ ] Cloudflare Worker + D1 setup
+- [ ] Clerk auth + dashboard
+- [ ] Connect integrations UI (API key input)
+- [ ] MCP proxy server on Workers
+- [ ] 10 integrations (Gmail, Slack, GitHub, Stripe, Notion, Google Sheets, WordPress, YouTube, Discord, HubSpot)
+- [ ] Encrypted credential storage
+- [ ] Request logging
 
-### v2 — Usable product
+### v2 — Growth
 - [ ] OAuth flow support (Gmail, Google Sheets, Google Calendar, etc.)
 - [ ] Token refresh handling
 - [ ] 25+ integrations
-- [ ] Request logging and error dashboard
-- [ ] Cloud deploy option via claw-link.dev
+- [ ] Error dashboard with alerts
+- [ ] Usage analytics
+- [ ] Free + paid tier billing (Stripe)
 
 ### v3 — Platform
 - [ ] Plugin system for community integrations
 - [ ] Integration marketplace
-- [ ] Team/multi-user configs with access controls
-- [ ] Rate limiting, retries, and reliability layer
+- [ ] Team accounts with role-based access
+- [ ] Retry engine with circuit breakers
 - [ ] Audit logs
-- [ ] Usage analytics dashboard
+- [ ] Webhook triggers ("when new email arrives, notify agent")
+- [ ] Self-host option for enterprise
 
 ## Contributing
 
 ClawLink is open source and contributions are welcome. To add a new integration:
 
 1. Fork the repo
-2. Add your integration file in `src/tools/`
-3. Register it in the integration data
+2. Add your integration handler in `worker/integrations/`
+3. Add the integration to `src/data/integrations.ts`
 4. Open a PR
 
 ## License
