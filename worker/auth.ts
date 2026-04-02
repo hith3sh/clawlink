@@ -1,14 +1,12 @@
 /**
  * Clerk JWT verification for worker authentication
+ * Note: env variables are passed via env parameter in the handler
  */
-
-const CLERK_PUBLISHABLE_KEY = process.env.CLERK_PUBLISHABLE_KEY;
-const CLERK_JWT_KEY = process.env.CLERK_JWT_KEY; // For verifying JWTs
 
 /**
  * Verify the Clerk JWT and extract user ID
  */
-export async function verifyAuth(authHeader: string | null): Promise<string | null> {
+export async function verifyAuth(authHeader: string | null, env?: { CLERK_PUBLISHABLE_KEY?: string; CLERK_JWT_KEY?: string }): Promise<string | null> {
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return null;
   }

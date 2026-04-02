@@ -146,7 +146,7 @@ export default {
     try {
       // Verify authentication
       const authHeader = request.headers.get("Authorization");
-      const userId = await verifyAuth(authHeader);
+      const userId = await verifyAuth(authHeader, env as { CLERK_PUBLISHABLE_KEY?: string; CLERK_JWT_KEY?: string });
       
       if (!userId) {
         return new Response(JSON.stringify({
@@ -173,7 +173,7 @@ export default {
           result = await handleToolCall(
             env,
             userId,
-            mcpRequest.method,
+            mcpRequest.params?.name || "",
             mcpRequest.params
           );
           break;

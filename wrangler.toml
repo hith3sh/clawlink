@@ -9,12 +9,12 @@ enabled = true
 [[d1_databases]]
 binding = "DB"
 database_name = "clawlink"
-database_id = "your-database-id-here"
+database_id = "6a73a389-ebd4-46ee-9a3d-2d637831ed65"
 
 # KV for credential cache
 [[kv_namespaces]]
 binding = "CREDENTIALS"
-id = "your-kv-namespace-id-here"
+id = "82482703a83c4bc28af059eb092bd9a2"
 
 # Environment variables
 [vars]
