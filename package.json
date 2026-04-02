@@ -9,12 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "next": "16.2.1",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "@clerk/nextjs": "^7.0.8",
+    "next": "^15.5.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "react-icons": "^5.6.0"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@cloudflare/workers-types": "^4.20260401.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

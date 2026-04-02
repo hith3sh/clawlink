@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState } from "react";
 import { FiSearch, FiFilter, FiCheckCircle, FiXCircle, FiClock, FiDownload } from "react-icons/fi";
 
@@ -175,4 +176,4 @@ export default function LogsPage() {
       </div>
     </div>
   );
-}
+}// edge runtime

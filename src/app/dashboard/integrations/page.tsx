@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState } from "react";
 import { integrations, categories } from "@/data/integrations";
 import Link from "next/link";
@@ -144,4 +145,4 @@ export default function IntegrationsPage() {
       )}
     </div>
   );
-}
+}// edge runtime

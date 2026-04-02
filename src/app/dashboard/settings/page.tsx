@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState } from "react";
 import { FiUser, FiKey, FiCreditCard, FiBell, FiShield, FiSave, FiCopy, FiCheck } from "react-icons/fi";
 
@@ -260,4 +261,4 @@ export default function SettingsPage() {
       </div>
     </div>
   );
-}
+}// edge runtime

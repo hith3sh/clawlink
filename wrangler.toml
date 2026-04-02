@@ -21,3 +21,6 @@ id = "82482703a83c4bc28af059eb092bd9a2"
 # Environment variables
 [vars]
 ENV = "development"
+
+# Clerk - set these via: wrangler secret put CLERK_SECRET_KEY
+# NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is set in Cloudflare Pages settings

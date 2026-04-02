@@ -1,3 +1,4 @@
+
 import Image from "next/image";
 import CopyCommand from "@/components/CopyCommand";
 import VisualEquation from "@/components/VisualEquation";
@@ -111,3 +112,4 @@ export default function Home() {
     </main>
   );
 }
+// edge runtime
