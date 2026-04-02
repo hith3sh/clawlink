@@ -1,0 +1,23 @@
+# Cloudflare Pages headers for Next.js static assets
+
+# Serve _next/static files with proper caching and MIME types
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: application/javascript
+
+# Serve static files with proper MIME types
+/entities/*
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: application/javascript
+
+# Serve images
+/*.png
+  Content-Type: image/png
+/*.jpg
+  Content-Type: image/jpeg
+/*.svg
+  Content-Type: image/svg+xml
+
+# API routes - no cache
+/api/*
+  Cache-Control: no-cache
