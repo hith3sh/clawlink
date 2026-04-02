@@ -19,7 +19,7 @@ export const integrations: Integration[] = [
   { name: "Apollo", slug: "apollo", description: "Search leads and manage contacts", category: "CRM & Sales", icon: "SiApollographql", color: "#311C87" },
   { name: "HubSpot", slug: "hubspot", description: "Manage contacts, deals, and pipelines", category: "CRM & Sales", icon: "SiHubspot", color: "#FF7A59" },
   { name: "Salesforce", slug: "salesforce", description: "Manage CRM data and workflows", category: "CRM & Sales", icon: "SiSalesforce", color: "#00A1E0" },
-  { name: "Pipedrive", slug: "pipedrive", description: "Manage deals and sales pipelines", category: "CRM & Sales", icon: "FaPipedrive", color: "#1A1A1A" },
+  { name: "Pipedrive", slug: "pipedrive", description: "Manage deals and sales pipelines", category: "CRM & Sales", icon: "SiPiped", color: "#1A1A1A" },
 
   // Content & CMS
   { name: "WordPress", slug: "wordpress", description: "Create and manage posts and pages", category: "Content & CMS", icon: "SiWordpress", color: "#21759B" },
@@ -56,10 +56,10 @@ export const integrations: Integration[] = [
   // Data & Analytics
   { name: "Google Analytics", slug: "google-analytics", description: "Fetch analytics data and reports", category: "Data & Analytics", icon: "SiGoogleanalytics", color: "#E37400" },
   { name: "Mixpanel", slug: "mixpanel", description: "Track events and user analytics", category: "Data & Analytics", icon: "SiMixpanel", color: "#7856FF" },
-  { name: "Segment", slug: "segment", description: "Manage event tracking and data routing", category: "Data & Analytics", icon: "FaSegment", color: "#52BD95" },
+  { name: "Segment", slug: "segment", description: "Manage event tracking and data routing", category: "Data & Analytics", icon: "SiSegment", color: "#52BD95" },
 
   // Storage & Databases
-  { name: "AWS S3", slug: "aws-s3", description: "Upload and manage files in S3 buckets", category: "Storage & Databases", icon: "FaAws", color: "#FF9900" },
+  { name: "AWS S3", slug: "aws-s3", description: "Upload and manage files in S3 buckets", category: "Storage & Databases", icon: "SiAws", color: "#FF9900" },
   { name: "Supabase", slug: "supabase", description: "Query and manage Postgres databases", category: "Storage & Databases", icon: "SiSupabase", color: "#3FCF8E" },
   { name: "Firebase", slug: "firebase", description: "Manage Firestore, Auth, and storage", category: "Storage & Databases", icon: "SiFirebase", color: "#FFCA28" },
 

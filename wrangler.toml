@@ -1,0 +1,21 @@
+name = "clawlink"
+main = "worker/index.ts"
+compatibility_date = "2026-04-01"
+
+[observability]
+enabled = true
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "clawlink"
+database_id = "your-database-id-here"
+
+# KV for credential cache
+[[kv_namespaces]]
+binding = "CREDENTIALS"
+id = "your-kv-namespace-id-here"
+
+# Environment variables
+[vars]
+ENV = "development"
