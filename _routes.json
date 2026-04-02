@@ -1,11 +1,19 @@
 {
   "version": 1,
   "include": [
-    "/_next/static/*",
-    "/entities/*",
-    "/api/*"
+    "/_next/data/*",
+    "/api/*",
+    "/dashboard/*"
   ],
   "exclude": [
-    "/"
+    "/_next/static/*",
+    "/entities/*",
+    "/*.js",
+    "/*.css",
+    "/*.json",
+    "/*.ico",
+    "/*.png",
+    "/*.jpg",
+    "/*.svg"
   ]
 }
