@@ -1,0 +1,6 @@
+# Allow all search bots
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://claw-link.dev/sitemap.xml
