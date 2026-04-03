@@ -5,8 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:worker": "echo 'Worker build is handled by Wrangler during deploy'",
+    "deploy:worker": "wrangler deploy --config worker/wrangler.worker.toml",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "version:worker": "wrangler versions upload --config worker/wrangler.worker.toml"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.0.8",
