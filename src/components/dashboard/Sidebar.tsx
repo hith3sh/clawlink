@@ -30,7 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const platformNav = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/dashboard/integrations", label: "Connections", icon: Link2 },
-  { href: "/dashboard/logs", label: "Logs", icon: Activity },
+  { href: "/dashboard/logs", label: "Usage", icon: Activity },
 ];
 
 const resourceNav = [
@@ -49,30 +49,41 @@ export function AppSidebar() {
   const userImage = user?.imageUrl;
 
   return (
-    <Sidebar>
-      <SidebarHeader>
+    <Sidebar variant="inset" className="border-none">
+      <SidebarHeader className="px-3 pt-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link href="/" className="flex items-center gap-2 px-2 py-1.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <Link
+              href="/dashboard"
+              className="dashboard-panel-soft flex items-center gap-3 px-3 py-3"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/18 text-primary">
                 <Zap className="h-4 w-4" />
               </div>
-              <span className="text-lg font-bold">ClawLink</span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold tracking-tight text-sidebar-foreground">
+                  ClawLink
+                </p>
+                <p className="text-xs text-muted-foreground">Hosted app connections</p>
+              </div>
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarContent className="px-3 pb-3">
+        <SidebarGroup className="py-4">
+          <SidebarGroupLabel className="px-3 text-[0.65rem] uppercase tracking-[0.26em] text-muted-foreground/80">
+            Platform
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="mt-2 gap-1">
               {platformNav.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     render={<Link href={item.href} />}
                     isActive={pathname === item.href}
+                    className="h-11 rounded-2xl px-3 text-sm text-muted-foreground hover:bg-white/[0.05] hover:text-sidebar-foreground data-[active=true]:bg-white/[0.08] data-[active=true]:text-sidebar-foreground data-[active=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                   >
                     <item.icon className="h-4 w-4" />
                     <span>{item.label}</span>
@@ -85,10 +96,12 @@ export function AppSidebar() {
 
         <SidebarSeparator />
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Resources</SidebarGroupLabel>
+        <SidebarGroup className="py-4">
+          <SidebarGroupLabel className="px-3 text-[0.65rem] uppercase tracking-[0.26em] text-muted-foreground/80">
+            Resources
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="mt-2 gap-1">
               {resourceNav.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
@@ -100,6 +113,7 @@ export function AppSidebar() {
                       />
                     }
                     isActive={!item.external && pathname === item.href}
+                    className="h-11 rounded-2xl px-3 text-sm text-muted-foreground hover:bg-white/[0.05] hover:text-sidebar-foreground data-[active=true]:bg-white/[0.08] data-[active=true]:text-sidebar-foreground"
                   >
                     <item.icon className="h-4 w-4" />
                     <span>{item.label}</span>
@@ -111,10 +125,10 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="px-3 pb-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex items-center gap-3 px-2 py-1.5">
+            <div className="dashboard-panel-soft flex items-center gap-3 px-3 py-3">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={userImage} alt={userName} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
@@ -130,7 +144,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={() => signOut({ redirectUrl: "/" })}
-              className="text-muted-foreground"
+              className="h-11 rounded-2xl px-3 text-muted-foreground hover:bg-white/[0.05] hover:text-sidebar-foreground"
             >
               <LogOut className="h-4 w-4" />
               <span>Sign Out</span>
