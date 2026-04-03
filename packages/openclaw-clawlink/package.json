@@ -1,0 +1,41 @@
+{
+  "name": "@clawlink/openclaw-plugin",
+  "version": "0.1.0",
+  "description": "Native OpenClaw plugin for ClawLink hosted connection sessions",
+  "type": "module",
+  "license": "MIT",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "clawlink",
+    "openclaw",
+    "plugin",
+    "oauth",
+    "integrations"
+  ],
+  "files": [
+    "index.js",
+    "openclaw.plugin.json",
+    "README.md",
+    "skills"
+  ],
+  "exports": {
+    ".": "./index.js"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.49"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.3.13"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.js"
+    ]
+  }
+}

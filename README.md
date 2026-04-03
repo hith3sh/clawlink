@@ -1,8 +1,8 @@
 # ClawLink
 
-**One command. Every API. Zero config.**
+**Install once. Connect with one click.**
 
-ClawLink is an open-source platform that gives [OpenClaw](https://github.com/openclaw/openclaw) instant access to 40+ API integrations — Gmail, Slack, Stripe, GitHub, Notion, and more. Connect once from the dashboard, and every API call is proxied securely through our edge network.
+ClawLink is an open-source platform that gives [OpenClaw](https://github.com/openclaw/openclaw) instant access to 40+ API integrations — Gmail, Slack, Stripe, GitHub, Notion, and more. Install the ClawLink plugin once, start a hosted connection session, and let ClawLink handle the browser-side auth flow for you.
 
 **Website:** [claw-link.dev](https://claw-link.dev)
 
@@ -11,7 +11,7 @@ ClawLink is an open-source platform that gives [OpenClaw](https://github.com/ope
 ```
 OpenClaw (your machine)
     │
-    │  MCP protocol
+    │  OpenClaw plugin tools + hosted auth
     ▼
 ClawLink Edge (Cloudflare Workers — 300+ locations)
     ├── Authenticates you
@@ -21,9 +21,10 @@ ClawLink Edge (Cloudflare Workers — 300+ locations)
     └── Returns the result
 ```
 
-1. **Sign up** at [claw-link.dev](https://claw-link.dev) and connect your integrations
-2. **Copy** your personal MCP command
-3. **Paste** it into OpenClaw — done
+1. **Sign up** at [claw-link.dev](https://claw-link.dev) and create a ClawLink API key
+2. **Install** the native OpenClaw plugin: `openclaw plugins install @clawlink/openclaw-plugin`
+3. **In a private chat with OpenClaw**, send `/clawlink login cllk_live_...`
+4. Say `connect my slack`
 
 Then just ask OpenClaw things like:
 - "Send an email to sarah@example.com"
@@ -105,6 +106,14 @@ npm run dev
 npx wrangler dev
 ```
 
+## Native OpenClaw plugin package
+
+The installable native OpenClaw plugin now lives in `packages/openclaw-clawlink`.
+
+- Package name: `@clawlink/openclaw-plugin`
+- Plugin id: `clawlink`
+- Local install/testing guide: `docs/openclaw-plugin-local-testing.md`
+
 ## Project structure
 
 ```
@@ -146,7 +155,7 @@ clawlink/
 - [ ] Free + paid tier billing (Stripe)
 
 ### v3 — Platform
-- [ ] Plugin system for community integrations
+- [x] Native OpenClaw plugin package
 - [ ] Integration marketplace
 - [ ] Team accounts with role-based access
 - [ ] Retry engine with circuit breakers

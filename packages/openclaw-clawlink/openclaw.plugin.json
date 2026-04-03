@@ -1,0 +1,42 @@
+{
+  "id": "clawlink",
+  "name": "ClawLink",
+  "description": "Hosted connection sessions for ClawLink integrations inside OpenClaw",
+  "version": "0.1.0",
+  "skills": [
+    "skills"
+  ],
+  "contracts": {
+    "tools": [
+      "clawlink_start_connection",
+      "clawlink_get_connection_status"
+    ]
+  },
+  "uiHints": {
+    "apiKey": {
+      "label": "ClawLink API key",
+      "help": "Bearer token created in the ClawLink dashboard.",
+      "placeholder": "cllk_live_...",
+      "sensitive": true
+    },
+    "baseUrl": {
+      "label": "ClawLink base URL",
+      "help": "Override for local or staging ClawLink deployments.",
+      "placeholder": "https://claw-link.dev"
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "apiKey": {
+        "type": "string",
+        "minLength": 1
+      },
+      "baseUrl": {
+        "type": "string",
+        "pattern": "^https?://"
+      }
+    }
+  }
+}

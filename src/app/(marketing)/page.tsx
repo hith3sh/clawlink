@@ -7,6 +7,7 @@ import PainMath from "@/components/PainMath";
 import VideoSection from "@/components/VideoSection";
 import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
+import { OPENCLAW_PLUGIN_INSTALL_COMMAND } from "@/lib/openclaw-plugin";
 
 export default function Home() {
   return (
@@ -34,7 +35,7 @@ export default function Home() {
         </div>
 
         <p className="mt-3 text-sm text-gray-400">
-          Then create a ClawLink API key and say “connect my Notion” in OpenClaw.
+          Then send `/clawlink login &lt;apiKey&gt;` in OpenClaw and say “connect my Slack”.
         </p>
       </section>
 
@@ -81,7 +82,7 @@ export default function Home() {
           </h2>
           <p className="text-gray-400 mb-8 max-w-xl mx-auto">
             Learn how to set up ClawLink, connect integrations, and use every
-            action available through the MCP server.
+            hosted connection flow available through the OpenClaw plugin.
           </p>
           <a
             href="https://docs.claw-link.dev"
@@ -106,7 +107,7 @@ export default function Home() {
           </p>
           <div className="inline-flex items-center gap-3 rounded-lg bg-white/20 backdrop-blur-sm border border-white/30 px-5 py-3 font-mono text-sm text-white">
             <span className="text-white/60">$</span>
-            <span>openclaw plugins install clawlink</span>
+            <span>{OPENCLAW_PLUGIN_INSTALL_COMMAND}</span>
           </div>
         </div>
       </section>

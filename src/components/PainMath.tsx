@@ -1,5 +1,7 @@
 "use client";
 
+import { OPENCLAW_PLUGIN_INSTALL_COMMAND } from "@/lib/openclaw-plugin";
+
 const painItems = [
   { hours: "4 hrs", task: "Reading Gmail API docs" },
   { hours: "3 hrs", task: "Fighting OAuth token refresh" },
@@ -43,12 +45,12 @@ export default function PainMath() {
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-bold">1</div>
             <code className="text-sm bg-white border border-green-200 rounded-lg px-3 py-1.5 text-gray-800">
-              openclaw plugins install clawlink
+              {OPENCLAW_PLUGIN_INSTALL_COMMAND}
             </code>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-bold">2</div>
-            <span className="text-gray-600">Create a ClawLink API key once</span>
+            <span className="text-gray-600">Paste `/clawlink login &lt;apiKey&gt;` in OpenClaw</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-bold">3</div>
