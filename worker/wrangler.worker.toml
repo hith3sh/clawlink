@@ -1,12 +1,12 @@
-name = "clawlink-web"
+name = "clawlink"
+main = "index.ts"
 compatibility_date = "2026-04-01"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".vercel/output/static"
 
 [observability]
 enabled = true
 
-# D1 Database (for Next.js API routes)
+# D1 Database
 [[d1_databases]]
 binding = "DB"
 database_name = "clawlink"
@@ -20,4 +20,3 @@ id = "82482703a83c4bc28af059eb092bd9a2"
 # Environment variables
 [vars]
 ENV = "production"
-NEXT_PUBLIC_API_URL = "https://api.claw-link.dev"

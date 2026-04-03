@@ -121,14 +121,16 @@ function handleListTools(): Array<{ name: string; description: string; inputSche
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     // Handle CORS
+    const origin = request.headers.get("Origin") || "https://claw-link.dev";
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Allow-Credentials": "true",
+    };
+
     if (request.method === "OPTIONS") {
-      return new Response(null, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
-      });
+      return new Response(null, { headers: corsHeaders });
     }
 
     // Only accept JSON-RPC POST
@@ -191,7 +193,8 @@ export default {
       return new Response(JSON.stringify(response), {
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
+          "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Credentials": "true"
         }
       });
 
@@ -211,7 +214,8 @@ export default {
         status: 500,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
+          "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Credentials": "true"
         }
       });
     }
