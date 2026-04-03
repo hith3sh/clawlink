@@ -1,68 +1,65 @@
-# Google Sheets Integration
+'use client'
 
-Learn how to connect Google Sheets to OpenClaw using ClawLink.
-
-## Getting Your Google Cloud Credentials
-
-### Step 1: Create a Google Cloud Project
-
-1. Go to [console.cloud.google.com](https://console.cloud.google.com)
-2. Click **Select a project** → **New Project**
-3. Name your project (e.g., "ClawLink")
-
-### Step 2: Enable Google Sheets API
-
-1. Go to **APIs & Services** → **Library**
-2. Search for "Google Sheets API"
-3. Click **Enable**
-
-### Step 3: Create OAuth Credentials
-
-1. Go to **APIs & Services** → **Credentials**
-2. Click **Create Credentials** → **OAuth client ID**
-3. Configure consent screen:
-   - User Type: **External**
-   - Fill in required fields
-4. Application type: **Desktop application**
-5. Click **Create**
-6. Download the JSON file
-
-### Step 4: Get Refresh Token
-
-The OAuth JSON contains:
-- `client_id`
-- `client_secret`
-
-You'll need to run the OAuth flow once to get a **refresh_token**.
-
-## Simplified: Use Service Account (Alternative)
-
-For server-to-server access:
-
-1. Go to **Credentials** → **Create Credentials** → **Service Account**
-2. Name it "ClawLink"
-3. Skip role selection, click **Done**
-4. Click on your new service account
-5. Go to **Keys** → **Add Key** → **Create new key**
-6. Choose **JSON**
-7. Download the file
-
-Then share your Google Sheets with the service account email.
-
-## Connect to ClawLink
-
-Run the setup:
-```
-npx clawlink@latest init
-```
-
-Enter your credentials when prompted.
-
-## Available Operations
-
-With Google Sheets integration, you can:
-- Read data from any spreadsheet
-- Write data to cells
-- Create new spreadsheets
-- Manage sheets within workbooks
-- Format cells (basic)
+export default function GoogleSheetsDoc() {
+  return (
+    <div className="prose max-w-none">
+      <h1>Google Sheets Integration</h1>
+      
+      <p>Learn how to connect Google Sheets to OpenClaw using ClawLink.</p>
+      
+      <h2>Getting Your Google Cloud Credentials</h2>
+      
+      <h3>Step 1: Create a Google Cloud Project</h3>
+      <ol>
+        <li>Go to <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a></li>
+        <li>Click <strong>Select a project</strong> → <strong>New Project</strong></li>
+        <li>Name your project (e.g., "ClawLink")</li>
+      </ol>
+      
+      <h3>Step 2: Enable Google Sheets API</h3>
+      <ol>
+        <li>Go to <strong>APIs & Services</strong> → <strong>Library</strong></li>
+        <li>Search for "Google Sheets API"</li>
+        <li>Click <strong>Enable</strong></li>
+      </ol>
+      
+      <h3>Step 3: Create OAuth Credentials</h3>
+      <ol>
+        <li>Go to <strong>APIs & Services</strong> → <strong>Credentials</strong></li>
+        <li>Click <strong>Create Credentials</strong> → <strong>OAuth client ID</strong></li>
+        <li>Configure consent screen:
+          <ul>
+            <li>User Type: <strong>External</strong></li>
+            <li>Fill in required fields</li>
+          </ul>
+        </li>
+        <li>Application type: <strong>Desktop application</strong></li>
+        <li>Click <strong>Create</strong></li>
+        <li>Download the JSON file</li>
+      </ol>
+      
+      <h3>Step 4: Get Refresh Token</h3>
+      <p>The OAuth JSON contains:</p>
+      <ul>
+        <li><code>client_id</code></li>
+        <li><code>client_secret</code></li>
+      </ul>
+      <p>You'll need to run the OAuth flow once to get a <strong>refresh_token</strong>.</p>
+      
+      <h2>Alternative: Use Service Account</h2>
+      <p>For server-to-server access:</p>
+      <ol>
+        <li>Go to <strong>Credentials</strong> → <strong>Create Credentials</strong> → <strong>Service Account</strong></li>
+        <li>Name it "ClawLink"</li>
+        <li>Go to <strong>Keys</strong> → <strong>Add Key</strong> → <strong>Create new key</strong></li>
+        <li>Choose <strong>JSON</strong></li>
+        <li>Download the file</li>
+      </ol>
+      <p>Then share your Google Sheets with the service account email.</p>
+      
+      <h2>Connect to ClawLink</h2>
+      <pre><code>npx clawlink@latest init</code></pre>
+      <p>Enter your credentials when prompted.</p>
+    </div>
+  )
+}

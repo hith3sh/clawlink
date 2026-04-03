@@ -1,55 +1,69 @@
-# Gmail Integration
+'use client'
 
-Learn how to connect Gmail to OpenClaw using ClawLink.
-
-## Getting Your Gmail API Credentials
-
-### Step 1: Go to Google Cloud Console
-
-1. Visit [console.cloud.google.com](https://console.cloud.google.com)
-2. Select or create a new project
-
-### Step 2: Enable the Gmail API
-
-1. Go to **APIs & Services** → **Library**
-2. Search for "Gmail API"
-3. Click **Enable**
-
-### Step 3: Create OAuth Credentials
-
-1. Go to **APIs & Services** → **Credentials**
-2. Click **Create Credentials** → **OAuth client ID**
-3. Configure the OAuth consent screen:
-   - User Type: **External**
-   - Fill in required fields (app name, email)
-4. Application type: **Desktop application**
-5. Click **Create**
-6. Download the JSON file
-
-### Step 4: Get Your Access Token
-
-The OAuth JSON contains:
-- `client_id`
-- `client_secret`
-- `refresh_token` (you'll get this after the first auth flow)
-
-For ClawLink, you'll need to run the OAuth flow once to get a refresh token, then use:
-- Client ID
-- Client Secret  
-- Refresh Token
-
-## Required Scopes
-
-Make sure your OAuth app requests these scopes:
-- `https://www.googleapis.com/auth/gmail.readonly`
-- `https://www.googleapis.com/auth/gmail.send`
-- `https://www.googleapis.com/auth/gmail.modify`
-
-## Connect to ClawLink
-
-Once you have your credentials, run:
-```
-npx clawlink@latest init
-```
-
-Enter your Gmail API credentials when prompted. That's it!
+export default function GmailDoc() {
+  return (
+    <div className="prose max-w-none">
+      <h1>Gmail Integration</h1>
+      
+      <p>Learn how to connect Gmail to OpenClaw using ClawLink.</p>
+      
+      <h2>Getting Your Gmail API Credentials</h2>
+      
+      <h3>Step 1: Go to Google Cloud Console</h3>
+      <ol>
+        <li>Visit <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a></li>
+        <li>Select or create a new project</li>
+      </ol>
+      
+      <h3>Step 2: Enable the Gmail API</h3>
+      <ol>
+        <li>Go to <strong>APIs & Services</strong> → <strong>Library</strong></li>
+        <li>Search for "Gmail API"</li>
+        <li>Click <strong>Enable</strong></li>
+      </ol>
+      
+      <h3>Step 3: Create OAuth Credentials</h3>
+      <ol>
+        <li>Go to <strong>APIs & Services</strong> → <strong>Credentials</strong></li>
+        <li>Click <strong>Create Credentials</strong> → <strong>OAuth client ID</strong></li>
+        <li>Configure the OAuth consent screen:
+          <ul>
+            <li>User Type: <strong>External</strong></li>
+            <li>Fill in required fields (app name, email)</li>
+          </ul>
+        </li>
+        <li>Application type: <strong>Desktop application</strong></li>
+        <li>Click <strong>Create</strong></li>
+        <li>Download the JSON file</li>
+      </ol>
+      
+      <h3>Step 4: Get Your Access Token</h3>
+      <p>The OAuth JSON contains:</p>
+      <ul>
+        <li><code>client_id</code></li>
+        <li><code>client_secret</code></li>
+        <li><code>refresh_token</code> (you'll get this after the first auth flow)</li>
+      </ul>
+      
+      <p>For ClawLink, you'll need to run the OAuth flow once to get a refresh token, then use:</p>
+      <ul>
+        <li>Client ID</li>
+        <li>Client Secret</li>
+        <li>Refresh Token</li>
+      </ul>
+      
+      <h2>Required Scopes</h2>
+      <p>Make sure your OAuth app requests these scopes:</p>
+      <ul>
+        <li><code>https://www.googleapis.com/auth/gmail.readonly</code></li>
+        <li><code>https://www.googleapis.com/auth/gmail.send</code></li>
+        <li><code>https://www.googleapis.com/auth/gmail.modify</code></li>
+      </ul>
+      
+      <h2>Connect to ClawLink</h2>
+      <p>Once you have your credentials, run:</p>
+      <pre><code>npx clawlink@latest init</code></pre>
+      <p>Enter your Gmail API credentials when prompted. That's it!</p>
+    </div>
+  )
+}

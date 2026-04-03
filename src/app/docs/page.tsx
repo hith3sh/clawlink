@@ -1,40 +1,49 @@
-# Welcome to ClawLink Docs
+'use client'
 
-Learn how to connect your favorite apps to OpenClaw using ClawLink.
-
-## Getting Started
-
-1. **Install ClawLink** in your OpenClaw instance:
-   ```
-   npx clawlink@latest init
-   ```
-
-2. **Add your API key** when prompted
-
-3. **Start using integrations** - just ask OpenClaw to do things!
-
-## Available Integrations
-
-| Integration | Description | Status |
-|-------------|-------------|--------|
-| Gmail | Send, read, and manage emails | ✅ Available |
-| Slack | Send messages and manage channels | ✅ Available |
-| Notion | Manage pages, databases, and blocks | ✅ Available |
-| WordPress | Create and manage posts and pages | ✅ Available |
-| Discord | Send messages and manage servers | ✅ Available |
-| GitHub | Manage repos, issues, and pull requests | ✅ Available |
-| Stripe | Manage payments, customers, and invoices | ✅ Available |
-| Google Sheets | Read and write spreadsheet data | ✅ Available |
-
-## API Token Guides
-
-Click on any integration above to learn how to get your API credentials.
-
-## Need Help?
-
-- **GitHub**: [github.com/hith3sh/clawlink](https://github.com/hith3sh/clawlink)
-- **Issues**: Report bugs or request new integrations
-
----
-
-*More integrations coming soon!*
+export default function DocsIndex() {
+  return (
+    <div className="prose max-w-none">
+      <h1>Welcome to ClawLink Docs</h1>
+      
+      <p>Learn how to connect your favorite apps to OpenClaw using ClawLink.</p>
+      
+      <h2>Getting Started</h2>
+      <ol>
+        <li><strong>Install ClawLink</strong> in your OpenClaw instance:
+          <pre><code>npx clawlink@latest init</code></pre>
+        </li>
+        <li><strong>Add your API key</strong> when prompted</li>
+        <li><strong>Start using integrations</strong> - just ask OpenClaw to do things!</li>
+      </ol>
+      
+      <h2>Available Integrations</h2>
+      <table>
+        <thead>
+          <tr><th>Integration</th><th>Description</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Gmail</td><td>Send, read, and manage emails</td><td>✅ Available</td></tr>
+          <tr><td>Slack</td><td>Send messages and manage channels</td><td>✅ Available</td></tr>
+          <tr><td>Notion</td><td>Manage pages, databases, and blocks</td><td>✅ Available</td></tr>
+          <tr><td>WordPress</td><td>Create and manage posts and pages</td><td>✅ Available</td></tr>
+          <tr><td>Discord</td><td>Send messages and manage servers</td><td>✅ Available</td></tr>
+          <tr><td>GitHub</td><td>Manage repos, issues, and pull requests</td><td>✅ Available</td></tr>
+          <tr><td>Stripe</td><td>Manage payments, customers, and invoices</td><td>✅ Available</td></tr>
+          <tr><td>Google Sheets</td><td>Read and write spreadsheet data</td><td>✅ Available</td></tr>
+        </tbody>
+      </table>
+      
+      <h2>API Token Guides</h2>
+      <p>Click on any integration in the sidebar to learn how to get your API credentials.</p>
+      
+      <h2>Need Help?</h2>
+      <ul>
+        <li><strong>GitHub</strong>: <a href="https://github.com/hith3sh/clawlink" target="_blank" rel="noopener">github.com/hith3sh/clawlink</a></li>
+        <li><strong>Issues</strong>: Report bugs or request new integrations</li>
+      </ul>
+      
+      <hr />
+      <p><em>More integrations coming soon!</em></p>
+    </div>
+  )
+}

@@ -1,55 +1,54 @@
-# Notion Integration
+'use client'
 
-Learn how to connect Notion to OpenClaw using ClawLink.
-
-## Getting Your Notion API Key
-
-### Step 1: Go to My Integrations
-
-1. Visit [notion.so/my-integrations](https://www.notion.so/my-integrations)
-2. Click **+ New integration**
-
-### Step 2: Configure Your Integration
-
-1. Name your integration (e.g., "ClawLink")
-2. Choose a profile picture (optional)
-3. Select capabilities:
-   - Read content
-   - Update content
-   - Insert content
-4. Click **Submit**
-
-### Step 3: Get Your API Key
-
-After creating the integration, you'll see:
-- **Internal Integration Token** - copy this!
-
-⚠️ **Important**: This token starts with `secret_`
-
-### Step 4: Connect to Your Notion Pages
-
-Your integration doesn't automatically have access to all pages. You need to share pages with it:
-
-1. Open the Notion page you want to connect
-2. Click the **•••** menu (top right)
-3. Click **Connect to**
-4. Select your ClawLink integration
-
-Repeat for each page/database you want ClawLink to access.
-
-## Required Capabilities
-
-- ✅ Read content
-- ✅ Update content (optional - for writing to Notion)
-- ✅ Insert content (optional - for creating pages)
-
-## Connect to ClawLink
-
-Run the setup command:
-```
-npx clawlink@latest init
-```
-
-Enter your Notion Internal Integration Token when prompted.
-
-You can now ask OpenClaw to read from and write to your Notion pages!
+export default function NotionDoc() {
+  return (
+    <div className="prose max-w-none">
+      <h1>Notion Integration</h1>
+      
+      <p>Learn how to connect Notion to OpenClaw using ClawLink.</p>
+      
+      <h2>Getting Your Notion API Key</h2>
+      
+      <h3>Step 1: Go to My Integrations</h3>
+      <ol>
+        <li>Visit <a href="https://www.notion.so/my-integrations" target="_blank" rel="noopener">notion.so/my-integrations</a></li>
+        <li>Click <strong>+ New integration</strong></li>
+      </ol>
+      
+      <h3>Step 2: Configure Your Integration</h3>
+      <ol>
+        <li>Name your integration (e.g., "ClawLink")</li>
+        <li>Choose a profile picture (optional)</li>
+        <li>Select capabilities:
+          <ul>
+            <li>Read content</li>
+            <li>Update content</li>
+            <li>Insert content</li>
+          </ul>
+        </li>
+        <li>Click <strong>Submit</strong></li>
+      </ol>
+      
+      <h3>Step 3: Get Your API Key</h3>
+      <p>After creating the integration, you'll see:</p>
+      <ul>
+        <li><strong>Internal Integration Token</strong> - copy this!</li>
+      </ul>
+      <p>⚠️ <strong>Important</strong>: This token starts with <code>secret_</code></p>
+      
+      <h3>Step 4: Connect to Your Notion Pages</h3>
+      <p>Your integration doesn't automatically have access to all pages:</p>
+      <ol>
+        <li>Open the Notion page you want to connect</li>
+        <li>Click the <strong>•••</strong> menu (top right)</li>
+        <li>Click <strong>Connect to</strong></li>
+        <li>Select your ClawLink integration</li>
+      </ol>
+      <p>Repeat for each page/database you want ClawLink to access.</p>
+      
+      <h2>Connect to ClawLink</h2>
+      <pre><code>npx clawlink@latest init</code></pre>
+      <p>Enter your Notion Internal Integration Token when prompted.</p>
+    </div>
+  )
+}
