@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { 
   SiGmail, SiSlack, SiGithub, SiStripe, SiNotion, 
   SiGoogleanalytics, SiHubspot, SiDiscord 
@@ -27,6 +28,13 @@ const quickIntegrations = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { signOut } = useClerk();
+  const { user, isLoaded } = useUser();
+
+  const userName = user?.fullName || user?.firstName || "User";
+  const userEmail = user?.emailAddresses?.[0]?.emailAddress || "";
+  const userInitials = user?.firstName?.[0] || user?.fullName?.[0] || "U";
+  const userImage = user?.imageUrl;
 
   return (
     <aside className="w-64 min-h-screen bg-gray-900 text-white flex flex-col">
@@ -84,15 +92,26 @@ export default function Sidebar() {
       {/* User Section */}
       <div className="p-4 border-t border-gray-800">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center text-white font-bold">
-            H
-          </div>
+          {userImage ? (
+            <img 
+              src={userImage} 
+              alt={userName}
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center text-white font-bold">
+              {userInitials}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">Hithesh</p>
-            <p className="text-xs text-gray-400 truncate">Free Plan</p>
+            <p className="text-sm font-medium truncate">{userName}</p>
+            <p className="text-xs text-gray-400 truncate">{userEmail || "Free Plan"}</p>
           </div>
         </div>
-        <button className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors text-sm">
+        <button 
+          onClick={() => signOut({ redirectUrl: "/" })}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors text-sm"
+        >
           <FiLogOut className="w-4 h-4" />
           Sign Out
         </button>

@@ -1,8 +1,9 @@
 "use client";
 
 
-import { useState } from "react";
+import { useState, useEffect, use } from "react";
 import { integrations, categories } from "@/data/integrations";
+import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { FiSearch, FiCheck, FiChevronRight } from "react-icons/fi";
 import { 
@@ -26,12 +27,40 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   SiOpenai, SiReplicate, SiElevenlabs
 };
 
-// Mock connected integrations
-const connectedIntegrations = ["gmail", "slack", "github"];
+// TODO: Fetch from database based on logged-in user
+// const connectedIntegrations = ["gmail", "slack", "github"];
 
 export default function IntegrationsPage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [connectedIntegrations, setConnectedIntegrations] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, isLoaded } = useUser();
+
+  useEffect(() => {
+    async function fetchConnectedIntegrations() {
+      if (!isLoaded || !user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/integrations");
+        const data = await res.json() as { integrations?: Array<{ integration: string }> };
+        
+        if (data.integrations) {
+          const connected = data.integrations.map((i) => i.integration);
+          setConnectedIntegrations(connected);
+        }
+      } catch (error) {
+        console.error("Failed to fetch integrations:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchConnectedIntegrations();
+  }, [user, isLoaded]);
 
   const filtered = integrations.filter((i) => {
     const matchesSearch = i.name.toLowerCase().includes(search.toLowerCase()) ||

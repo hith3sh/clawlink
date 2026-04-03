@@ -2,11 +2,17 @@
 
 
 import { useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import { FiUser, FiKey, FiCreditCard, FiBell, FiShield, FiSave, FiCopy, FiCheck } from "react-icons/fi";
 
 export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
+  const { user, isLoaded } = useUser();
+
+  const userName = user?.fullName || user?.firstName || "";
+  const userEmail = user?.emailAddresses?.[0]?.emailAddress || "";
+  const userImage = user?.imageUrl;
 
   const copyApiKey = () => {
     navigator.clipboard.writeText("sk_live_xxxxxxxxxxxxxxxxxxxx");
@@ -61,9 +67,17 @@ export default function SettingsPage() {
               </div>
               <div className="p-6 space-y-6">
                 <div className="flex items-center gap-6">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center text-white text-2xl font-bold">
-                    H
-                  </div>
+                  {userImage ? (
+                    <img 
+                      src={userImage} 
+                      alt={userName}
+                      className="w-20 h-20 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center text-white text-2xl font-bold">
+                      {(user?.firstName?.[0] || userName?.[0] || "U").toUpperCase()}
+                    </div>
+                  )}
                   <button className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                     Change Avatar
                   </button>
@@ -73,7 +87,7 @@ export default function SettingsPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
                     <input
                       type="text"
-                      defaultValue="Hithesh"
+                      defaultValue={userName}
                       className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none"
                     />
                   </div>
@@ -81,8 +95,9 @@ export default function SettingsPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                     <input
                       type="email"
-                      defaultValue="hithesh@example.com"
+                      defaultValue={userEmail}
                       className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none"
+                      disabled
                     />
                   </div>
                 </div>
