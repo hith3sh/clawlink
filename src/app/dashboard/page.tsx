@@ -57,7 +57,7 @@ export default function DashboardPage() {
             <div>
               <p className="text-sm font-medium">API Key</p>
               <p className="text-xs text-muted-foreground">
-                Your API key for using ClawLink services. Use this with the MCP command.
+                Use this in the ClawLink OpenClaw plugin, then say “connect my app” to start hosted setup.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -168,18 +168,29 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* MCP Command Section */}
-      <Card className="bg-gradient-to-r from-card to-secondary border-border">
+<<<<<<< HEAD
+      {/* OpenClaw Install Section */}
+      <Card className="border-border bg-gradient-to-r from-card to-secondary">
         <CardContent className="pt-6">
-          <h2 className="text-lg font-semibold mb-1">Your MCP Command</h2>
-          <p className="text-sm text-muted-foreground mb-4">Paste this into OpenClaw to connect all your integrations</p>
-          <div className="flex items-center gap-3 rounded-lg bg-background/50 p-4">
+          <h2 className="mb-1 text-lg font-semibold">Install Once, Connect With One Click</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Install the ClawLink plugin in OpenClaw, create an API key, then say “connect my Notion.”
+          </p>
+          <div className="mb-4 flex items-center gap-3 rounded-lg bg-background/50 p-4">
             <code className="flex-1 font-mono text-sm text-primary">
-              npx @clawlink/mcp --api-key sk_live_xxxx
+              openclaw plugins install clawlink
             </code>
-            <Button size="sm">
-              Copy
-            </Button>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/dashboard/settings" className={buttonVariants({ size: "sm" })}>
+              Create API Key
+            </Link>
+            <Link
+              href="/dashboard/integrations"
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              Start Connecting Apps
+            </Link>
           </div>
         </CardContent>
       </Card>

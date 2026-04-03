@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const INSTALL_COMMAND = "npx clawlink@latest init";
+const INSTALL_COMMAND = "openclaw plugins install clawlink";
 
 export default function CopyCommand() {
   const [copied, setCopied] = useState(false);

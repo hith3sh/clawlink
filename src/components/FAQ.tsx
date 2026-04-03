@@ -5,19 +5,19 @@ import { useState } from "react";
 const faqs = [
   {
     q: "What is ClawLink?",
-    a: "ClawLink is an open-source MCP server that lets you connect 40+ APIs to OpenClaw with a single command. No boilerplate, no config files.",
+    a: "ClawLink is a hosted connection layer for OpenClaw. Install ClawLink once, then connect apps like Notion, Slack, GitHub, and Gmail without manually wiring provider auth every time.",
   },
   {
     q: "How does it work with OpenClaw?",
-    a: "Run `npx clawlink@latest init`, pick your integrations, paste your API keys, and ClawLink sets up an MCP server that OpenClaw connects to automatically. Then just ask OpenClaw to \"send an email\" or \"create a Slack message\" — it handles the rest.",
+    a: "Install the ClawLink plugin in OpenClaw, create a ClawLink API key once, then say something like \"connect my Notion.\" ClawLink creates a hosted setup link, you approve access in the browser, and OpenClaw polls until the integration is ready.",
   },
   {
     q: "Is my API key safe?",
-    a: "Your API keys are stored locally on your machine in an encrypted config file. They never leave your device. ClawLink is fully open source — you can audit every line of code.",
+    a: "Provider credentials are encrypted before they are stored, and ClawLink API keys are only shown once when created. The hosted setup flow means OpenClaw does not need to own every provider token directly.",
   },
   {
     q: "Does it work with other AI tools?",
-    a: "ClawLink is built for OpenClaw, but since it's a standard MCP server, it works with any MCP-compatible client like Claude Desktop, Cursor, and more.",
+    a: "ClawLink is built around the OpenClaw workflow first. The current product direction is install once in OpenClaw, then connect and manage apps through hosted sessions.",
   },
   {
     q: "Can I add custom integrations?",
@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "Is it free?",
-    a: "Yes, ClawLink is 100% free and open source under the MIT license.",
+    a: "The install and core product are being positioned around easy hosted connections for OpenClaw. Pricing can sit on top of that convenience layer, while the codebase remains open to inspect.",
   },
 ];
 

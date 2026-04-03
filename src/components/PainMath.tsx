@@ -43,19 +43,19 @@ export default function PainMath() {
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-bold">1</div>
             <code className="text-sm bg-white border border-green-200 rounded-lg px-3 py-1.5 text-gray-800">
-              npx clawlink@latest init
+              openclaw plugins install clawlink
             </code>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-bold">2</div>
-            <span className="text-gray-600">Paste your API key</span>
+            <span className="text-gray-600">Create a ClawLink API key once</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-bold">3</div>
-            <span className="text-gray-600">Done. Ask OpenClaw anything.</span>
+            <span className="text-gray-600">Say “connect my app” and finish auth in one click</span>
           </div>
           <div className="border-t border-green-200 pt-3">
-            <span className="text-green-700 font-semibold text-lg">Under 30 seconds.</span>
+            <span className="text-green-700 font-semibold text-lg">Install once. Connect from any device.</span>
           </div>
         </div>
       </div>

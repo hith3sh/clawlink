@@ -25,8 +25,8 @@ export default function Home() {
           </span>
         </h1>
         <p className="mt-4 text-lg text-gray-500 text-center max-w-xl">
-          One command. 40+ integrations. Gmail, Slack, Stripe, and more —
-          ready in seconds, zero config.
+          Install ClawLink once, then connect apps with one click.
+          Gmail, Slack, GitHub, Notion, Stripe, and more without API setup pain.
         </p>
 
         <div className="mt-8 w-full max-w-md">
@@ -34,7 +34,7 @@ export default function Home() {
         </div>
 
         <p className="mt-3 text-sm text-gray-400">
-          Paste this into OpenClaw and you&apos;re done.
+          Then create a ClawLink API key and say “connect my Notion” in OpenClaw.
         </p>
       </section>
 
@@ -102,11 +102,11 @@ export default function Home() {
             Ready to supercharge OpenClaw?
           </h2>
           <p className="text-white/80 mb-8">
-            One command. Every API. Zero friction.
+            Install once. Connect with one click. Use anywhere.
           </p>
           <div className="inline-flex items-center gap-3 rounded-lg bg-white/20 backdrop-blur-sm border border-white/30 px-5 py-3 font-mono text-sm text-white">
             <span className="text-white/60">$</span>
-            <span>npx clawlink@latest init</span>
+            <span>openclaw plugins install clawlink</span>
           </div>
         </div>
       </section>

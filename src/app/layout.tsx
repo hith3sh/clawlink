@@ -17,20 +17,23 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ClawLink — Plug Anything into OpenClaw",
   description:
-    "One command to add 40+ integrations to OpenClaw. Gmail, Slack, WordPress, Stripe, and more — zero config.",
+    "Install ClawLink in OpenClaw once, then connect apps with one click. Hosted auth, encrypted credentials, and headless-friendly setup links.",
+  icons: {
+    icon: "/images/logo/favicon.ico",
+    apple: "/images/logo/clawlink-512.png",
+  },
   openGraph: {
     title: "ClawLink — Plug Anything into OpenClaw",
-    description:
-      "One command to add 40+ integrations to OpenClaw. Gmail, Slack, WordPress, Stripe, and more — zero config.",
+    description: "Install ClawLink in OpenClaw once, then connect apps with one click. Hosted auth, encrypted credentials, and headless-friendly setup links.",
+    type: "website",
     url: "https://claw-link.dev",
     siteName: "ClawLink",
-    type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "ClawLink — Plug Anything into OpenClaw",
-    description:
-      "One command to add 40+ integrations to OpenClaw. Gmail, Slack, WordPress, Stripe, and more — zero config.",
+    description: "Install ClawLink in OpenClaw once, then connect apps with one click. Hosted auth, encrypted credentials, and headless-friendly setup links.",
+    images: ["https://docs.claw-link.dev/images/logo/social-card.png"],
   },
   alternates: {
     canonical: "https://claw-link.dev",
