@@ -3,7 +3,7 @@ import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { getOptionalRequestContext } from "@cloudflare/next-on-pages";
 
-interface D1Statement {
+export interface D1Statement {
   bind(...values: unknown[]): {
     all<T = Record<string, unknown>>(): Promise<{ results?: T[] }>;
     first<T = Record<string, unknown>>(): Promise<T | null>;
@@ -11,19 +11,21 @@ interface D1Statement {
   };
 }
 
-interface D1LikeDatabase {
+export interface D1LikeDatabase {
   prepare(query: string): D1Statement;
 }
 
-interface UserRow {
+export interface UserRow {
   id: string;
+  clerk_id?: string;
+  email?: string;
 }
 
 interface StoredIntegrationRow {
   integration: string;
   expires_at: string | null;
   created_at: string;
-  updated_at?: string;
+  updated_at?: string | null;
 }
 
 export interface IntegrationConnectionRecord {
@@ -33,12 +35,12 @@ export interface IntegrationConnectionRecord {
   updatedAt: string | null;
 }
 
-interface Identity {
+export interface Identity {
   clerkId: string;
   email: string;
 }
 
-function getEnvBinding<T>(key: string): T | undefined {
+export function getEnvBinding<T>(key: string): T | undefined {
   const context = getOptionalRequestContext();
   const contextValue = (context?.env as Record<string, unknown> | undefined)?.[key];
   if (contextValue !== undefined) {
@@ -64,6 +66,18 @@ function encodeBase64(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString("base64");
 }
 
+export function randomToken(bytes = 24): string {
+  return encodeBase64(crypto.getRandomValues(new Uint8Array(bytes)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+export async function sha256Hex(input: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 async function encryptCredentials(credentials: Record<string, string>): Promise<string> {
   const encryptionKey = getEncryptionKey();
 
@@ -81,7 +95,6 @@ async function encryptCredentials(credentials: Record<string, string>): Promise<
 
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const data = new TextEncoder().encode(JSON.stringify(credentials));
-
   const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, data);
   const combined = new Uint8Array(iv.length + encrypted.byteLength);
 
@@ -110,9 +123,9 @@ export async function getAuthenticatedIdentity(): Promise<Identity | null> {
   };
 }
 
-async function ensureUser(db: D1LikeDatabase, identity: Identity): Promise<UserRow> {
+export async function ensureUser(db: D1LikeDatabase, identity: Identity): Promise<UserRow> {
   const existingUser = await db
-    .prepare("SELECT id FROM users WHERE clerk_id = ?")
+    .prepare("SELECT id, clerk_id, email FROM users WHERE clerk_id = ?")
     .bind(identity.clerkId)
     .first<UserRow>();
 
@@ -132,7 +145,22 @@ async function ensureUser(db: D1LikeDatabase, identity: Identity): Promise<UserR
     .bind(userId, identity.clerkId, identity.email)
     .run();
 
-  return { id: userId };
+  return {
+    id: userId,
+    clerk_id: identity.clerkId,
+    email: identity.email,
+  };
+}
+
+export async function getUserForCurrentIdentity(): Promise<UserRow | null> {
+  const db = getDatabase();
+  const identity = await getAuthenticatedIdentity();
+
+  if (!db || !identity) {
+    return null;
+  }
+
+  return ensureUser(db, identity);
 }
 
 function mapConnection(row: StoredIntegrationRow): IntegrationConnectionRecord {
@@ -146,13 +174,12 @@ function mapConnection(row: StoredIntegrationRow): IntegrationConnectionRecord {
 
 export async function listIntegrationConnections(): Promise<IntegrationConnectionRecord[]> {
   const db = getDatabase();
-  const identity = await getAuthenticatedIdentity();
+  const user = await getUserForCurrentIdentity();
 
-  if (!db || !identity) {
+  if (!db || !user) {
     return [];
   }
 
-  const user = await ensureUser(db, identity);
   const result = await db
     .prepare(
       `
@@ -170,13 +197,20 @@ export async function listIntegrationConnections(): Promise<IntegrationConnectio
 
 export async function getIntegrationConnection(slug: string): Promise<IntegrationConnectionRecord | null> {
   const db = getDatabase();
-  const identity = await getAuthenticatedIdentity();
+  const user = await getUserForCurrentIdentity();
 
-  if (!db || !identity) {
+  if (!db || !user) {
     return null;
   }
 
-  const user = await ensureUser(db, identity);
+  return getIntegrationConnectionForUserId(db, user.id, slug);
+}
+
+export async function getIntegrationConnectionForUserId(
+  db: D1LikeDatabase,
+  userId: string,
+  slug: string,
+): Promise<IntegrationConnectionRecord | null> {
   const result = await db
     .prepare(
       `
@@ -185,7 +219,7 @@ export async function getIntegrationConnection(slug: string): Promise<Integratio
         WHERE user_id = ? AND integration = ?
       `,
     )
-    .bind(user.id, slug)
+    .bind(userId, slug)
     .first<StoredIntegrationRow>();
 
   return result ? mapConnection(result) : null;
@@ -196,17 +230,25 @@ export async function saveIntegrationConnection(
   credentials: Record<string, string>,
 ): Promise<IntegrationConnectionRecord> {
   const db = getDatabase();
-  const identity = await getAuthenticatedIdentity();
+  const user = await getUserForCurrentIdentity();
 
   if (!db) {
     throw new Error("DB binding is not configured");
   }
 
-  if (!identity) {
+  if (!user) {
     throw new Error("Unauthorized");
   }
 
-  const user = await ensureUser(db, identity);
+  return saveIntegrationConnectionForUserId(db, user.id, slug, credentials);
+}
+
+export async function saveIntegrationConnectionForUserId(
+  db: D1LikeDatabase,
+  userId: string,
+  slug: string,
+  credentials: Record<string, string>,
+): Promise<IntegrationConnectionRecord> {
   const encrypted = await encryptCredentials(credentials);
 
   await db
@@ -220,10 +262,10 @@ export async function saveIntegrationConnection(
           updated_at = datetime('now')
       `,
     )
-    .bind(user.id, slug, encrypted)
+    .bind(userId, slug, encrypted)
     .run();
 
-  const saved = await getIntegrationConnection(slug);
+  const saved = await getIntegrationConnectionForUserId(db, userId, slug);
 
   if (!saved) {
     throw new Error("Integration was saved but could not be reloaded");
@@ -234,17 +276,15 @@ export async function saveIntegrationConnection(
 
 export async function deleteIntegrationConnection(slug: string): Promise<void> {
   const db = getDatabase();
-  const identity = await getAuthenticatedIdentity();
+  const user = await getUserForCurrentIdentity();
 
   if (!db) {
     throw new Error("DB binding is not configured");
   }
 
-  if (!identity) {
+  if (!user) {
     throw new Error("Unauthorized");
   }
-
-  const user = await ensureUser(db, identity);
 
   await db
     .prepare("DELETE FROM user_integrations WHERE user_id = ? AND integration = ?")

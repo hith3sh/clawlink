@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import Image from "next/image";
 import Link from "next/link";
 import "./globals.css";
 
@@ -59,7 +60,7 @@ export default function RootLayout({
         <body className="min-h-full flex flex-col">
           <header className="flex items-center justify-between p-4 border-b">
             <Link href="/" className="flex items-center gap-2">
-              <img src="/images/logo/clawlink-512.png" alt="ClawLink" className="w-8 h-8" />
+              <Image src="/images/logo/clawlink-512.png" alt="ClawLink" width={32} height={32} className="w-8 h-8" />
               <span className="text-xl font-bold">ClawLink</span>
             </Link>
             <nav className="flex items-center gap-4">

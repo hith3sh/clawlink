@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getIntegrationBySlug } from "@/data/integrations";
+import { getLatestActiveConnectionSessionForUser } from "@/lib/server/connection-sessions";
 import {
   deleteIntegrationConnection,
   getAuthenticatedIdentity,
   getIntegrationConnection,
   getDatabase,
+  getUserForCurrentIdentity,
   saveIntegrationConnection,
 } from "@/lib/server/integration-store";
 
@@ -41,10 +43,16 @@ export async function GET(
 
   try {
     const connection = await getIntegrationConnection(slug);
+    const user = await getUserForCurrentIdentity();
+    const activeSession = user
+      ? await getLatestActiveConnectionSessionForUser(user, slug)
+      : null;
+
     return NextResponse.json({
       integration: slug,
       connected: Boolean(connection),
       connection,
+      activeSession,
     });
   } catch (error) {
     console.error(`Error fetching integration ${slug}:`, error);
