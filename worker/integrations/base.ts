@@ -96,6 +96,8 @@ export abstract class BaseIntegration implements IntegrationHandler {
    * Get headers for API requests (override per integration)
    */
   protected getHeaders(credentials: Record<string, string>): Record<string, string> {
+    void credentials;
+
     return {
       "Content-Type": "application/json",
     };
