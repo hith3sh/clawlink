@@ -333,10 +333,17 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   notion: {
     setupMode: "manual",
     dashboardStatus: "available",
-    runtimeStatus: "planned",
+    runtimeStatus: "live",
     setupGuide: "Create an internal Notion integration and paste the integration token here.",
     credentialFields: [tokenField("integrationToken", "Integration Token", "secret_...")],
-    tools: [],
+    tools: [
+      { name: "notion_search", description: "Search pages and databases in Notion" },
+      { name: "notion_get_page", description: "Get a page by ID" },
+      { name: "notion_create_page", description: "Create a new page" },
+      { name: "notion_query_database", description: "Query a database" },
+      { name: "notion_create_database", description: "Create a new database" },
+      { name: "notion_append_blocks", description: "Append blocks to a page" },
+    ],
   },
   airtable: {
     setupMode: "manual",

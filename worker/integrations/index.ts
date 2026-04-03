@@ -8,6 +8,7 @@
 import "./gmail";
 import "./slack";
 import "./github";
+import "./notion";
 // import "./stripe";
 // etc.
 
