@@ -6,7 +6,12 @@
 /**
  * Verify the Clerk JWT and extract user ID
  */
-export async function verifyAuth(authHeader: string | null, env?: { CLERK_PUBLISHABLE_KEY?: string; CLERK_JWT_KEY?: string }): Promise<string | null> {
+export async function verifyAuth(
+  authHeader: string | null,
+  env?: { CLERK_PUBLISHABLE_KEY?: string; CLERK_JWT_KEY?: string },
+): Promise<string | null> {
+  void env;
+
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return null;
   }
@@ -54,6 +59,8 @@ function decodeJWT(token: string): { sub?: string; exp?: number } | null {
  * Middleware to require authentication (sync version for compatibility)
  */
 export function requireAuth(authHeader: string | null): string {
+  void authHeader;
+
   // For sync use, we'll just return a placeholder - use verifyAuth async in real code
   throw new Error("Use verifyAuth (async) instead");
 }

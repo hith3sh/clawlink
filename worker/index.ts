@@ -10,8 +10,8 @@
 // Import integrations to register handlers
 import "./integrations";
 
+import { integrations } from "../src/data/integrations";
 import { verifyAuth } from "./auth";
-import { encryptCredential, decryptCredential } from "./crypto";
 import { logRequest } from "./logger";
 import { getIntegrationHandler } from "./integrations";
 
@@ -48,7 +48,6 @@ interface MCPResponse {
 async function handleToolCall(
   env: Env,
   userId: string,
-  method: string,
   params?: MCPRequest["params"]
 ): Promise<unknown> {
   const { name, arguments: args = {} } = params || {};
@@ -102,8 +101,6 @@ async function handleToolCall(
  * Handle MCP list_tools request
  */
 function handleListTools(): Array<{ name: string; description: string; inputSchema: object }> {
-  const { integrations } = require("../src/data/integrations");
-  
   // Map integrations to MCP tools
   const tools: Array<{ name: string; description: string; inputSchema: object }> = [];
   
@@ -175,7 +172,6 @@ export default {
           result = await handleToolCall(
             env,
             userId,
-            mcpRequest.params?.name || "",
             mcpRequest.params
           );
           break;

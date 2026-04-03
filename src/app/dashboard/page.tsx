@@ -1,6 +1,6 @@
 
 import { FiActivity, FiZap, FiCheckCircle, FiAlertCircle, FiClock } from "react-icons/fi";
-import { SiGmail, SiSlack, SiGithub, SiStripe, SiNotion, SiGoogleanalytics } from "react-icons/si";
+import { SiGmail, SiSlack, SiGithub, SiStripe } from "react-icons/si";
 import Link from "next/link";
 
 const stats = [

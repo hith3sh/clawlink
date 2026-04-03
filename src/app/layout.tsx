@@ -18,6 +18,31 @@ export const metadata: Metadata = {
   title: "ClawLink — Plug Anything into OpenClaw",
   description:
     "One command to add 40+ integrations to OpenClaw. Gmail, Slack, WordPress, Stripe, and more — zero config.",
+  icons: {
+    icon: "/images/logo/favicon.ico",
+    apple: "/images/logo/clawlink-512.png",
+  },
+  openGraph: {
+    title: "ClawLink — Plug Anything into OpenClaw",
+    description: "One command to add 40+ integrations to OpenClaw. Gmail, Slack, WordPress, Stripe, and more — zero config.",
+    type: "website",
+    url: "https://claw-link.dev",
+    siteName: "ClawLink",
+    images: [
+      {
+        url: "https://docs.claw-link.dev/images/logo/social-card.png",
+        width: 1200,
+        height: 630,
+        alt: "ClawLink - Plug Anything into OpenClaw",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ClawLink — Plug Anything into OpenClaw",
+    description: "One command to add 40+ integrations to OpenClaw. Gmail, Slack, WordPress, Stripe, and more — zero config.",
+    images: ["https://docs.claw-link.dev/images/logo/social-card.png"],
+  },
 };
 
 export default function RootLayout({
@@ -33,7 +58,10 @@ export default function RootLayout({
       >
         <body className="min-h-full flex flex-col">
           <header className="flex items-center justify-between p-4 border-b">
-            <Link href="/" className="text-xl font-bold">ClawLink</Link>
+            <Link href="/" className="flex items-center gap-2">
+              <img src="/images/logo/clawlink-512.png" alt="ClawLink" className="w-8 h-8" />
+              <span className="text-xl font-bold">ClawLink</span>
+            </Link>
             <nav className="flex items-center gap-4">
               <Link href="https://docs.claw-link.dev" target="_blank" className="text-sm hover:text-primary">Docs</Link>
               <Link href="/dashboard" className="text-sm">Dashboard</Link>

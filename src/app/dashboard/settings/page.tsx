@@ -1,6 +1,7 @@
 "use client";
 
 
+import Image from "next/image";
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { FiUser, FiKey, FiCreditCard, FiBell, FiShield, FiSave, FiCopy, FiCheck } from "react-icons/fi";
@@ -8,7 +9,7 @@ import { FiUser, FiKey, FiCreditCard, FiBell, FiShield, FiSave, FiCopy, FiCheck 
 export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
 
   const userName = user?.fullName || user?.firstName || "";
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || "";
@@ -68,10 +69,13 @@ export default function SettingsPage() {
               <div className="p-6 space-y-6">
                 <div className="flex items-center gap-6">
                   {userImage ? (
-                    <img 
+                    <Image
                       src={userImage} 
                       alt={userName}
+                      width={80}
+                      height={80}
                       className="w-20 h-20 rounded-full object-cover"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-20 h-20 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center text-white text-2xl font-bold">

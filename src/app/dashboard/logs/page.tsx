@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FiSearch, FiFilter, FiDownload, FiInbox } from "react-icons/fi";
+import { FiSearch, FiDownload, FiInbox } from "react-icons/fi";
 
 const integrations = ["all", "gmail", "slack", "github", "stripe", "notion", "hubspot", "discord"];
 const actions = ["all", "send_email", "send_message", "create_issue", "list_customers", "create_page", "list_emails", "create_contact"];

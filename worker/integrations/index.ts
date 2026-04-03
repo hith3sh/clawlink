@@ -6,9 +6,8 @@
 
 // Import and register handlers
 import "./gmail";
-// Add more integrations here:
-// import "./slack";
-// import "./github";
+import "./slack";
+import "./github";
 // import "./stripe";
 // etc.
 

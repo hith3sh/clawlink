@@ -1,12 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useClerk, useUser } from "@clerk/nextjs";
-import { 
-  SiGmail, SiSlack, SiGithub, SiStripe, SiNotion, 
-  SiGoogleanalytics, SiHubspot, SiDiscord 
-} from "react-icons/si";
+import { SiGmail, SiSlack, SiGithub, SiStripe } from "react-icons/si";
 import { 
   FiHome, FiGrid, FiActivity, FiSettings, FiLogOut,
   FiZap
@@ -29,7 +27,7 @@ const quickIntegrations = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { signOut } = useClerk();
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
 
   const userName = user?.fullName || user?.firstName || "User";
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || "";
@@ -93,10 +91,13 @@ export default function Sidebar() {
       <div className="p-4 border-t border-gray-800">
         <div className="flex items-center gap-3 mb-4">
           {userImage ? (
-            <img 
+            <Image
               src={userImage} 
               alt={userName}
+              width={40}
+              height={40}
               className="w-10 h-10 rounded-full object-cover"
+              unoptimized
             />
           ) : (
             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center text-white font-bold">

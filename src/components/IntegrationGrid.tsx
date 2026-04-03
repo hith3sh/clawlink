@@ -2,37 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { integrations } from "@/data/integrations";
+import { getIntegrationIcon } from "@/lib/integration-icons";
 import SearchBar from "./SearchBar";
-import {
-  SiGmail, SiSlack, SiDiscord, SiTelegram,
-  SiApollographql, SiHubspot, SiSalesforce,
-  SiWordpress, SiWebflow, SiGhost, SiContentful,
-  SiYoutube, SiX, SiInstagram,
-  SiGooglesheets, SiGooglecalendar, SiGoogledrive, SiNotion, SiAirtable, SiTodoist,
-  SiGithub, SiGitlab, SiJira, SiLinear, SiVercel,
-  SiStripe, SiPaypal, SiQuickbooks,
-  SiGoogleanalytics, SiMixpanel,
-  SiSupabase, SiFirebase,
-  SiShopify, SiWoocommerce,
-  SiOpenai, SiReplicate, SiElevenlabs,
-} from "react-icons/si";
-import { FaAws, FaLinkedin, FaMicrosoft } from "react-icons/fa";
-import { TbBrandFunimation, TbArrowsSplit } from "react-icons/tb";
-import type { IconType } from "react-icons";
-
-const iconMap: Record<string, IconType> = {
-  SiGmail, SiSlack, SiDiscord, FaMicrosoft, SiTelegram,
-  SiApollographql, SiHubspot, SiSalesforce, FaPipedrive: TbBrandFunimation,
-  SiWordpress, SiWebflow, SiGhost, SiContentful,
-  SiYoutube, SiX, FaLinkedin, SiInstagram,
-  SiGooglesheets, SiGooglecalendar, SiGoogledrive, SiNotion, SiAirtable, SiTodoist,
-  SiGithub, SiGitlab, SiJira, SiLinear, SiVercel,
-  SiStripe, SiPaypal, SiQuickbooks,
-  SiGoogleanalytics, SiMixpanel, FaSegment: TbArrowsSplit,
-  FaAws, SiSupabase, SiFirebase,
-  SiShopify, SiWoocommerce,
-  SiOpenai, SiReplicate, SiElevenlabs,
-};
 
 // Featured integrations shown by default (most popular ones)
 const FEATURED_SLUGS = [
@@ -74,18 +45,14 @@ export default function IntegrationGrid() {
       {/* Integration cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {filtered.map((integration) => {
-          const Icon = iconMap[integration.icon];
+          const Icon = getIntegrationIcon(integration.icon);
           return (
             <div
               key={integration.slug}
               className="group rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-gray-300 hover:shadow-md"
             >
               <div className="flex items-center gap-3">
-                {Icon ? (
-                  <Icon className="w-6 h-6 shrink-0" style={{ color: integration.color }} />
-                ) : (
-                  <span className="text-2xl">{integration.icon}</span>
-                )}
+                <Icon className="w-6 h-6 shrink-0" style={{ color: integration.color }} />
                 <div className="min-w-0">
                   <h4 className="font-medium text-gray-900 text-sm truncate">
                     {integration.name}
