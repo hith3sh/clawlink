@@ -73,6 +73,28 @@ export default function Home() {
         <FAQ />
       </section>
 
+      {/* Documentation */}
+      <section className="bg-gray-900 py-24 px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-white mb-3">
+            Read the Docs
+          </h2>
+          <p className="text-gray-400 mb-8 max-w-xl mx-auto">
+            Learn how to set up ClawLink, connect integrations, and use every
+            action available through the MCP server.
+          </p>
+          <a
+            href="https://docs.claw-link.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg bg-white text-gray-900 px-6 py-3 font-medium hover:bg-gray-100 transition-colors"
+          >
+            View Documentation
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+          </a>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="bg-gradient-to-r from-red-500 to-orange-500 py-20 px-6">
         <div className="max-w-2xl mx-auto text-center">

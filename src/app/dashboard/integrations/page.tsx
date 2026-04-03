@@ -1,13 +1,12 @@
 "use client";
 
-
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { integrations, categories } from "@/data/integrations";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { FiSearch, FiCheck, FiChevronRight } from "react-icons/fi";
-import { 
-  SiGmail, SiSlack, SiDiscord, SiTelegram, SiApollographql, SiHubspot, 
+import { Search, Check, Plus } from "lucide-react";
+import {
+  SiGmail, SiSlack, SiDiscord, SiTelegram, SiApollographql, SiHubspot,
   SiSalesforce, SiPiped, SiWordpress, SiWebflow, SiGhost, SiContentful,
   SiYoutube, SiX, SiInstagram, SiGooglesheets, SiGooglecalendar,
   SiGoogledrive, SiNotion, SiAirtable, SiTodoist, SiGithub, SiGitlab, SiJira,
@@ -15,7 +14,10 @@ import {
   SiMixpanel, SiSupabase, SiFirebase, SiShopify, SiWoocommerce, SiOpenai,
   SiReplicate, SiElevenlabs
 } from "react-icons/si";
-
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   SiGmail, SiSlack, SiDiscord, SiTelegram, SiApollographql, SiHubspot,
@@ -26,9 +28,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   SiMixpanel, SiSupabase, SiFirebase, SiShopify, SiWoocommerce,
   SiOpenai, SiReplicate, SiElevenlabs
 };
-
-// TODO: Fetch from database based on logged-in user
-// const connectedIntegrations = ["gmail", "slack", "github"];
 
 export default function IntegrationsPage() {
   const [search, setSearch] = useState("");
@@ -47,7 +46,7 @@ export default function IntegrationsPage() {
       try {
         const res = await fetch("/api/integrations");
         const data = await res.json() as { integrations?: Array<{ integration: string }> };
-        
+
         if (data.integrations) {
           const connected = data.integrations.map((i) => i.integration);
           setConnectedIntegrations(connected);
@@ -69,109 +68,98 @@ export default function IntegrationsPage() {
     return matchesSearch && matchesCategory;
   });
 
-  const grouped = categories.reduce((acc, cat) => {
-    acc[cat] = filtered.filter((i) => i.category === cat);
-    return acc;
-  }, {} as Record<string, typeof integrations>);
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
-        <p className="text-gray-500">Browse and connect API integrations</p>
+        <h1 className="text-2xl font-bold">Connections</h1>
+        <p className="text-muted-foreground">Browse and connect API integrations</p>
       </div>
 
       {/* Search & Filter */}
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col gap-4 md:flex-row">
         <div className="relative flex-1">
-          <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search integrations..."
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder={`Search ${integrations.length} integrations...`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-100 outline-none transition-all"
+            className="pl-9"
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <button
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={!selectedCategory ? "default" : "secondary"}
+            size="sm"
             onClick={() => setSelectedCategory(null)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              !selectedCategory 
-                ? "bg-red-500 text-white" 
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
           >
             All
-          </button>
+          </Button>
           {categories.map((cat) => (
-            <button
+            <Button
               key={cat}
+              variant={selectedCategory === cat ? "default" : "secondary"}
+              size="sm"
               onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                selectedCategory === cat
-                  ? "bg-red-500 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
             >
               {cat}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
-      {/* Categories Grid */}
-      {Object.entries(grouped).map(([category, items]) => items.length > 0 && (
-        <div key={category} className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">{category}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {items.map((integration) => {
-              const Icon = iconMap[integration.icon] || FiCheck;
-              const isConnected = connectedIntegrations.includes(integration.slug);
+      {/* Integration Grid */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {filtered.map((integration) => {
+          const Icon = iconMap[integration.icon] || Check;
+          const isConnected = connectedIntegrations.includes(integration.slug);
 
-              return (
-                <Link
-                  key={integration.slug}
-                  href={`/dashboard/integrations/${integration.slug}`}
-                  className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-red-200 transition-all group"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div 
-                      className="w-12 h-12 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: `${integration.color}15` }}
+          return (
+            <Card key={integration.slug} className="group transition-colors hover:border-primary/30">
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+                      style={{ backgroundColor: `${integration.color}20` }}
                     >
                       <span style={{ color: integration.color }}>
-                        <Icon className="w-6 h-6" />
+                        <Icon className="h-5 w-5" />
                       </span>
                     </div>
-                    {isConnected && (
-                      <span className="flex items-center gap-1 text-xs text-green-500 bg-green-50 px-2 py-1 rounded-full">
-                        <FiCheck className="w-3 h-3" /> Connected
-                      </span>
-                    )}
+                    <div className="min-w-0">
+                      <h3 className="font-medium leading-tight">{integration.name}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                        {integration.description}
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-red-500 transition-colors">
-                    {integration.name}
-                  </h3>
-                  <p className="text-sm text-gray-500 line-clamp-2">{integration.description}</p>
-                  <div className="mt-4 flex items-center text-sm text-red-500 font-medium">
-                    <span>{isConnected ? "Manage" : "Connect"}</span>
-                    <FiChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+                  {isConnected ? (
+                    <Badge variant="secondary" className="shrink-0 text-green-400">
+                      <Check className="mr-1 h-3 w-3" /> Connected
+                    </Badge>
+                  ) : (
+                    <Link
+                      href={`/dashboard/integrations/${integration.slug}`}
+                      className={buttonVariants({ variant: "outline", size: "sm" }) + " shrink-0"}
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" />
+                      Connect
+                    </Link>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
       {/* Empty State */}
       {filtered.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No integrations found matching your search</p>
+        <div className="py-12 text-center">
+          <p className="text-muted-foreground">No integrations found matching your search</p>
         </div>
       )}
     </div>
   );
-}// edge runtime
+}

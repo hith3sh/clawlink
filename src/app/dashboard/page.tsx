@@ -1,21 +1,19 @@
+"use client";
 
-import { FiActivity, FiZap, FiCheckCircle, FiAlertCircle, FiClock } from "react-icons/fi";
-import { SiGmail, SiSlack, SiGithub, SiStripe, SiNotion, SiGoogleanalytics } from "react-icons/si";
+import { useState } from "react";
+import { Activity, CheckCircle, Clock, Zap, AlertCircle, Copy, RotateCcw, Eye, EyeOff } from "lucide-react";
+import { SiGmail, SiSlack, SiGithub, SiStripe } from "react-icons/si";
 import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 const stats = [
-  { label: "Total Requests", value: "1,234", change: "+12%", icon: FiActivity, color: "blue" },
-  { label: "Success Rate", value: "98.2%", change: "+0.3%", icon: FiCheckCircle, color: "green" },
-  { label: "Avg Latency", value: "234ms", change: "-15%", icon: FiClock, color: "orange" },
-  { label: "Active Integrations", value: "4", change: "+1", icon: FiZap, color: "red" },
+  { label: "Total Requests", value: "1,234", change: "+12%", icon: Activity },
+  { label: "Success Rate", value: "98.2%", change: "+0.3%", icon: CheckCircle },
+  { label: "Avg Latency", value: "234ms", change: "-15%", icon: Clock },
+  { label: "Active Integrations", value: "4", change: "+1", icon: Zap },
 ];
-
-const colorMap: Record<string, string> = {
-  blue: "text-blue-500 bg-blue-50",
-  green: "text-green-500 bg-green-50",
-  orange: "text-orange-500 bg-orange-50",
-  red: "text-red-500 bg-red-50",
-};
 
 const connectedIntegrations = [
   { name: "Gmail", icon: SiGmail, color: "#EA4335", status: "connected", lastUsed: "2 min ago" },
@@ -33,119 +31,158 @@ const recentLogs = [
 ];
 
 export default function DashboardPage() {
+  const [copied, setCopied] = useState(false);
+  const [showKey, setShowKey] = useState(false);
+
+  const apiKey = "sk_live_xxxxxxxxxxxxxxxxxxxx";
+
+  const copyApiKey = () => {
+    navigator.clipboard.writeText(apiKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500">Monitor your API integrations and usage</p>
+        <h1 className="text-2xl font-bold">Home</h1>
+        <p className="text-muted-foreground">Monitor your API integrations and usage</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-lg ${colorMap[stat.color]}`}>
-                <stat.icon className="w-6 h-6" />
-              </div>
-              <span className="text-sm text-green-500 font-medium">{stat.change}</span>
+      {/* API Key Card */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium">API Key</p>
+              <p className="text-xs text-muted-foreground">
+                Your API key for using ClawLink services. Use this with the MCP command.
+              </p>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-            <p className="text-sm text-gray-500">{stat.label}</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 rounded-md bg-muted px-3 py-2 font-mono text-sm sm:flex-initial">
+                {showKey ? apiKey : "sk_live_•••••••••••••••"}
+              </code>
+              <Button variant="ghost" size="icon" onClick={() => setShowKey(!showKey)}>
+                {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+              <Button variant="outline" size="sm" onClick={copyApiKey}>
+                <Copy className="mr-1.5 h-3.5 w-3.5" />
+                {copied ? "Copied!" : "Copy"}
+              </Button>
+              <Button variant="outline" size="sm">
+                <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                Reset
+              </Button>
+            </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => (
+          <Card key={stat.label}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="rounded-lg bg-primary/10 p-2.5">
+                  <stat.icon className="h-5 w-5 text-primary" />
+                </div>
+                <Badge variant="secondary" className="text-xs font-medium text-green-400">
+                  {stat.change}
+                </Badge>
+              </div>
+              <p className="text-2xl font-bold">{stat.value}</p>
+              <p className="text-sm text-muted-foreground">{stat.label}</p>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Connected Integrations */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Connected Integrations</h2>
-            <Link 
-              href="/dashboard/integrations" 
-              className="text-sm text-red-500 hover:text-red-600 font-medium"
-            >
+        <Card>
+          <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-base">Connected Integrations</CardTitle>
+            <Link href="/dashboard/integrations" className={buttonVariants({ variant: "link", size: "sm" }) + " text-primary"}>
               View all
             </Link>
-          </div>
-          <div className="p-6 space-y-4">
+          </CardHeader>
+          <CardContent className="space-y-4">
             {connectedIntegrations.map((integration) => (
               <div key={integration.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div 
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: `${integration.color}15` }}
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-lg"
+                    style={{ backgroundColor: `${integration.color}20` }}
                   >
-                    <integration.icon className="w-5 h-5" style={{ color: integration.color }} />
+                    <integration.icon className="h-5 w-5" style={{ color: integration.color }} />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{integration.name}</p>
-                    <p className="text-xs text-gray-400">Last used {integration.lastUsed}</p>
+                    <p className="text-sm font-medium">{integration.name}</p>
+                    <p className="text-xs text-muted-foreground">Last used {integration.lastUsed}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {integration.status === "connected" ? (
-                    <span className="flex items-center gap-1 text-sm text-green-500">
-                      <FiCheckCircle className="w-4 h-4" /> Connected
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-sm text-red-500">
-                      <FiAlertCircle className="w-4 h-4" /> Error
-                    </span>
-                  )}
-                </div>
+                {integration.status === "connected" ? (
+                  <Badge variant="secondary" className="text-green-400">
+                    <CheckCircle className="mr-1 h-3 w-3" /> Connected
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive">
+                    <AlertCircle className="mr-1 h-3 w-3" /> Error
+                  </Badge>
+                )}
               </div>
             ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Recent Logs */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Requests</h2>
-            <Link 
-              href="/dashboard/logs" 
-              className="text-sm text-red-500 hover:text-red-600 font-medium"
-            >
+        <Card>
+          <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-base">Recent Requests</CardTitle>
+            <Link href="/dashboard/logs" className={buttonVariants({ variant: "link", size: "sm" }) + " text-primary"}>
               View all
             </Link>
-          </div>
-          <div className="p-6">
+          </CardHeader>
+          <CardContent>
             <div className="space-y-3">
               {recentLogs.map((log, i) => (
-                <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                <div key={i} className="flex items-center justify-between border-b border-border/50 pb-3 last:border-0 last:pb-0">
                   <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${log.status === "success" ? "bg-green-500" : "bg-red-500"}`} />
+                    <div className={`h-2 w-2 rounded-full ${log.status === "success" ? "bg-green-500" : "bg-destructive"}`} />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        <span className="text-gray-500">{log.integration}</span>/{log.action}
+                      <p className="text-sm font-medium">
+                        <span className="text-muted-foreground">{log.integration}</span>/{log.action}
                       </p>
-                      <p className="text-xs text-gray-400">{log.time}</p>
+                      <p className="text-xs text-muted-foreground">{log.time}</p>
                     </div>
                   </div>
-                  <span className="text-sm text-gray-500">{log.latency}</span>
+                  <span className="text-sm text-muted-foreground">{log.latency}</span>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* MCP Command Section */}
-      <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-6 text-white">
-        <h2 className="text-lg font-semibold mb-2">Your MCP Command</h2>
-        <p className="text-gray-400 text-sm mb-4">Paste this into OpenClaw to connect all your integrations</p>
-        <div className="flex items-center gap-3 bg-gray-800 rounded-lg p-4">
-          <code className="flex-1 font-mono text-sm text-green-400">
-            npx @clawlink/mcp --api-key sk_live_xxxx
-          </code>
-          <button className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-sm font-medium transition-colors">
-            Copy
-          </button>
-        </div>
-      </div>
+      <Card className="bg-gradient-to-r from-card to-secondary border-border">
+        <CardContent className="pt-6">
+          <h2 className="text-lg font-semibold mb-1">Your MCP Command</h2>
+          <p className="text-sm text-muted-foreground mb-4">Paste this into OpenClaw to connect all your integrations</p>
+          <div className="flex items-center gap-3 rounded-lg bg-background/50 p-4">
+            <code className="flex-1 font-mono text-sm text-primary">
+              npx @clawlink/mcp --api-key sk_live_xxxx
+            </code>
+            <Button size="sm">
+              Copy
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
