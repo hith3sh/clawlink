@@ -7,7 +7,7 @@ This repo now includes a native OpenClaw plugin package at `packages/openclaw-cl
 Until a final registry name is locked, the plugin package is published as:
 
 ```bash
-@clawlink/openclaw-plugin
+@useclawlink/openclaw-plugin
 ```
 
 The OpenClaw plugin id remains:

@@ -5,7 +5,7 @@ Native OpenClaw plugin package for ClawLink hosted connection sessions.
 ## Install
 
 ```bash
-openclaw plugins install @clawlink/openclaw-plugin
+openclaw plugins install @useclawlink/openclaw-plugin
 openclaw gateway restart
 ```
 

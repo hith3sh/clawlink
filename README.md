@@ -22,7 +22,7 @@ ClawLink Edge (Cloudflare Workers — 300+ locations)
 ```
 
 1. **Sign up** at [claw-link.dev](https://claw-link.dev) and create a ClawLink API key
-2. **Install** the native OpenClaw plugin: `openclaw plugins install @clawlink/openclaw-plugin`
+2. **Install** the native OpenClaw plugin: `openclaw plugins install @useclawlink/openclaw-plugin`
 3. **In a private chat with OpenClaw**, send `/clawlink login cllk_live_...`
 4. Say `connect my slack`
 
@@ -110,7 +110,7 @@ npx wrangler dev
 
 The installable native OpenClaw plugin now lives in `packages/openclaw-clawlink`.
 
-- Package name: `@clawlink/openclaw-plugin`
+- Package name: `@useclawlink/openclaw-plugin`
 - Plugin id: `clawlink`
 - Local install/testing guide: `docs/openclaw-plugin-local-testing.md`
 

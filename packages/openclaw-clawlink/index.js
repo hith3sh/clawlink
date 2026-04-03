@@ -1,7 +1,7 @@
 import { Type } from "@sinclair/typebox";
 
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@clawlink/openclaw-plugin/0.1.0";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.0";
 
 function tokenizeArgs(value) {
   const input = typeof value === "string" ? value.trim() : "";

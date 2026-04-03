@@ -1,5 +1,5 @@
 {
-  "name": "@clawlink/openclaw-plugin",
+  "name": "@useclawlink/openclaw-plugin",
   "version": "0.1.0",
   "description": "Native OpenClaw plugin for ClawLink hosted connection sessions",
   "type": "module",
