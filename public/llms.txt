@@ -1,0 +1,86 @@
+# ClawLink - AI Agent Integration Platform
+
+One command to add 40+ integrations to OpenClaw. Connect Gmail, Slack, Notion, WordPress, Stripe, GitHub, and more — zero config.
+
+## Website: https://claw-link.dev
+
+### Main Pages
+- Home (/) - Landing page with features, integrations, pricing
+- Dashboard (/dashboard) - Manage your connected integrations
+- Sign In (/sign-in) - User authentication
+- Sign Up (/sign-up) - Create account
+- Docs (https://docs.claw-link.dev) - Full documentation
+
+## Documentation: https://docs.claw-link.dev
+
+### Getting Started
+- Introduction - What is ClawLink
+- Quick Start - Get started in 5 minutes
+- How It Works - Technical overview
+
+### Dashboard Guide
+- Dashboard Overview - Navigate your dashboard
+- Integrations - Connect and manage services
+- Request Logs - Monitor API usage
+- Settings - Configure your account
+
+### Integration Categories
+
+#### Communication
+- Gmail - Send, read, manage emails
+- Slack - Send messages, manage channels
+- Discord - Bot messaging, server management
+- Microsoft Teams - Team communication
+- Telegram - Bot API integration
+
+#### Productivity
+- Notion - Pages, databases, blocks
+- Google Docs - Document creation
+- Google Sheets - Spreadsheet data
+- Calendar - Event management
+
+#### Developer Tools
+- GitHub - Repos, issues, PRs
+- GitLab - DevOps platform
+- Jira - Project tracking
+
+#### Payments
+- Stripe - Payments, customers, invoices
+
+#### CRM & Sales
+- HubSpot - CRM, marketing automation
+- Salesforce - Enterprise CRM
+
+#### AI & ML
+- OpenAI - GPT models, embeddings
+- Anthropic - Claude models
+
+### Security
+- Encryption at rest (AES-256-GCM)
+- Credentials never in plaintext
+- Per-request decryption
+- Environment isolation
+
+### Troubleshooting
+- Common errors and solutions
+- API key setup
+- Integration connections
+
+## Key Features
+- One-command setup
+- 40+ pre-built integrations
+- Secure credential storage
+- Usage monitoring
+- Dashboard management
+- Team collaboration
+
+## Pricing
+- Free tier available
+- Usage-based billing
+- Per-request pricing
+
+## Contact
+- GitHub: https://github.com/hith3sh/clawlink
+- Support: Check docs or open GitHub issue
+
+Last updated: 2026-04-03
