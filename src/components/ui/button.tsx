@@ -58,10 +58,3 @@ function Button({
 }
 
 export { Button, buttonVariants }
-
-      {...props}
-    />
-  )
-}
-
-export { Button, buttonVariants }

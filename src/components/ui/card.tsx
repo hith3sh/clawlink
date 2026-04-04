@@ -101,11 +101,3 @@ export {
   CardDescription,
   CardContent,
 }
-,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardAction,
-  CardDescription,
-  CardContent,
-}
