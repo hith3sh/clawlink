@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { createElement } from "react";
-import { CheckCircle2, ChevronRight } from "lucide-react";
+import { CheckCircle2, Plus } from "lucide-react";
 
 import type { Integration } from "@/data/integrations";
 import { getIntegrationIcon } from "@/lib/integration-icons";
-import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface IntegrationCardProps {
@@ -19,58 +20,40 @@ export function IntegrationCard({
   className,
 }: IntegrationCardProps) {
   return (
-    <div
-      className={cn(
-        "group/dashboard-card flex h-full flex-col justify-between rounded-[24px] border border-white/8 bg-white/[0.025] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] transition-all duration-200 hover:border-white/14 hover:bg-white/[0.04] hover:shadow-[0_18px_48px_rgba(0,0,0,0.22)]",
-        className,
-      )}
-    >
-      <div>
-        <div className="flex items-start justify-between gap-4">
-          <div
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/6 bg-black/10"
-            style={{ boxShadow: `inset 0 0 0 1px ${integration.color}20` }}
-          >
-            {createElement(getIntegrationIcon(integration.icon), {
-              className: "h-5 w-5",
-              style: { color: integration.color },
-            })}
-          </div>
-          <span className="dashboard-pill px-2.5 py-1 text-[0.65rem] font-medium tracking-[0.18em] text-muted-foreground uppercase">
-            {integration.category}
-          </span>
+    <Card className={cn("transition-colors hover:bg-card", className)}>
+      <CardContent className="space-y-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg">
+          {createElement(getIntegrationIcon(integration.icon), {
+            className: "h-6 w-6",
+            style: { color: integration.color },
+          })}
         </div>
 
-        <div className="mt-5 space-y-2">
-          <h3 className="text-base font-medium text-foreground">{integration.name}</h3>
-          <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
-            {integration.description}
-          </p>
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="truncate text-sm font-medium text-foreground">
+            {integration.name}
+          </h3>
+          {isConnected ? (
+            <span className="inline-flex shrink-0 items-center gap-1.5 text-xs text-emerald-400">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Connected
+            </span>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href={`/dashboard/integrations/${integration.slug}`} />}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Connect
+            </Button>
+          )}
         </div>
-      </div>
 
-      <div className="mt-6 flex items-center justify-between gap-3">
-        <p className="text-xs text-muted-foreground">
-          {integration.dashboardStatus === "available"
-            ? "Hosted connect ready"
-            : "Flow reserved for a future release"}
+        <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+          {integration.description}
         </p>
-
-        {isConnected ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Connected
-          </span>
-        ) : (
-          <Link
-            href={`/dashboard/integrations/${integration.slug}`}
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-full px-3.5")}
-          >
-            Connect
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
-        )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

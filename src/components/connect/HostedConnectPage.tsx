@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FiAlertCircle, FiCheckCircle, FiCopy, FiExternalLink, FiLoader } from "react-icons/fi";
+import { AlertCircle, CheckCircle2, Copy, ExternalLink, Loader2 } from "lucide-react";
 
 import type { Integration } from "@/data/integrations";
 
@@ -35,6 +35,10 @@ export default function HostedConnectPage({ integration, session }: Props) {
   const [copied, setCopied] = useState(false);
 
   const expiresLabel = useMemo(() => formatTimestamp(session.expiresAt), [session.expiresAt]);
+  const oauthStartUrl =
+    integration.setupMode === "oauth" && integration.dashboardStatus === "available"
+      ? `/api/oauth/${integration.slug}/start?session=${encodeURIComponent(session.token)}`
+      : null;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -85,7 +89,7 @@ export default function HostedConnectPage({ integration, session }: Props) {
             onClick={handleCopy}
             className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
           >
-            <FiCopy className="h-4 w-4" />
+            <Copy className="h-4 w-4" />
             {copied ? "Copied link" : "Copy link"}
           </button>
         </div>
@@ -107,7 +111,7 @@ export default function HostedConnectPage({ integration, session }: Props) {
 
         {error ? (
           <div className="mb-6 flex items-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <FiAlertCircle className="h-4 w-4 shrink-0" />
+            <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
         ) : null}
@@ -115,7 +119,7 @@ export default function HostedConnectPage({ integration, session }: Props) {
         {status === "connected" ? (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
             <div className="flex items-center gap-2 text-emerald-700">
-              <FiCheckCircle className="h-5 w-5" />
+              <CheckCircle2 className="h-5 w-5" />
               <p className="font-medium">Connection completed</p>
             </div>
             <p className="mt-3 text-sm text-emerald-800">
@@ -126,6 +130,32 @@ export default function HostedConnectPage({ integration, session }: Props) {
         ) : status === "expired" ? (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
             This session has expired. Start a new connection from OpenClaw or the ClawLink dashboard.
+          </div>
+        ) : oauthStartUrl ? (
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+            <p className="font-medium text-gray-900">Continue with {integration.name}</p>
+            <p className="mt-2 text-sm text-gray-600">
+              You will be redirected to {integration.name} to authorize ClawLink, then returned here
+              automatically so OpenClaw can pick up the completed session.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <a
+                href={oauthStartUrl}
+                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+              >
+                Continue with {integration.name}
+                <ExternalLink className="h-4 w-4" />
+              </a>
+              <a
+                href="https://docs.claw-link.dev"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-900"
+              >
+                Open docs
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
           </div>
         ) : integration.setupMode === "oauth" || integration.credentialFields.length === 0 ? (
           <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
@@ -178,7 +208,7 @@ export default function HostedConnectPage({ integration, session }: Props) {
                 disabled={submitting}
                 className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {submitting ? <FiLoader className="h-4 w-4 animate-spin" /> : <FiCheckCircle className="h-4 w-4" />}
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                 Save and connect
               </button>
               <a
@@ -188,7 +218,7 @@ export default function HostedConnectPage({ integration, session }: Props) {
                 className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-900"
               >
                 Open docs
-                <FiExternalLink className="h-4 w-4" />
+                <ExternalLink className="h-4 w-4" />
               </a>
             </div>
           </form>

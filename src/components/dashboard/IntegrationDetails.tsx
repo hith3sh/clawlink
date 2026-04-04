@@ -3,18 +3,21 @@
 import Link from "next/link";
 import { createElement, useEffect, useMemo, useState } from "react";
 import {
-  FiAlertCircle,
-  FiArrowLeft,
-  FiCheckCircle,
-  FiCopy,
-  FiExternalLink,
-  FiKey,
-  FiLoader,
-  FiRefreshCw,
-  FiTrash2,
-} from "react-icons/fi";
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Copy,
+  ExternalLink,
+  Key,
+  Loader2,
+  RefreshCcw,
+  Trash2,
+} from "lucide-react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Integration } from "@/data/integrations";
 import { getIntegrationIcon } from "@/lib/integration-icons";
 
@@ -240,83 +243,78 @@ export default function IntegrationDetails({ integration }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-        <Link
-          href="/dashboard/integrations"
-          className="inline-flex items-center gap-2 transition-colors hover:text-foreground"
-        >
-          <FiArrowLeft className="h-4 w-4" />
-          Back to connections
-        </Link>
-      </div>
+      <Link
+        href="/dashboard/integrations"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to connections
+      </Link>
 
-      <section className="dashboard-panel p-6 lg:p-8">
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(260px,0.7fr)]">
+      <Card>
+        <CardContent className="space-y-4">
           <div className="flex items-start gap-4">
-            <div
-              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] border border-white/8 bg-black/10"
-              style={{ boxShadow: `inset 0 0 0 1px ${integration.color}25` }}
-            >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
               {createElement(getIntegrationIcon(integration.icon), {
-                className: "h-6 w-6",
+                className: "h-7 w-7",
                 style: { color: integration.color },
               })}
             </div>
-
-            <div className="space-y-4">
-              <div>
-                <div className="mb-3 flex flex-wrap gap-2">
-                  <span className="dashboard-pill px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em] text-muted-foreground">
-                    {integration.category}
-                  </span>
-                  <span className="dashboard-pill px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em] text-muted-foreground">
-                    {integration.runtimeStatus === "live" ? "Worker live" : "Worker planned"}
-                  </span>
-                  <span className="dashboard-pill px-3 py-1 text-[0.68rem] uppercase tracking-[0.18em] text-muted-foreground">
-                    {integration.dashboardStatus === "available" ? "Hosted connect ready" : "Dashboard flow pending"}
-                  </span>
-                </div>
-
-                <h2 className="text-3xl font-semibold tracking-tight text-foreground">
-                  {integration.name}
-                </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                  {integration.description}
-                </p>
-              </div>
-
-              <div className="dashboard-panel-soft p-4">
-                <p className="text-sm leading-6 text-muted-foreground">
-                  {integration.setupGuide}
-                </p>
-              </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-semibold text-foreground">{integration.name}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{integration.description}</p>
             </div>
           </div>
 
-          <div className="dashboard-panel-soft p-5">
+          <p className="text-sm text-muted-foreground">{integration.setupGuide}</p>
+        </CardContent>
+      </Card>
+
+      {error ? (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {success ? (
+        <Alert className="border-emerald-500/20 bg-emerald-500/10 text-emerald-100 [&>svg]:text-emerald-400">
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertDescription className="text-emerald-100">{success}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardContent className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium text-foreground">Connection status</h3>
+            </div>
+
             {loading ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <FiLoader className="h-4 w-4 animate-spin" />
-                Checking connection status
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-10 w-full" />
               </div>
             ) : connection ? (
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-emerald-300">
-                  <FiCheckCircle className="h-4 w-4" />
+                <div className="flex items-center gap-2 text-sm text-emerald-400">
+                  <CheckCircle2 className="h-4 w-4" />
                   Connected
                 </div>
 
-                <dl className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between gap-4">
+                <dl className="space-y-2 text-sm">
+                  <div className="flex justify-between">
                     <dt className="text-muted-foreground">Connected</dt>
                     <dd className="text-foreground">{formatTimestamp(connection.createdAt)}</dd>
                   </div>
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex justify-between">
                     <dt className="text-muted-foreground">Updated</dt>
                     <dd className="text-foreground">{formatTimestamp(connection.updatedAt) ?? "Never"}</dd>
                   </div>
                   {connection.expiresAt ? (
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex justify-between">
                       <dt className="text-muted-foreground">Expires</dt>
                       <dd className="text-foreground">{formatTimestamp(connection.expiresAt)}</dd>
                     </div>
@@ -325,190 +323,138 @@ export default function IntegrationDetails({ integration }: Props) {
 
                 <Button
                   variant="destructive"
-                  className="w-full justify-center"
+                  className="w-full"
                   onClick={handleDisconnect}
                   disabled={disconnecting}
                 >
-                  {disconnecting ? <FiLoader className="h-4 w-4 animate-spin" /> : <FiTrash2 className="h-4 w-4" />}
+                  {disconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                   Disconnect
                 </Button>
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                  <FiRefreshCw className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <RefreshCcw className="h-4 w-4" />
                   Not connected
                 </div>
-                <p className="text-sm leading-6 text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Start a hosted connection session and finish setup on any device.
                 </p>
               </div>
             )}
-          </div>
-        </div>
-      </section>
+          </CardContent>
+        </Card>
 
-      {error ? (
-        <div className="rounded-[22px] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-red-100">
-          <div className="flex items-center gap-2">
-            <FiAlertCircle className="h-4 w-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        </div>
-      ) : null}
-
-      {success ? (
-        <div className="rounded-[22px] border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-          <div className="flex items-center gap-2">
-            <FiCheckCircle className="h-4 w-4 shrink-0" />
-            <span>{success}</span>
-          </div>
-        </div>
-      ) : null}
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.75fr)]">
-        <section className="dashboard-panel p-6">
-          <div className="mb-5">
-            <p className="text-[0.68rem] uppercase tracking-[0.24em] text-muted-foreground">
-              Hosted setup
-            </p>
-            <h3 className="mt-2 text-xl font-semibold tracking-tight text-foreground">
-              Create a short-lived link for this connection.
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              The flow is designed for local installs and headless agents: OpenClaw can print the
-              link, the user opens it anywhere, and ClawLink polls for completion.
-            </p>
-          </div>
-
-          {integration.dashboardStatus !== "available" ? (
-            <div className="dashboard-panel-soft p-5 text-sm leading-6 text-muted-foreground">
-              <p className="font-medium text-foreground">Hosted setup is not implemented yet.</p>
-              <p className="mt-2">
-                The session model is ready, but {integration.name} still needs its provider-specific
-                connect flow.
+        <Card>
+          <CardContent className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium text-foreground">Hosted setup</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Create a short-lived link for this connection.
               </p>
             </div>
-          ) : (
-            <div className="space-y-5">
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={handleStartConnection} disabled={startingSession}>
-                  {startingSession ? <FiLoader className="h-4 w-4 animate-spin" /> : <FiKey className="h-4 w-4" />}
-                  {activeSession && activeSession.status === "awaiting_user_action"
-                    ? "Refresh session link"
-                    : "Create hosted setup link"}
-                </Button>
 
-                {connectUrl ? (
-                  <>
-                    <Button variant="outline" onClick={handleCopyLink}>
-                      <FiCopy className="h-4 w-4" />
-                      {copyingLink ? "Copied" : "Copy link"}
-                    </Button>
-                    <a
-                      href={connectUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={buttonVariants({ variant: "outline" })}
-                    >
-                      <FiExternalLink className="h-4 w-4" />
-                      Open hosted page
-                    </a>
-                  </>
-                ) : null}
-              </div>
-
-              {activeSession ? (
-                <div className="dashboard-panel-soft p-5">
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div>
-                      <p className="text-[0.68rem] uppercase tracking-[0.18em] text-muted-foreground">
-                        Session code
-                      </p>
-                      <p className="mt-2 font-mono text-xl font-semibold text-foreground">
-                        {activeSession.displayCode}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[0.68rem] uppercase tracking-[0.18em] text-muted-foreground">
-                        Status
-                      </p>
-                      <p className="mt-2 text-sm font-medium capitalize text-foreground">
-                        {activeSession.status.replaceAll("_", " ")}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[0.68rem] uppercase tracking-[0.18em] text-muted-foreground">
-                        Expires
-                      </p>
-                      <p className="mt-2 text-sm font-medium text-foreground">
-                        {formatTimestamp(activeSession.expiresAt)}
-                      </p>
-                    </div>
-                  </div>
+            {integration.dashboardStatus !== "available" ? (
+              <p className="text-sm text-muted-foreground">
+                Hosted setup is not implemented yet for {integration.name}.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={handleStartConnection} disabled={startingSession}>
+                    {startingSession ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
+                    {activeSession && activeSession.status === "awaiting_user_action"
+                      ? "Refresh session"
+                      : "Create setup link"}
+                  </Button>
 
                   {connectUrl ? (
-                    <div className="dashboard-code mt-5 p-4">
-                      <p className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
-                        <FiExternalLink className="h-4 w-4" />
-                        Open this URL on any device
-                      </p>
-                      <code className="block overflow-x-auto whitespace-nowrap text-xs text-muted-foreground">
-                        {connectUrl}
-                      </code>
-                    </div>
+                    <>
+                      <Button variant="outline" onClick={handleCopyLink}>
+                        <Copy className="h-4 w-4" />
+                        {copyingLink ? "Copied" : "Copy link"}
+                      </Button>
+                      <a
+                        href={connectUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={buttonVariants({ variant: "outline" })}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Open
+                      </a>
+                    </>
                   ) : null}
                 </div>
-              ) : null}
-            </div>
-          )}
-        </section>
 
-        <section className="space-y-6">
-          <div className="dashboard-panel p-6">
-            <p className="text-[0.68rem] uppercase tracking-[0.24em] text-muted-foreground">
-              Exposed tools
-            </p>
-            <h3 className="mt-2 text-xl font-semibold tracking-tight text-foreground">
-              Worker-facing commands for this integration
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {integration.runtimeStatus === "live"
-                ? "These tool names are already wired in the worker."
-                : "These tool names are placeholders for the worker implementation."}
-            </p>
+                {activeSession ? (
+                  <div className="space-y-3 rounded-lg border border-border p-4">
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Session code</p>
+                        <p className="mt-1 font-mono text-lg font-semibold text-foreground">
+                          {activeSession.displayCode}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Status</p>
+                        <p className="mt-1 text-sm capitalize text-foreground">
+                          {activeSession.status.replaceAll("_", " ")}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Expires</p>
+                        <p className="mt-1 text-sm text-foreground">
+                          {formatTimestamp(activeSession.expiresAt)}
+                        </p>
+                      </div>
+                    </div>
 
-            {integration.tools.length > 0 ? (
-              <div className="mt-5 space-y-3">
-                {integration.tools.map((tool) => (
-                  <div key={tool.name} className="dashboard-panel-soft p-4">
-                    <p className="font-mono text-sm font-medium text-foreground">
-                      {integration.slug}_{tool.name}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">{tool.description}</p>
+                    {connectUrl ? (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Setup URL</p>
+                        <code className="mt-1 block overflow-x-auto whitespace-nowrap text-xs text-muted-foreground">
+                          {connectUrl}
+                        </code>
+                      </div>
+                    ) : null}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="dashboard-panel-soft mt-5 p-4 text-sm text-muted-foreground">
-                No worker tools are defined for this integration yet.
+                ) : null}
               </div>
             )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardContent className="space-y-4">
+          <div>
+            <h3 className="text-sm font-medium text-foreground">Available tools</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {integration.runtimeStatus === "live"
+                ? "These tools are active in the worker."
+                : "These tools are planned for a future release."}
+            </p>
           </div>
 
-          <div className="dashboard-panel p-6">
-            <p className="text-[0.68rem] uppercase tracking-[0.24em] text-muted-foreground">
-              OpenClaw flow
-            </p>
-            <div className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
-              <p>1. OpenClaw asks ClawLink to start a connection session.</p>
-              <p>2. ClawLink returns a hosted URL plus a short-lived session code.</p>
-              <p>3. The user finishes auth on any device.</p>
-              <p>4. OpenClaw polls until the session changes to connected.</p>
+          {integration.tools.length > 0 ? (
+            <div className="space-y-2">
+              {integration.tools.map((tool) => (
+                <div key={tool.name} className="rounded-lg border border-border p-3">
+                  <p className="font-mono text-sm text-foreground">
+                    {integration.slug}_{tool.name}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">{tool.description}</p>
+                </div>
+              ))}
             </div>
-          </div>
-        </section>
-      </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No tools defined for this integration yet.
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

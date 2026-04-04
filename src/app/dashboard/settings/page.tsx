@@ -46,21 +46,8 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="dashboard-panel p-6">
-        <p className="text-[0.68rem] uppercase tracking-[0.24em] text-muted-foreground">
-          Workspace controls
-        </p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-          Keep keys, profile, billing, and security in one place.
-        </h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          The goal here is not novelty. It is a predictable control surface for the parts of the
-          product people revisit when something needs to be changed quickly.
-        </p>
-      </section>
-
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="flex flex-wrap gap-2 bg-transparent p-0 ring-0">
+        <TabsList>
           <TabsTrigger value="profile">
             <User className="h-4 w-4" />
             Profile
@@ -84,7 +71,7 @@ export default function SettingsPage() {
         </TabsList>
 
         <TabsContent value="profile">
-          <Card className="dashboard-panel border-white/8 bg-transparent">
+          <Card>
             <CardHeader>
               <CardTitle>Profile settings</CardTitle>
               <CardDescription>
@@ -92,21 +79,21 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="dashboard-panel-soft flex flex-col gap-5 p-5 sm:flex-row sm:items-center">
-                <Avatar className="h-20 w-20">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <Avatar className="h-16 w-16">
                   <AvatarImage src={userImage} alt={userName} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+                  <AvatarFallback className="text-lg">
                     {(user?.firstName?.[0] || userName?.[0] || "U").toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="space-y-2">
-                  <p className="text-base font-medium text-foreground">{userName || "ClawLink user"}</p>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">{userName || "ClawLink user"}</p>
                   <p className="text-sm text-muted-foreground">{userEmail}</p>
                   <Button variant="outline" size="sm">Change avatar</Button>
                 </div>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
                   <Input id="name" defaultValue={userName} />
@@ -128,7 +115,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="api">
-          <Card className="dashboard-panel border-white/8 bg-transparent">
+          <Card>
             <CardHeader>
               <CardTitle>API keys</CardTitle>
               <CardDescription>
@@ -149,15 +136,15 @@ export default function SettingsPage() {
                     {copied ? "Copied" : "Copy"}
                   </Button>
                 </div>
-                <Alert className="border-amber-400/15 bg-amber-400/10 text-amber-100">
-                  <AlertDescription className="text-sm text-amber-100/90">
+                <Alert variant="destructive">
+                  <AlertDescription>
                     This key grants full workspace access. Rotate it immediately if it leaves your
                     trusted environment.
                   </AlertDescription>
                 </Alert>
               </div>
 
-              <Separator className="bg-white/8" />
+              <Separator />
 
               <Button variant="outline">Create new key</Button>
             </CardContent>
@@ -165,7 +152,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-6">
-          <Card className="dashboard-panel border-white/8 bg-transparent">
+          <Card>
             <CardHeader>
               <CardTitle>Current plan</CardTitle>
               <CardDescription>Usage limits and upgrade controls for this workspace.</CardDescription>
@@ -173,7 +160,7 @@ export default function SettingsPage() {
             <CardContent>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="text-2xl font-semibold tracking-tight text-foreground">Free plan</p>
+                  <p className="text-lg font-semibold text-foreground">Free plan</p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     1,000 requests per month and 5 connected apps.
                   </p>
@@ -181,30 +168,28 @@ export default function SettingsPage() {
                 <Button>Upgrade plan</Button>
               </div>
 
-              <Separator className="my-6 bg-white/8" />
+              <Separator className="my-6" />
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Requests this month</span>
                   <span className="font-medium text-foreground">1,234 / 1,000</span>
                 </div>
-                <Progress value={100} className="h-2 bg-white/8" />
+                <Progress value={100} className="h-2" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="dashboard-panel border-white/8 bg-transparent">
+          <Card>
             <CardHeader>
               <CardTitle>Payment method</CardTitle>
               <CardDescription>Add billing details before moving beyond the free tier.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="dashboard-panel-soft flex items-center gap-4 p-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/[0.04]">
-                  <CreditCard className="h-5 w-5 text-muted-foreground" />
-                </div>
+              <div className="flex items-center gap-4">
+                <CreditCard className="h-5 w-5 text-muted-foreground" />
                 <div className="flex-1">
-                  <p className="font-medium text-foreground">No payment method</p>
+                  <p className="text-sm font-medium text-foreground">No payment method</p>
                   <p className="text-sm text-muted-foreground">Add a card before upgrading.</p>
                 </div>
                 <Button variant="outline" size="sm">Add card</Button>
@@ -214,7 +199,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="notifications">
-          <Card className="dashboard-panel border-white/8 bg-transparent">
+          <Card>
             <CardHeader>
               <CardTitle>Notification preferences</CardTitle>
               <CardDescription>
@@ -229,9 +214,9 @@ export default function SettingsPage() {
                 { label: "Usage alerts", desc: "Send a warning when usage passes 80%.", default: false },
                 { label: "Product updates", desc: "News about new features and integrations.", default: false },
               ].map((item) => (
-                <div key={item.label} className="dashboard-panel-soft flex items-center justify-between gap-4 p-4">
+                <div key={item.label} className="flex items-center justify-between gap-4 py-2">
                   <div>
-                    <p className="font-medium text-foreground">{item.label}</p>
+                    <p className="text-sm font-medium text-foreground">{item.label}</p>
                     <p className="text-sm text-muted-foreground">{item.desc}</p>
                   </div>
                   <Switch defaultChecked={item.default} />
@@ -242,7 +227,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="security">
-          <Card className="dashboard-panel border-white/8 bg-transparent">
+          <Card>
             <CardHeader>
               <CardTitle>Security</CardTitle>
               <CardDescription>Review the basic account protections tied to this workspace.</CardDescription>
@@ -253,9 +238,9 @@ export default function SettingsPage() {
                 { label: "Two-factor authentication", desc: "Not enabled", action: "Enable" },
                 { label: "Active sessions", desc: "1 active session", action: "View" },
               ].map((item) => (
-                <div key={item.label} className="dashboard-panel-soft flex items-center justify-between gap-4 p-4">
+                <div key={item.label} className="flex items-center justify-between gap-4 py-2">
                   <div>
-                    <p className="font-medium text-foreground">{item.label}</p>
+                    <p className="text-sm font-medium text-foreground">{item.label}</p>
                     <p className="text-sm text-muted-foreground">{item.desc}</p>
                   </div>
                   <Button variant="outline" size="sm">{item.action}</Button>

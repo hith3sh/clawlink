@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -107,10 +107,10 @@ body {
   --input: oklch(1 0 0 / 7%);
   --ring: oklch(0.71 0.1 246);
   --chart-1: oklch(0.71 0.1 246);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --chart-2: oklch(0.6 0.12 246);
+  --chart-3: oklch(0.5 0.14 246);
+  --chart-4: oklch(0.4 0.16 246);
+  --chart-5: oklch(0.3 0.18 246);
   --sidebar: oklch(0.13 0.007 255);
   --sidebar-foreground: oklch(0.95 0.004 255);
   --sidebar-primary: oklch(0.71 0.1 246);
@@ -133,59 +133,19 @@ body {
   }
 }
 
-.dashboard-shell {
-  position: relative;
-  min-height: 100%;
-  background:
-    radial-gradient(circle at top left, rgba(86, 124, 196, 0.14), transparent 28%),
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.04), transparent 18%),
-    linear-gradient(180deg, #080a0f 0%, #05070b 100%);
+
+/* Entrance animation utility */
+.animate-enter {
+  animation: animate-enter 0.5s ease-out both;
 }
 
-.dashboard-shell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.45;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 96px 96px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 72%);
-}
-
-.dashboard-content {
-  position: relative;
-  z-index: 1;
-}
-
-.dashboard-panel {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
-  background: linear-gradient(180deg, rgba(20, 23, 31, 0.9), rgba(12, 14, 19, 0.88));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    0 24px 80px rgba(0, 0, 0, 0.36);
-  backdrop-filter: blur(18px);
-}
-
-.dashboard-panel-soft {
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.035);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(16px);
-}
-
-.dashboard-pill {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.dashboard-code {
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.035);
+@keyframes animate-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

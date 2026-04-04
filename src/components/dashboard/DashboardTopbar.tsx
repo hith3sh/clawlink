@@ -7,43 +7,29 @@ import { BookOpen, MessageSquareText } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-const TITLES = [
-  { match: (pathname: string) => pathname === "/dashboard", title: "Home", eyebrow: "Workspace" },
-  { match: (pathname: string) => pathname === "/dashboard/integrations", title: "Connections", eyebrow: "Workspace" },
-  { match: (pathname: string) => pathname.startsWith("/dashboard/integrations/"), title: "Connection Setup", eyebrow: "Workspace" },
-  { match: (pathname: string) => pathname === "/dashboard/logs", title: "Usage", eyebrow: "Workspace" },
-  { match: (pathname: string) => pathname === "/dashboard/settings", title: "Settings", eyebrow: "Workspace" },
+const TITLES: Array<{ match: (p: string) => boolean; title: string }> = [
+  { match: (p) => p === "/dashboard", title: "Home" },
+  { match: (p) => p === "/dashboard/integrations", title: "Connections" },
+  { match: (p) => p.startsWith("/dashboard/integrations/"), title: "Connection Setup" },
+  { match: (p) => p === "/dashboard/logs", title: "Usage" },
+  { match: (p) => p === "/dashboard/settings", title: "Settings" },
 ];
-
-function resolveTitle(pathname: string) {
-  return TITLES.find((entry) => entry.match(pathname)) ?? {
-    title: "Dashboard",
-    eyebrow: "Workspace",
-  };
-}
 
 export function DashboardTopbar() {
   const pathname = usePathname();
-  const { title, eyebrow } = resolveTitle(pathname);
+  const title = TITLES.find((entry) => entry.match(pathname))?.title ?? "Dashboard";
 
   return (
-    <div className="dashboard-content sticky top-0 z-20 border-b border-white/6 bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 lg:px-8">
+    <div className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur-sm">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
         <div className="flex items-center gap-3">
           <div className="md:hidden">
-            <SidebarTrigger className="rounded-xl border border-white/8 bg-white/[0.03]" />
+            <SidebarTrigger />
           </div>
-          <div>
-            <p className="text-[0.65rem] uppercase tracking-[0.26em] text-muted-foreground">
-              {eyebrow}
-            </p>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              {title}
-            </h1>
-          </div>
+          <h1 className="text-sm font-medium text-foreground">{title}</h1>
         </div>
 
-        <div className="hidden items-center gap-2 sm:flex">
+        <div className="hidden items-center gap-1 sm:flex">
           <Link
             href="mailto:hello@claw-link.dev"
             className={buttonVariants({ variant: "ghost", size: "sm" })}

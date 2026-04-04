@@ -9,14 +9,12 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="dark">
-      <SidebarProvider className="bg-[#04060a]">
+      <SidebarProvider>
         <AppSidebar />
-        <SidebarInset className="border border-white/6 bg-transparent shadow-none">
-          <div className="dashboard-shell">
-            <DashboardTopbar />
-            <div className="dashboard-content mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
-              {children}
-            </div>
+        <SidebarInset>
+          <DashboardTopbar />
+          <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
+            {children}
           </div>
         </SidebarInset>
       </SidebarProvider>
