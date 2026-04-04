@@ -30,12 +30,12 @@ export default function IntegrationGrid() {
   }, [search, isSearching]);
 
   return (
-    <div className="w-full space-y-6">
-      <div className="text-center mb-2">
-        <h2 className="text-3xl font-bold text-gray-900">
+    <div className="w-full space-y-8">
+      <div className="text-center mb-4">
+        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
           40+ integrations ready to go
         </h2>
-        <p className="text-gray-500 mt-2">
+        <p className="text-gray-500 mt-3 text-lg">
           Search for any app — if we support it, it shows up
         </p>
       </div>
@@ -43,21 +43,21 @@ export default function IntegrationGrid() {
       <SearchBar value={search} onChange={setSearch} resultCount={filtered.length} />
 
       {/* Integration cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {filtered.map((integration) => {
           const Icon = getIntegrationIcon(integration.icon);
           return (
             <div
               key={integration.slug}
-              className="group rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-gray-300 hover:shadow-md"
+              className="group rounded-2xl border border-gray-100 bg-white/80 p-4 sm:p-5 transition-all hover:border-amber-200/60 hover:shadow-lg hover:shadow-amber-500/5 hover:-translate-y-0.5"
             >
               <div className="flex items-center gap-3">
-                <Icon className="w-6 h-6 shrink-0" style={{ color: integration.color }} />
+                <Icon className="w-7 h-7 shrink-0" style={{ color: integration.color }} />
                 <div className="min-w-0">
-                  <h4 className="font-medium text-gray-900 text-sm truncate">
+                  <h4 className="font-semibold text-gray-900 text-sm truncate">
                     {integration.name}
                   </h4>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p className="text-xs text-gray-400 truncate mt-0.5">
                     {integration.description}
                   </p>
                 </div>
@@ -77,7 +77,7 @@ export default function IntegrationGrid() {
               if (el) { el.focus(); el.value = " "; }
               setSearch(" ");
             }}
-            className="text-red-500 hover:text-red-600 underline cursor-pointer"
+            className="text-amber-600 hover:text-amber-700 underline cursor-pointer font-medium"
           >
             View all {integrations.length}
           </button>

@@ -114,13 +114,13 @@ export function AppSidebar() {
       <SidebarFooter className="px-3 pb-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
+            <button
               onClick={() => signOut({ redirectUrl: "/" })}
-              className="h-9 rounded-lg px-3 text-sm"
+              className="flex h-9 w-full items-center gap-2 rounded-lg px-3 text-sm text-sidebar-foreground hover:bg-sidebar-accent"
             >
               <LogOut className="h-4 w-4" />
               <span>Sign Out</span>
-            </SidebarMenuButton>
+            </button>
           </SidebarMenuItem>
           {userEmail ? (
             <SidebarMenuItem>

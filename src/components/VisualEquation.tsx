@@ -18,7 +18,7 @@ export default function VisualEquation() {
   return (
     <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
       {/* OpenClaw */}
-      <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+      <div className="flex items-center gap-2.5 rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-3.5 shadow-sm">
         <Image src="/openclaw-lobster.svg" alt="OpenClaw" width={24} height={24} />
         <span className="font-semibold text-gray-900">OpenClaw</span>
       </div>
@@ -26,8 +26,8 @@ export default function VisualEquation() {
       <span className="text-2xl font-light text-gray-300">+</span>
 
       {/* ClawLink */}
-      <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
-        <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">CL</span>
+      <div className="flex items-center gap-2.5 rounded-2xl border border-amber-200/60 bg-amber-50/50 backdrop-blur-sm px-5 py-3.5 shadow-sm">
+        <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">CL</span>
         <span className="font-semibold text-gray-900">ClawLink</span>
       </div>
 
@@ -38,12 +38,12 @@ export default function VisualEquation() {
         {icons.map(({ Icon, color }, i) => (
           <div
             key={i}
-            className="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-100 bg-white shadow-sm"
+            className="flex items-center justify-center w-11 h-11 rounded-xl border border-gray-100 bg-white shadow-sm"
           >
             <Icon className="w-5 h-5" style={{ color }} />
           </div>
         ))}
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-100 bg-gray-50 text-xs font-medium text-gray-400">
+        <div className="flex items-center justify-center w-11 h-11 rounded-xl border border-gray-100 bg-gray-50 text-xs font-semibold text-gray-500">
           +40
         </div>
       </div>

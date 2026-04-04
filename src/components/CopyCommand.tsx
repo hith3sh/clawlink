@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { OPENCLAW_PLUGIN_INSTALL_COMMAND } from "@/lib/openclaw-plugin";
+import { Check, Copy } from "lucide-react";
 
 export default function CopyCommand() {
   const [copied, setCopied] = useState(false);
@@ -15,12 +16,22 @@ export default function CopyCommand() {
   return (
     <button
       onClick={copy}
-      className="group flex flex-1 items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 font-mono text-sm transition-all hover:border-gray-300 hover:bg-gray-100 cursor-pointer"
+      className="group flex flex-1 items-center gap-3 rounded-xl border border-gray-200/80 bg-white/80 backdrop-blur-sm px-5 py-3.5 font-mono text-sm transition-all hover:border-amber-300/50 hover:bg-amber-50/50 hover:shadow-md hover:shadow-amber-500/10 cursor-pointer"
     >
-      <span className="text-gray-300 select-none">$</span>
-      <span className="text-gray-900">{OPENCLAW_PLUGIN_INSTALL_COMMAND}</span>
-      <span className="ml-auto text-xs text-gray-400 group-hover:text-gray-600 transition-colors">
-        {copied ? "Copied!" : "Copy"}
+      <span className="text-amber-500/60 select-none">$</span>
+      <span className="text-gray-700">{OPENCLAW_PLUGIN_INSTALL_COMMAND}</span>
+      <span className="ml-auto flex items-center gap-1.5 text-xs text-gray-400 group-hover:text-amber-600 transition-colors">
+        {copied ? (
+          <>
+            <Check className="w-3.5 h-3.5" />
+            <span className="font-medium">Copied!</span>
+          </>
+        ) : (
+          <>
+            <Copy className="w-3.5 h-3.5" />
+            <span>Copy</span>
+          </>
+        )}
       </span>
     </button>
   );

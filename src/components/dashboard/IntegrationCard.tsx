@@ -22,7 +22,13 @@ export function IntegrationCard({
   return (
     <Card className={cn("transition-colors hover:bg-card", className)}>
       <CardContent className="space-y-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg">
+        <div
+          className="flex h-10 w-10 items-center justify-center rounded-lg"
+          style={{
+            backgroundColor: `${integration.color}15`,
+            boxShadow: `inset 0 0 0 1px ${integration.color}30`,
+          }}
+        >
           {createElement(getIntegrationIcon(integration.icon), {
             className: "h-6 w-6",
             style: { color: integration.color },

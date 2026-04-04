@@ -34,22 +34,22 @@ export default function FAQ() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="text-3xl font-bold text-center text-gray-900 mb-3">
+      <h2 className="text-3xl font-bold text-center text-gray-900 mb-3 tracking-tight">
         Frequently asked questions
       </h2>
-      <p className="text-center text-gray-500 mb-10">
+      <p className="text-center text-gray-500 mb-12 text-lg">
         Everything you need to know about ClawLink
       </p>
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-gray-100 rounded-2xl border border-gray-100 bg-white/50 backdrop-blur-sm">
         {faqs.map((faq, i) => (
-          <div key={i}>
+          <div key={i} className="first:rounded-t-2xl last:rounded-b-2xl">
             <button
               onClick={() => setOpenIndex(openIndex === i ? null : i)}
-              className="w-full flex items-center justify-between py-5 text-left cursor-pointer"
+              className="w-full flex items-center justify-between px-6 py-5 text-left cursor-pointer hover:bg-gray-50/50 transition-colors"
             >
               <span className="font-medium text-gray-900">{faq.q}</span>
               <svg
-                className={`w-5 h-5 text-gray-400 shrink-0 ml-4 transition-transform ${
+                className={`w-5 h-5 text-gray-400 shrink-0 ml-4 transition-transform duration-200 ${
                   openIndex === i ? "rotate-180" : ""
                 }`}
                 fill="none"
@@ -60,7 +60,7 @@ export default function FAQ() {
               </svg>
             </button>
             {openIndex === i && (
-              <p className="pb-5 text-gray-500 leading-relaxed">{faq.a}</p>
+              <p className="pb-5 px-6 text-gray-500 leading-relaxed">{faq.a}</p>
             )}
           </div>
         ))}

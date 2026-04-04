@@ -22,25 +22,25 @@ const testimonials = [
 export default function Testimonials() {
   return (
     <div>
-      <h2 className="text-3xl font-bold text-center text-gray-900 mb-3">
+      <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 mb-3 tracking-tight">
         People love it
       </h2>
-      <p className="text-center text-gray-500 mb-10">
+      <p className="text-center text-gray-500 mb-12 text-lg">
         Join hundreds of OpenClaw users who stopped fighting APIs
       </p>
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-5 sm:gap-6">
         {testimonials.map((t, i) => (
           <div
             key={i}
-            className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+            className="rounded-2xl border border-gray-100 bg-white/80 backdrop-blur-sm p-6 sm:p-7 shadow-sm hover:shadow-md hover:border-amber-100/50 transition-all"
           >
             <p className="text-gray-600 leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
-            <div className="mt-5 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-orange-400 flex items-center justify-center text-white text-sm font-bold">
+            <div className="mt-6 flex items-center gap-3">
+              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center text-white text-sm font-bold">
                 {t.avatar}
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">{t.name}</p>
+                <p className="text-sm font-semibold text-gray-900">{t.name}</p>
                 <p className="text-xs text-gray-400">{t.role}</p>
               </div>
             </div>

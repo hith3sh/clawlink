@@ -10,7 +10,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-[0_12px_32px_rgba(66,99,166,0.22)] [a]:hover:bg-primary/90",
+        default: "bg-primary text-primary-foreground",
         outline:
           "border-border bg-background/70 hover:bg-muted/90 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-white/8 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]",
         secondary:
@@ -52,6 +52,13 @@ function Button({
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+}
+
+export { Button, buttonVariants }
+
       {...props}
     />
   )
