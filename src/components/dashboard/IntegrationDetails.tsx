@@ -289,9 +289,9 @@ export default function IntegrationDetails({ integration }: Props) {
       ) : null}
 
       {success ? (
-        <Alert className="border-emerald-500/20 bg-emerald-500/10 text-emerald-100 [&>svg]:text-emerald-400">
+        <Alert className="border-emerald-500/20 bg-emerald-500/10 text-emerald-800 dark:text-emerald-100 [&>svg]:text-emerald-600 dark:[&>svg]:text-emerald-400">
           <CheckCircle2 className="h-4 w-4" />
-          <AlertDescription className="text-emerald-100">{success}</AlertDescription>
+          <AlertDescription className="text-emerald-800 dark:text-emerald-100">{success}</AlertDescription>
         </Alert>
       ) : null}
 

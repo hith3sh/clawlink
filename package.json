@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "build:worker": "echo 'Worker build is handled by Wrangler during deploy'",
     "deploy:worker": "wrangler deploy --config worker/wrangler.worker.toml",

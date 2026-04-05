@@ -320,8 +320,8 @@ export default function SettingsPage() {
               ) : null}
 
               {apiKeySuccess ? (
-                <Alert className="border-emerald-500/20 bg-emerald-500/10 text-emerald-100">
-                  <AlertDescription className="text-emerald-100">{apiKeySuccess}</AlertDescription>
+                <Alert className="border-emerald-500/20 bg-emerald-500/10 text-emerald-800 dark:text-emerald-100">
+                  <AlertDescription className="text-emerald-800 dark:text-emerald-100">{apiKeySuccess}</AlertDescription>
                 </Alert>
               ) : null}
 

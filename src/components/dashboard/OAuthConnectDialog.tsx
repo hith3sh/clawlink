@@ -1,6 +1,6 @@
 "use client";
 
-import { createElement, useEffect, useMemo, useState } from "react";
+import { createElement, type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -45,6 +45,9 @@ interface SessionRecord {
 interface Props {
   integration: Integration;
   onConnected?: () => void;
+  triggerClassName?: string;
+  triggerLabel?: string;
+  triggerIcon?: ReactNode;
 }
 
 function formatTimestamp(value: string | null): string | null {
@@ -75,7 +78,13 @@ function buildPopupFeatures() {
   ].join(",");
 }
 
-export function OAuthConnectDialog({ integration, onConnected }: Props) {
+export function OAuthConnectDialog({
+  integration,
+  onConnected,
+  triggerClassName,
+  triggerLabel = "Connect",
+  triggerIcon,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -263,9 +272,9 @@ export function OAuthConnectDialog({ integration, onConnected }: Props) {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <ExternalLink className="h-3.5 w-3.5" />
-        Connect
+      <Button variant="outline" size="sm" className={triggerClassName} onClick={() => setOpen(true)}>
+        {triggerIcon ?? <ExternalLink className="h-3.5 w-3.5" />}
+        {triggerLabel}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -304,9 +313,9 @@ export function OAuthConnectDialog({ integration, onConnected }: Props) {
             ) : null}
 
             {success ? (
-              <Alert className="border-emerald-500/20 bg-emerald-500/10 text-emerald-100 [&>svg]:text-emerald-400">
+              <Alert className="border-emerald-500/20 bg-emerald-500/10 text-emerald-800 dark:text-emerald-100 [&>svg]:text-emerald-600 dark:[&>svg]:text-emerald-400">
                 <CheckCircle2 className="h-4 w-4" />
-                <AlertDescription className="text-emerald-100">{success}</AlertDescription>
+                <AlertDescription className="text-emerald-800 dark:text-emerald-100">{success}</AlertDescription>
               </Alert>
             ) : null}
 
