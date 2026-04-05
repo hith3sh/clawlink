@@ -14,12 +14,15 @@ CREATE TABLE IF NOT EXISTS user_integrations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id TEXT NOT NULL,
   integration TEXT NOT NULL,
+  connection_label TEXT,
+  account_label TEXT,
+  external_account_id TEXT,
   credentials_encrypted TEXT NOT NULL,
+  is_default INTEGER NOT NULL DEFAULT 0,
   expires_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  UNIQUE(user_id, integration)
+  FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 -- Request logs
@@ -42,6 +45,13 @@ CREATE INDEX IF NOT EXISTS idx_request_logs_user_id ON request_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_request_logs_created_at ON request_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_request_logs_integration ON request_logs(integration);
 CREATE INDEX IF NOT EXISTS idx_user_integrations_user_id ON user_integrations(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_integrations_lookup ON user_integrations(user_id, integration);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_integrations_default_unique
+  ON user_integrations(user_id, integration)
+  WHERE is_default = 1;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_integrations_external_account_unique
+  ON user_integrations(user_id, integration, external_account_id)
+  WHERE external_account_id IS NOT NULL;
 
 -- API keys for developers
 CREATE TABLE IF NOT EXISTS api_keys (

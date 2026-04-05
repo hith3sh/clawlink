@@ -5,9 +5,10 @@ import { getLatestActiveConnectionSessionForUser } from "@/lib/server/connection
 import {
   deleteIntegrationConnection,
   getAuthenticatedIdentity,
-  getIntegrationConnection,
   getDatabase,
+  getIntegrationConnection,
   getUserForCurrentIdentity,
+  listIntegrationConnectionsForSlug,
   saveIntegrationConnection,
 } from "@/lib/server/integration-store";
 
@@ -43,16 +44,22 @@ export async function GET(
   }
 
   try {
-    const connection = await getIntegrationConnection(slug);
-    const user = await getUserForCurrentIdentity();
+    const [connection, connections, user] = await Promise.all([
+      getIntegrationConnection(slug),
+      listIntegrationConnectionsForSlug(slug),
+      getUserForCurrentIdentity(),
+    ]);
+
     const activeSession = user
       ? await getLatestActiveConnectionSessionForUser(user, slug)
       : null;
 
     return NextResponse.json({
       integration: slug,
-      connected: Boolean(connection),
+      connected: connections.length > 0,
       connection,
+      connections,
+      connectionCount: connections.length,
       activeSession,
     });
   } catch (error) {
@@ -114,7 +121,10 @@ export async function POST(
       ]),
     );
 
-    const connection = await saveIntegrationConnection(slug, credentials);
+    const connection = await saveIntegrationConnection(slug, credentials, {
+      mode: "upsert_default",
+      setAsDefault: true,
+    });
 
     return NextResponse.json({
       integration: slug,
@@ -134,7 +144,7 @@ export async function POST(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   context: { params: Promise<{ slug: string }> },
 ) {
   const identity = await getAuthenticatedIdentity();
@@ -154,8 +164,25 @@ export async function DELETE(
     return NextResponse.json({ error: "Integration not found" }, { status: 404 });
   }
 
+  const rawConnectionId = request.nextUrl.searchParams.get("connectionId");
+  const parsedConnectionId = rawConnectionId ? Number.parseInt(rawConnectionId, 10) : NaN;
+  const connectionId = Number.isFinite(parsedConnectionId) ? parsedConnectionId : undefined;
+
   try {
-    await deleteIntegrationConnection(slug);
+    if (!connectionId) {
+      const connections = await listIntegrationConnectionsForSlug(slug);
+
+      if (connections.length > 1) {
+        return NextResponse.json(
+          {
+            error: `Multiple ${integration.name} connections exist. Remove a specific connection from the Connections page.`,
+          },
+          { status: 409 },
+        );
+      }
+    }
+
+    await deleteIntegrationConnection(slug, connectionId);
 
     return NextResponse.json({
       integration: slug,

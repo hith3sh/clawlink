@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getIntegrationBySlug } from "@/data/integrations";
+import { getBillingAccessDecisionForUser } from "@/lib/server/billing";
 import { createConnectionSession, getLatestActiveConnectionSessionForUser } from "@/lib/server/connection-sessions";
+import { getDatabase } from "@/lib/server/integration-store";
 import { resolveRequestActor } from "@/lib/server/request-auth";
 
 export const runtime = "edge";
@@ -35,6 +37,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const db = getDatabase();
+
+    if (!db) {
+      return NextResponse.json({ error: "DB binding is not configured" }, { status: 500 });
+    }
+
+    const billingAccess = await getBillingAccessDecisionForUser(db, actor.user, integration.slug);
+
+    if (!billingAccess.allowed) {
+      return NextResponse.json(
+        {
+          error: billingAccess.reason,
+          upgradeUrl: `${request.nextUrl.origin}/dashboard/settings?tab=billing`,
+        },
+        { status: 402 },
+      );
+    }
+
     const existingSession = await getLatestActiveConnectionSessionForUser(actor.user, integration.slug);
     const session = existingSession ?? (await createConnectionSession(actor.user, integration.slug));
     const origin = request.nextUrl.origin;
@@ -44,6 +64,7 @@ export async function POST(request: NextRequest) {
       sessionToken: session.token,
       displayCode: session.displayCode,
       integration: session.integration,
+      connectionId: session.connectionId,
       status: session.status,
       expiresAt: session.expiresAt,
       pollIntervalMs: 3000,

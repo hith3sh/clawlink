@@ -44,6 +44,77 @@ Agent guidance:
 - When in doubt, choose the flow that is easier for non-technical users to understand.
 - Keep developer-oriented escape hatches out of primary UX unless the user explicitly asks for them.
 
+# Deployment Architecture
+
+ClawLink currently runs as two separate Cloudflare projects. Do not treat them as one deploy target.
+
+1. Frontend / hosted app / Next routes
+   - Cloudflare Pages project: `clawlink-web`
+   - Config file: `wrangler.toml`
+   - Current build output: `.vercel/output/static`
+   - This project serves the Next.js app, dashboard, hosted connect flow, and Next API routes under `src/app/api/**`.
+
+2. Worker / tool execution backend
+   - Cloudflare Worker project: `clawlink`
+   - Config file: `worker/wrangler.worker.toml`
+   - This project runs the MCP/tool execution layer in `worker/**`.
+
+Shared infrastructure:
+
+- Both projects use the same D1 database: `clawlink`
+- Both projects use the same KV namespace: `CREDENTIALS`
+- The frontend points to the worker/API base via `NEXT_PUBLIC_API_URL`, currently `https://api.claw-link.dev`
+
+Important deployment rules:
+
+- A frontend/Next API change is not deployed by pushing only the worker.
+- A worker change is not deployed by pushing only the Pages app.
+- If a change touches schema, credential lookup, OAuth contracts, or connection lifecycle behavior, expect to update database migrations and often deploy both projects.
+- Do not assume a successful Worker deploy means dashboard routes or hosted API routes are live.
+- The current frontend deployment path is Pages-based. Be careful with stale `.vercel/output` artifacts when deploying.
+
+# Integration Data Model
+
+The old single-row-per-provider assumption is no longer valid. The integration model now supports multiple connections per provider per user.
+
+Rules:
+
+- `user_integrations.id` is the stable connection id.
+- A user can have multiple rows for the same integration slug.
+- `is_default` determines the default connection for a provider when a worker call does not specify a `connectionId`.
+- `external_account_id` is used to match/reuse the same upstream account on reconnect.
+- `connection_sessions.connection_id` links an OAuth/manual setup session to the exact connection row being created or updated.
+- Row deletion should happen by connection id, not by integration slug.
+- Do not reintroduce logic that assumes “one integration slug = one record”.
+
+Current API expectation:
+
+- Row-level delete lives at `DELETE /api/connections/[id]`
+- Slug-scoped routes can still exist for provider-level actions, but not for deleting the only assumed row
+
+# Integration MVP Testing
+
+For any integration MVP, validate in two layers:
+
+1. Hosted connect / OAuth / credential capture flow
+   - Confirm the user can complete the dashboard connection flow end to end.
+   - For OAuth providers, verify login, consent, callback, session completion, and stored credentials.
+   - For manual providers, verify credential submission, validation, and stored credentials.
+   - Typical check: start from the integration page, complete the connection flow, and verify the connection session ends in `connected`.
+
+2. Worker tool execution
+   - After connection succeeds, confirm the stored credentials work in the worker.
+   - Preferred test order:
+     1. read/list/get actions
+     2. then write/create/send/update actions
+   - For MVP verification, prioritize simple low-risk reads first, then higher-impact writes.
+
+Troubleshooting guidance:
+
+- If the connect flow fails, check redirect URIs, provider app registration/config, callback handling, and credential storage first.
+- If connection succeeds but tools fail, check provider permissions/scopes, token handling/refresh, and worker request formatting.
+- Separate “connection flow works” from “tool execution works”; both layers must pass before treating an integration as working.
+
 # OpenClaw Plugin Release Workflow
 
 This repo contains a publish workflow for the npm package `@useclawlink/openclaw-plugin` at:

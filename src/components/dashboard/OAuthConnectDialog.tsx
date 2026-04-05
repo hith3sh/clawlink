@@ -22,7 +22,11 @@ import { getIntegrationIcon } from "@/lib/integration-icons";
 import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
 
 interface ConnectionRecord {
+  id: number;
   integration: string;
+  connectionLabel?: string | null;
+  accountLabel?: string | null;
+  isDefault?: boolean;
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string | null;
@@ -33,6 +37,7 @@ interface SessionRecord {
   token: string;
   displayCode: string;
   integration: string;
+  connectionId?: number | null;
   status: "awaiting_user_action" | "connected" | "failed" | "expired";
   flowType: string;
   errorMessage: string | null;
@@ -90,6 +95,7 @@ export function OAuthConnectDialog({
   const [starting, setStarting] = useState(false);
   const [activeSession, setActiveSession] = useState<SessionRecord | null>(null);
   const [connection, setConnection] = useState<ConnectionRecord | null>(null);
+  const [connectionCount, setConnectionCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -119,6 +125,8 @@ export function OAuthConnectDialog({
         const data = (await response.json()) as {
           error?: string;
           connection?: ConnectionRecord | null;
+          connections?: ConnectionRecord[];
+          connectionCount?: number;
           activeSession?: SessionRecord | null;
         };
 
@@ -131,12 +139,8 @@ export function OAuthConnectDialog({
         }
 
         setConnection(data.connection ?? null);
+        setConnectionCount(data.connectionCount ?? data.connections?.length ?? (data.connection ? 1 : 0));
         setActiveSession(data.activeSession ?? null);
-
-        if (data.connection) {
-          setSuccess(`${integration.name} is already connected.`);
-          onConnected?.();
-        }
       } catch (requestError) {
         if (active) {
           setError(requestError instanceof Error ? requestError.message : "Failed to load integration");
@@ -187,6 +191,7 @@ export function OAuthConnectDialog({
       if (data.session.status === "connected") {
         setSuccess(`${integration.name} is connected.`);
         setError(null);
+        setConnectionCount((current) => Math.max(1, current + 1));
         onConnected?.();
       }
 
@@ -324,19 +329,21 @@ export function OAuthConnectDialog({
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Loading {integration.name} connection state...
               </div>
-            ) : connection ? (
-              <div className="space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
-                <div className="flex items-center gap-2 text-sm font-medium text-emerald-300">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Connected
-                </div>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <p>Connected {formatTimestamp(connection.createdAt) ?? "just now"}</p>
-                  <p>Updated {formatTimestamp(connection.updatedAt) ?? "never"}</p>
-                </div>
-              </div>
             ) : (
               <>
+                {connectionCount > 0 ? (
+                  <div className="space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+                    <div className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                      <CheckCircle2 className="h-4 w-4" />
+                      {connectionCount === 1 ? "1 active connection" : `${connectionCount} active connections`}
+                    </div>
+                    <div className="space-y-1 text-sm text-muted-foreground">
+                      {connection?.accountLabel ? <p>Current default: {connection.accountLabel}</p> : null}
+                      <p>Adding another connection will make the new one the default for {integration.name}.</p>
+                    </div>
+                  </div>
+                ) : null}
+
                 <div className="rounded-2xl border border-border/60 bg-muted/10 p-5">
                   <p className="text-sm font-medium text-foreground">
                     Continue with {integration.name}

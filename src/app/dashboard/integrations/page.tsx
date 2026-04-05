@@ -1,15 +1,14 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { createElement, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Search } from "lucide-react";
+import { Check, Copy, Loader2, Plus, Search, Trash2 } from "lucide-react";
 
-import { categories, integrations } from "@/data/integrations";
-import { IntegrationCard } from "@/components/dashboard/IntegrationCard";
+import { OAuthConnectDialog } from "@/components/dashboard/OAuthConnectDialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -17,182 +16,616 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+import { integrations, type Integration } from "@/data/integrations";
+import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
+import { getIntegrationIcon } from "@/lib/integration-icons";
 
-type SortMode = "popular" | "alphabetical" | "connected";
+interface ConnectionRecord {
+  id: number;
+  integration: string;
+  connectionLabel: string | null;
+  accountLabel: string | null;
+  isDefault: boolean;
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
 
-const FEATURED_SLUGS = [
-  "gmail",
-  "outlook",
-  "slack",
-  "google-calendar",
-  "google-drive",
-  "notion",
-  "github",
-  "hubspot",
-  "stripe",
-];
+type ConnectionStatus = "active" | "expiring" | "expired";
+
+interface ConnectionRow {
+  connection: ConnectionRecord;
+  integration: Integration;
+  accountLabel: string;
+  methodLabel: string;
+  status: ConnectionStatus;
+  connectionCode: string;
+}
+
+function formatConnectionTimestamp(value: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function getConnectionStatus(expiresAt: string | null): ConnectionStatus {
+  if (!expiresAt) {
+    return "active";
+  }
+
+  const expiresAtTime = new Date(expiresAt).getTime();
+
+  if (Number.isNaN(expiresAtTime)) {
+    return "active";
+  }
+
+  if (expiresAtTime <= Date.now()) {
+    return "expired";
+  }
+
+  const msUntilExpiry = expiresAtTime - Date.now();
+  const daysUntilExpiry = msUntilExpiry / (1000 * 60 * 60 * 24);
+
+  return daysUntilExpiry <= 7 ? "expiring" : "active";
+}
+
+function getMethodLabel(integration: Integration): string {
+  if (integration.setupMode === "oauth") {
+    return "OAuth 2";
+  }
+
+  if (integration.credentialFields.some((field) => field.label.toLowerCase().includes("api key"))) {
+    return "API Key";
+  }
+
+  if (integration.credentialFields.length > 1) {
+    return "Basic";
+  }
+
+  if (integration.credentialFields.some((field) => field.label.toLowerCase().includes("token"))) {
+    return "Token";
+  }
+
+  return "Manual";
+}
+
+function getStatusBadgeClasses(status: ConnectionStatus): string {
+  if (status === "expired") {
+    return "border-red-200 bg-red-50 text-red-700";
+  }
+
+  if (status === "expiring") {
+    return "border-amber-200 bg-amber-50 text-amber-700";
+  }
+
+  return "border-emerald-200 bg-emerald-50 text-emerald-700";
+}
+
+function getStatusLabel(status: ConnectionStatus): string {
+  if (status === "expired") {
+    return "Expired";
+  }
+
+  if (status === "expiring") {
+    return "Expiring";
+  }
+
+  return "Active";
+}
+
+function IntegrationMark({ integration }: { integration: Integration }) {
+  if (hasBrandLogo(integration.slug)) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={getBrandLogoSrc(integration.slug)}
+        alt=""
+        aria-hidden="true"
+        className="h-8 w-8 object-contain"
+      />
+    );
+  }
+
+  return createElement(getIntegrationIcon(integration.icon), {
+    className: "h-5 w-5",
+    style: { color: integration.color },
+  });
+}
 
 export default function IntegrationsPage() {
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [sort, setSort] = useState<SortMode>("popular");
-  const [connectedIntegrations, setConnectedIntegrations] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user, isLoaded } = useUser();
+  const [connections, setConnections] = useState<ConnectionRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [appFilter, setAppFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [addSearch, setAddSearch] = useState("");
+  const [removingConnectionId, setRemovingConnectionId] = useState<number | null>(null);
+  const [copiedConnectionId, setCopiedConnectionId] = useState<number | null>(null);
 
-  const deferredSearch = useDeferredValue(search);
+  const deferredAddSearch = useDeferredValue(addSearch);
 
-  useEffect(() => {
-    async function fetchConnectedIntegrations() {
-      if (!isLoaded || !user) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await fetch("/api/integrations");
-        const data = (await response.json()) as {
-          integrations?: Array<{ integration: string }>;
-        };
-
-        if (data.integrations) {
-          setConnectedIntegrations(data.integrations.map((item) => item.integration));
-        }
-      } catch (error) {
-        console.error("Failed to fetch integrations:", error);
-      } finally {
-        setLoading(false);
-      }
+  const loadConnections = useCallback(async () => {
+    if (!isLoaded) {
+      return;
     }
 
-    fetchConnectedIntegrations();
+    if (!user) {
+      setConnections([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/integrations", { cache: "no-store" });
+      const data = (await response.json()) as {
+        error?: string;
+        integrations?: ConnectionRecord[];
+      };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to load connections");
+      }
+
+      setConnections(data.integrations ?? []);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Failed to load connections");
+    } finally {
+      setLoading(false);
+    }
   }, [isLoaded, user]);
 
-  const connectedSet = useMemo(
-    () => new Set(connectedIntegrations),
-    [connectedIntegrations],
-  );
+  useEffect(() => {
+    void loadConnections();
+  }, [loadConnections]);
 
-  const filteredIntegrations = useMemo(() => {
-    const query = deferredSearch.trim().toLowerCase();
-    const featuredOrder = new Map(FEATURED_SLUGS.map((slug, index) => [slug, index]));
+  const connectionRows = useMemo<ConnectionRow[]>(() => {
+    return connections
+      .map((connection) => {
+        const integration = integrations.find((item) => item.slug === connection.integration);
 
-    const matches = integrations.filter((integration) => {
-      const matchesSearch =
-        !query ||
-        integration.name.toLowerCase().includes(query) ||
-        integration.description.toLowerCase().includes(query) ||
-        integration.category.toLowerCase().includes(query);
-
-      const matchesCategory =
-        !selectedCategory || integration.category === selectedCategory;
-
-      return matchesSearch && matchesCategory;
-    });
-
-    return [...matches].sort((left, right) => {
-      if (sort === "connected") {
-        const connectionDelta =
-          Number(connectedSet.has(right.slug)) - Number(connectedSet.has(left.slug));
-
-        if (connectionDelta !== 0) {
-          return connectionDelta;
+        if (!integration) {
+          return null;
         }
-      }
 
-      if (sort === "alphabetical") {
-        return left.name.localeCompare(right.name);
-      }
+        return {
+          connection,
+          integration,
+          accountLabel:
+            connection.accountLabel ??
+            connection.connectionLabel ??
+            (integration.setupMode === "oauth" ? "Connected account" : "Manual credentials"),
+          methodLabel: getMethodLabel(integration),
+          status: getConnectionStatus(connection.expiresAt),
+          connectionCode: `conn_${connection.id.toString().padStart(6, "0")}`,
+        };
+      })
+      .filter((row): row is ConnectionRow => row !== null);
+  }, [connections]);
 
-      const featuredDelta =
-        (featuredOrder.get(left.slug) ?? Number.MAX_SAFE_INTEGER) -
-        (featuredOrder.get(right.slug) ?? Number.MAX_SAFE_INTEGER);
+  const appOptions = useMemo(() => {
+    return [...new Set(connectionRows.map((row) => row.integration.slug))];
+  }, [connectionRows]);
 
-      if (featuredDelta !== 0) {
-        return featuredDelta;
-      }
+  const filteredConnections = useMemo(() => {
+    return connectionRows.filter((row) => {
+      const matchesApp = appFilter === "all" || row.integration.slug === appFilter;
+      const matchesStatus = statusFilter === "all" || row.status === statusFilter;
 
-      return left.name.localeCompare(right.name);
+      return matchesApp && matchesStatus;
     });
-  }, [connectedSet, deferredSearch, selectedCategory, sort]);
+  }, [appFilter, connectionRows, statusFilter]);
+
+  const connectionCountsBySlug = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    for (const row of connectionRows) {
+      counts.set(row.integration.slug, (counts.get(row.integration.slug) ?? 0) + 1);
+    }
+
+    return counts;
+  }, [connectionRows]);
+
+  const availableIntegrations = useMemo(() => {
+    const query = deferredAddSearch.trim().toLowerCase();
+
+    return integrations
+      .filter((integration) => integration.dashboardStatus === "available")
+      .filter((integration) => {
+        if (!query) {
+          return true;
+        }
+
+        return (
+          integration.name.toLowerCase().includes(query) ||
+          integration.description.toLowerCase().includes(query) ||
+          integration.category.toLowerCase().includes(query)
+        );
+      })
+      .sort((left, right) => left.name.localeCompare(right.name));
+  }, [deferredAddSearch]);
+
+  async function handleRemoveConnection(row: ConnectionRow) {
+    const confirmed = window.confirm(`Remove the ${row.integration.name} connection?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setRemovingConnectionId(row.connection.id);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/connections/${row.connection.id}`, {
+        method: "DELETE",
+      });
+      const data = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to remove connection");
+      }
+
+      setConnections((current) =>
+        current.filter((connection) => connection.id !== row.connection.id),
+      );
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Failed to remove connection");
+    } finally {
+      setRemovingConnectionId(null);
+    }
+  }
+
+  async function handleCopyConnectionId(row: ConnectionRow) {
+    await navigator.clipboard.writeText(row.connectionCode);
+    setCopiedConnectionId(row.connection.id);
+    window.setTimeout(() => setCopiedConnectionId(null), 1500);
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={`Search ${integrations.length} apps...`}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="pl-9"
-          />
-        </div>
-
-        <Select value={sort} onValueChange={(value) => setSort((value as SortMode) ?? "popular")}>
-          <SelectTrigger className="w-full sm:w-[160px]">
-            <SelectValue placeholder="Sort apps" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="popular">Popularity</SelectItem>
-            <SelectItem value="connected">Connected first</SelectItem>
-            <SelectItem value="alphabetical">Alphabetical</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant={!selectedCategory ? "secondary" : "ghost"}
-          size="sm"
-          onClick={() => setSelectedCategory(null)}
-        >
-          All
-        </Button>
-        {categories.map((category) => (
-          <Button
-            key={category}
-            variant={selectedCategory === category ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setSelectedCategory(category)}
-          >
-            {category}
-          </Button>
-        ))}
-      </div>
-
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="space-y-3">
-                <Skeleton className="h-10 w-10 rounded-lg" />
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : filteredIntegrations.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredIntegrations.map((integration) => (
-            <IntegrationCard
-              key={integration.slug}
-              integration={integration}
-              isConnected={connectedSet.has(integration.slug)}
-            />
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="flex min-h-48 flex-col items-center justify-center text-center">
-            <p className="text-sm font-medium text-foreground">No integrations found.</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Clear the category filter or try a broader search term.
+    <>
+      <div className="space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">
+              Review active app connections and remove access when you no longer need it.
             </p>
+          </div>
+
+          <Button onClick={() => setSheetOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Add connection
+          </Button>
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Select value={appFilter} onValueChange={(value) => setAppFilter(value ?? "all")}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="App" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All apps</SelectItem>
+              {appOptions.map((slug) => {
+                const integration = integrations.find((item) => item.slug === slug);
+
+                if (!integration) {
+                  return null;
+                }
+
+                return (
+                  <SelectItem key={slug} value={slug}>
+                    {integration.name}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+
+          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value ?? "all")}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="expiring">Expiring</SelectItem>
+              <SelectItem value="expired">Expired</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {error ? (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="py-4 text-sm text-red-700">{error}</CardContent>
+          </Card>
+        ) : null}
+
+        <Card className="overflow-hidden rounded-[28px] border border-black/8 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="space-y-3 px-6 py-6">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <Skeleton key={index} className="h-14 w-full rounded-2xl" />
+                ))}
+              </div>
+            ) : filteredConnections.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-4 px-6 py-14 text-center">
+                <div className="space-y-1">
+                  <h2 className="text-base font-semibold text-foreground">No connections found</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {connectionRows.length === 0
+                      ? "Connect your first app to start using ClawLink from OpenClaw."
+                      : "Try a different filter or add another app connection."}
+                  </p>
+                </div>
+                <Button onClick={() => setSheetOpen(true)}>
+                  <Plus className="h-4 w-4" />
+                  Add connection
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="hidden md:block">
+                  <table className="min-w-full table-fixed border-collapse">
+                    <thead className="bg-black/[0.03] text-left text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                      <tr>
+                        <th className="px-6 py-4">App</th>
+                        <th className="px-6 py-4">Account</th>
+                        <th className="px-6 py-4">Connection ID</th>
+                        <th className="px-6 py-4">Method</th>
+                        <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4">Created</th>
+                        <th className="w-[88px] px-6 py-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredConnections.map((row) => (
+                        <tr key={row.connection.id} className="border-t border-black/6">
+                          <td className="px-6 py-4 align-middle">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/[0.03]">
+                                <IntegrationMark integration={row.integration} />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium text-foreground">{row.integration.name}</p>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <p className="truncate text-xs text-muted-foreground">
+                                    {row.integration.category}
+                                  </p>
+                                  {row.connection.isDefault ? (
+                                    <span className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-foreground">
+                                      Default
+                                    </span>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-foreground">{row.accountLabel}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs text-foreground">{row.connectionCode}</span>
+                              <Button
+                                variant="ghost"
+                                size="icon-xs"
+                                onClick={() => void handleCopyConnectionId(row)}
+                                title="Copy connection ID"
+                              >
+                                {copiedConnectionId === row.connection.id ? (
+                                  <Check className="h-3.5 w-3.5 text-emerald-600" />
+                                ) : (
+                                  <Copy className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-muted-foreground">{row.methodLabel}</td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${getStatusBadgeClasses(row.status)}`}
+                            >
+                              <span className="h-2 w-2 rounded-full bg-current" />
+                              {getStatusLabel(row.status)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-muted-foreground">
+                            {formatConnectionTimestamp(row.connection.createdAt)}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => void handleRemoveConnection(row)}
+                              disabled={removingConnectionId === row.connection.id}
+                              title={`Remove ${row.integration.name}`}
+                            >
+                              {removingConnectionId === row.connection.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="space-y-3 p-4 md:hidden">
+                  {filteredConnections.map((row) => (
+                    <div
+                      key={row.connection.id}
+                      className="rounded-3xl border border-black/8 bg-white px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/[0.03]">
+                            <IntegrationMark integration={row.integration} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium text-foreground">{row.integration.name}</p>
+                            <p className="truncate text-xs text-muted-foreground">{row.accountLabel}</p>
+                            {row.connection.isDefault ? (
+                              <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-foreground">
+                                Default connection
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
+                        <span
+                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${getStatusBadgeClasses(row.status)}`}
+                        >
+                          <span className="h-2 w-2 rounded-full bg-current" />
+                          {getStatusLabel(row.status)}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Connection ID</p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="font-mono text-xs text-foreground">{row.connectionCode}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              onClick={() => void handleCopyConnectionId(row)}
+                              title="Copy connection ID"
+                            >
+                              {copiedConnectionId === row.connection.id ? (
+                                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Method</p>
+                          <p className="mt-1 text-foreground">{row.methodLabel}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Created</p>
+                          <p className="mt-1 text-foreground">
+                            {formatConnectionTimestamp(row.connection.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-end">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => void handleRemoveConnection(row)}
+                          disabled={removingConnectionId === row.connection.id}
+                        >
+                          {removingConnectionId === row.connection.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
-      )}
-    </div>
+      </div>
+
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="right" className="w-full max-w-full border-l-black/10 p-0 sm:max-w-xl">
+          <SheetHeader className="border-b border-black/8 px-6 py-5">
+            <SheetTitle>Add connection</SheetTitle>
+            <SheetDescription>
+              Choose an app and start a new hosted or manual connection flow.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="flex h-full flex-col overflow-hidden px-6 pb-6">
+            <div className="py-5">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={addSearch}
+                  onChange={(event) => setAddSearch(event.target.value)}
+                  placeholder={`Search ${integrations.length} apps...`}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-8">
+              {availableIntegrations.length === 0 ? (
+                <div className="rounded-[24px] border border-dashed border-black/10 bg-black/[0.02] px-5 py-8 text-center">
+                  <p className="text-sm font-medium text-foreground">No matching apps found</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Try a broader search term.</p>
+                </div>
+              ) : (
+                availableIntegrations.map((integration) => (
+                  <div
+                    key={integration.slug}
+                    className="flex items-center justify-between gap-4 rounded-[24px] border border-black/8 bg-white px-4 py-4 shadow-[0_10px_28px_rgba(15,23,42,0.04)]"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-black/[0.03]">
+                        <IntegrationMark integration={integration} />
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground">{integration.name}</p>
+                        <p className="line-clamp-2 text-sm text-muted-foreground">
+                          {integration.description}
+                        </p>
+                        {(connectionCountsBySlug.get(integration.slug) ?? 0) > 0 ? (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {connectionCountsBySlug.get(integration.slug)} connected
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {integration.setupMode === "oauth" ? (
+                      <OAuthConnectDialog
+                        integration={integration}
+                        onConnected={() => {
+                          setSheetOpen(false);
+                          void loadConnections();
+                        }}
+                        triggerLabel="Connect"
+                        triggerClassName="rounded-full px-4"
+                      />
+                    ) : (
+                      <Button
+                        variant="outline"
+                        nativeButton={false}
+                        render={<Link href={`/dashboard/integrations/${integration.slug}`} />}
+                      >
+                        Connect
+                      </Button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

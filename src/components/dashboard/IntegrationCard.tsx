@@ -33,6 +33,7 @@ export function IntegrationCard({
     <Card
       className={cn(
         "min-h-[200px] rounded-[22px] border border-black/8 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(15,23,42,0.09)]",
+        integration.dashboardStatus === "coming-soon" && "opacity-60 grayscale-[0.6] hover:opacity-80 hover:grayscale-[0.3]",
         className,
       )}
     >
@@ -59,6 +60,10 @@ export function IntegrationCard({
             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-600">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Connected
+            </span>
+          ) : integration.dashboardStatus === "coming-soon" ? (
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-500">
+              Coming soon
             </span>
           ) : integration.setupMode === "oauth" && integration.dashboardStatus === "available" ? (
             <OAuthConnectDialog

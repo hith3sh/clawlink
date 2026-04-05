@@ -14,7 +14,11 @@ export interface UserIntegration {
   id: number;
   userId: string;
   integration: string;
+  connectionLabel: string | null;
+  accountLabel: string | null;
+  externalAccountId: string | null;
   credentialsEncrypted: string;
+  isDefault: boolean;
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string;

@@ -23,7 +23,11 @@ import { getIntegrationIcon } from "@/lib/integration-icons";
 import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
 
 interface ConnectionRecord {
+  id: number;
   integration: string;
+  accountLabel?: string | null;
+  connectionLabel?: string | null;
+  isDefault?: boolean;
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string | null;
@@ -34,6 +38,7 @@ interface SessionRecord {
   token: string;
   displayCode: string;
   integration: string;
+  connectionId?: number | null;
   status: "awaiting_user_action" | "connected" | "failed" | "expired";
   flowType: string;
   errorMessage: string | null;
@@ -60,6 +65,7 @@ function formatTimestamp(value: string | null): string | null {
 
 export default function IntegrationDetails({ integration }: Props) {
   const [connection, setConnection] = useState<ConnectionRecord | null>(null);
+  const [connectionCount, setConnectionCount] = useState(0);
   const [activeSession, setActiveSession] = useState<SessionRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -90,6 +96,8 @@ export default function IntegrationDetails({ integration }: Props) {
         const data = (await response.json()) as {
           error?: string;
           connection?: ConnectionRecord | null;
+          connections?: ConnectionRecord[];
+          connectionCount?: number;
           activeSession?: SessionRecord | null;
         };
 
@@ -103,6 +111,7 @@ export default function IntegrationDetails({ integration }: Props) {
         }
 
         setConnection(data.connection ?? null);
+        setConnectionCount(data.connectionCount ?? data.connections?.length ?? (data.connection ? 1 : 0));
         setActiveSession(data.activeSession ?? null);
       } catch (requestError) {
         if (active) {
@@ -151,6 +160,7 @@ export default function IntegrationDetails({ integration }: Props) {
 
       if (data.session.status === "connected") {
         setSuccess(`${integration.name} is connected and ready in OpenClaw.`);
+        setConnectionCount((current) => Math.max(1, current + 1));
       }
 
       if (data.session.status === "expired") {
@@ -234,6 +244,7 @@ export default function IntegrationDetails({ integration }: Props) {
       }
 
       setConnection(null);
+      setConnectionCount(0);
       setSuccess(`${integration.name} has been disconnected.`);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Failed to disconnect integration");
@@ -312,10 +323,16 @@ export default function IntegrationDetails({ integration }: Props) {
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-sm text-emerald-400">
                   <CheckCircle2 className="h-4 w-4" />
-                  Connected
+                  {connectionCount > 1 ? `${connectionCount} connections` : "Connected"}
                 </div>
 
                 <dl className="space-y-2 text-sm">
+                  {connection?.accountLabel ? (
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-muted-foreground">Default account</dt>
+                      <dd className="text-right text-foreground">{connection.accountLabel}</dd>
+                    </div>
+                  ) : null}
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Connected</dt>
                     <dd className="text-foreground">{formatTimestamp(connection.createdAt)}</dd>
@@ -332,15 +349,21 @@ export default function IntegrationDetails({ integration }: Props) {
                   ) : null}
                 </dl>
 
-                <Button
-                  variant="destructive"
-                  className="w-full"
-                  onClick={handleDisconnect}
-                  disabled={disconnecting}
-                >
-                  {disconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                  Disconnect
-                </Button>
+                {connectionCount > 1 ? (
+                  <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
+                    Multiple {integration.name} connections exist. Remove specific rows from the Connections page.
+                  </div>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={handleDisconnect}
+                    disabled={disconnecting}
+                  >
+                    {disconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                    Disconnect
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="space-y-3">

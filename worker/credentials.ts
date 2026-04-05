@@ -21,6 +21,7 @@ interface UserRow {
 }
 
 interface StoredIntegrationRow {
+  id: number;
   credentials_encrypted: string;
 }
 
@@ -42,8 +43,12 @@ interface OutlookTokenResponse {
   error_description?: string;
 }
 
-function cacheKey(userId: string, integration: string): string {
-  return `cred:${userId}:${integration}`;
+interface CredentialLookupOptions {
+  connectionId?: number;
+}
+
+function cacheKey(connectionId: number): string {
+  return `cred:${connectionId}`;
 }
 
 function safeTrim(value: unknown): string | undefined {
@@ -103,10 +108,9 @@ export async function resolveInternalUserId(
 
 async function loadCachedCredentials(
   env: CredentialBridgeEnv,
-  userId: string,
-  integration: string,
+  connectionId: number,
 ): Promise<Record<string, string> | null> {
-  const raw = await env.CREDENTIALS?.get(cacheKey(userId, integration));
+  const raw = await env.CREDENTIALS?.get(cacheKey(connectionId));
 
   if (!raw) {
     return null;
@@ -121,8 +125,7 @@ async function loadCachedCredentials(
 
 async function cacheCredentials(
   env: CredentialBridgeEnv,
-  userId: string,
-  integration: string,
+  connectionId: number,
   credentials: Record<string, string>,
 ): Promise<void> {
   if (!env.CREDENTIALS) {
@@ -130,7 +133,7 @@ async function cacheCredentials(
   }
 
   await env.CREDENTIALS.put(
-    cacheKey(userId, integration),
+    cacheKey(connectionId),
     JSON.stringify(credentials),
     { expirationTtl: 60 * 30 },
   );
@@ -138,8 +141,7 @@ async function cacheCredentials(
 
 async function persistCredentials(
   env: CredentialBridgeEnv,
-  userId: string,
-  integration: string,
+  connectionId: number,
   credentials: Record<string, string>,
 ): Promise<void> {
   const encrypted = await encryptCredential(credentials, env.CREDENTIAL_ENCRYPTION_KEY);
@@ -148,14 +150,18 @@ async function persistCredentials(
     .prepare(
       `
         UPDATE user_integrations
-        SET credentials_encrypted = ?, updated_at = datetime('now')
-        WHERE user_id = ? AND integration = ?
+        SET credentials_encrypted = ?, expires_at = ?, updated_at = datetime('now')
+        WHERE id = ?
       `,
     )
-    .bind(encrypted, userId, integration)
+    .bind(
+      encrypted,
+      safeTrim(credentials.expiresAt) ?? null,
+      connectionId,
+    )
     .run();
 
-  await cacheCredentials(env, userId, integration, credentials);
+  await cacheCredentials(env, connectionId, credentials);
 }
 
 function getOutlookOAuthConfig(env: CredentialBridgeEnv): { clientId: string; clientSecret: string } {
@@ -220,7 +226,7 @@ async function refreshOutlookCredentials(
 
 async function maybeRefreshCredentials(
   env: CredentialBridgeEnv,
-  userId: string,
+  connectionId: number,
   integration: string,
   credentials: Record<string, string>,
 ): Promise<Record<string, string>> {
@@ -229,41 +235,66 @@ async function maybeRefreshCredentials(
   }
 
   const refreshed = await refreshOutlookCredentials(env, credentials);
-  await persistCredentials(env, userId, integration, refreshed);
+  await persistCredentials(env, connectionId, refreshed);
   return refreshed;
+}
+
+async function loadConnectionRecord(
+  env: CredentialBridgeEnv,
+  userId: string,
+  integration: string,
+  options: CredentialLookupOptions,
+): Promise<StoredIntegrationRow | null> {
+  if (options.connectionId) {
+    return env.DB
+      .prepare(
+        `
+          SELECT id, credentials_encrypted
+          FROM user_integrations
+          WHERE id = ? AND user_id = ? AND integration = ?
+          LIMIT 1
+        `,
+      )
+      .bind(options.connectionId, userId, integration)
+      .first<StoredIntegrationRow>();
+  }
+
+  return env.DB
+    .prepare(
+      `
+        SELECT id, credentials_encrypted
+        FROM user_integrations
+        WHERE user_id = ? AND integration = ?
+        ORDER BY is_default DESC, updated_at DESC, created_at DESC, id DESC
+        LIMIT 1
+      `,
+    )
+    .bind(userId, integration)
+    .first<StoredIntegrationRow>();
 }
 
 export async function loadCredentialsForIntegration(
   env: CredentialBridgeEnv,
   userId: string,
   integration: string,
+  options: CredentialLookupOptions = {},
 ): Promise<Record<string, string>> {
-  const cached = await loadCachedCredentials(env, userId, integration);
-
-  if (cached) {
-    const refreshedCachedCredentials = await maybeRefreshCredentials(env, userId, integration, cached);
-
-    if (refreshedCachedCredentials !== cached) {
-      await cacheCredentials(env, userId, integration, refreshedCachedCredentials);
-    }
-
-    return refreshedCachedCredentials;
-  }
-
-  const record = await env.DB
-    .prepare(
-      `
-        SELECT credentials_encrypted
-        FROM user_integrations
-        WHERE user_id = ? AND integration = ?
-        LIMIT 1
-      `,
-    )
-    .bind(userId, integration)
-    .first<StoredIntegrationRow>();
+  const record = await loadConnectionRecord(env, userId, integration, options);
 
   if (!record?.credentials_encrypted) {
     throw new Error(`No credentials found for ${integration}. Please connect it first.`);
+  }
+
+  const cached = await loadCachedCredentials(env, record.id);
+
+  if (cached) {
+    const refreshedCachedCredentials = await maybeRefreshCredentials(env, record.id, integration, cached);
+
+    if (refreshedCachedCredentials !== cached) {
+      await cacheCredentials(env, record.id, refreshedCachedCredentials);
+    }
+
+    return refreshedCachedCredentials;
   }
 
   const decryptedCredentials = await decryptCredential(
@@ -271,8 +302,8 @@ export async function loadCredentialsForIntegration(
     env.CREDENTIAL_ENCRYPTION_KEY,
   );
 
-  const credentials = await maybeRefreshCredentials(env, userId, integration, decryptedCredentials);
-  await cacheCredentials(env, userId, integration, credentials);
+  const credentials = await maybeRefreshCredentials(env, record.id, integration, decryptedCredentials);
+  await cacheCredentials(env, record.id, credentials);
 
   return credentials;
 }

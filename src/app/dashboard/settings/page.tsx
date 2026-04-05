@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { BillingSettingsPanel } from "@/components/dashboard/BillingSettingsPanel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +29,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -96,6 +96,9 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
     const tab = searchParams.get("tab");
     if (tab === "api") return "api";
+    if (tab === "billing") return "billing";
+    if (tab === "notifications") return "notifications";
+    if (tab === "security") return "security";
     return "profile";
   });
   const [copied, setCopied] = useState(false);
@@ -113,6 +116,7 @@ export default function SettingsPage() {
   const userName = user?.fullName || user?.firstName || "";
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || "";
   const userImage = user?.imageUrl;
+  const checkoutId = searchParams.get("checkoutId") ?? searchParams.get("checkout_id");
   const activeTabMeta = settingsTabs.find((tab) => tab.value === activeTab) ?? settingsTabs[0];
 
   useEffect(() => {
@@ -438,44 +442,11 @@ export default function SettingsPage() {
           </TabsContent>
 
           <TabsContent value="billing" className="space-y-6">
-            <div className="rounded-2xl border border-border/70 bg-muted/10 p-5">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-lg font-semibold text-foreground">Free plan</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    1,000 requests per month and 5 connected apps.
-                  </p>
-                </div>
-                <Button>Upgrade plan</Button>
-              </div>
-
-              <Separator className="my-6" />
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Requests this month</span>
-                  <span className="font-medium text-foreground">1,234 / 1,000</span>
-                </div>
-                <Progress value={100} className="h-2" />
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-border/70 bg-muted/10 p-5">
-              <div className="mb-4">
-                <h3 className="text-sm font-medium text-foreground">Payment method</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Add billing details before moving beyond the free tier.
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                <CreditCard className="h-5 w-5 text-muted-foreground" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">No payment method</p>
-                  <p className="text-sm text-muted-foreground">Add a card before upgrading.</p>
-                </div>
-                <Button variant="outline" size="sm">Add card</Button>
-              </div>
-            </div>
+            <BillingSettingsPanel
+              isLoaded={isLoaded}
+              hasUser={Boolean(user)}
+              checkoutId={checkoutId}
+            />
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-3">

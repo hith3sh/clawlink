@@ -72,7 +72,7 @@ function requireApiKey(api) {
 
   if (!apiKey) {
     throw new Error(
-      "ClawLink is not configured yet. Ask the user to create an API key at https://claw-link.dev/dashboard/settings, then paste the generated `/clawlink login ...` command into OpenClaw.",
+      "ClawLink is not configured yet. Ask the user to create an API key at https://claw-link.dev/dashboard/settings?tab=api, then paste the generated `/clawlink login ...` command into OpenClaw.",
     );
   }
 
@@ -284,7 +284,7 @@ const clawlinkPlugin = {
 
           if (!apiKey) {
             return {
-              text: "Usage: /clawlink login <apiKey>\nCreate a key at https://claw-link.dev/dashboard/settings",
+              text: "Usage: /clawlink login <apiKey>\nCreate a key at https://claw-link.dev/dashboard/settings?tab=api",
             };
           }
 

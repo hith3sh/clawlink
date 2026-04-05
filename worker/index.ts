@@ -54,7 +54,7 @@ async function handleToolCall(
   authSubject: string,
   params?: MCPRequest["params"]
 ): Promise<unknown> {
-  const { name, arguments: args = {} } = params || {};
+  const { name, arguments: rawArgs = {} } = params || {};
   
   if (!name) {
     throw new Error("Missing tool name");
@@ -71,12 +71,27 @@ async function handleToolCall(
 
   // Get cached credentials or decrypt from request
   let credentials: Record<string, string>;
+  const args = { ...rawArgs };
+  const rawConnectionId = args.connectionId;
+  const parsedConnectionId =
+    typeof rawConnectionId === "number"
+      ? rawConnectionId
+      : typeof rawConnectionId === "string"
+        ? Number.parseInt(rawConnectionId, 10)
+        : NaN;
+  const connectionId = Number.isFinite(parsedConnectionId) ? parsedConnectionId : undefined;
+
+  if ("connectionId" in args) {
+    delete args.connectionId;
+  }
   
   if (params?.credentials) {
     // Credentials passed in request (already encrypted per-session)
     credentials = params.credentials;
   } else {
-    credentials = await loadCredentialsForIntegration(env, internalUserId, integration);
+    credentials = await loadCredentialsForIntegration(env, internalUserId, integration, {
+      connectionId,
+    });
   }
 
   // Get the integration handler

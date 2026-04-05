@@ -22,6 +22,6 @@ Rules:
 - Only call these tools for connection and setup requests.
 - Prefer the exact integration slug the user named.
 - If the plugin is not configured and the tool reports a missing API key, prefer the `/clawlink login <apiKey>` command instead of manual config editing.
-- Tell the user to create the key at `https://claw-link.dev/dashboard/settings` if they do not have one yet.
+- Tell the user to create the key at `https://claw-link.dev/dashboard/settings?tab=api` if they do not have one yet.
 - Do not print the full API key back to the user after they provide it. Mask it in confirmations.
 - Do not keep polling after a terminal state is reached.

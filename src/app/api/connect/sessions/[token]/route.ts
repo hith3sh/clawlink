@@ -26,6 +26,7 @@ export async function GET(
         token: session.token,
         displayCode: session.displayCode,
         integration: session.integration,
+        connectionId: session.connectionId,
         status: session.status,
         flowType: session.flowType,
         errorMessage: session.errorMessage,

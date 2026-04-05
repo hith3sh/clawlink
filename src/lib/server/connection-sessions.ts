@@ -3,6 +3,7 @@ import "server-only";
 import { getIntegrationBySlug } from "@/data/integrations";
 import {
   getDatabase,
+  getIntegrationConnectionByIdForUserId,
   getIntegrationConnectionForUserId,
   randomToken,
   saveIntegrationConnectionForUserId,
@@ -23,6 +24,7 @@ interface StoredConnectionSessionRow {
   display_code: string;
   user_id: string;
   integration: string;
+  connection_id: number | null;
   status: ConnectionSessionStatus;
   flow_type: string;
   error_message: string | null;
@@ -37,6 +39,7 @@ export interface ConnectionSessionRecord {
   token: string;
   displayCode: string;
   integration: string;
+  connectionId: number | null;
   status: ConnectionSessionStatus;
   flowType: string;
   errorMessage: string | null;
@@ -56,6 +59,7 @@ function mapSession(
     token: row.public_token,
     displayCode: row.display_code,
     integration: row.integration,
+    connectionId: row.connection_id,
     status: row.status,
     flowType: row.flow_type,
     errorMessage: row.error_message,
@@ -81,7 +85,7 @@ async function loadSession(
   return db
     .prepare(
       `
-        SELECT id, public_token, display_code, user_id, integration, status, flow_type,
+        SELECT id, public_token, display_code, user_id, integration, connection_id, status, flow_type,
                error_message, expires_at, completed_at, created_at, updated_at
         FROM connection_sessions
         WHERE public_token = ?
@@ -89,6 +93,25 @@ async function loadSession(
     )
     .bind(token)
     .first<StoredConnectionSessionRow>();
+}
+
+async function loadConnectionForSession(
+  db: D1LikeDatabase,
+  session: StoredConnectionSessionRow,
+): Promise<IntegrationConnectionRecord | null> {
+  if (session.connection_id) {
+    const exactConnection = await getIntegrationConnectionByIdForUserId(
+      db,
+      session.user_id,
+      session.connection_id,
+    );
+
+    if (exactConnection) {
+      return exactConnection;
+    }
+  }
+
+  return getIntegrationConnectionForUserId(db, session.user_id, session.integration);
 }
 
 async function expireIfNeeded(
@@ -150,13 +173,14 @@ export async function createConnectionSession(
           display_code,
           user_id,
           integration,
+          connection_id,
           status,
           flow_type,
           expires_at,
           created_at,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
       `,
     )
     .bind(
@@ -165,6 +189,7 @@ export async function createConnectionSession(
       displayCode,
       user.id,
       integration.slug,
+      null,
       "awaiting_user_action",
       integration.setupMode,
       expiresAt,
@@ -176,6 +201,7 @@ export async function createConnectionSession(
     token,
     displayCode,
     integration: integration.slug,
+    connectionId: null,
     status: "awaiting_user_action",
     flowType: integration.setupMode,
     errorMessage: null,
@@ -203,11 +229,7 @@ export async function getConnectionSessionByToken(
   }
 
   const normalized = await expireIfNeeded(db, session);
-  const connection = await getIntegrationConnectionForUserId(
-    db,
-    normalized.user_id,
-    normalized.integration,
-  );
+  const connection = await loadConnectionForSession(db, normalized);
 
   return mapSession(normalized, connection);
 }
@@ -225,7 +247,7 @@ export async function getLatestActiveConnectionSessionForUser(
   const session = await db
     .prepare(
       `
-        SELECT id, public_token, display_code, user_id, integration, status, flow_type,
+        SELECT id, public_token, display_code, user_id, integration, connection_id, status, flow_type,
                error_message, expires_at, completed_at, created_at, updated_at
         FROM connection_sessions
         WHERE user_id = ? AND integration = ?
@@ -242,11 +264,7 @@ export async function getLatestActiveConnectionSessionForUser(
   }
 
   const normalized = await expireIfNeeded(db, session);
-  const connection = await getIntegrationConnectionForUserId(db, user.id, integrationSlug);
-
-  if (normalized.status === "expired") {
-    return mapSession(normalized, connection);
-  }
+  const connection = await loadConnectionForSession(db, normalized);
 
   return mapSession(normalized, connection);
 }
@@ -283,20 +301,30 @@ export async function completeManualConnectionSession(
     throw new Error(`${integration.name} requires a hosted OAuth flow that is not implemented yet`);
   }
 
-  await saveIntegrationConnectionForUserId(db, normalized.user_id, normalized.integration, credentials);
+  const connection = await saveIntegrationConnectionForUserId(
+    db,
+    normalized.user_id,
+    normalized.integration,
+    credentials,
+    {
+      mode: "create_or_match_account",
+      setAsDefault: true,
+    },
+  );
 
   await db
     .prepare(
       `
         UPDATE connection_sessions
-        SET status = 'connected',
+        SET connection_id = ?,
+            status = 'connected',
             error_message = NULL,
             completed_at = datetime('now'),
             updated_at = datetime('now')
         WHERE id = ?
       `,
     )
-    .bind(normalized.id)
+    .bind(connection.id, normalized.id)
     .run();
 
   const saved = await getConnectionSessionByToken(token);
@@ -340,20 +368,30 @@ export async function completeOAuthConnectionSession(
     throw new Error(`${integration.name} does not use the hosted OAuth flow`);
   }
 
-  await saveIntegrationConnectionForUserId(db, normalized.user_id, normalized.integration, credentials);
+  const connection = await saveIntegrationConnectionForUserId(
+    db,
+    normalized.user_id,
+    normalized.integration,
+    credentials,
+    {
+      mode: "create_or_match_account",
+      setAsDefault: true,
+    },
+  );
 
   await db
     .prepare(
       `
         UPDATE connection_sessions
-        SET status = 'connected',
+        SET connection_id = ?,
+            status = 'connected',
             error_message = NULL,
             completed_at = datetime('now'),
             updated_at = datetime('now')
         WHERE id = ?
       `,
     )
-    .bind(normalized.id)
+    .bind(connection.id, normalized.id)
     .run();
 
   const saved = await getConnectionSessionByToken(token);
