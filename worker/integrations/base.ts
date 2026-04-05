@@ -4,10 +4,57 @@
  * All integration handlers implement this interface
  */
 
+export type ToolAccessLevel = "read" | "write" | "destructive";
+
+export interface IntegrationToolExample {
+  user: string;
+  args: Record<string, unknown>;
+}
+
 export interface IntegrationTool {
+  integration: string;
   name: string;
   description: string;
-  inputSchema: object;
+  inputSchema: Record<string, unknown>;
+  accessLevel: ToolAccessLevel;
+  tags: string[];
+  whenToUse: string[];
+  askBefore: string[];
+  safeDefaults: Record<string, unknown>;
+  examples: IntegrationToolExample[];
+  followups: string[];
+}
+
+export interface DefineIntegrationToolOptions {
+  description: string;
+  inputSchema: Record<string, unknown>;
+  accessLevel: ToolAccessLevel;
+  tags?: string[];
+  whenToUse?: string[];
+  askBefore?: string[];
+  safeDefaults?: Record<string, unknown>;
+  examples?: IntegrationToolExample[];
+  followups?: string[];
+}
+
+export function defineTool(
+  integration: string,
+  action: string,
+  options: DefineIntegrationToolOptions,
+): IntegrationTool {
+  return {
+    integration,
+    name: `${integration}_${action}`,
+    description: options.description,
+    inputSchema: options.inputSchema,
+    accessLevel: options.accessLevel,
+    tags: options.tags ?? [],
+    whenToUse: options.whenToUse ?? [],
+    askBefore: options.askBefore ?? [],
+    safeDefaults: options.safeDefaults ?? {},
+    examples: options.examples ?? [],
+    followups: options.followups ?? [],
+  };
 }
 
 export interface IntegrationHandler {

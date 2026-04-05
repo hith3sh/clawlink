@@ -402,6 +402,13 @@ export async function listIntegrationConnections(): Promise<IntegrationConnectio
     return [];
   }
 
+  return listIntegrationConnectionsForUserId(db, user.id);
+}
+
+export async function listIntegrationConnectionsForUserId(
+  db: D1LikeDatabase,
+  userId: string,
+): Promise<IntegrationConnectionRecord[]> {
   const result = await db
     .prepare(
       `
@@ -412,7 +419,7 @@ export async function listIntegrationConnections(): Promise<IntegrationConnectio
         ORDER BY is_default DESC, created_at DESC, id DESC
       `,
     )
-    .bind(user.id)
+    .bind(userId)
     .all<StoredIntegrationRow>();
 
   return (result.results ?? []).map(mapConnection);

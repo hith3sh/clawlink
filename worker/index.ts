@@ -14,7 +14,7 @@ import { integrations } from "../src/data/integrations";
 import { verifyAuth } from "./auth";
 import { loadCredentialsForIntegration, resolveInternalUserId } from "./credentials";
 import { logRequest } from "./logger";
-import { getIntegrationHandler } from "./integrations";
+import { getIntegrationHandler, type IntegrationTool } from "./integrations";
 
 export interface Env {
   DB: D1Database;
@@ -118,9 +118,8 @@ async function handleToolCall(
 /**
  * Handle MCP list_tools request
  */
-function handleListTools(): Array<{ name: string; description: string; inputSchema: object }> {
-  // Map integrations to MCP tools
-  const tools: Array<{ name: string; description: string; inputSchema: object }> = [];
+function handleListTools(): IntegrationTool[] {
+  const tools: IntegrationTool[] = [];
   
   for (const integration of integrations) {
     const handler = getIntegrationHandler(integration.slug);

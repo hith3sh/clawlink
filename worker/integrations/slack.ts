@@ -2,15 +2,12 @@
  * Slack integration handler
  */
 
-import { BaseIntegration, type IntegrationTool, registerHandler } from "./base";
+import { BaseIntegration, defineTool, type IntegrationTool, registerHandler } from "./base";
 
 class SlackHandler extends BaseIntegration {
   getTools(integrationSlug: string): IntegrationTool[] {
-    const prefix = `${integrationSlug}_`;
-
     return [
-      {
-        name: `${prefix}send_message`,
+      defineTool(integrationSlug, "send_message", {
         description: "Post a Slack message to a channel",
         inputSchema: {
           type: "object",
@@ -20,9 +17,30 @@ class SlackHandler extends BaseIntegration {
           },
           required: ["channel", "text"],
         },
-      },
-      {
-        name: `${prefix}list_channels`,
+        accessLevel: "write",
+        tags: ["messaging", "channels", "slack"],
+        whenToUse: [
+          "User explicitly asks to send or post a Slack message.",
+          "The destination channel is known and the task is to notify or update teammates.",
+        ],
+        askBefore: [
+          "Ask which channel to use if the user did not name one clearly.",
+          "Confirm before posting if the message could be sensitive or broadly visible.",
+        ],
+        examples: [
+          {
+            user: "send a slack message to #general saying deployment is live",
+            args: {
+              channel: "#general",
+              text: "Deployment is live.",
+            },
+          },
+        ],
+        followups: [
+          "Offer to list channels if the user is unsure where to post.",
+        ],
+      }),
+      defineTool(integrationSlug, "list_channels", {
         description: "List public Slack channels available to the bot",
         inputSchema: {
           type: "object",
@@ -30,7 +48,27 @@ class SlackHandler extends BaseIntegration {
             limit: { type: "number", description: "Maximum channels to return (default 100)" },
           },
         },
-      },
+        accessLevel: "read",
+        tags: ["channels", "discovery", "slack"],
+        whenToUse: [
+          "User wants to know which Slack channels are available.",
+          "You need a channel before sending a message and the user has not specified one.",
+        ],
+        safeDefaults: {
+          limit: 100,
+        },
+        examples: [
+          {
+            user: "what slack channels can you access",
+            args: {
+              limit: 100,
+            },
+          },
+        ],
+        followups: [
+          "Offer to send a message to one of the returned channels.",
+        ],
+      }),
     ];
   }
 

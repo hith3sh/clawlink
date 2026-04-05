@@ -2,15 +2,12 @@
  * Gmail integration handler
  */
 
-import { BaseIntegration, IntegrationTool, registerHandler } from "./base";
+import { BaseIntegration, defineTool, type IntegrationTool, registerHandler } from "./base";
 
 class GmailHandler extends BaseIntegration {
   getTools(integrationSlug: string): IntegrationTool[] {
-    const prefix = `${integrationSlug}_`;
-    
     return [
-      {
-        name: `${prefix}send_email`,
+      defineTool(integrationSlug, "send_email", {
         description: "Send an email via Gmail",
         inputSchema: {
           type: "object",
@@ -23,9 +20,31 @@ class GmailHandler extends BaseIntegration {
           },
           required: ["to", "subject", "body"],
         },
-      },
-      {
-        name: `${prefix}list_emails`,
+        accessLevel: "write",
+        tags: ["email", "send", "gmail"],
+        whenToUse: [
+          "User explicitly asks to send an email from Gmail.",
+          "The recipients, subject, and message body are already known.",
+        ],
+        askBefore: [
+          "Confirm recipients or draft details if they are ambiguous.",
+          "Ask before sending if the user has only asked to draft or review the message.",
+        ],
+        examples: [
+          {
+            user: "email alex that the meeting is moved to 3pm",
+            args: {
+              to: "alex@example.com",
+              subject: "Meeting update",
+              body: "The meeting has moved to 3pm.",
+            },
+          },
+        ],
+        followups: [
+          "Offer to create a draft instead if the user wants to review before sending.",
+        ],
+      }),
+      defineTool(integrationSlug, "list_emails", {
         description: "List recent emails from Gmail",
         inputSchema: {
           type: "object",
@@ -35,9 +54,29 @@ class GmailHandler extends BaseIntegration {
             labelIds: { type: "array", items: { type: "string" }, description: "Filter by label IDs" },
           },
         },
-      },
-      {
-        name: `${prefix}get_email`,
+        accessLevel: "read",
+        tags: ["email", "list", "inbox"],
+        whenToUse: [
+          "User wants to see recent Gmail messages.",
+          "You need to search or narrow down messages before opening one.",
+        ],
+        safeDefaults: {
+          maxResults: 10,
+        },
+        examples: [
+          {
+            user: "show my latest gmail messages",
+            args: {
+              maxResults: 10,
+            },
+          },
+        ],
+        followups: [
+          "Offer to fetch a specific message by id.",
+          "Offer to refine with a Gmail search query.",
+        ],
+      }),
+      defineTool(integrationSlug, "get_email", {
         description: "Get a specific email by ID",
         inputSchema: {
           type: "object",
@@ -46,9 +85,28 @@ class GmailHandler extends BaseIntegration {
           },
           required: ["id"],
         },
-      },
-      {
-        name: `${prefix}create_draft`,
+        accessLevel: "read",
+        tags: ["email", "message", "lookup"],
+        whenToUse: [
+          "User wants the contents of a specific Gmail message.",
+          "A previous list step returned the message id and you need the full details.",
+        ],
+        askBefore: [
+          "Ask which message they mean if they have not identified one yet.",
+        ],
+        examples: [
+          {
+            user: "open that second gmail message",
+            args: {
+              id: "gmail-message-id",
+            },
+          },
+        ],
+        followups: [
+          "Offer to draft a reply or summarize the message.",
+        ],
+      }),
+      defineTool(integrationSlug, "create_draft", {
         description: "Create a new email draft",
         inputSchema: {
           type: "object",
@@ -59,9 +117,27 @@ class GmailHandler extends BaseIntegration {
           },
           required: ["to", "subject", "body"],
         },
-      },
-      {
-        name: `${prefix}delete_email`,
+        accessLevel: "write",
+        tags: ["email", "draft", "gmail"],
+        whenToUse: [
+          "User wants a draft prepared but not sent yet.",
+          "You should avoid sending immediately until the user reviews the message.",
+        ],
+        examples: [
+          {
+            user: "draft an email to finance asking for the invoice",
+            args: {
+              to: "finance@example.com",
+              subject: "Invoice request",
+              body: "Could you send over the latest invoice?",
+            },
+          },
+        ],
+        followups: [
+          "Offer to send the email after the user reviews the draft.",
+        ],
+      }),
+      defineTool(integrationSlug, "delete_email", {
         description: "Move an email to trash",
         inputSchema: {
           type: "object",
@@ -70,7 +146,26 @@ class GmailHandler extends BaseIntegration {
           },
           required: ["id"],
         },
-      },
+        accessLevel: "destructive",
+        tags: ["email", "delete", "trash"],
+        whenToUse: [
+          "User explicitly asks to delete or trash a Gmail message.",
+        ],
+        askBefore: [
+          "Always confirm before deleting a message unless the user has already been explicit about the exact email.",
+        ],
+        examples: [
+          {
+            user: "trash that spam email in gmail",
+            args: {
+              id: "gmail-message-id",
+            },
+          },
+        ],
+        followups: [
+          "Offer to list remaining messages if the user wants to continue cleaning up.",
+        ],
+      }),
     ];
   }
 

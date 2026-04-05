@@ -2,7 +2,7 @@
  * Outlook integration handler
  */
 
-import { BaseIntegration, type IntegrationTool, registerHandler } from "./base";
+import { BaseIntegration, defineTool, type IntegrationTool, registerHandler } from "./base";
 
 const GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0";
 
@@ -15,11 +15,8 @@ interface GraphErrorPayload {
 
 class OutlookHandler extends BaseIntegration {
   getTools(integrationSlug: string): IntegrationTool[] {
-    const prefix = `${integrationSlug}_`;
-
     return [
-      {
-        name: `${prefix}list_messages`,
+      defineTool(integrationSlug, "list_messages", {
         description: "List recent Outlook messages",
         inputSchema: {
           type: "object",
@@ -33,9 +30,31 @@ class OutlookHandler extends BaseIntegration {
             includeBody: { type: "boolean", description: "Include the message body instead of bodyPreview only" },
           },
         },
-      },
-      {
-        name: `${prefix}get_message`,
+        accessLevel: "read",
+        tags: ["email", "messages", "outlook"],
+        whenToUse: [
+          "User wants to review recent Outlook messages.",
+          "You need to identify a message before opening or acting on it.",
+        ],
+        safeDefaults: {
+          top: 10,
+          unreadOnly: false,
+          includeBody: false,
+        },
+        examples: [
+          {
+            user: "show my latest outlook emails",
+            args: {
+              top: 10,
+            },
+          },
+        ],
+        followups: [
+          "Offer to fetch a specific message by id.",
+          "Offer to narrow to unread messages or a folder.",
+        ],
+      }),
+      defineTool(integrationSlug, "get_message", {
         description: "Get a single Outlook message by id",
         inputSchema: {
           type: "object",
@@ -44,9 +63,28 @@ class OutlookHandler extends BaseIntegration {
           },
           required: ["messageId"],
         },
-      },
-      {
-        name: `${prefix}send_email`,
+        accessLevel: "read",
+        tags: ["email", "message", "lookup"],
+        whenToUse: [
+          "User wants the contents of a specific Outlook message.",
+          "A prior list step returned the message id and the next step is to inspect it.",
+        ],
+        askBefore: [
+          "Ask which message they mean if the selection is still ambiguous.",
+        ],
+        examples: [
+          {
+            user: "open that outlook email from Sarah",
+            args: {
+              messageId: "outlook-message-id",
+            },
+          },
+        ],
+        followups: [
+          "Offer to summarize the message or draft a reply.",
+        ],
+      }),
+      defineTool(integrationSlug, "send_email", {
         description: "Send an email from Outlook",
         inputSchema: {
           type: "object",
@@ -68,9 +106,32 @@ class OutlookHandler extends BaseIntegration {
           },
           required: ["to", "subject", "body"],
         },
-      },
-      {
-        name: `${prefix}list_events`,
+        accessLevel: "write",
+        tags: ["email", "send", "outlook"],
+        whenToUse: [
+          "User explicitly asks to send an email from Outlook.",
+          "Recipients and message content are known and the action is ready to send.",
+        ],
+        askBefore: [
+          "Confirm recipients if there is any ambiguity.",
+          "Ask before sending if the user may have intended a draft or review step.",
+        ],
+        examples: [
+          {
+            user: "send an outlook email to ops that maintenance starts tonight",
+            args: {
+              to: "ops@example.com",
+              subject: "Maintenance tonight",
+              body: "Maintenance starts tonight at 10pm UTC.",
+              bodyType: "Text",
+            },
+          },
+        ],
+        followups: [
+          "Offer to list recent sent or inbox messages if the user wants to verify context.",
+        ],
+      }),
+      defineTool(integrationSlug, "list_events", {
         description: "List Outlook calendar events",
         inputSchema: {
           type: "object",
@@ -90,9 +151,33 @@ class OutlookHandler extends BaseIntegration {
             },
           },
         },
-      },
-      {
-        name: `${prefix}create_event`,
+        accessLevel: "read",
+        tags: ["calendar", "events", "outlook"],
+        whenToUse: [
+          "User wants to see upcoming Outlook calendar events.",
+          "You need to inspect existing events before creating or updating one.",
+        ],
+        safeDefaults: {
+          top: 10,
+          timeZone: "UTC",
+        },
+        askBefore: [
+          "Ask for a date window only if the user needs something more specific than a short upcoming list.",
+        ],
+        examples: [
+          {
+            user: "what's on my outlook calendar this week",
+            args: {
+              top: 10,
+              timeZone: "UTC",
+            },
+          },
+        ],
+        followups: [
+          "Offer to create a new event if the user needs one scheduled.",
+        ],
+      }),
+      defineTool(integrationSlug, "create_event", {
         description: "Create an Outlook calendar event",
         inputSchema: {
           type: "object",
@@ -115,9 +200,32 @@ class OutlookHandler extends BaseIntegration {
           },
           required: ["subject", "start", "end"],
         },
-      },
-      {
-        name: `${prefix}list_contacts`,
+        accessLevel: "write",
+        tags: ["calendar", "events", "create"],
+        whenToUse: [
+          "User explicitly asks to schedule a calendar event in Outlook.",
+        ],
+        askBefore: [
+          "Ask for missing start, end, timezone, or attendees before creating the event.",
+          "Confirm if the request could conflict with other calendar events and the user has not asked you to proceed anyway.",
+        ],
+        examples: [
+          {
+            user: "schedule a 30 minute outlook meeting with Priya tomorrow at 2pm UTC",
+            args: {
+              subject: "Meeting with Priya",
+              start: "2026-04-06T14:00:00Z",
+              end: "2026-04-06T14:30:00Z",
+              timeZone: "UTC",
+              attendees: ["priya@example.com"],
+            },
+          },
+        ],
+        followups: [
+          "Offer to list upcoming events to verify the calendar.",
+        ],
+      }),
+      defineTool(integrationSlug, "list_contacts", {
         description: "List Outlook contacts",
         inputSchema: {
           type: "object",
@@ -125,7 +233,27 @@ class OutlookHandler extends BaseIntegration {
             top: { type: "number", description: "Maximum contacts to return (default 25, max 100)" },
           },
         },
-      },
+        accessLevel: "read",
+        tags: ["contacts", "people", "outlook"],
+        whenToUse: [
+          "User wants to see Outlook contacts.",
+          "You need to find a contact before sending email or scheduling an event.",
+        ],
+        safeDefaults: {
+          top: 25,
+        },
+        examples: [
+          {
+            user: "show my outlook contacts",
+            args: {
+              top: 25,
+            },
+          },
+        ],
+        followups: [
+          "Offer to send an email or create an event with one of the contacts.",
+        ],
+      }),
     ];
   }
 

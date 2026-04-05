@@ -13,5 +13,10 @@ import "./notion";
 // import "./stripe";
 // etc.
 
-export { getIntegrationHandler, getAllHandlers, registerHandler } from "./base";
-export type { IntegrationHandler, IntegrationTool } from "./base";
+export { defineTool, getIntegrationHandler, getAllHandlers, registerHandler } from "./base";
+export type {
+  IntegrationHandler,
+  IntegrationTool,
+  IntegrationToolExample,
+  ToolAccessLevel,
+} from "./base";

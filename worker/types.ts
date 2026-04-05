@@ -80,9 +80,17 @@ export interface MCPResponse {
 }
 
 export interface MCPTool {
+  integration: string;
   name: string;
   description: string;
   inputSchema: object;
+  accessLevel: "read" | "write" | "destructive";
+  tags: string[];
+  whenToUse: string[];
+  askBefore: string[];
+  safeDefaults: Record<string, unknown>;
+  examples: Array<{ user: string; args: Record<string, unknown> }>;
+  followups: string[];
 }
 
 export interface MCPToolsListResponse {

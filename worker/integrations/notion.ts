@@ -2,15 +2,12 @@
  * Notion integration handler
  */
 
-import { BaseIntegration, type IntegrationTool, registerHandler } from "./base";
+import { BaseIntegration, defineTool, type IntegrationTool, registerHandler } from "./base";
 
 class NotionHandler extends BaseIntegration {
   getTools(integrationSlug: string): IntegrationTool[] {
-    const prefix = `${integrationSlug}_`;
-
     return [
-      {
-        name: `${prefix}search`,
+      defineTool(integrationSlug, "search", {
         description: "Search pages and databases in Notion",
         inputSchema: {
           type: "object",
@@ -27,9 +24,34 @@ class NotionHandler extends BaseIntegration {
           },
           required: ["query"],
         },
-      },
-      {
-        name: `${prefix}get_page`,
+        accessLevel: "read",
+        tags: ["search", "pages", "databases"],
+        whenToUse: [
+          "User asks what pages or databases are available in Notion.",
+          "User wants to find a page or database before reading or updating it.",
+        ],
+        askBefore: [
+          "Ask which workspace or object they mean if the request is vague and multiple matches are likely.",
+        ],
+        safeDefaults: {
+          pageSize: 10,
+        },
+        examples: [
+          {
+            user: "what pages can you see in notion",
+            args: {
+              query: "",
+              filter: { value: "page" },
+              pageSize: 10,
+            },
+          },
+        ],
+        followups: [
+          "Offer to fetch a selected page.",
+          "Offer to query a selected database if the user wants records.",
+        ],
+      }),
+      defineTool(integrationSlug, "get_page", {
         description: "Get a page by ID",
         inputSchema: {
           type: "object",
@@ -38,9 +60,29 @@ class NotionHandler extends BaseIntegration {
           },
           required: ["pageId"],
         },
-      },
-      {
-        name: `${prefix}create_page`,
+        accessLevel: "read",
+        tags: ["page", "lookup", "content"],
+        whenToUse: [
+          "User wants the contents or metadata of a specific Notion page.",
+          "A prior search returned a page id and the next step is to inspect it.",
+        ],
+        askBefore: [
+          "Ask which page they mean if they have not identified a specific page yet.",
+        ],
+        examples: [
+          {
+            user: "open the onboarding page in notion",
+            args: {
+              pageId: "32-character-page-id",
+            },
+          },
+        ],
+        followups: [
+          "Offer to append content to the page.",
+          "Offer to search for related pages or databases.",
+        ],
+      }),
+      defineTool(integrationSlug, "create_page", {
         description: "Create a new page",
         inputSchema: {
           type: "object",
@@ -52,9 +94,32 @@ class NotionHandler extends BaseIntegration {
           },
           required: ["parent"],
         },
-      },
-      {
-        name: `${prefix}query_database`,
+        accessLevel: "write",
+        tags: ["page", "create", "content"],
+        whenToUse: [
+          "User explicitly asks to create a page in Notion.",
+          "User wants a new database row-like page created under a parent database or page.",
+        ],
+        askBefore: [
+          "Ask which parent page or database should own the new page if it is not explicit.",
+          "Ask for missing title or content details before creating the page.",
+        ],
+        examples: [
+          {
+            user: "create a notion page called Weekly recap under the team wiki",
+            args: {
+              parent: "parent-page-or-database-id",
+              title: "Weekly recap",
+              content: "## Highlights\n- Launch shipped",
+            },
+          },
+        ],
+        followups: [
+          "Offer to append more content.",
+          "Offer to create a related database if they need structured records.",
+        ],
+      }),
+      defineTool(integrationSlug, "query_database", {
         description: "Query a database",
         inputSchema: {
           type: "object",
@@ -66,9 +131,34 @@ class NotionHandler extends BaseIntegration {
           },
           required: ["databaseId"],
         },
-      },
-      {
-        name: `${prefix}create_database`,
+        accessLevel: "read",
+        tags: ["database", "query", "records"],
+        whenToUse: [
+          "User wants rows or records from a specific Notion database.",
+          "A previous search identified the database and the next step is to inspect entries.",
+        ],
+        askBefore: [
+          "Ask which database they mean if they have not picked one yet.",
+          "Ask for filters or sorting only when the user needs something more specific than a short recent list.",
+        ],
+        safeDefaults: {
+          pageSize: 10,
+        },
+        examples: [
+          {
+            user: "show the latest tasks in my notion project tracker",
+            args: {
+              databaseId: "database-id",
+              pageSize: 10,
+            },
+          },
+        ],
+        followups: [
+          "Offer to fetch or update a selected record page.",
+          "Offer to refine with filters or sorts.",
+        ],
+      }),
+      defineTool(integrationSlug, "create_database", {
         description: "Create a new database",
         inputSchema: {
           type: "object",
@@ -79,9 +169,34 @@ class NotionHandler extends BaseIntegration {
           },
           required: ["parentPageId", "title"],
         },
-      },
-      {
-        name: `${prefix}append_blocks`,
+        accessLevel: "write",
+        tags: ["database", "create", "schema"],
+        whenToUse: [
+          "User explicitly asks to create a new Notion database.",
+          "User needs a structured table-like workspace under a parent page.",
+        ],
+        askBefore: [
+          "Ask which parent page should contain the database if it is not explicit.",
+          "Ask for the properties schema if the user has not described the columns yet.",
+        ],
+        examples: [
+          {
+            user: "create a notion database for interview candidates under recruiting",
+            args: {
+              parentPageId: "parent-page-id",
+              title: "Interview candidates",
+              properties: {
+                Name: { title: {} },
+              },
+            },
+          },
+        ],
+        followups: [
+          "Offer to add an initial page or record.",
+          "Offer to query the database once it exists.",
+        ],
+      }),
+      defineTool(integrationSlug, "append_blocks", {
         description: "Append blocks to a page",
         inputSchema: {
           type: "object",
@@ -91,7 +206,30 @@ class NotionHandler extends BaseIntegration {
           },
           required: ["pageId", "content"],
         },
-      },
+        accessLevel: "write",
+        tags: ["page", "append", "content"],
+        whenToUse: [
+          "User wants to add notes, checklist items, or other content to an existing Notion page.",
+          "A previous read step identified the page and the next step is to extend it.",
+        ],
+        askBefore: [
+          "Ask which page to update if they have not named it clearly.",
+          "Confirm before appending if the content might modify an important shared document unexpectedly.",
+        ],
+        examples: [
+          {
+            user: "append today's meeting notes to the launch page",
+            args: {
+              pageId: "page-id",
+              content: "## Meeting notes\n- Confirmed launch checklist",
+            },
+          },
+        ],
+        followups: [
+          "Offer to fetch the page again so the user can verify the new content.",
+          "Offer to create a related follow-up page if the notes need their own document.",
+        ],
+      }),
     ];
   }
 

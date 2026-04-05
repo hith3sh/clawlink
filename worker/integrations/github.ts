@@ -2,15 +2,12 @@
  * GitHub integration handler
  */
 
-import { BaseIntegration, type IntegrationTool, registerHandler } from "./base";
+import { BaseIntegration, defineTool, type IntegrationTool, registerHandler } from "./base";
 
 class GitHubHandler extends BaseIntegration {
   getTools(integrationSlug: string): IntegrationTool[] {
-    const prefix = `${integrationSlug}_`;
-
     return [
-      {
-        name: `${prefix}list_repos`,
+      defineTool(integrationSlug, "list_repos", {
         description: "List repositories visible to the authenticated GitHub user",
         inputSchema: {
           type: "object",
@@ -27,9 +24,30 @@ class GitHubHandler extends BaseIntegration {
             perPage: { type: "number", description: "Maximum repositories to return (default 20)" },
           },
         },
-      },
-      {
-        name: `${prefix}list_issues`,
+        accessLevel: "read",
+        tags: ["github", "repos", "discovery"],
+        whenToUse: [
+          "User wants to know which GitHub repositories are available.",
+          "You need a repository before listing issues or creating one.",
+        ],
+        safeDefaults: {
+          visibility: "all",
+          perPage: 20,
+        },
+        examples: [
+          {
+            user: "what github repos can you access",
+            args: {
+              visibility: "all",
+              perPage: 20,
+            },
+          },
+        ],
+        followups: [
+          "Offer to list issues for a selected repository.",
+        ],
+      }),
+      defineTool(integrationSlug, "list_issues", {
         description: "List issues from a GitHub repository",
         inputSchema: {
           type: "object",
@@ -45,9 +63,35 @@ class GitHubHandler extends BaseIntegration {
           },
           required: ["owner", "repo"],
         },
-      },
-      {
-        name: `${prefix}create_issue`,
+        accessLevel: "read",
+        tags: ["github", "issues", "repos"],
+        whenToUse: [
+          "User wants to see issues in a repository.",
+          "You need to inspect existing issues before creating a new one.",
+        ],
+        safeDefaults: {
+          state: "open",
+          perPage: 20,
+        },
+        askBefore: [
+          "Ask which repository they mean if owner or repo is missing.",
+        ],
+        examples: [
+          {
+            user: "show open github issues in useclawlink/clawlink",
+            args: {
+              owner: "useclawlink",
+              repo: "clawlink",
+              state: "open",
+              perPage: 20,
+            },
+          },
+        ],
+        followups: [
+          "Offer to create a new issue if nothing matches.",
+        ],
+      }),
+      defineTool(integrationSlug, "create_issue", {
         description: "Create an issue in a GitHub repository",
         inputSchema: {
           type: "object",
@@ -59,7 +103,30 @@ class GitHubHandler extends BaseIntegration {
           },
           required: ["owner", "repo", "title"],
         },
-      },
+        accessLevel: "write",
+        tags: ["github", "issues", "create"],
+        whenToUse: [
+          "User explicitly asks to open a GitHub issue.",
+        ],
+        askBefore: [
+          "Ask which repository to use if owner or repo is missing.",
+          "Ask for the issue title or body if the request is underspecified.",
+        ],
+        examples: [
+          {
+            user: "open a github issue in useclawlink/clawlink for the oauth timeout bug",
+            args: {
+              owner: "useclawlink",
+              repo: "clawlink",
+              title: "OAuth timeout bug",
+              body: "Users are hitting a timeout during the OAuth callback flow.",
+            },
+          },
+        ],
+        followups: [
+          "Offer to list issues afterward so the user can verify it was created.",
+        ],
+      }),
     ];
   }
 

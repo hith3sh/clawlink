@@ -1,6 +1,6 @@
 # ClawLink OpenClaw Plugin
 
-Native OpenClaw plugin package for ClawLink hosted connection sessions.
+Native OpenClaw plugin package for ClawLink hosted connection sessions and dynamic integration tooling.
 
 ## Install
 
@@ -23,6 +23,10 @@ You can also manage config manually in `~/.openclaw/openclaw.json` under `plugin
 
 - `clawlink_start_connection`
 - `clawlink_get_connection_status`
+- `clawlink_list_integrations`
+- `clawlink_list_tools`
+- `clawlink_describe_tool`
+- `clawlink_call_tool`
 
 ## Commands
 

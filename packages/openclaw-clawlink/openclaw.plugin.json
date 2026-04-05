@@ -1,7 +1,7 @@
 {
   "id": "openclaw-plugin",
   "name": "ClawLink",
-  "description": "Hosted connection sessions for ClawLink integrations inside OpenClaw",
+  "description": "Generic ClawLink bridge for hosted connections and dynamic integration tools inside OpenClaw",
   "version": "0.1.3",
   "skills": [
     "skills"
@@ -9,7 +9,11 @@
   "contracts": {
     "tools": [
       "clawlink_start_connection",
-      "clawlink_get_connection_status"
+      "clawlink_get_connection_status",
+      "clawlink_list_integrations",
+      "clawlink_list_tools",
+      "clawlink_describe_tool",
+      "clawlink_call_tool"
     ]
   },
   "uiHints": {
