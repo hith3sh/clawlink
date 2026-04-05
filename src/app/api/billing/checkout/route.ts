@@ -41,4 +41,3 @@ export async function GET(request: NextRequest) {
 
   return checkoutHandler(new NextRequest(url, request));
 }
-

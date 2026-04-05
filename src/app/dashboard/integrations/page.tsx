@@ -243,7 +243,6 @@ export default function IntegrationsPage() {
     const query = deferredAddSearch.trim().toLowerCase();
 
     return integrations
-      .filter((integration) => integration.dashboardStatus === "available")
       .filter((integration) => {
         if (!query) {
           return true;
@@ -255,7 +254,12 @@ export default function IntegrationsPage() {
           integration.category.toLowerCase().includes(query)
         );
       })
-      .sort((left, right) => left.name.localeCompare(right.name));
+      .sort((left, right) => {
+        if (left.dashboardStatus !== right.dashboardStatus) {
+          return left.dashboardStatus === "available" ? -1 : 1;
+        }
+        return left.name.localeCompare(right.name);
+      });
   }, [deferredAddSearch]);
 
   async function handleRemoveConnection(row: ConnectionRow) {
