@@ -1,19 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import {
-  Copy,
-  Check,
-  Eye,
-  EyeOff,
-  RefreshCcw,
+  ArrowRight,
   Search,
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 
 import { integrations } from "@/data/integrations";
 import { IntegrationCard } from "@/components/dashboard/IntegrationCard";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,8 +40,6 @@ const FEATURED_SLUGS = [
 type SortMode = "popular" | "connected" | "alphabetical";
 
 export default function DashboardPage() {
-  const [copied, setCopied] = useState(false);
-  const [showKey, setShowKey] = useState(false);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortMode>("popular");
   const [connectedIntegrations, setConnectedIntegrations] = useState<string[]>([]);
@@ -52,7 +47,6 @@ export default function DashboardPage() {
   const { user, isLoaded } = useUser();
 
   const deferredSearch = useDeferredValue(search);
-  const apiKey = "sk_live_xxxxxxxxxxxxxxxxxxxx";
 
   useEffect(() => {
     async function fetchConnectedIntegrations() {
@@ -128,40 +122,29 @@ export default function DashboardPage() {
     });
   }, [connectedSet, deferredSearch, sort]);
 
-  function copyApiKey() {
-    navigator.clipboard.writeText(apiKey);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 2000);
-  }
-
   return (
     <div className="space-y-6">
       <Card>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           <div>
-            <h2 className="text-base font-medium text-foreground">API Key</h2>
+            <h2 className="text-base font-medium text-foreground">API keys</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Your API key for using ClawLink services. Use this key with the{" "}
-              <span className="text-foreground underline underline-offset-2">API Gateway</span>{" "}
-              OpenClaw skill.
+              Create a ClawLink API key once, then send `/clawlink login &lt;apiKey&gt;` in OpenClaw.
+              Keys are only shown once when created.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 flex-1 items-center rounded-lg border border-border bg-muted/50 px-3 font-mono text-sm text-foreground">
-              {showKey ? apiKey : "sk_live_•••• ... ••••"}
+          <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="font-mono text-sm text-foreground">cllk_live_...</p>
+              <p className="text-sm text-muted-foreground">
+                Manage keys in Settings. Revoke and recreate a key if you need a fresh value.
+              </p>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setShowKey((v) => !v)}>
-              {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
-            <Button variant="outline" size="sm" onClick={copyApiKey}>
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? "Copied" : "Copy"}
-            </Button>
-            <Button variant="outline" size="sm">
-              <RefreshCcw className="h-4 w-4" />
-              Reset
-            </Button>
+            <Link href="/dashboard/settings" className={buttonVariants({ variant: "outline", size: "sm" })}>
+              Manage API keys
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </CardContent>
       </Card>

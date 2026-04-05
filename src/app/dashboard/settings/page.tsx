@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import {
   Bell,
@@ -8,8 +8,10 @@ import {
   Copy,
   CreditCard,
   Key,
+  Loader2,
   Save,
   Shield,
+  Trash2,
   User,
 } from "lucide-react";
 
@@ -30,18 +32,159 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+interface ApiKeyRecord {
+  id: number;
+  name: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
+
+function formatTimestamp(value: string | null): string | null {
+  if (!value) {
+    return null;
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
 export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
-  const { user } = useUser();
+  const [apiKeys, setApiKeys] = useState<ApiKeyRecord[]>([]);
+  const [apiKeyName, setApiKeyName] = useState("OpenClaw");
+  const [apiKeyValue, setApiKeyValue] = useState<string | null>(null);
+  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
+  const [apiKeySuccess, setApiKeySuccess] = useState<string | null>(null);
+  const [loadingApiKeys, setLoadingApiKeys] = useState(true);
+  const [creatingApiKey, setCreatingApiKey] = useState(false);
+  const [deletingApiKeyId, setDeletingApiKeyId] = useState<number | null>(null);
+  const { user, isLoaded } = useUser();
 
   const userName = user?.fullName || user?.firstName || "";
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || "";
   const userImage = user?.imageUrl;
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadApiKeys() {
+      if (!isLoaded) {
+        return;
+      }
+
+      if (!user) {
+        if (active) {
+          setApiKeys([]);
+          setLoadingApiKeys(false);
+        }
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/api-keys", { cache: "no-store" });
+        const data = (await response.json()) as {
+          error?: string;
+          keys?: ApiKeyRecord[];
+        };
+
+        if (!active) {
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "Failed to load API keys");
+        }
+
+        setApiKeys(data.keys ?? []);
+      } catch (error) {
+        if (active) {
+          setApiKeyError(error instanceof Error ? error.message : "Failed to load API keys");
+        }
+      } finally {
+        if (active) {
+          setLoadingApiKeys(false);
+        }
+      }
+    }
+
+    void loadApiKeys();
+
+    return () => {
+      active = false;
+    };
+  }, [isLoaded, user]);
+
   function copyApiKey() {
-    navigator.clipboard.writeText("sk_live_xxxxxxxxxxxxxxxxxxxx");
+    if (!apiKeyValue) {
+      return;
+    }
+
+    navigator.clipboard.writeText(apiKeyValue);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleCreateApiKey() {
+    const name = apiKeyName.trim() || "OpenClaw";
+
+    setApiKeyError(null);
+    setApiKeySuccess(null);
+    setCreatingApiKey(true);
+
+    try {
+      const response = await fetch("/api/api-keys", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name }),
+      });
+      const data = (await response.json()) as {
+        error?: string;
+        key?: ApiKeyRecord;
+        rawKey?: string;
+      };
+
+      if (!response.ok || !data.key || !data.rawKey) {
+        throw new Error(data.error ?? "Failed to create API key");
+      }
+
+      setApiKeys((current) => [data.key!, ...current.filter((entry) => entry.id !== data.key!.id)]);
+      setApiKeyValue(data.rawKey);
+      setCopied(false);
+      setApiKeyName("OpenClaw");
+      setApiKeySuccess(`Created API key "${data.key.name}". Copy it now because it will not be shown again.`);
+    } catch (error) {
+      setApiKeyError(error instanceof Error ? error.message : "Failed to create API key");
+    } finally {
+      setCreatingApiKey(false);
+    }
+  }
+
+  async function handleDeleteApiKey(key: ApiKeyRecord) {
+    setApiKeyError(null);
+    setApiKeySuccess(null);
+    setDeletingApiKeyId(key.id);
+
+    try {
+      const response = await fetch(`/api/api-keys/${key.id}`, {
+        method: "DELETE",
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to revoke API key");
+      }
+
+      setApiKeys((current) => current.filter((entry) => entry.id !== key.id));
+      setApiKeySuccess(`Revoked API key "${key.name}".`);
+    } catch (error) {
+      setApiKeyError(error instanceof Error ? error.message : "Failed to revoke API key");
+    } finally {
+      setDeletingApiKeyId(null);
+    }
   }
 
   return (
@@ -119,34 +262,122 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>API keys</CardTitle>
               <CardDescription>
-                Manage the secret ClawLink uses for gateway and hosted setup flows.
+                Create the ClawLink secret OpenClaw uses for hosted connection sessions and worker calls.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {apiKeyError ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{apiKeyError}</AlertDescription>
+                </Alert>
+              ) : null}
+
+              {apiKeySuccess ? (
+                <Alert className="border-emerald-500/20 bg-emerald-500/10 text-emerald-100">
+                  <AlertDescription className="text-emerald-100">{apiKeySuccess}</AlertDescription>
+                </Alert>
+              ) : null}
+
+              {apiKeyValue ? (
+                <div className="space-y-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                  <div className="space-y-1">
+                    <Label>Your new API key</Label>
+                    <p className="text-sm text-muted-foreground">
+                      This raw key is only shown once. Save it now, then use `/clawlink login &lt;apiKey&gt;`
+                      in OpenClaw.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input readOnly value={apiKeyValue} className="flex-1 font-mono text-sm" />
+                    <Button variant="outline" onClick={copyApiKey}>
+                      {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                      {copied ? "Copied" : "Copy"}
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+
               <div className="space-y-3">
-                <Label>Live API key</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="api-key-name">Create a new key</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Name the key by where it will be used. `OpenClaw` is a sensible default.
+                  </p>
+                </div>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <Input
-                    readOnly
-                    value="sk_live_xxxxxxxxxxxxxxxxxxxx"
-                    className="flex-1 font-mono text-sm"
+                    id="api-key-name"
+                    value={apiKeyName}
+                    onChange={(event) => setApiKeyName(event.target.value)}
+                    placeholder="OpenClaw"
+                    className="flex-1"
                   />
-                  <Button variant="outline" onClick={copyApiKey}>
-                    {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
-                    {copied ? "Copied" : "Copy"}
+                  <Button onClick={handleCreateApiKey} disabled={creatingApiKey}>
+                    {creatingApiKey ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
+                    {creatingApiKey ? "Creating..." : "Create API key"}
                   </Button>
                 </div>
-                <Alert variant="destructive">
-                  <AlertDescription>
-                    This key grants full workspace access. Rotate it immediately if it leaves your
-                    trusted environment.
-                  </AlertDescription>
-                </Alert>
               </div>
 
               <Separator />
 
-              <Button variant="outline">Create new key</Button>
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-medium text-foreground">Existing keys</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Raw key values are never shown again after creation. Revoke and recreate a key if you need a new copy.
+                  </p>
+                </div>
+
+                {loadingApiKeys ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading API keys...
+                  </div>
+                ) : apiKeys.length > 0 ? (
+                  <div className="space-y-3">
+                    {apiKeys.map((key) => (
+                      <div
+                        key={key.id}
+                        className="flex flex-col gap-4 rounded-2xl border border-border/70 p-4 md:flex-row md:items-center md:justify-between"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-foreground">{key.name}</p>
+                            <span className="rounded-full border border-border/70 px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
+                              cllk_live_...
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Created {formatTimestamp(key.createdAt) ?? "just now"}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Last used {formatTimestamp(key.lastUsedAt) ?? "never"}
+                          </p>
+                        </div>
+
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => void handleDeleteApiKey(key)}
+                          disabled={deletingApiKeyId === key.id}
+                        >
+                          {deletingApiKeyId === key.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                          {deletingApiKeyId === key.id ? "Revoking..." : "Revoke"}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-border/70 p-4 text-sm text-muted-foreground">
+                    No API keys yet. Create one and then run `/clawlink login &lt;apiKey&gt;` in OpenClaw.
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
