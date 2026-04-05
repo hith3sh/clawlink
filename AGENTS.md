@@ -72,6 +72,11 @@ Important deployment rules:
 - If a change touches schema, credential lookup, OAuth contracts, or connection lifecycle behavior, expect to update database migrations and often deploy both projects.
 - Do not assume a successful Worker deploy means dashboard routes or hosted API routes are live.
 - The current frontend deployment path is Pages-based. Be careful with stale `.vercel/output` artifacts when deploying.
+- There is no active `clawlink-web` OpenNext Worker anymore. The live frontend stays on the Pages project `clawlink-web`.
+- `api.claw-link.dev` is a custom domain on the separate Worker `clawlink`.
+- The Cloudflare dashboard may still show a failed build card for `clawlink`, but the live `clawlink` service is deployed from Wrangler versions. Check the Worker deployment/version APIs before assuming the active runtime is broken.
+- The Polar webhook endpoint for the frontend app is `https://claw-link.dev/api/billing/webhooks`.
+- While the frontend remains on Cloudflare Pages with `npx @cloudflare/next-on-pages`, every non-static App Router page/route used at runtime must keep `export const runtime = "edge";`. Removing that will break the Pages build even if local `next build` succeeds.
 
 # Integration Data Model
 
