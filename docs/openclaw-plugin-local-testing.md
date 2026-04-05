@@ -76,5 +76,5 @@ Inside OpenClaw:
 ## Current coverage
 
 - Manual hosted connections remain supported for non-OAuth integrations.
-- Notion is the first hosted OAuth provider wired into the connection-session flow.
+- Notion and Outlook are wired into the hosted OAuth connection-session flow.
 - Other OAuth providers still need provider-specific hosted callback and token exchange work on the ClawLink backend before the plugin can connect them successfully.

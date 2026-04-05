@@ -8,7 +8,7 @@ import SearchBar from "./SearchBar";
 
 // Featured integrations shown by default (most popular ones)
 const FEATURED_SLUGS = [
-  "gmail", "slack", "github", "stripe", "notion", "google-sheets",
+  "gmail", "outlook", "slack", "github", "stripe", "notion", "google-sheets",
   "wordpress", "youtube", "shopify", "discord", "hubspot", "openai",
 ];
 

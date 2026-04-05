@@ -6,6 +6,7 @@
 
 // Import and register handlers
 import "./gmail";
+import "./outlook";
 import "./slack";
 import "./github";
 import "./notion";

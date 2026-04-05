@@ -22,6 +22,7 @@ type SortMode = "popular" | "alphabetical" | "connected";
 
 const FEATURED_SLUGS = [
   "gmail",
+  "outlook",
   "slack",
   "google-calendar",
   "google-drive",

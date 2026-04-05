@@ -29,7 +29,7 @@ This repo now supports the hosted connection-session model for OpenClaw-style in
 ## Current provider coverage
 
 - Manual hosted connect is implemented for integrations that declare `credentialFields` and `dashboardStatus = "available"`.
-- Notion now uses the hosted OAuth callback flow end to end.
+- Notion and Outlook now use the hosted OAuth callback flow end to end.
 - Other OAuth-backed integrations still need provider-specific callback work.
 
 ## OpenClaw plugin contract

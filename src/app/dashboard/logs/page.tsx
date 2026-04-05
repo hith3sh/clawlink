@@ -14,8 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const integrationOptions = ["all", "gmail", "slack", "github", "stripe", "notion", "hubspot", "discord"];
-const actionOptions = ["all", "send_email", "send_message", "create_issue", "list_customers", "create_page", "list_emails", "create_contact"];
+const integrationOptions = ["all", "gmail", "outlook", "slack", "github", "stripe", "notion", "hubspot", "discord"];
+const actionOptions = ["all", "send_email", "send_message", "create_issue", "create_event", "list_events", "list_messages", "create_page", "list_contacts"];
 
 export default function LogsPage() {
   const [search, setSearch] = useState("");

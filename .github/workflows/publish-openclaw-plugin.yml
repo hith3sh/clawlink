@@ -1,0 +1,53 @@
+name: Publish OpenClaw Plugin
+
+on:
+  push:
+    tags:
+      - "openclaw-plugin-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/openclaw-clawlink
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Verify package and manifest versions
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          MANIFEST_VERSION=$(node -p "require('./openclaw.plugin.json').version")
+
+          if [ "$PACKAGE_VERSION" != "$MANIFEST_VERSION" ]; then
+            echo "package.json version ($PACKAGE_VERSION) does not match openclaw.plugin.json version ($MANIFEST_VERSION)"
+            exit 1
+          fi
+
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            TAG_VERSION="${GITHUB_REF_NAME#openclaw-plugin-v}"
+
+            if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
+              echo "Tag version ($TAG_VERSION) does not match package version ($PACKAGE_VERSION)"
+              exit 1
+            fi
+          fi
+
+      - name: Inspect publish tarball
+        run: npm pack --dry-run
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public

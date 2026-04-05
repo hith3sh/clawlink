@@ -40,6 +40,7 @@ import {
   SiYoutube,
 } from "react-icons/si";
 import { FaAws, FaLinkedin, FaMicrosoft } from "react-icons/fa";
+import { PiMicrosoftOutlookLogo } from "react-icons/pi";
 import { TbArrowsSplit, TbPlugConnected } from "react-icons/tb";
 
 export const integrationIconMap: Record<string, IconType> = {
@@ -47,6 +48,7 @@ export const integrationIconMap: Record<string, IconType> = {
   SiSlack,
   SiDiscord,
   FaMicrosoft,
+  PiMicrosoftOutlookLogo,
   SiTelegram,
   SiApollographql,
   SiHubspot,

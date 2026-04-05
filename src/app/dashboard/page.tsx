@@ -141,7 +141,7 @@ export default function DashboardPage() {
                 Manage keys in Settings. Revoke and recreate a key if you need a fresh value.
               </p>
             </div>
-            <Link href="/dashboard/settings" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <Link href="/dashboard/settings?tab=api" className={buttonVariants({ variant: "outline", size: "sm" })}>
               Manage API keys
               <ArrowRight className="h-4 w-4" />
             </Link>

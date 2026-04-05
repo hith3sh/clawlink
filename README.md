@@ -44,7 +44,7 @@ Then just ask OpenClaw things like:
 
 | Category | Integrations |
 |---|---|
-| Communication | Gmail, Slack, Discord, Microsoft Teams, Telegram |
+| Communication | Gmail, Outlook, Slack, Discord, Microsoft Teams, Telegram |
 | CRM & Sales | Apollo, HubSpot, Salesforce, Pipedrive |
 | Content & CMS | WordPress, Webflow, Ghost, Contentful |
 | Social Media | YouTube, Twitter/X, LinkedIn, Instagram |

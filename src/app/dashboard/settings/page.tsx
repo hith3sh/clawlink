@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import {
   Bell,
@@ -91,7 +92,12 @@ function formatTimestamp(value: string | null): string | null {
 }
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "api") return "api";
+    return "profile";
+  });
   const [copied, setCopied] = useState(false);
   const [copiedCommand, setCopiedCommand] = useState(false);
   const [apiKeys, setApiKeys] = useState<ApiKeyRecord[]>([]);
