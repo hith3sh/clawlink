@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { listIntegrationConnections } from "@/lib/server/integration-store";
 
 export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {

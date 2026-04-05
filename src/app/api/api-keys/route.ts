@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createApiKey, listApiKeys } from "@/lib/server/api-keys";
 
 export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {

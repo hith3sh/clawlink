@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { deleteApiKey } from "@/lib/server/api-keys";
 
 export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
 export async function DELETE(
   _request: Request,

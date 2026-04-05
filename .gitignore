@@ -42,3 +42,21 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# nested dependencies
+packages/*/node_modules
+
+# wrangler / miniflare local dev state
+/.wrangler/
+
+# local agent / tooling state
+/.agents/
+/.claude/
+/.pi/
+/.playwright-mcp/
+/skills/
+/skills-lock.json
+
+# local / scratch content
+/matona/
+/playwright-signin-snapshot*.md

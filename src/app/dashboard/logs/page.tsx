@@ -117,5 +117,3 @@ export default function LogsPage() {
     </div>
   );
 }
-
-export const runtime = "edge";
