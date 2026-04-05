@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { integrations } from "@/data/integrations";
 import { getIntegrationIcon } from "@/lib/integration-icons";
+import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
 import SearchBar from "./SearchBar";
 
 // Featured integrations shown by default (most popular ones)
@@ -52,7 +53,17 @@ export default function IntegrationGrid() {
               className="group rounded-2xl border border-gray-100 bg-white/80 p-4 sm:p-5 transition-all hover:border-amber-200/60 hover:shadow-lg hover:shadow-amber-500/5 hover:-translate-y-0.5"
             >
               <div className="flex items-center gap-3">
-                <Icon className="w-7 h-7 shrink-0" style={{ color: integration.color }} />
+                {hasBrandLogo(integration.slug) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={getBrandLogoSrc(integration.slug, "light")}
+                    alt=""
+                    aria-hidden="true"
+                    className="w-7 h-7 shrink-0 object-contain"
+                  />
+                ) : (
+                  <Icon className="w-7 h-7 shrink-0" style={{ color: integration.color }} />
+                )}
                 <div className="min-w-0">
                   <h4 className="font-semibold text-gray-900 text-sm truncate">
                     {integration.name}

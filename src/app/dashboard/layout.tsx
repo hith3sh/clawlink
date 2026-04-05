@@ -8,7 +8,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="dark">
+    <div className="min-h-svh bg-background text-foreground">
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>

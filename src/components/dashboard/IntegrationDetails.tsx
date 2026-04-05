@@ -20,6 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Integration } from "@/data/integrations";
 import { getIntegrationIcon } from "@/lib/integration-icons";
+import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
 
 interface ConnectionRecord {
   integration: string;
@@ -254,11 +255,21 @@ export default function IntegrationDetails({ integration }: Props) {
       <Card>
         <CardContent className="space-y-4">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
-              {createElement(getIntegrationIcon(integration.icon), {
-                className: "h-7 w-7",
-                style: { color: integration.color },
-              })}
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center">
+              {hasBrandLogo(integration.slug) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={getBrandLogoSrc(integration.slug)}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-12 w-12 object-contain"
+                />
+              ) : (
+                createElement(getIntegrationIcon(integration.icon), {
+                  className: "h-10 w-10",
+                  style: { color: integration.color },
+                })
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="text-lg font-semibold text-foreground">{integration.name}</h2>

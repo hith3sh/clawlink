@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { SignOutButton, useUser } from "@clerk/nextjs";
 import {
   Home,
   Link2,
@@ -39,7 +39,6 @@ const resourceNav = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { signOut } = useClerk();
   const { user } = useUser();
 
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || "";
@@ -114,13 +113,15 @@ export function AppSidebar() {
       <SidebarFooter className="px-3 pb-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <button
-              onClick={() => signOut({ redirectUrl: "/" })}
-              className="flex h-9 w-full items-center gap-2 rounded-lg px-3 text-sm text-sidebar-foreground hover:bg-sidebar-accent"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Sign Out</span>
-            </button>
+            <SignOutButton redirectUrl="/">
+              <button
+                type="button"
+                className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg px-3 text-sm text-sidebar-foreground hover:bg-sidebar-accent"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </button>
+            </SignOutButton>
           </SidebarMenuItem>
           {userEmail ? (
             <SidebarMenuItem>

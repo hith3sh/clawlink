@@ -4,6 +4,7 @@ import { CheckCircle2, Plus } from "lucide-react";
 
 import type { Integration } from "@/data/integrations";
 import { getIntegrationIcon } from "@/lib/integration-icons";
+import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,17 +23,21 @@ export function IntegrationCard({
   return (
     <Card className={cn("transition-colors hover:bg-card", className)}>
       <CardContent className="space-y-3">
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-lg"
-          style={{
-            backgroundColor: `${integration.color}15`,
-            boxShadow: `inset 0 0 0 1px ${integration.color}30`,
-          }}
-        >
-          {createElement(getIntegrationIcon(integration.icon), {
-            className: "h-6 w-6",
-            style: { color: integration.color },
-          })}
+        <div className="flex h-10 w-10 items-center justify-center">
+          {hasBrandLogo(integration.slug) ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={getBrandLogoSrc(integration.slug)}
+              alt=""
+              aria-hidden="true"
+              className="h-10 w-10 object-contain"
+            />
+          ) : (
+            createElement(getIntegrationIcon(integration.icon), {
+              className: "h-8 w-8",
+              style: { color: integration.color },
+            })
+          )}
         </div>
 
         <div className="flex items-center justify-between gap-3">
@@ -48,6 +53,7 @@ export function IntegrationCard({
             <Button
               variant="outline"
               size="sm"
+              nativeButton={false}
               render={<Link href={`/dashboard/integrations/${integration.slug}`} />}
             >
               <Plus className="h-3.5 w-3.5" />

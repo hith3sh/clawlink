@@ -1,18 +1,9 @@
 "use client";
 
-import {
-  SiGmail, SiSlack, SiStripe, SiGithub, SiNotion, SiShopify,
-} from "react-icons/si";
 import Image from "next/image";
+import { getBrandLogoSrc } from "@/lib/brand-logos";
 
-const icons = [
-  { Icon: SiGmail, color: "#EA4335" },
-  { Icon: SiSlack, color: "#4A154B" },
-  { Icon: SiStripe, color: "#635BFF" },
-  { Icon: SiGithub, color: "#181717" },
-  { Icon: SiNotion, color: "#000000" },
-  { Icon: SiShopify, color: "#7AB55C" },
-];
+const iconSlugs = ["gmail", "slack", "stripe", "github", "notion", "shopify"];
 
 export default function VisualEquation() {
   return (
@@ -35,12 +26,18 @@ export default function VisualEquation() {
 
       {/* Integration icons */}
       <div className="flex items-center gap-1">
-        {icons.map(({ Icon, color }, i) => (
+        {iconSlugs.map((slug) => (
           <div
-            key={i}
+            key={slug}
             className="flex items-center justify-center w-11 h-11 rounded-xl border border-gray-100 bg-white shadow-sm"
           >
-            <Icon className="w-5 h-5" style={{ color }} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={getBrandLogoSrc(slug, "light")}
+              alt=""
+              aria-hidden="true"
+              className="w-5 h-5 object-contain"
+            />
           </div>
         ))}
         <div className="flex items-center justify-center w-11 h-11 rounded-xl border border-gray-100 bg-gray-50 text-xs font-semibold text-gray-500">
