@@ -7,7 +7,6 @@ import {
   getIntegrationConnectionById,
 } from "@/lib/server/integration-store";
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 function unauthorizedResponse() {

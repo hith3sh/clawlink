@@ -11,7 +11,6 @@ import {
   exchangeNotionAuthorizationCode,
 } from "@/lib/server/oauth/notion";
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {

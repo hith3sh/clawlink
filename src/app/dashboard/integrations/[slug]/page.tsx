@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { getIntegrationBySlug } from "@/data/integrations";
 import IntegrationDetails from "@/components/dashboard/IntegrationDetails";
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export default async function IntegrationDetailPage({

@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "build:web": "opennextjs-cloudflare build --config wrangler.toml",
+    "deploy:web": "opennextjs-cloudflare deploy --config wrangler.toml",
     "build:worker": "echo 'Worker build is handled by Wrangler during deploy'",
     "deploy:worker": "wrangler --cwd worker deploy --config wrangler.worker.toml --experimental-autoconfig=false",
     "start": "next start",

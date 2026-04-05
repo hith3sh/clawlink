@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 
 import { getDatabase, getUserForCurrentIdentity } from "@/lib/server/integration-store";
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 interface LogRow {

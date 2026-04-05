@@ -1,10 +1,23 @@
 name = "clawlink-web"
 compatibility_date = "2026-04-01"
-compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".vercel/output/static"
+main = ".open-next/worker.js"
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
+workers_dev = true
 
 [observability]
 enabled = true
+
+[[routes]]
+pattern = "claw-link.dev"
+custom_domain = true
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[[services]]
+binding = "WORKER_SELF_REFERENCE"
+service = "clawlink-web"
 
 # D1 Database (for Next.js API routes)
 [[d1_databases]]

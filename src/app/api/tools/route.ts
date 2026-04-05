@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { resolveRequestActor } from "@/lib/server/request-auth";
 import { listToolsForUser } from "@/lib/server/tooling";
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {

@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { getIntegrationBySlug } from "@/data/integrations";
 import { getConnectionSessionByToken } from "@/lib/server/connection-sessions";
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function GET(

@@ -46,38 +46,39 @@ Agent guidance:
 
 # Deployment Architecture
 
-ClawLink currently runs as two separate Cloudflare projects. Do not treat them as one deploy target.
+ClawLink runs as two production Cloudflare Workers. Do not treat them as one deploy target.
 
 1. Frontend / hosted app / Next routes
-   - Cloudflare Pages project: `clawlink-web`
+   - Cloudflare Worker: `clawlink-web`
    - Config file: `wrangler.toml`
-   - Current build output: `.vercel/output/static`
-   - This project serves the Next.js app, dashboard, hosted connect flow, and Next API routes under `src/app/api/**`.
+   - Build/deploy commands: `npm run build:web` and `npm run deploy:web`
+   - This project serves `claw-link.dev`, including the Next.js app, dashboard, hosted connect flow, Polar billing routes, OAuth callbacks, and Next API routes under `src/app/api/**`.
 
 2. Worker / tool execution backend
-   - Cloudflare Worker project: `clawlink`
+   - Cloudflare Worker: `clawlink`
    - Config file: `worker/wrangler.worker.toml`
-   - This project runs the MCP/tool execution layer in `worker/**`.
+   - Build/deploy commands: `npm run build:worker` and `npm run deploy:worker`
+   - This project serves `api.claw-link.dev` and runs the MCP/tool execution layer in `worker/**`.
 
 Shared infrastructure:
 
-- Both projects use the same D1 database: `clawlink`
-- Both projects use the same KV namespace: `CREDENTIALS`
-- The frontend points to the worker/API base via `NEXT_PUBLIC_API_URL`, currently `https://api.claw-link.dev`
+- Both Workers use the same D1 database: `clawlink`
+- Both Workers use the same KV namespace: `CREDENTIALS`
+- The frontend points to the tool/API worker via `NEXT_PUBLIC_API_URL`, currently `https://api.claw-link.dev`
 
 Important deployment rules:
 
-- A frontend/Next API change is not deployed by pushing only the worker.
-- A worker change is not deployed by pushing only the Pages app.
-- If a change touches schema, credential lookup, OAuth contracts, or connection lifecycle behavior, expect to update database migrations and often deploy both projects.
-- Do not assume a successful Worker deploy means dashboard routes or hosted API routes are live.
-- The current frontend deployment path is Pages-based. Be careful with stale `.vercel/output` artifacts when deploying.
-- There is no active `clawlink-web` OpenNext Worker anymore. The live frontend stays on the Pages project `clawlink-web`.
-- `api.claw-link.dev` is a custom domain on the separate Worker `clawlink`.
-- The Cloudflare dashboard may still show a failed build card for `clawlink`, but the live `clawlink` service is deployed from Wrangler versions. Check the Worker deployment/version APIs before assuming the active runtime is broken.
-- The git-based Worker build for `clawlink` runs from the repo root. Keep the worker deploy command isolated with `wrangler --cwd worker ... --experimental-autoconfig=false` so Wrangler does not auto-detect the root Next/OpenNext app.
+- A frontend/Next API change is not deployed by pushing only the `clawlink` worker.
+- A tool execution/backend change is not deployed by pushing only the `clawlink-web` worker.
+- If a change touches schema, credential lookup, OAuth contracts, billing state, or connection lifecycle behavior, expect to update database migrations and often deploy both Workers.
+- Do not assume a successful `clawlink` Worker deploy means dashboard routes or hosted API routes are live.
+- Do not assume a successful `clawlink-web` Worker deploy updates `api.claw-link.dev`.
+- `clawlink-web` uses OpenNext on Workers. Do not reintroduce the old Pages-specific `runtime = "edge"` requirement across App Router files unless the frontend is intentionally moved back to Pages.
+- The `clawlink` git-based Worker build runs from the repo root. Keep the worker deploy command isolated with `wrangler --cwd worker ... --experimental-autoconfig=false` so Wrangler does not auto-detect the root Next/OpenNext app.
+- The frontend custom domain is `claw-link.dev`.
+- The backend custom domain is `api.claw-link.dev`.
 - The Polar webhook endpoint for the frontend app is `https://claw-link.dev/api/billing/webhooks`.
-- While the frontend remains on Cloudflare Pages with `npx @cloudflare/next-on-pages`, every non-static App Router page/route used at runtime must keep `export const runtime = "edge";`. Removing that will break the Pages build even if local `next build` succeeds.
+- A `clawlink-web` Pages project may still exist for previews/history, but it is not the production frontend surface anymore.
 
 # Integration Data Model
 

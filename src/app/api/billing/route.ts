@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 
 import { getBillingOverviewForCurrentUser } from "@/lib/server/billing";
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
