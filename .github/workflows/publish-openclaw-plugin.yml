@@ -27,10 +27,9 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
-      - name: Upgrade npm for trusted publishing
+      - name: Verify trusted publishing npm version
         run: |
-          npm install -g npm@latest
-          npm --version
+          npx --yes npm@11.6.2 --version
 
       - name: Verify package and manifest versions
         run: |
@@ -55,4 +54,4 @@ jobs:
         run: npm pack --dry-run
 
       - name: Publish to npm
-        run: npm publish --provenance --access public
+        run: npx --yes npm@11.6.2 publish --provenance --access public
