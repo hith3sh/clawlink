@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { createElement } from "react";
+import { createElement, useEffect, useState } from "react";
 import { CheckCircle2, Plus } from "lucide-react";
 
 import type { Integration } from "@/data/integrations";
@@ -8,6 +10,7 @@ import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { OAuthConnectDialog } from "@/components/dashboard/OAuthConnectDialog";
 
 interface IntegrationCardProps {
   integration: Integration;
@@ -20,6 +23,12 @@ export function IntegrationCard({
   isConnected,
   className,
 }: IntegrationCardProps) {
+  const [connected, setConnected] = useState(isConnected);
+
+  useEffect(() => {
+    setConnected(isConnected);
+  }, [isConnected]);
+
   return (
     <Card className={cn("transition-colors hover:bg-card", className)}>
       <CardContent className="space-y-3">
@@ -44,11 +53,13 @@ export function IntegrationCard({
           <h3 className="truncate text-sm font-medium text-foreground">
             {integration.name}
           </h3>
-          {isConnected ? (
+          {connected ? (
             <span className="inline-flex shrink-0 items-center gap-1.5 text-xs text-emerald-400">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Connected
             </span>
+          ) : integration.setupMode === "oauth" && integration.dashboardStatus === "available" ? (
+            <OAuthConnectDialog integration={integration} onConnected={() => setConnected(true)} />
           ) : (
             <Button
               variant="outline"
