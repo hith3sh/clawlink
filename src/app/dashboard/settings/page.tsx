@@ -39,6 +39,46 @@ interface ApiKeyRecord {
   lastUsedAt: string | null;
 }
 
+type SettingsTab = "profile" | "api" | "billing" | "notifications" | "security";
+
+const settingsTabs: Array<{
+  value: SettingsTab;
+  label: string;
+  description: string;
+  icon: typeof User;
+}> = [
+  {
+    value: "profile",
+    label: "Profile",
+    description: "Basic account information shown across the dashboard.",
+    icon: User,
+  },
+  {
+    value: "api",
+    label: "API Keys",
+    description: "Create the ClawLink secret OpenClaw uses for hosted connection sessions and worker calls.",
+    icon: Key,
+  },
+  {
+    value: "billing",
+    label: "Billing",
+    description: "Usage limits, payment details, and upgrade controls for this workspace.",
+    icon: CreditCard,
+  },
+  {
+    value: "notifications",
+    label: "Notifications",
+    description: "Decide which operational events should interrupt you.",
+    icon: Bell,
+  },
+  {
+    value: "security",
+    label: "Security",
+    description: "Review the basic account protections tied to this workspace.",
+    icon: Shield,
+  },
+];
+
 function formatTimestamp(value: string | null): string | null {
   if (!value) {
     return null;
@@ -51,6 +91,7 @@ function formatTimestamp(value: string | null): string | null {
 }
 
 export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const [copied, setCopied] = useState(false);
   const [copiedCommand, setCopiedCommand] = useState(false);
   const [apiKeys, setApiKeys] = useState<ApiKeyRecord[]>([]);
@@ -66,6 +107,7 @@ export default function SettingsPage() {
   const userName = user?.fullName || user?.firstName || "";
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || "";
   const userImage = user?.imageUrl;
+  const activeTabMeta = settingsTabs.find((tab) => tab.value === activeTab) ?? settingsTabs[0];
 
   useEffect(() => {
     let active = true;
@@ -200,40 +242,39 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="profile">
-            <User className="h-4 w-4" />
-            Profile
-          </TabsTrigger>
-          <TabsTrigger value="api">
-            <Key className="h-4 w-4" />
-            API Keys
-          </TabsTrigger>
-          <TabsTrigger value="billing">
-            <CreditCard className="h-4 w-4" />
-            Billing
-          </TabsTrigger>
-          <TabsTrigger value="notifications">
-            <Bell className="h-4 w-4" />
-            Notifications
-          </TabsTrigger>
-          <TabsTrigger value="security">
-            <Shield className="h-4 w-4" />
-            Security
-          </TabsTrigger>
-        </TabsList>
+    <Tabs
+      value={activeTab}
+      onValueChange={(value) => setActiveTab(value as SettingsTab)}
+      className="gap-6 xl:grid xl:grid-cols-[240px_minmax(0,1fr)] xl:items-start"
+    >
+      <Card className="border-border/70 bg-card/70 xl:sticky xl:top-6">
+        <CardContent className="p-3">
+          <TabsList className="!grid w-full grid-cols-2 gap-2 bg-transparent p-0 ring-0 md:grid-cols-3 xl:grid-cols-1">
+            {settingsTabs.map((tab) => {
+              const Icon = tab.icon;
 
-        <TabsContent value="profile">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile settings</CardTitle>
-              <CardDescription>
-                Basic account information shown across the dashboard.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+              return (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="w-full justify-start rounded-xl border border-border/60 bg-muted/20 px-3 py-3 text-left data-active:border-border data-active:bg-background"
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </CardContent>
+      </Card>
+
+      <Card className="min-h-[680px] border-border/70 bg-card/80">
+        <CardHeader className="min-h-28 border-b border-border/60">
+          <CardTitle>{activeTabMeta.label}</CardTitle>
+          <CardDescription>{activeTabMeta.description}</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <TabsContent value="profile" className="space-y-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={userImage} alt={userName} />
@@ -265,19 +306,9 @@ export default function SettingsPage() {
                   Save changes
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="api">
-          <Card>
-            <CardHeader>
-              <CardTitle>API keys</CardTitle>
-              <CardDescription>
-                Create the ClawLink secret OpenClaw uses for hosted connection sessions and worker calls.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          <TabsContent value="api" className="space-y-6">
               {apiKeyError ? (
                 <Alert variant="destructive">
                   <AlertDescription>{apiKeyError}</AlertDescription>
@@ -400,17 +431,10 @@ export default function SettingsPage() {
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="billing" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Current plan</CardTitle>
-              <CardDescription>Usage limits and upgrade controls for this workspace.</CardDescription>
-            </CardHeader>
-            <CardContent>
+          <TabsContent value="billing" className="space-y-6">
+            <div className="rounded-2xl border border-border/70 bg-muted/10 p-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-lg font-semibold text-foreground">Free plan</p>
@@ -430,15 +454,15 @@ export default function SettingsPage() {
                 </div>
                 <Progress value={100} className="h-2" />
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment method</CardTitle>
-              <CardDescription>Add billing details before moving beyond the free tier.</CardDescription>
-            </CardHeader>
-            <CardContent>
+            <div className="rounded-2xl border border-border/70 bg-muted/10 p-5">
+              <div className="mb-4">
+                <h3 className="text-sm font-medium text-foreground">Payment method</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Add billing details before moving beyond the free tier.
+                </p>
+              </div>
               <div className="flex items-center gap-4">
                 <CreditCard className="h-5 w-5 text-muted-foreground" />
                 <div className="flex-1">
@@ -447,19 +471,10 @@ export default function SettingsPage() {
                 </div>
                 <Button variant="outline" size="sm">Add card</Button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </TabsContent>
 
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification preferences</CardTitle>
-              <CardDescription>
-                Decide which operational events should interrupt you.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <TabsContent value="notifications" className="space-y-3">
               {[
                 { label: "Request failures", desc: "Get notified when an API call fails.", default: true },
                 { label: "Rate limit warnings", desc: "Alert when a workspace approaches its limit.", default: true },
@@ -472,20 +487,12 @@ export default function SettingsPage() {
                     <p className="text-sm font-medium text-foreground">{item.label}</p>
                     <p className="text-sm text-muted-foreground">{item.desc}</p>
                   </div>
-                  <Switch defaultChecked={item.default} />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                    <Switch defaultChecked={item.default} />
+                  </div>
+                ))}
+          </TabsContent>
 
-        <TabsContent value="security">
-          <Card>
-            <CardHeader>
-              <CardTitle>Security</CardTitle>
-              <CardDescription>Review the basic account protections tied to this workspace.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <TabsContent value="security" className="space-y-3">
               {[
                 { label: "Password", desc: "Last changed 30 days ago", action: "Change" },
                 { label: "Two-factor authentication", desc: "Not enabled", action: "Enable" },
@@ -496,13 +503,12 @@ export default function SettingsPage() {
                     <p className="text-sm font-medium text-foreground">{item.label}</p>
                     <p className="text-sm text-muted-foreground">{item.desc}</p>
                   </div>
-                  <Button variant="outline" size="sm">{item.action}</Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+                    <Button variant="outline" size="sm">{item.action}</Button>
+                  </div>
+                ))}
+          </TabsContent>
+        </CardContent>
+      </Card>
+    </Tabs>
   );
 }
