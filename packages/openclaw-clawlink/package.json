@@ -5,6 +5,10 @@
   "type": "module",
   "license": "MIT",
   "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hith3sh/clawlink"
+  },
   "publishConfig": {
     "access": "public"
   },
