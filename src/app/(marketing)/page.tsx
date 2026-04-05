@@ -39,10 +39,6 @@ export default function Home() {
         <div className="mt-8 w-full max-w-md">
           <CopyCommand />
         </div>
-
-        <p className="mt-3 text-sm text-gray-400">
-          Then send `/clawlink login &lt;apiKey&gt;` in OpenClaw and say “connect my Slack”.
-        </p>
       </section>
 
       {/* Integrations search */}
