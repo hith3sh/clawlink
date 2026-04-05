@@ -15,7 +15,29 @@ function getBearerToken(headerValue: string | null): string | null {
   return headerValue.slice("Bearer ".length).trim();
 }
 
-export async function resolveRequestActor(authorizationHeader: string | null): Promise<RequestActor | null> {
+function getApiKeyFromHeaders(headers: Headers): string | null {
+  const explicitApiKey = headers.get("x-clawlink-api-key")?.trim();
+
+  if (explicitApiKey) {
+    return explicitApiKey;
+  }
+
+  return getBearerToken(headers.get("authorization"));
+}
+
+export async function resolveRequestActor(headers: Headers): Promise<RequestActor | null> {
+  const apiKey = getApiKeyFromHeaders(headers);
+
+  if (apiKey) {
+    const apiKeyUser = await authenticateApiKey(apiKey);
+
+    if (!apiKeyUser) {
+      return null;
+    }
+
+    return { kind: "api_key", user: apiKeyUser };
+  }
+
   const signedInIdentity = await getAuthenticatedIdentity();
 
   if (signedInIdentity) {
@@ -26,17 +48,5 @@ export async function resolveRequestActor(authorizationHeader: string | null): P
     }
   }
 
-  const bearerToken = getBearerToken(authorizationHeader);
-
-  if (!bearerToken) {
-    return null;
-  }
-
-  const apiKeyUser = await authenticateApiKey(bearerToken);
-
-  if (!apiKeyUser) {
-    return null;
-  }
-
-  return { kind: "api_key", user: apiKeyUser };
+  return null;
 }

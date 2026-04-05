@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
-    const actor = await resolveRequestActor(request.headers.get("authorization"));
+    const actor = await resolveRequestActor(request.headers);
 
     if (!actor) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

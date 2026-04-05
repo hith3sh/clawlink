@@ -6,7 +6,7 @@ This repo now supports the hosted connection-session model for OpenClaw-style in
 
 1. OpenClaw calls `POST /api/connect/start` with:
    - authenticated browser session, or
-   - `Authorization: Bearer cllk_live_...`
+   - `X-ClawLink-API-Key: cllk_live_...`
 2. ClawLink returns:
    - `sessionId`
    - `sessionToken`

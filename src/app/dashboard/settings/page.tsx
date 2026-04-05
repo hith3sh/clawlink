@@ -245,28 +245,26 @@ export default function SettingsPage() {
     <Tabs
       value={activeTab}
       onValueChange={(value) => setActiveTab(value as SettingsTab)}
-      className="gap-6 xl:grid xl:grid-cols-[240px_minmax(0,1fr)] xl:items-start"
+      className="space-y-6"
     >
-      <Card className="border-border/70 bg-card/70 xl:sticky xl:top-6">
-        <CardContent className="p-3">
-          <TabsList className="!grid w-full grid-cols-2 gap-2 bg-transparent p-0 ring-0 md:grid-cols-3 xl:grid-cols-1">
-            {settingsTabs.map((tab) => {
-              const Icon = tab.icon;
+      <div className="overflow-x-auto pb-1">
+        <TabsList className="flex w-max min-w-full flex-nowrap justify-start gap-2 rounded-2xl bg-card/70 p-1 ring-1 ring-border/60">
+          {settingsTabs.map((tab) => {
+            const Icon = tab.icon;
 
-              return (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="w-full justify-start rounded-xl border border-border/60 bg-muted/20 px-3 py-3 text-left data-active:border-border data-active:bg-background"
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-        </CardContent>
-      </Card>
+            return (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="min-w-max justify-start rounded-xl border border-transparent px-3 py-2.5 data-active:border-border data-active:bg-background"
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+      </div>
 
       <Card className="min-h-[680px] border-border/70 bg-card/80">
         <CardHeader className="min-h-28 border-b border-border/60">

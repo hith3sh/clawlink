@@ -96,7 +96,7 @@ async function callClawLink(api, path, options = {}) {
   const response = await fetch(`${DEFAULT_BASE_URL}${path}`, {
     method: options.method ?? "GET",
     headers: {
-      "Authorization": `Bearer ${apiKey}`,
+      "X-ClawLink-API-Key": apiKey,
       "Content-Type": "application/json",
       "User-Agent": USER_AGENT,
       ...(options.headers ?? {}),
