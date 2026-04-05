@@ -72,7 +72,7 @@ function requireApiKey(api) {
 
   if (!apiKey) {
     throw new Error(
-      "ClawLink is not configured yet. Ask the user to create an API key at https://claw-link.dev/dashboard/settings, then send `/clawlink login <apiKey>` in a private chat with OpenClaw.",
+      "ClawLink is not configured yet. Ask the user to create an API key at https://claw-link.dev/dashboard/settings, then paste the generated `/clawlink login ...` command into OpenClaw.",
     );
   }
 
@@ -247,8 +247,6 @@ function buildCommandHelp() {
     "/clawlink status",
     "/clawlink login <apiKey>",
     "/clawlink logout",
-    "",
-    "Send the login command in a private chat with OpenClaw so your API key is not exposed in a group.",
   ].join("\n");
 }
 

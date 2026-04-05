@@ -9,7 +9,7 @@ openclaw plugins install @useclawlink/openclaw-plugin
 openclaw gateway restart
 ```
 
-Then, in a private chat with OpenClaw, save the API key:
+Then paste this command into OpenClaw:
 
 ```text
 /clawlink login cllk_live_...

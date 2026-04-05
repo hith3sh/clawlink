@@ -37,7 +37,7 @@ If you previously linked an older prerelease build, remove that local load path 
 
 ## Configure the plugin
 
-The intended setup flow is chat-native. In a private chat with OpenClaw:
+The intended setup flow is chat-native. Paste this into OpenClaw:
 
 ```text
 /clawlink login cllk_live_...
@@ -66,7 +66,7 @@ Inside OpenClaw:
 
 1. Install or link the plugin.
 2. Restart the OpenClaw gateway.
-3. Send `/clawlink login cllk_live_...` in a private chat.
+3. Paste `/clawlink login cllk_live_...` into OpenClaw.
 4. Confirm `/clawlink status` shows the key as configured.
 5. Ask OpenClaw to connect an integration, for example: `connect my slack`.
 6. Confirm the agent calls `clawlink_start_connection`.

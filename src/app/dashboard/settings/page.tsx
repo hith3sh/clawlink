@@ -52,6 +52,7 @@ function formatTimestamp(value: string | null): string | null {
 
 export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
+  const [copiedCommand, setCopiedCommand] = useState(false);
   const [apiKeys, setApiKeys] = useState<ApiKeyRecord[]>([]);
   const [apiKeyName, setApiKeyName] = useState("OpenClaw");
   const [apiKeyValue, setApiKeyValue] = useState<string | null>(null);
@@ -126,6 +127,16 @@ export default function SettingsPage() {
     window.setTimeout(() => setCopied(false), 2000);
   }
 
+  function copyLoginCommand() {
+    if (!apiKeyValue) {
+      return;
+    }
+
+    navigator.clipboard.writeText(`/clawlink login ${apiKeyValue}`);
+    setCopiedCommand(true);
+    window.setTimeout(() => setCopiedCommand(false), 2000);
+  }
+
   async function handleCreateApiKey() {
     const name = apiKeyName.trim() || "OpenClaw";
 
@@ -154,8 +165,9 @@ export default function SettingsPage() {
       setApiKeys((current) => [data.key!, ...current.filter((entry) => entry.id !== data.key!.id)]);
       setApiKeyValue(data.rawKey);
       setCopied(false);
+      setCopiedCommand(false);
       setApiKeyName("OpenClaw");
-      setApiKeySuccess(`Created API key "${data.key.name}". Copy it now because it will not be shown again.`);
+      setApiKeySuccess(`Created API key "${data.key.name}". Copy the OpenClaw command now because the raw key will not be shown again.`);
     } catch (error) {
       setApiKeyError(error instanceof Error ? error.message : "Failed to create API key");
     } finally {
@@ -281,17 +293,27 @@ export default function SettingsPage() {
               {apiKeyValue ? (
                 <div className="space-y-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
                   <div className="space-y-1">
-                    <Label>Your new API key</Label>
+                    <Label>Paste this into OpenClaw</Label>
                     <p className="text-sm text-muted-foreground">
-                      This raw key is only shown once. Save it now, then use `/clawlink login &lt;apiKey&gt;`
-                      in OpenClaw.
+                      This raw key is only shown once. The easiest path is to copy the full command below and paste it into OpenClaw.
                     </p>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      readOnly
+                      value={`/clawlink login ${apiKeyValue}`}
+                      className="flex-1 font-mono text-sm"
+                    />
+                    <Button variant="outline" onClick={copyLoginCommand}>
+                      {copiedCommand ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                      {copiedCommand ? "Copied" : "Copy command"}
+                    </Button>
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Input readOnly value={apiKeyValue} className="flex-1 font-mono text-sm" />
                     <Button variant="outline" onClick={copyApiKey}>
                       {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
-                      {copied ? "Copied" : "Copy"}
+                      {copied ? "Copied" : "Copy raw key"}
                     </Button>
                   </div>
                 </div>
@@ -374,7 +396,7 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-border/70 p-4 text-sm text-muted-foreground">
-                    No API keys yet. Create one and then run `/clawlink login &lt;apiKey&gt;` in OpenClaw.
+                    No API keys yet. Create one and paste the generated `/clawlink login ...` command into OpenClaw.
                   </div>
                 )}
               </div>

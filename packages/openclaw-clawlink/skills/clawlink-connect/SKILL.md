@@ -15,7 +15,7 @@ Workflow:
 
 Missing API key workflow:
 1. If the ClawLink tool reports that the plugin is not configured, ask the user to paste their ClawLink API key.
-2. Tell them to send `/clawlink login <apiKey>` in a private chat with OpenClaw.
+2. Tell them to paste `/clawlink login <apiKey>` into OpenClaw.
 3. After the login command succeeds, continue with the connection flow.
 
 Rules:

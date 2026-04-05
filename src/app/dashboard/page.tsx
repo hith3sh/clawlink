@@ -129,7 +129,7 @@ export default function DashboardPage() {
           <div>
             <h2 className="text-base font-medium text-foreground">API keys</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Create a ClawLink API key once, then send `/clawlink login &lt;apiKey&gt;` in OpenClaw.
+              Create a ClawLink API key once, then copy the generated `/clawlink login ...` command into OpenClaw.
               Keys are only shown once when created.
             </p>
           </div>
