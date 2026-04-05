@@ -75,6 +75,7 @@ Important deployment rules:
 - There is no active `clawlink-web` OpenNext Worker anymore. The live frontend stays on the Pages project `clawlink-web`.
 - `api.claw-link.dev` is a custom domain on the separate Worker `clawlink`.
 - The Cloudflare dashboard may still show a failed build card for `clawlink`, but the live `clawlink` service is deployed from Wrangler versions. Check the Worker deployment/version APIs before assuming the active runtime is broken.
+- The git-based Worker build for `clawlink` runs from the repo root. Keep the worker deploy command isolated with `wrangler --cwd worker ... --experimental-autoconfig=false` so Wrangler does not auto-detect the root Next/OpenNext app.
 - The Polar webhook endpoint for the frontend app is `https://claw-link.dev/api/billing/webhooks`.
 - While the frontend remains on Cloudflare Pages with `npx @cloudflare/next-on-pages`, every non-static App Router page/route used at runtime must keep `export const runtime = "edge";`. Removing that will break the Pages build even if local `next build` succeeds.
 
