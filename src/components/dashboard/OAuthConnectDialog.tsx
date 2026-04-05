@@ -47,6 +47,16 @@ interface SessionRecord {
   updatedAt: string | null;
 }
 
+interface BillingSummary {
+  planKey: "free" | "pro";
+  subscribed: boolean;
+  distinctIntegrationCount: number;
+  freeIntegrationLimit: number;
+  needsUpgrade: boolean;
+  checkoutConfigured: boolean;
+  checkoutUrl: string;
+}
+
 interface Props {
   integration: Integration;
   onConnected?: () => void;
@@ -99,6 +109,8 @@ export function OAuthConnectDialog({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [upgradeUrl, setUpgradeUrl] = useState<string | null>(null);
+  const [connectedAppsAtOpen, setConnectedAppsAtOpen] = useState<number | null>(null);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   const popupUrl = useMemo(() => {
     if (!activeSession) {
@@ -119,30 +131,40 @@ export function OAuthConnectDialog({
       setLoading(true);
       setError(null);
       setUpgradeUrl(null);
+      setShowUpgradePrompt(false);
 
       try {
-        const response = await fetch(`/api/integrations/${integration.slug}`, {
-          cache: "no-store",
-        });
-        const data = (await response.json()) as {
+        const [integrationResponse, billingResponse] = await Promise.all([
+          fetch(`/api/integrations/${integration.slug}`, {
+            cache: "no-store",
+          }),
+          fetch("/api/billing", { cache: "no-store" }),
+        ]);
+
+        const data = (await integrationResponse.json()) as {
           error?: string;
           connection?: ConnectionRecord | null;
           connections?: ConnectionRecord[];
           connectionCount?: number;
           activeSession?: SessionRecord | null;
         };
+        const billingData = billingResponse.ok
+          ? (await billingResponse.json()) as { billing?: BillingSummary }
+          : null;
 
         if (!active) {
           return;
         }
 
-        if (!response.ok) {
+        if (!integrationResponse.ok) {
           throw new Error(data.error ?? "Failed to load integration");
         }
 
         setConnection(data.connection ?? null);
         setConnectionCount(data.connectionCount ?? data.connections?.length ?? (data.connection ? 1 : 0));
         setActiveSession(data.activeSession ?? null);
+        setConnectedAppsAtOpen(billingData?.billing?.distinctIntegrationCount ?? null);
+        setUpgradeUrl(billingData?.billing?.checkoutUrl ?? null);
       } catch (requestError) {
         if (active) {
           setError(requestError instanceof Error ? requestError.message : "Failed to load integration");
@@ -165,6 +187,8 @@ export function OAuthConnectDialog({
     if (!open || !activeSession || activeSession.status !== "awaiting_user_action") {
       return;
     }
+
+    let handledConnected = false;
 
     const interval = window.setInterval(async () => {
       const response = await fetch(`/api/connect/sessions/${activeSession.token}`, {
@@ -196,6 +220,30 @@ export function OAuthConnectDialog({
         setUpgradeUrl(null);
         setConnectionCount((current) => Math.max(1, current + 1));
         onConnected?.();
+
+        if (!handledConnected) {
+          handledConnected = true;
+
+          const billingResponse = await fetch("/api/billing", { cache: "no-store" });
+
+          if (billingResponse.ok) {
+            const billingData = (await billingResponse.json()) as { billing?: BillingSummary };
+            const billing = billingData.billing;
+
+            if (billing) {
+              setUpgradeUrl(billing.checkoutUrl);
+
+              const shouldPromptUpgrade =
+                connectedAppsAtOpen === 0 &&
+                billing.planKey === "free" &&
+                !billing.subscribed &&
+                billing.checkoutConfigured &&
+                billing.distinctIntegrationCount === billing.freeIntegrationLimit;
+
+              setShowUpgradePrompt(shouldPromptUpgrade);
+            }
+          }
+        }
       }
 
       if (data.session.status === "failed") {
@@ -208,9 +256,10 @@ export function OAuthConnectDialog({
     }, 3000);
 
     return () => {
+      handledConnected = true;
       window.clearInterval(interval);
     };
-  }, [activeSession, integration.name, onConnected, open]);
+  }, [activeSession, connectedAppsAtOpen, integration.name, onConnected, open]);
 
   async function openOAuthPopup(session: SessionRecord) {
     const popup = window.open("", "clawlink-oauth", buildPopupFeatures());
@@ -228,6 +277,7 @@ export function OAuthConnectDialog({
     setError(null);
     setSuccess(null);
     setUpgradeUrl(null);
+    setShowUpgradePrompt(false);
 
     try {
       let session = activeSession;
@@ -347,6 +397,26 @@ export function OAuthConnectDialog({
                 <CheckCircle2 className="h-4 w-4" />
                 <AlertDescription className="text-emerald-800 dark:text-emerald-100">{success}</AlertDescription>
               </Alert>
+            ) : null}
+
+            {showUpgradePrompt && upgradeUrl ? (
+              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
+                <p className="text-sm font-medium text-foreground">Your first app is connected.</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  You have used the free connection slot. Upgrade to ClawLink Pro for $5/month anytime you want to add more apps.
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <a href={upgradeUrl}>
+                    <Button>
+                      Upgrade to Pro
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  </a>
+                  <Button type="button" variant="outline" onClick={() => setShowUpgradePrompt(false)}>
+                    Not now
+                  </Button>
+                </div>
+              </div>
             ) : null}
 
             {loading ? (
