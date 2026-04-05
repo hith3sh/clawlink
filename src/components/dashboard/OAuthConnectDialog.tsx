@@ -98,6 +98,7 @@ export function OAuthConnectDialog({
   const [connectionCount, setConnectionCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [upgradeUrl, setUpgradeUrl] = useState<string | null>(null);
 
   const popupUrl = useMemo(() => {
     if (!activeSession) {
@@ -117,6 +118,7 @@ export function OAuthConnectDialog({
     async function loadState() {
       setLoading(true);
       setError(null);
+      setUpgradeUrl(null);
 
       try {
         const response = await fetch(`/api/integrations/${integration.slug}`, {
@@ -191,6 +193,7 @@ export function OAuthConnectDialog({
       if (data.session.status === "connected") {
         setSuccess(`${integration.name} is connected.`);
         setError(null);
+        setUpgradeUrl(null);
         setConnectionCount((current) => Math.max(1, current + 1));
         onConnected?.();
       }
@@ -224,6 +227,7 @@ export function OAuthConnectDialog({
     setStarting(true);
     setError(null);
     setSuccess(null);
+    setUpgradeUrl(null);
 
     try {
       let session = activeSession;
@@ -237,6 +241,7 @@ export function OAuthConnectDialog({
 
         const data = (await response.json()) as {
           error?: string;
+          upgradeUrl?: string;
           sessionId?: string;
           sessionToken?: string;
           displayCode?: string;
@@ -245,7 +250,14 @@ export function OAuthConnectDialog({
           expiresAt?: string;
         };
 
+        if (response.status === 402 && data.upgradeUrl) {
+          setUpgradeUrl(data.upgradeUrl);
+          window.location.assign(data.upgradeUrl);
+          return;
+        }
+
         if (!response.ok) {
+          setUpgradeUrl(data.upgradeUrl ?? null);
           throw new Error(data.error ?? "Failed to create connection session");
         }
 
@@ -313,7 +325,20 @@ export function OAuthConnectDialog({
             {error ? (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>
+                  <div className="space-y-3">
+                    <p>{error}</p>
+                    {upgradeUrl ? (
+                      <a
+                        href={upgradeUrl}
+                        className="inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4"
+                      >
+                        Upgrade now
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    ) : null}
+                  </div>
+                </AlertDescription>
               </Alert>
             ) : null}
 

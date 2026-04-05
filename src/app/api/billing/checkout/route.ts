@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
 
   url.searchParams.set("products", productId);
   url.searchParams.set("customerExternalId", user.id);
+  url.searchParams.set("theme", "light");
 
   if (user.email) {
     url.searchParams.set("customerEmail", user.email);
