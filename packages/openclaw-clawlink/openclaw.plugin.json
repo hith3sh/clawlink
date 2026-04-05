@@ -2,7 +2,7 @@
   "id": "openclaw-plugin",
   "name": "ClawLink",
   "description": "Hosted connection sessions for ClawLink integrations inside OpenClaw",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "skills": [
     "skills"
   ],
