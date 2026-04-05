@@ -15,13 +15,7 @@ Then, in a private chat with OpenClaw, save the API key:
 /clawlink login cllk_live_...
 ```
 
-For local or staging ClawLink deployments:
-
-```text
-/clawlink login cllk_live_... http://localhost:3000
-```
-
-You can also manage config manually in `~/.openclaw/openclaw.json` under `plugins.entries.clawlink.config`, but the chat command is the intended setup flow.
+You can also manage config manually in `~/.openclaw/openclaw.json` under `plugins.entries.openclaw-plugin.config`, but the chat command is the intended setup flow.
 
 ## Tools
 
@@ -31,8 +25,7 @@ You can also manage config manually in `~/.openclaw/openclaw.json` under `plugin
 ## Commands
 
 - `/clawlink status`
-- `/clawlink login <apiKey> [baseUrl]`
-- `/clawlink base-url <url|default>`
+- `/clawlink login <apiKey>`
 - `/clawlink logout`
 
 ## Local development

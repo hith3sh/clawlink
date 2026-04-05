@@ -12,12 +12,16 @@ import "./integrations";
 
 import { integrations } from "../src/data/integrations";
 import { verifyAuth } from "./auth";
+import { loadCredentialsForIntegration, resolveInternalUserId } from "./credentials";
 import { logRequest } from "./logger";
 import { getIntegrationHandler } from "./integrations";
 
 export interface Env {
   DB: D1Database;
   CREDENTIALS: KVNamespace;
+  CREDENTIAL_ENCRYPTION_KEY?: string;
+  CLERK_PUBLISHABLE_KEY?: string;
+  CLERK_JWT_KEY?: string;
 }
 
 interface MCPRequest {
@@ -47,7 +51,7 @@ interface MCPResponse {
  */
 async function handleToolCall(
   env: Env,
-  userId: string,
+  authSubject: string,
   params?: MCPRequest["params"]
 ): Promise<unknown> {
   const { name, arguments: args = {} } = params || {};
@@ -59,6 +63,11 @@ async function handleToolCall(
   // Parse tool name: "gmail_send_email" -> integration: gmail, action: send_email
   const [integration, ...actionParts] = name.split("_");
   const action = actionParts.join("_");
+  const internalUserId = await resolveInternalUserId(env.DB, authSubject);
+
+  if (!internalUserId) {
+    throw new Error("No ClawLink user found for the authenticated account.");
+  }
 
   // Get cached credentials or decrypt from request
   let credentials: Record<string, string>;
@@ -67,13 +76,7 @@ async function handleToolCall(
     // Credentials passed in request (already encrypted per-session)
     credentials = params.credentials;
   } else {
-    // Fetch from KV cache
-    const cached = await env.CREDENTIALS.get(`cred:${userId}:${integration}`);
-    if (cached) {
-      credentials = JSON.parse(cached);
-    } else {
-      throw new Error(`No credentials found for ${integration}. Please connect it first.`);
-    }
+    credentials = await loadCredentialsForIntegration(env, internalUserId, integration);
   }
 
   // Get the integration handler
@@ -87,7 +90,7 @@ async function handleToolCall(
 
   // Log the request
   await logRequest(env.DB, {
-    userId,
+    userId: internalUserId,
     integration,
     action,
     success: true,

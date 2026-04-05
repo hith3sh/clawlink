@@ -308,6 +308,63 @@ export async function completeManualConnectionSession(
   return saved;
 }
 
+export async function completeOAuthConnectionSession(
+  token: string,
+  credentials: Record<string, string>,
+): Promise<ConnectionSessionRecord> {
+  const db = getDatabase();
+
+  if (!db) {
+    throw new Error("DB binding is not configured");
+  }
+
+  const session = await loadSession(db, token);
+
+  if (!session) {
+    throw new Error("Connection session not found");
+  }
+
+  const integration = getIntegrationBySlug(session.integration);
+
+  if (!integration) {
+    throw new Error("Integration not found");
+  }
+
+  const normalized = await expireIfNeeded(db, session);
+
+  if (normalized.status === "expired") {
+    throw new Error("This connection session has expired");
+  }
+
+  if (integration.setupMode !== "oauth") {
+    throw new Error(`${integration.name} does not use the hosted OAuth flow`);
+  }
+
+  await saveIntegrationConnectionForUserId(db, normalized.user_id, normalized.integration, credentials);
+
+  await db
+    .prepare(
+      `
+        UPDATE connection_sessions
+        SET status = 'connected',
+            error_message = NULL,
+            completed_at = datetime('now'),
+            updated_at = datetime('now')
+        WHERE id = ?
+      `,
+    )
+    .bind(normalized.id)
+    .run();
+
+  const saved = await getConnectionSessionByToken(token);
+
+  if (!saved) {
+    throw new Error("Connection session was completed but could not be reloaded");
+  }
+
+  return saved;
+}
+
 export async function failConnectionSession(token: string, message: string): Promise<void> {
   const db = getDatabase();
 

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { getOptionalRequestContext } from "@cloudflare/next-on-pages";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export interface D1Statement {
   bind(...values: unknown[]): {
@@ -38,6 +38,18 @@ export interface IntegrationConnectionRecord {
 export interface Identity {
   clerkId: string;
   email: string;
+}
+
+function getOptionalRequestContext():
+  | { env?: Record<string, unknown> }
+  | undefined {
+  try {
+    return getCloudflareContext({ async: false }) as unknown as {
+      env?: Record<string, unknown>;
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 export function getEnvBinding<T>(key: string): T | undefined {

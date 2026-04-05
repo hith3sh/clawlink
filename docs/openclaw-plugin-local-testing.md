@@ -2,18 +2,18 @@
 
 This repo now includes a native OpenClaw plugin package at `packages/openclaw-clawlink`.
 
-## Temporary package name
+## Published package
 
-Until a final registry name is locked, the plugin package is published as:
+The plugin package is published as:
 
 ```bash
 @useclawlink/openclaw-plugin
 ```
 
-The OpenClaw plugin id remains:
+The OpenClaw plugin id is:
 
 ```bash
-clawlink
+openclaw-plugin
 ```
 
 ## Link the local package into OpenClaw
@@ -29,9 +29,11 @@ You can also pack the package first and install the tarball:
 
 ```bash
 (cd packages/openclaw-clawlink && npm pack)
-openclaw plugins install ./packages/openclaw-clawlink/clawlink-openclaw-plugin-0.1.0.tgz
+openclaw plugins install ./packages/openclaw-clawlink/useclawlink-openclaw-plugin-0.1.1.tgz
 openclaw gateway restart
 ```
+
+If you previously linked an older prerelease build, remove that local load path before testing the published npm package. Otherwise OpenClaw will load both copies and warn about duplicate plugin ids.
 
 ## Configure the plugin
 
@@ -41,31 +43,22 @@ The intended setup flow is chat-native. In a private chat with OpenClaw:
 /clawlink login cllk_live_...
 ```
 
-For local or staging ClawLink deployments:
-
-```text
-/clawlink login cllk_live_... http://localhost:3000
-```
-
-You can still configure the plugin manually if needed by adding the ClawLink API key and optional base URL override to your OpenClaw config:
+You can still configure the plugin manually if needed by adding the ClawLink API key to your OpenClaw config:
 
 ```json5
 {
   plugins: {
     entries: {
-      clawlink: {
+      "openclaw-plugin": {
         enabled: true,
         config: {
-          apiKey: "cllk_live_...",
-          baseUrl: "http://localhost:3000",
+          apiKey: "cllk_live_..."
         },
       },
     },
   },
 }
 ```
-
-Use `https://claw-link.dev` for production or a local/staging URL when testing this repo.
 
 ## Smoke test
 
@@ -82,5 +75,6 @@ Inside OpenClaw:
 
 ## Current coverage
 
-- Manual hosted connections are the only end-to-end flow currently ready.
-- OAuth providers such as Notion still need provider-specific hosted callback and token exchange work on the ClawLink backend before the plugin can connect them successfully.
+- Manual hosted connections remain supported for non-OAuth integrations.
+- Notion is the first hosted OAuth provider wired into the connection-session flow.
+- Other OAuth providers still need provider-specific hosted callback and token exchange work on the ClawLink backend before the plugin can connect them successfully.

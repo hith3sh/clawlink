@@ -4,19 +4,28 @@
  * Credentials are encrypted at rest and decrypted only at execution time
  */
 
-const ENCRYPTION_KEY = process.env.CREDENTIAL_ENCRYPTION_KEY;
+function getEncryptionKey(providedKey?: string): string {
+  const encryptionKey = providedKey ?? process.env.CREDENTIAL_ENCRYPTION_KEY;
+
+  if (!encryptionKey) {
+    throw new Error("CREDENTIAL_ENCRYPTION_KEY is not configured");
+  }
+
+  return encryptionKey;
+}
 
 /**
  * Encrypt credentials for storage
  */
-export async function encryptCredential(credentials: Record<string, string>): Promise<string> {
-  if (!ENCRYPTION_KEY) {
-    throw new Error("ENCRYPTION_KEY not configured");
-  }
+export async function encryptCredential(
+  credentials: Record<string, string>,
+  encryptionKeyOverride?: string,
+): Promise<string> {
+  const encryptionKey = getEncryptionKey(encryptionKeyOverride);
 
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(ENCRYPTION_KEY.padEnd(32, "0").slice(0, 32)),
+    new TextEncoder().encode(encryptionKey.padEnd(32, "0").slice(0, 32)),
     { name: "AES-GCM" },
     false,
     ["encrypt"]
@@ -42,14 +51,15 @@ export async function encryptCredential(credentials: Record<string, string>): Pr
 /**
  * Decrypt credentials from storage
  */
-export async function decryptCredential(encryptedData: string): Promise<Record<string, string>> {
-  if (!ENCRYPTION_KEY) {
-    throw new Error("ENCRYPTION_KEY not configured");
-  }
+export async function decryptCredential(
+  encryptedData: string,
+  encryptionKeyOverride?: string,
+): Promise<Record<string, string>> {
+  const encryptionKey = getEncryptionKey(encryptionKeyOverride);
 
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(ENCRYPTION_KEY.padEnd(32, "0").slice(0, 32)),
+    new TextEncoder().encode(encryptionKey.padEnd(32, "0").slice(0, 32)),
     { name: "AES-GCM" },
     false,
     ["decrypt"]

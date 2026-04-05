@@ -331,11 +331,11 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   notion: {
-    setupMode: "manual",
+    setupMode: "oauth",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Create an internal Notion integration and paste the integration token here.",
-    credentialFields: [tokenField("integrationToken", "Integration Token", "secret_...")],
+    setupGuide: "Connect your Notion workspace through the hosted OAuth flow and approve the pages ClawLink can access.",
+    credentialFields: [],
     tools: [
       { name: "notion_search", description: "Search pages and databases in Notion" },
       { name: "notion_get_page", description: "Get a page by ID" },

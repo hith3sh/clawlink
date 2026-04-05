@@ -1,7 +1,9 @@
 import { Type } from "@sinclair/typebox";
 
+const PLUGIN_ID = "openclaw-plugin";
+const LEGACY_PLUGIN_IDS = ["clawlink"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.0";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.1";
 
 function tokenizeArgs(value) {
   const input = typeof value === "string" ? value.trim() : "";
@@ -33,20 +35,26 @@ function maskSecret(value) {
   return `${trimmed.slice(0, 4)}...${trimmed.slice(-4)}`;
 }
 
-function normalizeBaseUrl(value) {
-  if (!isNonEmptyString(value)) {
-    return DEFAULT_BASE_URL;
+function getPluginConfigEntry(entries, pluginId) {
+  const pluginEntry = entries?.[pluginId];
+
+  if (pluginEntry && typeof pluginEntry === "object") {
+    return pluginEntry.config ?? {};
   }
 
-  return value.trim().replace(/\/+$/, "");
+  return null;
 }
 
 function getDynamicPluginConfig(api) {
   const liveConfig = api.runtime?.config?.loadConfig?.();
-  const pluginEntry = liveConfig?.plugins?.entries?.[api.id];
+  const entries = liveConfig?.plugins?.entries;
 
-  if (pluginEntry && typeof pluginEntry === "object") {
-    return pluginEntry.config ?? {};
+  for (const pluginId of [api.id, ...LEGACY_PLUGIN_IDS]) {
+    const config = getPluginConfigEntry(entries, pluginId);
+
+    if (config) {
+      return config;
+    }
   }
 
   return api.pluginConfig ?? {};
@@ -55,13 +63,12 @@ function getDynamicPluginConfig(api) {
 function getPluginConfig(api) {
   const rawConfig = getDynamicPluginConfig(api);
   const apiKey = isNonEmptyString(rawConfig.apiKey) ? rawConfig.apiKey.trim() : "";
-  const baseUrl = normalizeBaseUrl(rawConfig.baseUrl);
 
-  return { apiKey, baseUrl };
+  return { apiKey };
 }
 
 function requireApiKey(api) {
-  const { apiKey, baseUrl } = getPluginConfig(api);
+  const { apiKey } = getPluginConfig(api);
 
   if (!apiKey) {
     throw new Error(
@@ -69,7 +76,7 @@ function requireApiKey(api) {
     );
   }
 
-  return { apiKey, baseUrl };
+  return { apiKey };
 }
 
 async function parseJsonSafely(response) {
@@ -85,8 +92,8 @@ function stringifyPayload(payload) {
 }
 
 async function callClawLink(api, path, options = {}) {
-  const { apiKey, baseUrl } = requireApiKey(api);
-  const response = await fetch(`${baseUrl}${path}`, {
+  const { apiKey } = requireApiKey(api);
+  const response = await fetch(`${DEFAULT_BASE_URL}${path}`, {
     method: options.method ?? "GET",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
@@ -203,22 +210,32 @@ async function persistPluginConfig(api, mutateConfig) {
 function updatePluginEntryConfig(config, updater) {
   const currentPlugins = config.plugins ?? {};
   const currentEntries = currentPlugins.entries ?? {};
-  const currentEntry = currentEntries.clawlink ?? {};
+  const legacyEntry = LEGACY_PLUGIN_IDS.map((pluginId) => currentEntries[pluginId]).find(
+    (entry) => entry && typeof entry === "object",
+  );
+  const currentEntry = currentEntries[PLUGIN_ID] ?? legacyEntry ?? {};
   const currentPluginConfig = currentEntry.config ?? {};
   const nextPluginConfig = updater({ ...currentPluginConfig });
+  const nextEntries = {
+    ...currentEntries,
+    [PLUGIN_ID]: {
+      ...currentEntry,
+      enabled: true,
+      config: nextPluginConfig,
+    },
+  };
+
+  for (const legacyPluginId of LEGACY_PLUGIN_IDS) {
+    if (legacyPluginId !== PLUGIN_ID) {
+      delete nextEntries[legacyPluginId];
+    }
+  }
 
   return {
     ...config,
     plugins: {
       ...currentPlugins,
-      entries: {
-        ...currentEntries,
-        clawlink: {
-          ...currentEntry,
-          enabled: true,
-          config: nextPluginConfig,
-        },
-      },
+      entries: nextEntries,
     },
   };
 }
@@ -228,9 +245,7 @@ function buildCommandHelp() {
     "ClawLink commands:",
     "",
     "/clawlink status",
-    "/clawlink login <apiKey> [baseUrl]",
-    "/clawlink base-url <url>",
-    "/clawlink base-url default",
+    "/clawlink login <apiKey>",
     "/clawlink logout",
     "",
     "Send the login command in a private chat with OpenClaw so your API key is not exposed in a group.",
@@ -238,7 +253,7 @@ function buildCommandHelp() {
 }
 
 const clawlinkPlugin = {
-  id: "clawlink",
+  id: PLUGIN_ID,
   name: "ClawLink",
   description: "Hosted connection sessions for ClawLink integrations inside OpenClaw",
   register(api) {
@@ -255,13 +270,12 @@ const clawlinkPlugin = {
         }
 
         if (action === "status") {
-          const { apiKey, baseUrl } = getPluginConfig(api);
+          const { apiKey } = getPluginConfig(api);
 
           return {
             text: [
               "ClawLink status:",
               `- apiKey: ${maskSecret(apiKey)}`,
-              `- baseUrl: ${baseUrl}`,
               `- login: ${apiKey ? "configured" : "missing"}`,
             ].join("\n"),
           };
@@ -269,63 +283,33 @@ const clawlinkPlugin = {
 
         if (action === "login") {
           const apiKey = tokens[1]?.trim() ?? "";
-          const baseUrl = tokens[2]?.trim();
 
           if (!apiKey) {
             return {
-              text: "Usage: /clawlink login <apiKey> [baseUrl]\nCreate a key at https://claw-link.dev/dashboard/settings",
+              text: "Usage: /clawlink login <apiKey>\nCreate a key at https://claw-link.dev/dashboard/settings",
             };
-          }
-
-          const nextBaseUrl = isNonEmptyString(baseUrl)
-            ? normalizeBaseUrl(baseUrl)
-            : undefined;
-
-          await persistPluginConfig(api, (config) =>
-            updatePluginEntryConfig(config, (pluginConfig) => ({
-              ...pluginConfig,
-              apiKey,
-              ...(nextBaseUrl ? { baseUrl: nextBaseUrl } : {}),
-            })),
-          );
-
-          return {
-            text: [
-              `ClawLink API key saved: ${maskSecret(apiKey)}`,
-              nextBaseUrl ? `Base URL saved: ${nextBaseUrl}` : null,
-              "You can retry your connection request now.",
-            ]
-              .filter(Boolean)
-              .join("\n"),
-          };
-        }
-
-        if (action === "base-url") {
-          const requested = tokens[1]?.trim() ?? "";
-
-          if (!requested) {
-            return { text: "Usage: /clawlink base-url <url>\nUsage: /clawlink base-url default" };
           }
 
           await persistPluginConfig(api, (config) =>
             updatePluginEntryConfig(config, (pluginConfig) => {
-              const nextPluginConfig = { ...pluginConfig };
+              const nextPluginConfig = {
+                ...pluginConfig,
+                apiKey,
+              };
 
-              if (requested === "default" || requested === "reset") {
-                delete nextPluginConfig.baseUrl;
-              } else {
-                nextPluginConfig.baseUrl = normalizeBaseUrl(requested);
-              }
+              delete nextPluginConfig.baseUrl;
 
               return nextPluginConfig;
             }),
           );
 
           return {
-            text:
-              requested === "default" || requested === "reset"
-                ? `ClawLink base URL reset to ${DEFAULT_BASE_URL}.`
-                : `ClawLink base URL saved: ${normalizeBaseUrl(requested)}`,
+            text: [
+              `ClawLink API key saved: ${maskSecret(apiKey)}`,
+              "You can retry your connection request now.",
+            ]
+              .filter(Boolean)
+              .join("\n"),
           };
         }
 
@@ -335,6 +319,7 @@ const clawlinkPlugin = {
               const nextPluginConfig = { ...pluginConfig };
 
               delete nextPluginConfig.apiKey;
+              delete nextPluginConfig.baseUrl;
 
               return nextPluginConfig;
             }),
