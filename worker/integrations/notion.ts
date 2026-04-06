@@ -4,6 +4,7 @@
 
 import {
   BaseIntegration,
+  IntegrationRequestError,
   defineTool,
   type IntegrationTool,
   registerHandler,
