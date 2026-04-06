@@ -10,6 +10,7 @@ import "./outlook";
 import "./slack";
 import "./github";
 import "./notion";
+import "./apollo";
 // import "./stripe";
 // etc.
 

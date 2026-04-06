@@ -308,10 +308,24 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   apollo: {
     setupMode: "manual",
     dashboardStatus: "available",
-    runtimeStatus: "planned",
-    setupGuide: "Create an Apollo API key and store it here for future worker support.",
-    credentialFields: [apiKeyField()],
-    tools: [],
+    runtimeStatus: "live",
+    setupGuide: "Create an Apollo API key in Apollo's developer dashboard and paste it here. Use a master API key if you want Apollo prospecting endpoints like People API Search; narrower keys can work if they include only the endpoints you plan to use.",
+    credentialFields: [
+      apiKeyField(
+        "apiKey",
+        "API Key",
+        "Paste your Apollo API key",
+        "Apollo supports API keys for customer API access. If you plan to use net-new prospecting searches, create a master key so those endpoints are available.",
+      ),
+    ],
+    tools: [
+      { name: "search_people", description: "Search net-new people in Apollo using prospecting filters" },
+      { name: "search_organizations", description: "Search companies in Apollo's organization database" },
+      { name: "enrich_person", description: "Enrich a single person's profile in Apollo" },
+      { name: "enrich_organization", description: "Enrich a single organization in Apollo by domain" },
+      { name: "search_contacts", description: "Search contacts already added to the team's Apollo account" },
+      { name: "create_contact", description: "Create a contact in the team's Apollo account" },
+    ],
   },
   notion: {
     setupMode: "oauth",

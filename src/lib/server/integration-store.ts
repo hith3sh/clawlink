@@ -152,6 +152,15 @@ function deriveConnectionMetadata(
     };
   }
 
+  if (slug === "apollo") {
+    return {
+      accountLabel: "Apollo workspace",
+      connectionLabel: "Apollo API key",
+      externalAccountId: null,
+      expiresAt,
+    };
+  }
+
   return {
     accountLabel:
       formatCombinedLabel(displayName, primaryEmail) ??
