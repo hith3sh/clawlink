@@ -2,7 +2,7 @@
   "id": "openclaw-plugin",
   "name": "ClawLink",
   "description": "Generic ClawLink bridge for hosted connections and dynamic integration tools inside OpenClaw",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "skills": [
     "skills"
   ],
