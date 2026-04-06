@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 const PLUGIN_ID = "openclaw-plugin";
 const LEGACY_PLUGIN_IDS = ["clawlink"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.7";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.8";
 
 function tokenizeArgs(value) {
   const input = typeof value === "string" ? value.trim() : "";
@@ -115,9 +115,13 @@ async function callClawLink(api, path, options = {}) {
       Array.isArray(payload?.details) && payload.details.length > 0
         ? `\n${payload.details.join("\n")}`
         : "";
+    const upgradeHint =
+      typeof payload?.upgradeUrl === "string"
+        ? `\nUpgrade here: ${payload.upgradeUrl}`
+        : "";
     const message =
       payload && typeof payload.error === "string"
-        ? `${payload.error}${details}`
+        ? `${payload.error}${details}${upgradeHint}`
         : `ClawLink request failed with status ${response.status}`;
     throw new Error(message);
   }
