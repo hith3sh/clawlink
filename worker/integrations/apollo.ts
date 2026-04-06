@@ -4,22 +4,28 @@
 
 import { BaseIntegration, defineTool, type IntegrationTool, registerHandler } from "./base";
 
+const APOLLO_BASE_URL = "https://api.apollo.io/api/v1";
+
 type ApolloQueryValue = string | number | boolean | null | undefined | string[];
 
 interface ApolloErrorPayload {
-  error?: string;
+  error?: string | { message?: string };
   message?: string;
-  errors?: unknown;
+  errors?: Array<{ message?: string }> | unknown;
 }
 
 class ApolloHandler extends BaseIntegration {
   getTools(integrationSlug: string): IntegrationTool[] {
     return [
       defineTool(integrationSlug, "search_people", {
-        description: "Search net-new people in Apollo using prospecting filters",
+        description: "Search Apollo's people database for leads that match role, company, geography, and seniority filters",
         inputSchema: {
           type: "object",
           properties: {
+            query: {
+              type: "string",
+              description: "General keyword query across names, titles, and employers",
+            },
             personTitles: {
               type: "array",
               items: { type: "string" },
@@ -28,10 +34,6 @@ class ApolloHandler extends BaseIntegration {
             includeSimilarTitles: {
               type: "boolean",
               description: "Whether Apollo should include similar job titles",
-            },
-            qKeywords: {
-              type: "string",
-              description: "General Apollo keyword query across names, titles, and employers",
             },
             personLocations: {
               type: "array",
@@ -76,6 +78,10 @@ class ApolloHandler extends BaseIntegration {
               type: "number",
               description: "Results per page, between 1 and 100",
             },
+            filters: {
+              type: "object",
+              description: "Additional Apollo query parameters to forward directly",
+            },
           },
         },
         accessLevel: "read",
@@ -86,7 +92,7 @@ class ApolloHandler extends BaseIntegration {
         ],
         askBefore: [
           "Ask for tighter filters before running a broad search, because Apollo pages large result sets and encourages narrowing searches.",
-          "If the user expects email addresses or phone numbers, explain that this search endpoint does not return them and enrichment is a separate step.",
+          "If the user expects email addresses or phone numbers, explain that this search endpoint may require additional enrichment or Apollo credits.",
         ],
         safeDefaults: {
           includeSimilarTitles: true,
@@ -114,9 +120,9 @@ class ApolloHandler extends BaseIntegration {
         inputSchema: {
           type: "object",
           properties: {
-            organizationName: {
+            query: {
               type: "string",
-              description: "Company-name filter, partial matches allowed",
+              description: "Company-name or keyword filter",
             },
             organizationDomains: {
               type: "array",
@@ -132,6 +138,11 @@ class ApolloHandler extends BaseIntegration {
               type: "array",
               items: { type: "string" },
               description: "Headquarters locations to exclude",
+            },
+            organizationIds: {
+              type: "array",
+              items: { type: "string" },
+              description: "Specific Apollo organization IDs to look up",
             },
             organizationNumEmployeesRanges: {
               type: "array",
@@ -150,6 +161,10 @@ class ApolloHandler extends BaseIntegration {
             perPage: {
               type: "number",
               description: "Results per page, between 1 and 100",
+            },
+            filters: {
+              type: "object",
+              description: "Additional Apollo query parameters to forward directly",
             },
           },
         },
@@ -187,38 +202,17 @@ class ApolloHandler extends BaseIntegration {
         inputSchema: {
           type: "object",
           properties: {
-            firstName: {
-              type: "string",
-              description: "Person's first name",
-            },
-            lastName: {
-              type: "string",
-              description: "Person's last name",
-            },
+            firstName: { type: "string", description: "Person's first name" },
+            lastName: { type: "string", description: "Person's last name" },
             name: {
               type: "string",
               description: "Person's full name if you are not sending first and last separately",
             },
-            email: {
-              type: "string",
-              description: "Work email address for the person",
-            },
-            organizationName: {
-              type: "string",
-              description: "Employer name",
-            },
-            domain: {
-              type: "string",
-              description: "Employer domain such as apollo.io",
-            },
-            id: {
-              type: "string",
-              description: "Apollo person id",
-            },
-            linkedinUrl: {
-              type: "string",
-              description: "LinkedIn profile URL",
-            },
+            email: { type: "string", description: "Work email address for the person" },
+            organizationName: { type: "string", description: "Employer name" },
+            domain: { type: "string", description: "Employer domain such as apollo.io" },
+            id: { type: "string", description: "Apollo person id" },
+            linkedinUrl: { type: "string", description: "LinkedIn profile URL" },
             revealPersonalEmails: {
               type: "boolean",
               description: "Request personal emails in addition to standard profile data",
@@ -286,7 +280,7 @@ class ApolloHandler extends BaseIntegration {
         inputSchema: {
           type: "object",
           properties: {
-            qKeywords: {
+            query: {
               type: "string",
               description: "Keywords across names, job titles, employers, and emails",
             },
@@ -299,6 +293,11 @@ class ApolloHandler extends BaseIntegration {
               type: "array",
               items: { type: "string" },
               description: "Apollo contact label ids to include",
+            },
+            emailStatuses: {
+              type: "array",
+              items: { type: "string" },
+              description: "Apollo contact email status values to filter on",
             },
             sortByField: {
               type: "string",
@@ -315,6 +314,10 @@ class ApolloHandler extends BaseIntegration {
             perPage: {
               type: "number",
               description: "Results per page, between 1 and 100",
+            },
+            filters: {
+              type: "object",
+              description: "Additional Apollo body fields to merge into the search request",
             },
           },
         },
@@ -335,13 +338,36 @@ class ApolloHandler extends BaseIntegration {
           {
             user: "search Apollo contacts for Tim Zheng",
             args: {
-              qKeywords: "Tim Zheng",
+              query: "Tim Zheng",
               perPage: 10,
             },
           },
         ],
         followups: [
           "Offer to create a contact if nothing relevant exists.",
+          "Offer to list contact stages if they want to organize results.",
+        ],
+      }),
+      defineTool(integrationSlug, "list_contact_stages", {
+        description: "List the contact stages available in Apollo",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+        accessLevel: "read",
+        tags: ["apollo", "contacts", "stages", "metadata"],
+        whenToUse: [
+          "You need Apollo contact stage IDs before assigning or filtering contacts by stage.",
+        ],
+        examples: [
+          {
+            user: "what contact stages are available in apollo",
+            args: {},
+          },
+        ],
+        followups: [
+          "Offer to search contacts in a chosen stage.",
+          "Offer to create a contact using one of the returned stage ids.",
         ],
       }),
       defineTool(integrationSlug, "create_contact", {
@@ -349,67 +375,34 @@ class ApolloHandler extends BaseIntegration {
         inputSchema: {
           type: "object",
           properties: {
-            firstName: {
-              type: "string",
-              description: "Contact first name",
-            },
-            lastName: {
-              type: "string",
-              description: "Contact last name",
-            },
-            organizationName: {
-              type: "string",
-              description: "Employer name",
-            },
-            title: {
-              type: "string",
-              description: "Current job title",
-            },
+            firstName: { type: "string", description: "Contact first name" },
+            lastName: { type: "string", description: "Contact last name" },
+            organizationName: { type: "string", description: "Employer name" },
+            title: { type: "string", description: "Current job title" },
             accountId: {
               type: "string",
               description: "Apollo account id if you already have it",
             },
-            email: {
-              type: "string",
-              description: "Work email address",
-            },
-            websiteUrl: {
-              type: "string",
-              description: "Corporate website URL",
-            },
+            email: { type: "string", description: "Work email address" },
+            websiteUrl: { type: "string", description: "Corporate website URL" },
+            linkedinUrl: { type: "string", description: "LinkedIn profile URL" },
+            ownerId: { type: "string", description: "Apollo user ID to assign as owner" },
             listIds: {
               type: "array",
               items: { type: "string" },
               description: "Apollo list ids to attach",
             },
-            contactStageId: {
-              type: "string",
-              description: "Apollo contact stage id",
-            },
+            contactStageId: { type: "string", description: "Apollo contact stage id" },
             presentRawAddress: {
               type: "string",
               description: "Location text for the contact",
             },
-            directPhone: {
-              type: "string",
-              description: "Primary direct phone number",
-            },
-            workPhone: {
-              type: "string",
-              description: "Office phone number",
-            },
-            mobilePhone: {
-              type: "string",
-              description: "Mobile phone number",
-            },
-            homePhone: {
-              type: "string",
-              description: "Home phone number",
-            },
-            otherPhone: {
-              type: "string",
-              description: "Alternative phone number",
-            },
+            phone: { type: "string", description: "Primary phone number" },
+            directPhone: { type: "string", description: "Primary direct phone number" },
+            workPhone: { type: "string", description: "Office phone number" },
+            mobilePhone: { type: "string", description: "Mobile phone number" },
+            homePhone: { type: "string", description: "Home phone number" },
+            otherPhone: { type: "string", description: "Alternative phone number" },
             typedCustomFields: {
               type: "object",
               description: "Apollo custom-field payload keyed by custom field id",
@@ -418,8 +411,11 @@ class ApolloHandler extends BaseIntegration {
               type: "boolean",
               description: "Whether Apollo should deduplicate instead of always creating a new row",
             },
+            extra: {
+              type: "object",
+              description: "Additional Apollo body fields to merge into the create request",
+            },
           },
-          required: ["firstName", "lastName"],
         },
         accessLevel: "write",
         tags: ["contacts", "crm", "create", "apollo"],
@@ -479,6 +475,8 @@ class ApolloHandler extends BaseIntegration {
         return this.enrichOrganization(args, credentials);
       case "search_contacts":
         return this.searchContacts(args, credentials);
+      case "list_contact_stages":
+        return this.listContactStages(credentials);
       case "create_contact":
         return this.createContact(args, credentials);
       default:
@@ -489,8 +487,11 @@ class ApolloHandler extends BaseIntegration {
   async validateCredentials(credentials: Record<string, string>): Promise<boolean> {
     try {
       const response = await this.apiRequest(
-        "https://api.apollo.io/api/v1/contacts/search?page=1&per_page=1",
-        { method: "POST" },
+        `${APOLLO_BASE_URL}/contacts/search?page=1&per_page=1`,
+        {
+          method: "POST",
+          body: JSON.stringify({}),
+        },
         credentials,
       );
 
@@ -511,7 +512,7 @@ class ApolloHandler extends BaseIntegration {
       if (Array.isArray(value)) {
         for (const item of value) {
           if (typeof item === "string" && item.trim()) {
-            searchParams.append(key, item);
+            searchParams.append(key, item.trim());
           }
         }
         continue;
@@ -519,11 +520,9 @@ class ApolloHandler extends BaseIntegration {
 
       if (typeof value === "string") {
         const trimmed = value.trim();
-
         if (trimmed) {
           searchParams.append(key, trimmed);
         }
-
         continue;
       }
 
@@ -540,7 +539,7 @@ class ApolloHandler extends BaseIntegration {
     const query = this.buildApolloQuery({
       "person_titles[]": this.toStringArray(args.personTitles),
       include_similar_titles: this.toOptionalBoolean(args.includeSimilarTitles),
-      q_keywords: this.toOptionalString(args.qKeywords),
+      q_keywords: this.toOptionalString(args.query),
       "person_locations[]": this.toStringArray(args.personLocations),
       "person_seniorities[]": this.toStringArray(args.personSeniorities),
       "organization_locations[]": this.toStringArray(args.organizationLocations),
@@ -548,13 +547,17 @@ class ApolloHandler extends BaseIntegration {
       "contact_email_status[]": this.toStringArray(args.contactEmailStatus),
       "organization_ids[]": this.toStringArray(args.organizationIds),
       "organization_num_employees_ranges[]": this.toStringArray(args.organizationNumEmployeesRanges),
+      ...this.recordQueryParams(args.filters),
       page: this.toPositiveInteger(args.page) ?? 1,
       per_page: this.clampPerPage(args.perPage, 10),
     });
 
     const response = await this.apiRequest(
-      `https://api.apollo.io/api/v1/mixed_people/api_search?${query}`,
-      { method: "POST" },
+      `${APOLLO_BASE_URL}/mixed_people/api_search?${query}`,
+      {
+        method: "POST",
+        body: JSON.stringify({}),
+      },
       credentials,
     );
 
@@ -570,19 +573,24 @@ class ApolloHandler extends BaseIntegration {
     credentials: Record<string, string>,
   ): Promise<unknown> {
     const query = this.buildApolloQuery({
-      q_organization_name: this.toOptionalString(args.organizationName),
+      q_organization_name: this.toOptionalString(args.query),
       "q_organization_domains_list[]": this.toStringArray(args.organizationDomains),
       "organization_locations[]": this.toStringArray(args.organizationLocations),
       "organization_not_locations[]": this.toStringArray(args.organizationNotLocations),
+      "organization_ids[]": this.toStringArray(args.organizationIds),
       "organization_num_employees_ranges[]": this.toStringArray(args.organizationNumEmployeesRanges),
       "q_organization_keyword_tags[]": this.toStringArray(args.keywordTags),
+      ...this.recordQueryParams(args.filters),
       page: this.toPositiveInteger(args.page) ?? 1,
       per_page: this.clampPerPage(args.perPage, 10),
     });
 
     const response = await this.apiRequest(
-      `https://api.apollo.io/api/v1/mixed_companies/search?${query}`,
-      { method: "POST" },
+      `${APOLLO_BASE_URL}/mixed_companies/search?${query}`,
+      {
+        method: "POST",
+        body: JSON.stringify({}),
+      },
       credentials,
     );
 
@@ -610,7 +618,7 @@ class ApolloHandler extends BaseIntegration {
     });
 
     const response = await this.apiRequest(
-      `https://api.apollo.io/api/v1/people/match?${query}`,
+      `${APOLLO_BASE_URL}/people/match?${query}`,
       { method: "POST" },
       credentials,
     );
@@ -633,7 +641,7 @@ class ApolloHandler extends BaseIntegration {
     }
 
     const response = await this.apiRequest(
-      `https://api.apollo.io/api/v1/organizations/enrich?${this.buildApolloQuery({ domain })}`,
+      `${APOLLO_BASE_URL}/organizations/enrich?${this.buildApolloQuery({ domain })}`,
       { method: "GET" },
       credentials,
     );
@@ -649,24 +657,43 @@ class ApolloHandler extends BaseIntegration {
     args: Record<string, unknown>,
     credentials: Record<string, string>,
   ): Promise<unknown> {
-    const body = {
-      ...(this.toOptionalString(args.qKeywords) ? { q_keywords: this.toOptionalString(args.qKeywords) } : {}),
-      ...(this.toStringArray(args.contactStageIds).length > 0
-        ? { contact_stage_ids: this.toStringArray(args.contactStageIds) }
-        : {}),
-      ...(this.toStringArray(args.contactLabelIds).length > 0
-        ? { contact_label_ids: this.toStringArray(args.contactLabelIds) }
-        : {}),
-      ...(this.toOptionalString(args.sortByField) ? { sort_by_field: this.toOptionalString(args.sortByField) } : {}),
-      ...(this.toOptionalBoolean(args.sortAscending) !== undefined
-        ? { sort_ascending: this.toOptionalBoolean(args.sortAscending) }
-        : {}),
+    const body: Record<string, unknown> = {
       page: this.toPositiveInteger(args.page) ?? 1,
       per_page: this.clampPerPage(args.perPage, 10),
     };
 
+    if (this.toOptionalString(args.query)) {
+      body.q_keywords = this.toOptionalString(args.query);
+    }
+
+    if (this.toStringArray(args.contactStageIds).length > 0) {
+      body.contact_stage_ids = this.toStringArray(args.contactStageIds);
+    }
+
+    if (this.toStringArray(args.contactLabelIds).length > 0) {
+      body.contact_label_ids = this.toStringArray(args.contactLabelIds);
+    }
+
+    if (this.toStringArray(args.emailStatuses).length > 0) {
+      body.contact_email_status = this.toStringArray(args.emailStatuses);
+    }
+
+    if (this.toOptionalString(args.sortByField)) {
+      body.sort_by_field = this.toOptionalString(args.sortByField);
+    }
+
+    if (this.toOptionalBoolean(args.sortAscending) !== undefined) {
+      body.sort_ascending = this.toOptionalBoolean(args.sortAscending);
+    }
+
+    if (this.isRecord(args.filters)) {
+      for (const [key, value] of Object.entries(args.filters)) {
+        body[key] = value;
+      }
+    }
+
     const response = await this.apiRequest(
-      "https://api.apollo.io/api/v1/contacts/search",
+      `${APOLLO_BASE_URL}/contacts/search`,
       {
         method: "POST",
         body: JSON.stringify(body),
@@ -681,10 +708,36 @@ class ApolloHandler extends BaseIntegration {
     return response.json();
   }
 
+  private async listContactStages(credentials: Record<string, string>): Promise<unknown> {
+    const response = await this.apiRequest(
+      `${APOLLO_BASE_URL}/contact_stages`,
+      { method: "GET" },
+      credentials,
+    );
+
+    if (!response.ok) {
+      throw await this.createApiError("Failed to list Apollo contact stages", response);
+    }
+
+    return response.json();
+  }
+
   private async createContact(
     args: Record<string, unknown>,
     credentials: Record<string, string>,
   ): Promise<unknown> {
+    const hasIdentity =
+      this.toOptionalString(args.email) ||
+      this.toOptionalString(args.firstName) ||
+      this.toOptionalString(args.lastName) ||
+      this.toOptionalString(args.organizationName);
+
+    if (!hasIdentity) {
+      throw new Error(
+        "Provide at least one identifying field such as email, firstName, lastName, or organizationName.",
+      );
+    }
+
     const query = this.buildApolloQuery({
       first_name: this.toOptionalString(args.firstName),
       last_name: this.toOptionalString(args.lastName),
@@ -693,9 +746,12 @@ class ApolloHandler extends BaseIntegration {
       account_id: this.toOptionalString(args.accountId),
       email: this.toOptionalString(args.email),
       website_url: this.toOptionalString(args.websiteUrl),
+      linkedin_url: this.toOptionalString(args.linkedinUrl),
+      owner_id: this.toOptionalString(args.ownerId),
       list_ids: this.toStringArray(args.listIds),
       contact_stage_id: this.toOptionalString(args.contactStageId),
       present_raw_address: this.toOptionalString(args.presentRawAddress),
+      phone_number: this.toOptionalString(args.phone),
       direct_phone: this.toOptionalString(args.directPhone),
       work_phone: this.toOptionalString(args.workPhone),
       mobile_phone: this.toOptionalString(args.mobilePhone),
@@ -704,16 +760,23 @@ class ApolloHandler extends BaseIntegration {
       run_dedupe: this.toOptionalBoolean(args.runDedupe) ?? true,
     });
 
-    const body =
-      args.typedCustomFields && typeof args.typedCustomFields === "object" && !Array.isArray(args.typedCustomFields)
-        ? JSON.stringify({ typed_custom_fields: args.typedCustomFields })
-        : undefined;
+    const body: Record<string, unknown> = {};
+
+    if (this.isRecord(args.typedCustomFields)) {
+      body.typed_custom_fields = args.typedCustomFields;
+    }
+
+    if (this.isRecord(args.extra)) {
+      for (const [key, value] of Object.entries(args.extra)) {
+        body[key] = value;
+      }
+    }
 
     const response = await this.apiRequest(
-      `https://api.apollo.io/api/v1/contacts?${query}`,
+      `${APOLLO_BASE_URL}/contacts?${query}`,
       {
         method: "POST",
-        ...(body ? { body } : {}),
+        ...(Object.keys(body).length > 0 ? { body: JSON.stringify(body) } : {}),
       },
       credentials,
     );
@@ -723,6 +786,40 @@ class ApolloHandler extends BaseIntegration {
     }
 
     return response.json();
+  }
+
+  private recordQueryParams(value: unknown): Record<string, ApolloQueryValue> {
+    if (!this.isRecord(value)) {
+      return {};
+    }
+
+    const entries: Array<[string, ApolloQueryValue]> = [];
+
+    for (const [key, rawValue] of Object.entries(value)) {
+      if (
+        rawValue === null ||
+        rawValue === undefined ||
+        typeof rawValue === "string" ||
+        typeof rawValue === "number" ||
+        typeof rawValue === "boolean"
+      ) {
+        entries.push([key, rawValue]);
+        continue;
+      }
+
+      if (Array.isArray(rawValue)) {
+        const values = rawValue.filter(
+          (item): item is string => typeof item === "string" && item.trim().length > 0,
+        );
+        entries.push([key, values]);
+      }
+    }
+
+    return Object.fromEntries(entries);
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
   }
 
   private toOptionalString(value: unknown): string | undefined {
@@ -770,15 +867,23 @@ class ApolloHandler extends BaseIntegration {
 
   private async createApiError(prefix: string, response: Response): Promise<Error> {
     const payload = (await response.json().catch(() => null)) as ApolloErrorPayload | null;
-    const nestedErrors =
-      payload?.errors && typeof payload.errors === "object"
+    const nestedErrors = Array.isArray(payload?.errors)
+      ? payload.errors
+          .map((entry) => (entry && typeof entry === "object" && "message" in entry ? String(entry.message) : ""))
+          .filter(Boolean)
+          .join("; ")
+      : payload?.errors && typeof payload.errors === "object"
         ? JSON.stringify(payload.errors)
         : undefined;
     const message =
       payload?.message ??
-      payload?.error ??
+      (typeof payload?.error === "string" ? payload.error : payload?.error?.message) ??
       nestedErrors ??
       response.statusText;
+
+    if (response.status === 403) {
+      return new Error(`${prefix}: ${message}. Apollo may require a master API key for this endpoint.`);
+    }
 
     return new Error(`${prefix}: ${message}`);
   }

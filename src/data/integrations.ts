@@ -190,7 +190,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   discord: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Create a Discord bot, invite it to your server, and store the bot token here.",
     credentialFields: [
@@ -223,7 +223,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   telegram: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Create a bot with BotFather and paste the Telegram bot token here.",
     credentialFields: [
@@ -281,7 +281,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   hubspot: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a HubSpot private app token to connect your portal.",
     credentialFields: [
@@ -299,7 +299,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   pipedrive: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Create a personal API token in Pipedrive and store it here.",
     credentialFields: [apiKeyField("apiToken", "API Token", "Paste your Pipedrive API token")],
@@ -309,13 +309,13 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     setupMode: "manual",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Create an Apollo API key in Apollo's developer dashboard and paste it here. Use a master API key if you want Apollo prospecting endpoints like People API Search; narrower keys can work if they include only the endpoints you plan to use.",
+    setupGuide: "Create an Apollo API key in Apollo's developer dashboard and paste it here. Search tools work with endpoint-enabled keys, but prospecting and some creation flows may require a master API key.",
     credentialFields: [
       apiKeyField(
         "apiKey",
         "API Key",
         "Paste your Apollo API key",
-        "Apollo supports API keys for customer API access. If you plan to use net-new prospecting searches, create a master key so those endpoints are available.",
+        "Use a master API key if you want Apollo prospecting or contact-creation endpoints in addition to narrower account data APIs.",
       ),
     ],
     tools: [
@@ -324,6 +324,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
       { name: "enrich_person", description: "Enrich a single person's profile in Apollo" },
       { name: "enrich_organization", description: "Enrich a single organization in Apollo by domain" },
       { name: "search_contacts", description: "Search contacts already added to the team's Apollo account" },
+      { name: "list_contact_stages", description: "List the contact stages available in Apollo" },
       { name: "create_contact", description: "Create a contact in the team's Apollo account" },
     ],
   },
@@ -384,7 +385,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   airtable: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a personal access token and the Airtable base you want the worker to operate on.",
     credentialFields: [
@@ -395,7 +396,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   todoist: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Create a Todoist API token and store it here.",
     credentialFields: [tokenField("apiToken", "API Token", "Paste your Todoist API token")],
@@ -487,7 +488,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   gitlab: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a GitLab personal access token.",
     credentialFields: [tokenField("accessToken", "Personal Access Token", "glpat-...")],
@@ -495,7 +496,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   jira: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a Jira API token together with your Atlassian email and site URL.",
     credentialFields: [
@@ -507,7 +508,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   linear: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a Linear personal API key.",
     credentialFields: [apiKeyField("apiKey", "API Key", "lin_api_...")],
@@ -515,7 +516,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   vercel: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a Vercel access token created from your account settings.",
     credentialFields: [tokenField("accessToken", "Access Token", "Paste your Vercel access token")],
@@ -539,7 +540,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   stripe: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use your Stripe secret key for server-side access.",
     credentialFields: [apiKeyField("secretKey", "Secret Key", "sk_live_...")],
@@ -547,7 +548,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   paypal: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a PayPal client ID and secret from your developer dashboard.",
     credentialFields: [
@@ -638,7 +639,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   shopify: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use the shop domain and Admin API access token from your custom app.",
     credentialFields: [
@@ -649,7 +650,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   woocommerce: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use your WooCommerce store URL plus consumer key and secret.",
     credentialFields: [
@@ -669,7 +670,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   supabase: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use your Supabase project URL and service role key for backend automation.",
     credentialFields: [
@@ -680,7 +681,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   firebase: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Paste the Firebase service account JSON so the worker can authenticate server-side.",
     credentialFields: [
@@ -690,7 +691,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   openai: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Store your OpenAI API key for future model and embeddings calls.",
     credentialFields: [apiKeyField("apiKey", "API Key", "sk-...")],
@@ -698,7 +699,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   elevenlabs: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use your ElevenLabs API key.",
     credentialFields: [apiKeyField("apiKey", "API Key", "Paste your ElevenLabs API key")],

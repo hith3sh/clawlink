@@ -10,7 +10,7 @@ import { useUser } from "@clerk/nextjs";
 
 import { integrations } from "@/data/integrations";
 import { IntegrationCard } from "@/components/dashboard/IntegrationCard";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,26 +22,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const FEATURED_SLUGS = [
-  "gmail",
-  "google-calendar",
-  "google-docs",
-  "google-drive",
-  "notion",
-  "google-sheets",
-  "slack",
-  "google-search-console",
-  "outlook",
-  "airtable",
-  "hubspot",
-  "youtube",
-];
-
 type SortMode = "popular" | "connected" | "alphabetical";
+
+function isLiveDashboardIntegration(
+  integration: (typeof integrations)[number],
+): boolean {
+  return (
+    integration.runtimeStatus === "live" &&
+    integration.dashboardStatus === "available"
+  );
+}
 
 export default function DashboardPage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortMode>("popular");
+  const [showAllApps, setShowAllApps] = useState(false);
   const [connectedIntegrations, setConnectedIntegrations] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, isLoaded } = useUser();
@@ -79,12 +74,14 @@ export default function DashboardPage() {
     [connectedIntegrations],
   );
 
+  const isSearchActive = deferredSearch.trim().length > 0;
+
   const filteredIntegrations = useMemo(() => {
     const query = deferredSearch.trim().toLowerCase();
 
     const matches = integrations.filter((integration) => {
       if (!query) {
-        return FEATURED_SLUGS.includes(integration.slug);
+        return true;
       }
 
       return (
@@ -93,8 +90,6 @@ export default function DashboardPage() {
         integration.category.toLowerCase().includes(query)
       );
     });
-
-    const featuredOrder = new Map(FEATURED_SLUGS.map((slug, index) => [slug, index]));
 
     return [...matches].sort((left, right) => {
       if (sort === "connected") {
@@ -110,17 +105,38 @@ export default function DashboardPage() {
         return left.name.localeCompare(right.name);
       }
 
-      const featuredDelta =
-        (featuredOrder.get(left.slug) ?? Number.MAX_SAFE_INTEGER) -
-        (featuredOrder.get(right.slug) ?? Number.MAX_SAFE_INTEGER);
+      const liveDelta =
+        Number(isLiveDashboardIntegration(right)) -
+        Number(isLiveDashboardIntegration(left));
 
-      if (featuredDelta !== 0) {
-        return featuredDelta;
+      if (liveDelta !== 0) {
+        return liveDelta;
       }
 
       return left.name.localeCompare(right.name);
     });
   }, [connectedSet, deferredSearch, sort]);
+
+  const liveDashboardIntegrations = useMemo(
+    () =>
+      filteredIntegrations.filter((integration) =>
+        isLiveDashboardIntegration(integration),
+      ),
+    [filteredIntegrations],
+  );
+
+  const visibleIntegrations = useMemo(() => {
+    if (isSearchActive || showAllApps) {
+      return filteredIntegrations;
+    }
+
+    return liveDashboardIntegrations;
+  }, [filteredIntegrations, isSearchActive, liveDashboardIntegrations, showAllApps]);
+
+  const hiddenIntegrationCount = Math.max(
+    0,
+    filteredIntegrations.length - liveDashboardIntegrations.length,
+  );
 
   return (
     <div className="space-y-6">
@@ -164,7 +180,7 @@ export default function DashboardPage() {
             <SelectValue placeholder="Sort" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="popular">Popularity</SelectItem>
+            <SelectItem value="popular">Live first</SelectItem>
             <SelectItem value="connected">Connected first</SelectItem>
             <SelectItem value="alphabetical">Alphabetical</SelectItem>
           </SelectContent>
@@ -184,14 +200,28 @@ export default function DashboardPage() {
           ))}
         </div>
       ) : filteredIntegrations.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredIntegrations.map((integration) => (
-            <IntegrationCard
-              key={integration.slug}
-              integration={integration}
-              isConnected={connectedSet.has(integration.slug)}
-            />
-          ))}
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {visibleIntegrations.map((integration) => (
+              <IntegrationCard
+                key={integration.slug}
+                integration={integration}
+                isConnected={connectedSet.has(integration.slug)}
+              />
+            ))}
+          </div>
+
+          {!isSearchActive && hiddenIntegrationCount > 0 ? (
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                className="rounded-full px-5"
+                onClick={() => setShowAllApps((current) => !current)}
+              >
+                {showAllApps ? "Show fewer apps" : `Show ${hiddenIntegrationCount} more apps`}
+              </Button>
+            </div>
+          ) : null}
         </div>
       ) : (
         <Card>
