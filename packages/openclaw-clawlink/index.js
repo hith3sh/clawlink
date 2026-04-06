@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 const PLUGIN_ID = "openclaw-plugin";
 const LEGACY_PLUGIN_IDS = ["clawlink"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.3";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.4";
 
 function tokenizeArgs(value) {
   const input = typeof value === "string" ? value.trim() : "";
