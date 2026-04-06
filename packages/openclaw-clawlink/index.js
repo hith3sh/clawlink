@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 const PLUGIN_ID = "openclaw-plugin";
 const LEGACY_PLUGIN_IDS = ["clawlink"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.4";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.5";
 
 function tokenizeArgs(value) {
   const input = typeof value === "string" ? value.trim() : "";
@@ -439,7 +439,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_start_connection",
-      description: "Start a hosted ClawLink connection session for an integration such as Slack or GitHub.",
+      description: "Start a hosted connection session to connect a new external app or service through ClawLink. Use this when the user wants to set up an app that is not yet connected.",
       parameters: Type.Object({
         integration: Type.String({
           description: "Integration slug to connect, for example slack, github, or notion.",
@@ -491,7 +491,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_list_integrations",
-      description: "List the integrations currently connected to the authenticated ClawLink account.",
+      description: "List all external apps and services currently connected through ClawLink.",
       parameters: Type.Object({}),
       async execute() {
         const payload = await callClawLink(api, "/api/integrations");
@@ -501,7 +501,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_list_tools",
-      description: "List the dynamic ClawLink tools available for the authenticated user's connected integrations.",
+      description: "List all available tools for the user's connected external apps and services. Call this first whenever the user wants to interact with any external app — the tool list is dynamic and reflects what is currently connected.",
       parameters: Type.Object({}),
       async execute() {
         const payload = await callClawLink(api, "/api/tools");
@@ -511,7 +511,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_describe_tool",
-      description: "Get schema, safety guidance, examples, and follow-up hints for a ClawLink tool.",
+      description: "Get the input schema, safety guidance, examples, and follow-up hints for a ClawLink tool before calling it.",
       parameters: Type.Object({
         tool: Type.String({
           description: "ClawLink tool name, for example notion_search or slack_send_message.",
@@ -532,7 +532,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_call_tool",
-      description: "Execute a dynamic ClawLink integration tool using backend-served schemas and runtime handlers.",
+      description: "Execute an action on a connected external app or service through ClawLink. Use clawlink_list_tools to discover available tools first, then clawlink_describe_tool for usage guidance.",
       parameters: Type.Object({
         tool: Type.String({
           description: "ClawLink tool name, for example notion_search or github_list_issues.",
