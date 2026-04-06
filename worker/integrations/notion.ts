@@ -4,7 +4,6 @@
 
 import {
   BaseIntegration,
-  IntegrationRequestError,
   defineTool,
   type IntegrationTool,
   registerHandler,
@@ -542,9 +541,9 @@ class NotionHandler extends BaseIntegration {
 
   private async createApiError(prefix: string, response: Response): Promise<Error> {
     const body = (await response.json().catch(() => null)) as { message?: string } | null;
-    return new IntegrationRequestError(`${prefix}: ${body?.message ?? response.statusText}`, {
-      status: response.status,
-    });
+    const error = new Error(`${prefix}: ${response.status} ${body?.message ?? response.statusText}`);
+    (error as unknown as Record<string, unknown>).status = response.status;
+    return error;
   }
 }
 
