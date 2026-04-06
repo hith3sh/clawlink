@@ -1,6 +1,6 @@
 {
   "name": "@useclawlink/openclaw-plugin",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Native OpenClaw plugin for ClawLink hosted connections and dynamic integration tools",
   "type": "module",
   "license": "MIT",
@@ -40,6 +40,14 @@
   "openclaw": {
     "extensions": [
       "./index.js"
-    ]
+    ],
+    "compat": {
+      "pluginApi": ">=2026.3.13",
+      "minGatewayVersion": "2026.3.13"
+    },
+    "build": {
+      "openclawVersion": "2026.4.5",
+      "pluginSdkVersion": "2026.4.5"
+    }
   }
 }
