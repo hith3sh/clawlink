@@ -337,6 +337,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [
       { name: "notion_search", description: "Search pages and databases in Notion" },
       { name: "notion_get_page", description: "Get a page by ID" },
+      { name: "notion_get_blocks", description: "Get the content blocks of a page" },
       { name: "notion_create_page", description: "Create a new page" },
       { name: "notion_query_database", description: "Query a database" },
       { name: "notion_create_database", description: "Create a new database" },

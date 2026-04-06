@@ -2,7 +2,13 @@
  * Notion integration handler
  */
 
-import { BaseIntegration, defineTool, type IntegrationTool, registerHandler } from "./base";
+import {
+  BaseIntegration,
+  IntegrationRequestError,
+  defineTool,
+  type IntegrationTool,
+  registerHandler,
+} from "./base";
 
 class NotionHandler extends BaseIntegration {
   getTools(integrationSlug: string): IntegrationTool[] {
@@ -52,7 +58,7 @@ class NotionHandler extends BaseIntegration {
         ],
       }),
       defineTool(integrationSlug, "get_page", {
-        description: "Get a page by ID",
+        description: "Get page metadata and properties by ID (use get_blocks to read the actual page content)",
         inputSchema: {
           type: "object",
           properties: {
@@ -80,6 +86,44 @@ class NotionHandler extends BaseIntegration {
         followups: [
           "Offer to append content to the page.",
           "Offer to search for related pages or databases.",
+        ],
+      }),
+      defineTool(integrationSlug, "get_blocks", {
+        description: "Get the content blocks of a page or block",
+        inputSchema: {
+          type: "object",
+          properties: {
+            blockId: { type: "string", description: "Page ID or block ID to retrieve children from" },
+            pageSize: { type: "number", description: "Number of blocks to return (default 50, max 100)" },
+            startCursor: { type: "string", description: "Cursor for pagination (from previous response)" },
+          },
+          required: ["blockId"],
+        },
+        accessLevel: "read",
+        tags: ["page", "blocks", "content", "read"],
+        whenToUse: [
+          "User wants to read the actual content of a Notion page.",
+          "A prior search or get_page call identified a page and the user wants to see what is inside it.",
+        ],
+        askBefore: [
+          "Ask which page they mean if they have not identified a specific page yet.",
+        ],
+        safeDefaults: {
+          pageSize: 50,
+        },
+        examples: [
+          {
+            user: "show me what's on the onboarding page",
+            args: {
+              blockId: "page-id-from-search",
+              pageSize: 50,
+            },
+          },
+        ],
+        followups: [
+          "Offer to fetch nested blocks if a block has children.",
+          "Offer to append new content to the page.",
+          "Offer to search for related pages.",
         ],
       }),
       defineTool(integrationSlug, "create_page", {
@@ -251,6 +295,8 @@ class NotionHandler extends BaseIntegration {
         return this.search(args, credentials);
       case "get_page":
         return this.getPage(args, credentials);
+      case "get_blocks":
+        return this.getBlocks(args, credentials);
       case "create_page":
         return this.createPage(args, credentials);
       case "query_database":
@@ -311,6 +357,28 @@ class NotionHandler extends BaseIntegration {
 
     if (!response.ok) {
       throw await this.createApiError("Failed to get page", response);
+    }
+
+    return response.json();
+  }
+
+  private async getBlocks(args: Record<string, unknown>, credentials: Record<string, string>): Promise<unknown> {
+    const blockId = args.blockId as string;
+    const pageSize = Math.min(Number(args.pageSize) || 50, 100);
+    const url = new URL(`https://api.notion.com/v1/blocks/${blockId}/children`);
+    url.searchParams.set("page_size", String(pageSize));
+    if (args.startCursor) {
+      url.searchParams.set("start_cursor", args.startCursor as string);
+    }
+
+    const response = await this.apiRequest(
+      url.toString(),
+      { method: "GET" },
+      credentials,
+    );
+
+    if (!response.ok) {
+      throw await this.createApiError("Failed to get blocks", response);
     }
 
     return response.json();
@@ -474,7 +542,9 @@ class NotionHandler extends BaseIntegration {
 
   private async createApiError(prefix: string, response: Response): Promise<Error> {
     const body = (await response.json().catch(() => null)) as { message?: string } | null;
-    return new Error(`${prefix}: ${body?.message ?? response.statusText}`);
+    return new IntegrationRequestError(`${prefix}: ${body?.message ?? response.statusText}`, {
+      status: response.status,
+    });
   }
 }
 
