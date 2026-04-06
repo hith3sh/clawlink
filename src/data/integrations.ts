@@ -476,15 +476,11 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   github: {
     setupMode: "manual",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
-    setupGuide: "Use a GitHub personal access token with repo access for issues and repository actions.",
-    credentialFields: [tokenField("accessToken", "Personal Access Token", "ghp_...")],
-    tools: [
-      { name: "list_repos", description: "List repositories visible to the token" },
-      { name: "list_issues", description: "List issues from a repository" },
-      { name: "create_issue", description: "Create a repository issue" },
-    ],
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
+    setupGuide: "GitHub support is reserved for a future release. The worker path exists internally, but the hosted product flow is not ready yet.",
+    credentialFields: [],
+    tools: [],
   },
   gitlab: {
     setupMode: "manual",

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, MessageSquareText } from "lucide-react";
 
+import { DashboardPlanBadge } from "@/components/dashboard/DashboardPlanBadge";
 import { buttonVariants } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
@@ -29,7 +30,10 @@ export function DashboardTopbar() {
           <h1 className="text-sm font-medium text-foreground">{title}</h1>
         </div>
 
-        <div className="hidden items-center gap-1 sm:flex">
+        <div className="flex items-center gap-2">
+          <DashboardPlanBadge />
+
+          <div className="hidden items-center gap-1 sm:flex">
           <Link
             href="mailto:hello@claw-link.dev"
             className={buttonVariants({ variant: "ghost", size: "sm" })}
@@ -46,6 +50,7 @@ export function DashboardTopbar() {
             <BookOpen className="h-4 w-4" />
             Docs
           </Link>
+          </div>
         </div>
       </div>
     </div>
