@@ -28,6 +28,8 @@ interface ConnectionRecord {
   accountLabel?: string | null;
   connectionLabel?: string | null;
   isDefault?: boolean;
+  authState: "active" | "needs_reauth";
+  authError: string | null;
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string | null;
@@ -86,6 +88,7 @@ export default function IntegrationDetails({ integration }: Props) {
 
     return `${origin}/connect/${integration.slug}?session=${encodeURIComponent(activeSession.token)}`;
   }, [activeSession, integration.slug, origin]);
+  const needsReauth = connection?.authState === "needs_reauth";
 
   useEffect(() => {
     let active = true;
@@ -321,9 +324,13 @@ export default function IntegrationDetails({ integration }: Props) {
               </div>
             ) : connection ? (
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm text-emerald-400">
-                  <CheckCircle2 className="h-4 w-4" />
-                  {connectionCount > 1 ? `${connectionCount} connections` : "Connected"}
+                <div className={`flex items-center gap-2 text-sm ${needsReauth ? "text-red-600" : "text-emerald-400"}`}>
+                  {needsReauth ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                  {needsReauth
+                    ? "Reconnect required"
+                    : connectionCount > 1
+                      ? `${connectionCount} connections`
+                      : "Connected"}
                 </div>
 
                 <dl className="space-y-2 text-sm">
@@ -348,6 +355,12 @@ export default function IntegrationDetails({ integration }: Props) {
                     </div>
                   ) : null}
                 </dl>
+
+                {needsReauth ? (
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    {connection.authError ?? `Reconnect ${integration.name} to refresh its credentials.`}
+                  </div>
+                ) : null}
 
                 {connectionCount > 1 ? (
                   <div className="rounded-lg border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
@@ -397,9 +410,11 @@ export default function IntegrationDetails({ integration }: Props) {
                 <div className="flex flex-wrap gap-2">
                   <Button onClick={handleStartConnection} disabled={startingSession}>
                     {startingSession ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
-                    {activeSession && activeSession.status === "awaiting_user_action"
-                      ? "Refresh session"
-                      : "Create setup link"}
+                    {needsReauth
+                      ? "Create reconnect link"
+                      : activeSession && activeSession.status === "awaiting_user_action"
+                        ? "Refresh session"
+                        : "Create setup link"}
                   </Button>
 
                   {connectUrl ? (

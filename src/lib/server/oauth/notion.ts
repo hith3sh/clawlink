@@ -1,9 +1,12 @@
 import "server-only";
 
 import { getEnvBinding } from "@/lib/server/integration-store";
-
-const NOTION_AUTHORIZE_URL = "https://api.notion.com/v1/oauth/authorize";
-const NOTION_TOKEN_URL = "https://api.notion.com/v1/oauth/token";
+import {
+  encodeBasicAuthValue,
+  getOAuthErrorMessage,
+  getOAuthProviderConfig,
+  safeTrim,
+} from "@/lib/oauth/providers";
 
 interface NotionOAuthConfig {
   clientId: string;
@@ -13,6 +16,8 @@ interface NotionOAuthConfig {
 interface NotionOAuthTokenResponse {
   access_token?: string;
   refresh_token?: string;
+  expires_in?: number;
+  token_type?: string;
   bot_id?: string;
   duplicated_template_id?: string | null;
   workspace_id?: string;
@@ -21,14 +26,6 @@ interface NotionOAuthTokenResponse {
   owner?: unknown;
   error?: string;
   message?: string;
-}
-
-function encodeBase64(value: string): string {
-  if (typeof btoa === "function") {
-    return btoa(value);
-  }
-
-  return Buffer.from(value).toString("base64");
 }
 
 function getNotionOAuthConfig(): NotionOAuthConfig {
@@ -42,15 +39,6 @@ function getNotionOAuthConfig(): NotionOAuthConfig {
   return { clientId, clientSecret };
 }
 
-function safeTrim(value: unknown): string | undefined {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
-}
-
 export function buildNotionConnectPath(sessionToken: string): string {
   return `/connect/notion?session=${encodeURIComponent(sessionToken)}`;
 }
@@ -61,6 +49,7 @@ export function buildNotionOAuthRedirectUri(origin: string): string {
 
 export function buildNotionAuthorizationUrl(params: { origin: string; state: string }): string {
   const { clientId } = getNotionOAuthConfig();
+  const provider = getOAuthProviderConfig("notion");
   const query = new URLSearchParams({
     owner: "user",
     client_id: clientId,
@@ -69,26 +58,7 @@ export function buildNotionAuthorizationUrl(params: { origin: string; state: str
     state: params.state,
   });
 
-  return `${NOTION_AUTHORIZE_URL}?${query.toString()}`;
-}
-
-function getOAuthErrorMessage(payload: NotionOAuthTokenResponse | null, response: Response): string {
-  const code = safeTrim(payload?.error);
-  const message = safeTrim(payload?.message);
-
-  if (code && message) {
-    return `Notion OAuth failed: ${code} (${message})`;
-  }
-
-  if (code) {
-    return `Notion OAuth failed: ${code}`;
-  }
-
-  if (message) {
-    return `Notion OAuth failed: ${message}`;
-  }
-
-  return `Notion OAuth failed with status ${response.status}`;
+  return `${provider?.authorizationUrl ?? "https://api.notion.com/v1/oauth/authorize"}?${query.toString()}`;
 }
 
 export async function exchangeNotionAuthorizationCode(params: {
@@ -96,12 +66,15 @@ export async function exchangeNotionAuthorizationCode(params: {
   redirectUri: string;
 }): Promise<Record<string, string>> {
   const { clientId, clientSecret } = getNotionOAuthConfig();
-  const response = await fetch(NOTION_TOKEN_URL, {
+  const provider = getOAuthProviderConfig("notion");
+  const refreshConfig = provider?.refresh;
+  const response = await fetch(refreshConfig?.tokenEndpoint ?? "https://api.notion.com/v1/oauth/token", {
     method: "POST",
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
-      Authorization: `Basic ${encodeBase64(`${clientId}:${clientSecret}`)}`,
+      ...(refreshConfig?.additionalHeaders ?? {}),
+      Authorization: `Basic ${encodeBasicAuthValue(clientId, clientSecret)}`,
     },
     body: JSON.stringify({
       grant_type: "authorization_code",
@@ -113,7 +86,9 @@ export async function exchangeNotionAuthorizationCode(params: {
   const payload = (await response.json().catch(() => null)) as NotionOAuthTokenResponse | null;
 
   if (!response.ok) {
-    throw new Error(getOAuthErrorMessage(payload, response));
+    throw new Error(
+      getOAuthErrorMessage("Notion", refreshConfig!, payload as Record<string, unknown> | null, response),
+    );
   }
 
   const integrationToken = safeTrim(payload?.access_token);
@@ -128,6 +103,10 @@ export async function exchangeNotionAuthorizationCode(params: {
     integrationToken,
     refreshToken,
     botId,
+    ...(typeof payload?.expires_in === "number" && payload.expires_in > 0
+      ? { expiresAt: new Date(Date.now() + payload.expires_in * 1000).toISOString() }
+      : {}),
+    ...(safeTrim(payload?.token_type) ? { tokenType: safeTrim(payload?.token_type)! } : {}),
     ...(safeTrim(payload?.workspace_id) ? { workspaceId: safeTrim(payload?.workspace_id)! } : {}),
     ...(safeTrim(payload?.workspace_name) ? { workspaceName: safeTrim(payload?.workspace_name)! } : {}),
     ...(safeTrim(payload?.workspace_icon) ? { workspaceIcon: safeTrim(payload?.workspace_icon)! } : {}),

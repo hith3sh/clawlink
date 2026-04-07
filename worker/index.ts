@@ -11,10 +11,17 @@
 import "./integrations";
 
 import { integrations } from "../src/data/integrations";
+import { getOAuthRefreshConfig } from "../src/lib/oauth/providers";
 import { verifyAuth } from "./auth";
-import { loadCredentialsForIntegration, resolveInternalUserId } from "./credentials";
+import {
+  loadCredentialsForIntegration,
+  markConnectionNeedsReauthForIntegration,
+  refreshCredentialsForIntegration,
+  resolveInternalUserId,
+} from "./credentials";
 import { logRequest } from "./logger";
 import { getIntegrationHandler, type IntegrationTool } from "./integrations";
+import { isAuthenticationFailure } from "./integrations/base";
 
 export interface Env {
   DB: D1Database;
@@ -22,6 +29,13 @@ export interface Env {
   CREDENTIAL_ENCRYPTION_KEY?: string;
   CLERK_PUBLISHABLE_KEY?: string;
   CLERK_JWT_KEY?: string;
+  GMAIL_CLIENT_ID?: string;
+  GMAIL_CLIENT_SECRET?: string;
+  NOTION_CLIENT_ID?: string;
+  NOTION_CLIENT_SECRET?: string;
+  OUTLOOK_CLIENT_ID?: string;
+  OUTLOOK_CLIENT_SECRET?: string;
+  [key: string]: unknown;
 }
 
 interface MCPRequest {
@@ -84,7 +98,8 @@ async function handleToolCall(
   if ("connectionId" in args) {
     delete args.connectionId;
   }
-  
+  const hasInlineCredentials = Boolean(params?.credentials);
+
   if (params?.credentials) {
     // Credentials passed in request (already encrypted per-session)
     credentials = params.credentials;
@@ -100,8 +115,41 @@ async function handleToolCall(
     throw new Error(`Unknown integration: ${integration}`);
   }
 
-  // Execute the action
-  const result = await handler.execute(action, args, credentials);
+  const canRetryAfterAuthFailure =
+    !hasInlineCredentials && Boolean(getOAuthRefreshConfig(integration));
+  let result: unknown;
+
+  try {
+    result = await handler.execute(action, args, credentials);
+  } catch (error) {
+    if (!canRetryAfterAuthFailure || !isAuthenticationFailure(error)) {
+      throw error;
+    }
+
+    const refreshed = await refreshCredentialsForIntegration(env, internalUserId, integration, {
+      connectionId,
+    });
+
+    try {
+      result = await handler.execute(action, args, refreshed.credentials);
+    } catch (retryError) {
+      if (isAuthenticationFailure(retryError)) {
+        const detail =
+          retryError instanceof Error
+            ? retryError.message
+            : `Authentication failed after refreshing ${integration} credentials.`;
+        await markConnectionNeedsReauthForIntegration(
+          env,
+          internalUserId,
+          integration,
+          detail,
+          { connectionId: refreshed.connectionId },
+        );
+      }
+
+      throw retryError;
+    }
+  }
 
   // Log the request
   await logRequest(env.DB, {

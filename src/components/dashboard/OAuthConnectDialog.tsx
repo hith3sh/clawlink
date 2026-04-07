@@ -27,6 +27,8 @@ interface ConnectionRecord {
   connectionLabel?: string | null;
   accountLabel?: string | null;
   isDefault?: boolean;
+  authState: "active" | "needs_reauth";
+  authError: string | null;
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string | null;
@@ -54,8 +56,9 @@ interface BillingSummary {
   freeIntegrationLimit: number;
   needsUpgrade: boolean;
   checkoutConfigured: boolean;
-  checkoutUrl: string;
 }
+
+const BILLING_SETTINGS_URL = "/dashboard/settings?tab=billing";
 
 interface Props {
   integration: Integration;
@@ -119,6 +122,7 @@ export function OAuthConnectDialog({
 
     return `/api/oauth/${integration.slug}/start?session=${encodeURIComponent(activeSession.token)}`;
   }, [activeSession, integration.slug]);
+  const needsReauth = connection?.authState === "needs_reauth";
 
   useEffect(() => {
     if (!open) {
@@ -164,7 +168,7 @@ export function OAuthConnectDialog({
         setConnectionCount(data.connectionCount ?? data.connections?.length ?? (data.connection ? 1 : 0));
         setActiveSession(data.activeSession ?? null);
         setConnectedAppsAtOpen(billingData?.billing?.distinctIntegrationCount ?? null);
-        setUpgradeUrl(billingData?.billing?.checkoutUrl ?? null);
+        setUpgradeUrl(billingData?.billing ? BILLING_SETTINGS_URL : null);
       } catch (requestError) {
         if (active) {
           setError(requestError instanceof Error ? requestError.message : "Failed to load integration");
@@ -231,7 +235,7 @@ export function OAuthConnectDialog({
             const billing = billingData.billing;
 
             if (billing) {
-              setUpgradeUrl(billing.checkoutUrl);
+              setUpgradeUrl(BILLING_SETTINGS_URL);
 
               const shouldPromptUpgrade =
                 connectedAppsAtOpen === 0 &&
@@ -383,7 +387,7 @@ export function OAuthConnectDialog({
                         href={upgradeUrl}
                         className="inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4"
                       >
-                        Upgrade now
+                        Open billing
                         <ExternalLink className="h-4 w-4" />
                       </a>
                     ) : null}
@@ -408,7 +412,7 @@ export function OAuthConnectDialog({
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <a href={upgradeUrl}>
                     <Button>
-                      Upgrade to Pro
+                      Open billing
                       <ExternalLink className="h-4 w-4" />
                     </Button>
                   </a>
@@ -427,14 +431,34 @@ export function OAuthConnectDialog({
             ) : (
               <>
                 {connectionCount > 0 ? (
-                  <div className="space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
-                    <div className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                      <CheckCircle2 className="h-4 w-4" />
-                      {connectionCount === 1 ? "1 active connection" : `${connectionCount} active connections`}
+                  <div
+                    className={`space-y-4 rounded-2xl p-5 ${
+                      needsReauth
+                        ? "border border-red-200 bg-red-50"
+                        : "border border-emerald-500/20 bg-emerald-500/5"
+                    }`}
+                  >
+                    <div
+                      className={`flex items-center gap-2 text-sm font-medium ${
+                        needsReauth
+                          ? "text-red-700 dark:text-red-300"
+                          : "text-emerald-700 dark:text-emerald-300"
+                      }`}
+                    >
+                      {needsReauth ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                      {needsReauth
+                        ? "Reconnect required"
+                        : connectionCount === 1
+                          ? "1 active connection"
+                          : `${connectionCount} active connections`}
                     </div>
                     <div className="space-y-1 text-sm text-muted-foreground">
                       {connection?.accountLabel ? <p>Current default: {connection.accountLabel}</p> : null}
-                      <p>Adding another connection will make the new one the default for {integration.name}.</p>
+                      {needsReauth ? (
+                        <p>{connection?.authError ?? `Reconnect ${integration.name} to refresh its credentials.`}</p>
+                      ) : (
+                        <p>Adding another connection will make the new one the default for {integration.name}.</p>
+                      )}
                     </div>
                   </div>
                 ) : null}
@@ -469,9 +493,11 @@ export function OAuthConnectDialog({
                 <div className="flex flex-wrap items-center gap-3">
                   <Button onClick={() => void handleContinue()} disabled={starting}>
                     {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                    {activeSession?.status === "awaiting_user_action"
-                      ? `Reopen ${integration.name} popup`
-                      : `Continue with ${integration.name}`}
+                    {needsReauth
+                      ? `Reconnect ${integration.name}`
+                      : activeSession?.status === "awaiting_user_action"
+                        ? `Reopen ${integration.name} popup`
+                        : `Continue with ${integration.name}`}
                   </Button>
                   {popupUrl ? (
                     <a

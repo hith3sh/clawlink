@@ -19,7 +19,7 @@ export default function IntegrationGrid() {
 
   const filtered = useMemo(() => {
     if (!isSearching) {
-      return integrations.filter((i) => FEATURED_SLUGS.includes(i.slug));
+      return integrations;
     }
     const q = search.toLowerCase();
     return integrations.filter(
@@ -50,7 +50,7 @@ export default function IntegrationGrid() {
           return (
             <div
               key={integration.slug}
-              className="group rounded-2xl border border-gray-100 bg-white/80 p-4 sm:p-5 transition-all hover:border-amber-200/60 hover:shadow-lg hover:shadow-amber-500/5 hover:-translate-y-0.5"
+              className="group rounded-2xl border border-gray-100 bg-white/80 p-4 sm:p-5 transition-all hover:border-[#ffe4cc]/60 hover:shadow-lg hover:shadow-[#e8915a]/5 hover:-translate-y-0.5"
             >
               <div className="flex items-center gap-3">
                 {hasBrandLogo(integration.slug) ? (
@@ -77,23 +77,6 @@ export default function IntegrationGrid() {
           );
         })}
       </div>
-
-      {/* Show count when not searching */}
-      {!isSearching && (
-        <p className="text-center text-sm text-gray-400">
-          Showing {filtered.length} popular integrations.{" "}
-          <button
-            onClick={() => {
-              const el = document.querySelector<HTMLInputElement>("input[type='text']");
-              if (el) { el.focus(); el.value = " "; }
-              setSearch(" ");
-            }}
-            className="text-amber-600 hover:text-amber-700 underline cursor-pointer font-medium"
-          >
-            View all {integrations.length}
-          </button>
-        </p>
-      )}
 
       {filtered.length === 0 && (
         <div className="text-center py-12">

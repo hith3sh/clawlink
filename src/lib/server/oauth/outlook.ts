@@ -1,9 +1,11 @@
 import "server-only";
 
 import { getEnvBinding } from "@/lib/server/integration-store";
-
-const MICROSOFT_AUTHORIZE_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
-const MICROSOFT_TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
+import {
+  getOAuthErrorMessage,
+  getOAuthProviderConfig,
+  safeTrim,
+} from "@/lib/oauth/providers";
 const MICROSOFT_GRAPH_ME_URL =
   "https://graph.microsoft.com/v1.0/me?$select=id,displayName,userPrincipalName,mail";
 
@@ -41,15 +43,6 @@ interface OutlookProfileResponse {
   mail?: string | null;
 }
 
-function safeTrim(value: unknown): string | undefined {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
-}
-
 function getOutlookOAuthConfig(): OutlookOAuthConfig {
   const clientId = getEnvBinding<string>("OUTLOOK_CLIENT_ID")?.trim();
   const clientSecret = getEnvBinding<string>("OUTLOOK_CLIENT_SECRET")?.trim();
@@ -71,6 +64,7 @@ export function buildOutlookOAuthRedirectUri(origin: string): string {
 
 export function buildOutlookAuthorizationUrl(params: { origin: string; state: string }): string {
   const { clientId } = getOutlookOAuthConfig();
+  const provider = getOAuthProviderConfig("outlook");
   const query = new URLSearchParams({
     client_id: clientId,
     response_type: "code",
@@ -81,26 +75,7 @@ export function buildOutlookAuthorizationUrl(params: { origin: string; state: st
     prompt: "select_account",
   });
 
-  return `${MICROSOFT_AUTHORIZE_URL}?${query.toString()}`;
-}
-
-function getOAuthErrorMessage(payload: OutlookTokenResponse | null, response: Response): string {
-  const error = safeTrim(payload?.error);
-  const description = safeTrim(payload?.error_description);
-
-  if (error && description) {
-    return `Outlook OAuth failed: ${error} (${description})`;
-  }
-
-  if (error) {
-    return `Outlook OAuth failed: ${error}`;
-  }
-
-  if (description) {
-    return `Outlook OAuth failed: ${description}`;
-  }
-
-  return `Outlook OAuth failed with status ${response.status}`;
+  return `${provider?.authorizationUrl ?? "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"}?${query.toString()}`;
 }
 
 async function fetchOutlookProfile(accessToken: string): Promise<OutlookProfileResponse | null> {
@@ -123,7 +98,9 @@ export async function exchangeOutlookAuthorizationCode(params: {
   redirectUri: string;
 }): Promise<Record<string, string>> {
   const { clientId, clientSecret } = getOutlookOAuthConfig();
-  const response = await fetch(MICROSOFT_TOKEN_URL, {
+  const provider = getOAuthProviderConfig("outlook");
+  const refreshConfig = provider?.refresh;
+  const response = await fetch(refreshConfig?.tokenEndpoint ?? "https://login.microsoftonline.com/common/oauth2/v2.0/token", {
     method: "POST",
     headers: {
       Accept: "application/json",
@@ -141,7 +118,9 @@ export async function exchangeOutlookAuthorizationCode(params: {
   const payload = (await response.json().catch(() => null)) as OutlookTokenResponse | null;
 
   if (!response.ok) {
-    throw new Error(getOAuthErrorMessage(payload, response));
+    throw new Error(
+      getOAuthErrorMessage("Outlook", refreshConfig!, payload as Record<string, unknown> | null, response),
+    );
   }
 
   const accessToken = safeTrim(payload?.access_token);

@@ -19,6 +19,8 @@ export interface UserIntegration {
   externalAccountId: string | null;
   credentialsEncrypted: string;
   isDefault: boolean;
+  authState: "active" | "needs_reauth";
+  authError: string | null;
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string;

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton, useUser } from "@clerk/nextjs";
@@ -10,7 +11,6 @@ import {
   Settings,
   ExternalLink,
   LogOut,
-  Zap,
 } from "lucide-react";
 import {
   Sidebar,
@@ -48,9 +48,20 @@ export function AppSidebar() {
       <SidebarHeader className="px-3 pt-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link href="/dashboard" className="flex items-center gap-2.5 px-3 py-2">
-              <Zap className="h-4 w-4 text-foreground" />
-              <span className="text-sm font-semibold text-foreground">ClawLink</span>
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2.5 rounded-xl px-3 py-2 transition-colors hover:bg-sidebar-accent"
+            >
+              <Image
+                src="/images/logo/clawlink.svg"
+                alt="ClawLink"
+                width={22}
+                height={22}
+                className="h-[22px] w-[22px] shrink-0"
+              />
+              <span className="text-sm font-semibold tracking-[-0.02em] text-foreground">
+                ClawLink
+              </span>
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -2,6 +2,7 @@ import "server-only";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import type { ConnectionAuthState } from "@/lib/connection-status";
 
 export interface D1Statement {
   bind(...values: unknown[]): {
@@ -28,6 +29,8 @@ interface StoredIntegrationRow {
   account_label: string | null;
   external_account_id: string | null;
   is_default: number;
+  auth_state: ConnectionAuthState;
+  auth_error: string | null;
   expires_at: string | null;
   created_at: string;
   updated_at?: string | null;
@@ -40,6 +43,8 @@ export interface IntegrationConnectionRecord {
   accountLabel: string | null;
   externalAccountId: string | null;
   isDefault: boolean;
+  authState: ConnectionAuthState;
+  authError: string | null;
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string | null;
@@ -188,6 +193,8 @@ function mapConnection(row: StoredIntegrationRow): IntegrationConnectionRecord {
     accountLabel: row.account_label,
     externalAccountId: row.external_account_id,
     isDefault: Boolean(row.is_default),
+    authState: row.auth_state,
+    authError: row.auth_error,
     expiresAt: row.expires_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at ?? null,
@@ -300,7 +307,7 @@ export async function getIntegrationConnectionByIdForUserId(
     .prepare(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
-               is_default, expires_at, created_at, updated_at
+               is_default, auth_state, auth_error, expires_at, created_at, updated_at
         FROM user_integrations
         WHERE user_id = ? AND id = ?
       `,
@@ -422,7 +429,7 @@ export async function listIntegrationConnectionsForUserId(
     .prepare(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
-               is_default, expires_at, created_at, updated_at
+               is_default, auth_state, auth_error, expires_at, created_at, updated_at
         FROM user_integrations
         WHERE user_id = ?
         ORDER BY is_default DESC, created_at DESC, id DESC
@@ -448,7 +455,7 @@ export async function listIntegrationConnectionsForSlug(
     .prepare(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
-               is_default, expires_at, created_at, updated_at
+               is_default, auth_state, auth_error, expires_at, created_at, updated_at
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
         ORDER BY is_default DESC, created_at DESC, id DESC
@@ -480,7 +487,7 @@ export async function getIntegrationConnectionForUserId(
     .prepare(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
-               is_default, expires_at, created_at, updated_at
+               is_default, auth_state, auth_error, expires_at, created_at, updated_at
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
         ORDER BY is_default DESC, updated_at DESC, created_at DESC, id DESC
@@ -567,6 +574,8 @@ export async function saveIntegrationConnectionForUserId(
               account_label = ?,
               external_account_id = ?,
               is_default = ?,
+              auth_state = 'active',
+              auth_error = NULL,
               expires_at = ?,
               updated_at = datetime('now')
           WHERE id = ? AND user_id = ?
@@ -595,11 +604,13 @@ export async function saveIntegrationConnectionForUserId(
             external_account_id,
             credentials_encrypted,
             is_default,
+            auth_state,
+            auth_error,
             expires_at,
             created_at,
             updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, ?, datetime('now'), datetime('now'))
         `,
       )
       .bind(

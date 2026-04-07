@@ -32,11 +32,11 @@ export default function Testimonials() {
         {testimonials.map((t, i) => (
           <div
             key={i}
-            className="rounded-2xl border border-gray-100 bg-white/80 backdrop-blur-sm p-6 sm:p-7 shadow-sm hover:shadow-md hover:border-amber-100/50 transition-all"
+            className="rounded-2xl border border-gray-100 bg-white/80 backdrop-blur-sm p-6 sm:p-7 shadow-sm hover:shadow-md hover:border-[#ffe4cc]/50 transition-all"
           >
             <p className="text-gray-600 leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
             <div className="mt-6 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center text-white text-sm font-bold">
+              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#e8915a] to-[#d4764a] flex items-center justify-center text-white text-sm font-bold">
                 {t.avatar}
               </div>
               <div>

@@ -2,7 +2,13 @@
  * Outlook integration handler
  */
 
-import { BaseIntegration, defineTool, type IntegrationTool, registerHandler } from "./base";
+import {
+  BaseIntegration,
+  IntegrationRequestError,
+  defineTool,
+  type IntegrationTool,
+  registerHandler,
+} from "./base";
 
 const GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0";
 
@@ -522,7 +528,13 @@ class OutlookHandler extends BaseIntegration {
     const payload = (await response.json().catch(() => null)) as GraphErrorPayload | null;
     const code = payload?.error?.code;
     const message = payload?.error?.message ?? response.statusText;
-    return new Error(code ? `${prefix}: ${code} (${message})` : `${prefix}: ${message}`);
+    return new IntegrationRequestError(
+      code ? `${prefix}: ${code} (${message})` : `${prefix}: ${message}`,
+      {
+        status: response.status,
+        code,
+      },
+    );
   }
 }
 

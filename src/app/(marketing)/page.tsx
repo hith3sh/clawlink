@@ -1,5 +1,6 @@
 
 import Image from "next/image";
+import Link from "next/link";
 import CopyCommand from "@/components/CopyCommand";
 import VisualEquation from "@/components/VisualEquation";
 import IntegrationGrid from "@/components/IntegrationGrid";
@@ -19,36 +20,40 @@ export default function Home() {
 
       {/* Hero */}
       <section className="flex flex-col items-center pb-24 px-6 relative">
-        {/* Ambient background effect */}
+        {/* Warm ambient background */}
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-amber-500/8 rounded-full blur-3xl" />
-          <div className="absolute top-20 left-1/4 w-96 h-96 bg-amber-400/5 rounded-full blur-2xl" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#ffe4cc]/20 rounded-full blur-3xl" />
+          <div className="absolute top-20 left-1/4 w-96 h-96 bg-[#ffe4cc]/10 rounded-full blur-2xl" />
         </div>
         <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-center max-w-3xl text-gray-900 relative">
           Plug anything into{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 relative">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#e8915a] to-[#d4764a] relative">
             OpenClaw.
-            <span className="absolute inset-0 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 blur-xl opacity-30" />
+            <span className="absolute inset-0 bg-gradient-to-r from-[#e8915a] to-[#d4764a] blur-xl opacity-20" />
           </span>
         </h1>
         <p className="mt-6 text-lg sm:text-xl text-gray-500 text-center max-w-xl leading-relaxed">
-          Install ClawLink once, then connect apps with one click.
-          <span className="text-gray-700 font-medium">Gmail, Slack, GitHub, Notion, Stripe</span>, and 40+ more.
+          Copy and paste this command below and ask OpenClaw to add your favourite integration.
         </p>
 
         <div className="mt-8 w-full max-w-md">
           <CopyCommand />
         </div>
+
+        {/* Trust badge */}
+        <div className="mt-10 flex items-center gap-2 text-sm text-gray-400">
+            <div className="flex -space-x-2">
+              <div className="w-7 h-7 rounded-full bg-[#ffe4cc] border-2 border-white flex items-center justify-center text-[10px] font-bold text-[#d4764a]">H</div>
+              <div className="w-7 h-7 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-500">M</div>
+              <div className="w-7 h-7 rounded-full bg-[#ffe4cc] border-2 border-white flex items-center justify-center text-[10px] font-bold text-[#d4764a]">S</div>
+              <div className="w-7 h-7 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-500">A</div>
+            </div>
+            <span>100+ users connected</span>
+          </div>
       </section>
 
-      {/* Integrations search */}
-      <section className="max-w-5xl mx-auto px-6 pb-24">
-        <IntegrationGrid />
-      </section>
-
-      {/* Pain Math — why ClawLink */}
+      {/* Problem — why you need ClawLink */}
       <section className="py-24 px-6 relative overflow-hidden">
-        {/* Subtle texture background */}
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '32px 32px' }} />
 
@@ -63,12 +68,17 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Solution — integrations grid */}
+      <section className="max-w-5xl mx-auto px-6 pb-24">
+        <IntegrationGrid />
+      </section>
+
       {/* Video */}
       <section className="py-24 px-6">
         <VideoSection />
       </section>
 
-      {/* Testimonials */}
+      {/* Social Proof — testimonials */}
       <section className="py-24 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-white to-gray-50" />
         <div className="max-w-5xl mx-auto relative">
@@ -76,12 +86,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* Authority — FAQ + Docs */}
       <section className="py-24 px-6">
         <FAQ />
       </section>
 
-      {/* Documentation */}
       <section className="py-24 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gray-50" />
         <div className="max-w-3xl mx-auto text-center relative">
@@ -106,11 +115,10 @@ export default function Home() {
 
       {/* CTA */}
       <section className="relative py-24 px-6 overflow-hidden">
-        {/* Rich gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-900 to-amber-950" />
-        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '32px 32px', color: 'rgba(251, 191, 36, 0.3)' }} />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-900 to-[#3d2a1a]" />
+        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '32px 32px', color: 'rgba(232, 145, 90, 0.3)' }} />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#e8915a]/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-[#d4764a]/10 rounded-full blur-3xl" />
 
         <div className="max-w-2xl mx-auto text-center relative">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 tracking-tight">
@@ -119,8 +127,8 @@ export default function Home() {
           <p className="text-gray-300 mb-10 text-lg">
             Install once. Connect with one click. Use anywhere.
           </p>
-          <div className="inline-flex items-center gap-3 rounded-xl bg-amber-500/10 backdrop-blur-sm border border-amber-500/20 px-6 py-4 font-mono text-sm text-amber-100">
-            <span className="text-amber-500/60">$</span>
+          <div className="inline-flex items-center gap-3 rounded-xl bg-[#e8915a]/10 backdrop-blur-sm border border-[#e8915a]/20 px-6 py-4 font-mono text-sm text-orange-100">
+            <span className="text-[#e8915a]/60">$</span>
             <span>{OPENCLAW_PLUGIN_INSTALL_COMMAND}</span>
           </div>
         </div>
@@ -129,20 +137,21 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-gray-100 bg-gray-50/50 py-10 px-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-gray-400">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <Image
-              src="/openclaw-lobster.svg"
-              alt="OpenClaw"
-              width={16}
-              height={16}
+              src="/images/logo/clawlink.svg"
+              alt="ClawLink"
+              width={100}
+              height={28}
+              className="h-6 w-auto"
             />
             <span className="font-medium text-gray-500">ClawLink</span>
           </div>
           <span className="text-gray-400">The easiest way to add integrations to OpenClaw</span>
           <div className="flex items-center gap-5">
-            <a href="https://github.com/hith3sh/clawlink" className="hover:text-gray-600 transition-colors">
-              GitHub
-            </a>
+            <Link href="/privacy" className="hover:text-gray-600 transition-colors">
+              Privacy Policy
+            </Link>
           </div>
         </div>
       </footer>

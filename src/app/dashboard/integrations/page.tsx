@@ -26,6 +26,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { integrations, type Integration } from "@/data/integrations";
 import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
+import { getConnectionStatus, type ConnectionStatus } from "@/lib/connection-status";
 import { getIntegrationIcon } from "@/lib/integration-icons";
 
 interface ConnectionRecord {
@@ -34,12 +35,12 @@ interface ConnectionRecord {
   connectionLabel: string | null;
   accountLabel: string | null;
   isDefault: boolean;
+  authState: "active" | "needs_reauth";
+  authError: string | null;
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string | null;
 }
-
-type ConnectionStatus = "active" | "expiring" | "expired";
 
 interface ConnectionRow {
   connection: ConnectionRecord;
@@ -55,27 +56,6 @@ function formatConnectionTimestamp(value: string): string {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));
-}
-
-function getConnectionStatus(expiresAt: string | null): ConnectionStatus {
-  if (!expiresAt) {
-    return "active";
-  }
-
-  const expiresAtTime = new Date(expiresAt).getTime();
-
-  if (Number.isNaN(expiresAtTime)) {
-    return "active";
-  }
-
-  if (expiresAtTime <= Date.now()) {
-    return "expired";
-  }
-
-  const msUntilExpiry = expiresAtTime - Date.now();
-  const daysUntilExpiry = msUntilExpiry / (1000 * 60 * 60 * 24);
-
-  return daysUntilExpiry <= 7 ? "expiring" : "active";
 }
 
 function getMethodLabel(integration: Integration): string {
@@ -99,6 +79,10 @@ function getMethodLabel(integration: Integration): string {
 }
 
 function getStatusBadgeClasses(status: ConnectionStatus): string {
+  if (status === "needs_reauth") {
+    return "border-red-200 bg-red-50 text-red-700";
+  }
+
   if (status === "expired") {
     return "border-red-200 bg-red-50 text-red-700";
   }
@@ -111,6 +95,10 @@ function getStatusBadgeClasses(status: ConnectionStatus): string {
 }
 
 function getStatusLabel(status: ConnectionStatus): string {
+  if (status === "needs_reauth") {
+    return "Reconnect";
+  }
+
   if (status === "expired") {
     return "Expired";
   }
@@ -209,7 +197,7 @@ export default function IntegrationsPage() {
             connection.connectionLabel ??
             (integration.setupMode === "oauth" ? "Connected account" : "Manual credentials"),
           methodLabel: getMethodLabel(integration),
-          status: getConnectionStatus(connection.expiresAt),
+          status: getConnectionStatus(connection.authState, connection.expiresAt),
           connectionCode: `conn_${connection.id.toString().padStart(6, "0")}`,
         };
       })
@@ -346,6 +334,7 @@ export default function IntegrationsPage() {
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="expiring">Expiring</SelectItem>
               <SelectItem value="expired">Expired</SelectItem>
+              <SelectItem value="needs_reauth">Needs reconnect</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -417,7 +406,12 @@ export default function IntegrationsPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-foreground">{row.accountLabel}</td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm text-foreground">{row.accountLabel}</p>
+                            {row.connection.authState === "needs_reauth" && row.connection.authError ? (
+                              <p className="mt-1 text-xs text-red-600">{row.connection.authError}</p>
+                            ) : null}
+                          </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
                               <span className="font-mono text-xs text-foreground">{row.connectionCode}</span>
@@ -482,6 +476,9 @@ export default function IntegrationsPage() {
                           <div className="min-w-0">
                             <p className="font-medium text-foreground">{row.integration.name}</p>
                             <p className="truncate text-xs text-muted-foreground">{row.accountLabel}</p>
+                            {row.connection.authState === "needs_reauth" && row.connection.authError ? (
+                              <p className="mt-1 text-xs text-red-600">{row.connection.authError}</p>
+                            ) : null}
                             {row.connection.isDefault ? (
                               <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-foreground">
                                 Default connection

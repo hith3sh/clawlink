@@ -31,6 +31,8 @@ export interface ToolConnectionSummary {
   connectionLabel: string | null;
   accountLabel: string | null;
   isDefault: boolean;
+  authState: IntegrationConnectionRecord["authState"];
+  authError: string | null;
   expiresAt: string | null;
 }
 
@@ -83,6 +85,8 @@ function mapConnectionSummary(connection: IntegrationConnectionRecord): ToolConn
     connectionLabel: connection.connectionLabel,
     accountLabel: connection.accountLabel,
     isDefault: connection.isDefault,
+    authState: connection.authState,
+    authError: connection.authError,
     expiresAt: connection.expiresAt,
   };
 }
@@ -143,6 +147,10 @@ function getCredentialBridgeEnv(): CredentialBridgeEnv | null {
     DB: db,
     CREDENTIALS: getEnvBinding("CREDENTIALS") as CredentialBridgeEnv["CREDENTIALS"],
     CREDENTIAL_ENCRYPTION_KEY: getEnvBinding<string>("CREDENTIAL_ENCRYPTION_KEY"),
+    GMAIL_CLIENT_ID: getEnvBinding<string>("GMAIL_CLIENT_ID"),
+    GMAIL_CLIENT_SECRET: getEnvBinding<string>("GMAIL_CLIENT_SECRET"),
+    NOTION_CLIENT_ID: getEnvBinding<string>("NOTION_CLIENT_ID"),
+    NOTION_CLIENT_SECRET: getEnvBinding<string>("NOTION_CLIENT_SECRET"),
     OUTLOOK_CLIENT_ID: getEnvBinding<string>("OUTLOOK_CLIENT_ID"),
     OUTLOOK_CLIENT_SECRET: getEnvBinding<string>("OUTLOOK_CLIENT_SECRET"),
   };

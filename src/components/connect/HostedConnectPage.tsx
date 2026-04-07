@@ -61,7 +61,11 @@ export default function HostedConnectPage({ integration, session }: Props) {
       <div className="rounded-[32px] border border-gray-200 bg-white p-8 shadow-sm sm:p-10">
         <div className="mb-8">
           <div>
-            <p className="text-sm font-medium text-red-500">ClawLink</p>
+            <div className="flex items-center gap-2 mb-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/logo/clawlink.svg" alt="ClawLink" className="h-6 w-auto" />
+              <span className="text-sm font-semibold text-gray-900">ClawLink</span>
+            </div>
             <h1 className="mt-2 text-4xl font-bold tracking-tight text-gray-900">
               Connect {integration.name}
             </h1>

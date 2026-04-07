@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 export default function MarketingLayout({
   children,
@@ -8,11 +10,21 @@ export default function MarketingLayout({
   return (
     <>
       <header className="flex items-center justify-between p-4 border-b">
-        <Link href="/" className="text-xl font-bold">ClawLink</Link>
-        <nav className="flex items-center gap-4">
-          <Link href="https://docs.claw-link.dev" target="_blank" className="text-sm hover:text-primary">Docs</Link>
-          <Link href="/dashboard" className="text-sm">Dashboard</Link>
-          <Link href="/sign-in" className="text-sm">Sign In</Link>
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/images/logo/clawlink.svg"
+            alt="ClawLink"
+            width={120}
+            height={32}
+            priority
+            className="h-8 w-auto"
+          />
+          <span className="text-lg font-bold">ClawLink</span>
+        </Link>
+        <nav>
+          <Button variant="outline" size="sm" className="rounded-full" render={<Link href="/sign-in" />}>
+            Sign In
+          </Button>
         </nav>
       </header>
       {children}
