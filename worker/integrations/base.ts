@@ -84,6 +84,32 @@ export interface IntegrationHandler {
   exchangeOAuthCode?(code: string, redirectUri: string): Promise<Record<string, string>>;
 }
 
+export class IntegrationRequestError extends Error {
+  readonly status: number;
+  readonly code?: string;
+
+  constructor(message: string, options: { status: number; code?: string }) {
+    super(message);
+    this.name = "IntegrationRequestError";
+    this.status = options.status;
+    this.code = options.code;
+  }
+}
+
+export function isAuthenticationFailure(error: unknown): boolean {
+  if (error instanceof IntegrationRequestError) {
+    return error.status === 401;
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return /\b401\b|unauthorized|invalid[_\s-]?token|token expired|invalid[_\s-]?auth/i.test(
+    error.message,
+  );
+}
+
 /**
  * Base class with common functionality
  */
