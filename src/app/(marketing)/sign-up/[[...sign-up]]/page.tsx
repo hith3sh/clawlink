@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export default function SignUpPage() {
   return (
     <div className="flex items-center justify-center min-h-[80vh]">
-      <SignUp />
+      <SignUp fallbackRedirectUrl="/dashboard" />
     </div>
   );
 }

@@ -80,6 +80,18 @@ Important deployment rules:
 - The Polar webhook endpoint for the frontend app is `https://claw-link.dev/api/billing/webhooks`.
 - A `clawlink-web` Pages project may still exist for previews/history, but it is not the production frontend surface anymore.
 
+## Clerk Redirect And Env Rules
+
+- Clerk sign-in/sign-up redirect defaults must be configured with the current Clerk keys:
+  - `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL`
+  - `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL`
+  - and, when required, the force variants `NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL` / `NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL`
+- Do not rely on the old `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` or `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL` names for new changes. Treat them as obsolete.
+- Prefer setting the redirect defaults in `ClerkProvider` as well as env so the frontend keeps working even if a manual build misses one env binding.
+- If users sign in successfully but land on `/` instead of `/dashboard`, check Clerk redirect config before debugging secrets.
+- Frontend auth fixes require `npm run deploy:web`. Deploying only `npm run deploy:worker` will not update the hosted sign-in flow on `claw-link.dev`.
+- Manual frontend deploys must use the repo’s `npm run deploy:web` flow so the OpenNext build and Wrangler deploy use the intended production env values together.
+
 # Integration Data Model
 
 The old single-row-per-provider assumption is no longer valid. The integration model now supports multiple connections per provider per user.
