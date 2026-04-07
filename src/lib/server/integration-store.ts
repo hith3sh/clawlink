@@ -406,7 +406,25 @@ async function promoteLatestConnectionToDefault(
         WHERE id = ?
       `,
     )
-    .bind(latestRemaining.id)
+      .bind(latestRemaining.id)
+      .run();
+}
+
+async function clearConnectionSessionReferences(
+  db: D1LikeDatabase,
+  userId: string,
+  connectionId: number,
+): Promise<void> {
+  await db
+    .prepare(
+      `
+        UPDATE connection_sessions
+        SET connection_id = NULL,
+            updated_at = datetime('now')
+        WHERE user_id = ? AND connection_id = ?
+      `,
+    )
+    .bind(userId, connectionId)
     .run();
 }
 
@@ -707,6 +725,8 @@ export async function deleteIntegrationConnectionForUserId(
   if (!connection || connection.integration !== slug) {
     return;
   }
+
+  await clearConnectionSessionReferences(db, userId, connectionId);
 
   await db
     .prepare("DELETE FROM user_integrations WHERE id = ? AND user_id = ?")

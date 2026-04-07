@@ -109,6 +109,12 @@ async function loadConnectionForSession(
     if (exactConnection) {
       return exactConnection;
     }
+
+    return null;
+  }
+
+  if (session.status !== "awaiting_user_action") {
+    return null;
   }
 
   return getIntegrationConnectionForUserId(db, session.user_id, session.integration);
