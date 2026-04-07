@@ -2,7 +2,24 @@
  * Gmail integration handler
  */
 
-import { BaseIntegration, defineTool, type IntegrationTool, registerHandler } from "./base";
+import {
+  BaseIntegration,
+  IntegrationRequestError,
+  defineTool,
+  type IntegrationTool,
+  registerHandler,
+} from "./base";
+
+interface GmailErrorPayload {
+  error?: {
+    code?: number;
+    message?: string;
+  };
+}
+
+function getAccessToken(credentials: Record<string, string>): string | undefined {
+  return credentials.accessToken ?? credentials.access_token;
+}
 
 class GmailHandler extends BaseIntegration {
   getTools(integrationSlug: string): IntegrationTool[] {
@@ -137,42 +154,19 @@ class GmailHandler extends BaseIntegration {
           "Offer to send the email after the user reviews the draft.",
         ],
       }),
-      defineTool(integrationSlug, "delete_email", {
-        description: "Move an email to trash",
-        inputSchema: {
-          type: "object",
-          properties: {
-            id: { type: "string", description: "Email ID to delete" },
-          },
-          required: ["id"],
-        },
-        accessLevel: "destructive",
-        tags: ["email", "delete", "trash"],
-        whenToUse: [
-          "User explicitly asks to delete or trash a Gmail message.",
-        ],
-        askBefore: [
-          "Always confirm before deleting a message unless the user has already been explicit about the exact email.",
-        ],
-        examples: [
-          {
-            user: "trash that spam email in gmail",
-            args: {
-              id: "gmail-message-id",
-            },
-          },
-        ],
-        followups: [
-          "Offer to list remaining messages if the user wants to continue cleaning up.",
-        ],
-      }),
     ];
   }
 
   protected getHeaders(credentials: Record<string, string>): Record<string, string> {
+    const accessToken = getAccessToken(credentials);
+
+    if (!accessToken) {
+      throw new Error("Gmail credentials are missing an access token.");
+    }
+
     return {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${credentials.access_token}`,
+      "Authorization": `Bearer ${accessToken}`,
     };
   }
 
@@ -195,13 +189,20 @@ class GmailHandler extends BaseIntegration {
       
       case "create_draft":
         return this.createDraft(baseUrl, args, credentials);
-      
-      case "delete_email":
-        return this.deleteEmail(baseUrl, args, credentials);
-      
+
       default:
         throw new Error(`Unknown action: ${action}`);
     }
+  }
+
+  private async readError(response: Response): Promise<never> {
+    const payload = (await response.json().catch(() => null)) as GmailErrorPayload | null;
+    const message = payload?.error?.message ?? response.statusText;
+
+    throw new IntegrationRequestError(`Gmail request failed: ${message}`, {
+      status: response.status,
+      code: payload?.error?.code ? String(payload.error.code) : undefined,
+    });
   }
 
   private async sendEmail(
@@ -234,8 +235,7 @@ class GmailHandler extends BaseIntegration {
     );
 
     if (!response.ok) {
-      const error = await response.json() as { error?: { message?: string } };
-      throw new Error(`Failed to send email: ${(error as {error?:{message?:string}})?.error?.message || response.statusText}`);
+      await this.readError(response);
     }
 
     return response.json();
@@ -252,7 +252,11 @@ class GmailHandler extends BaseIntegration {
     params.set("maxResults", String(maxResults));
     if (query) params.set("q", query as string);
     if (labelIds && Array.isArray(labelIds)) {
-      params.set("labelIds", labelIds.join(","));
+      for (const labelId of labelIds) {
+        if (typeof labelId === "string" && labelId.trim().length > 0) {
+          params.append("labelIds", labelId);
+        }
+      }
     }
 
     const response = await this.apiRequest(
@@ -262,8 +266,7 @@ class GmailHandler extends BaseIntegration {
     );
 
     if (!response.ok) {
-      const error = await response.json() as { error?: { message?: string } };
-      throw new Error(`Failed to list emails: ${(error as {error?:{message?:string}})?.error?.message || response.statusText}`);
+      await this.readError(response);
     }
 
     return response.json();
@@ -283,8 +286,7 @@ class GmailHandler extends BaseIntegration {
     );
 
     if (!response.ok) {
-      const error = await response.json() as { error?: { message?: string } };
-      throw new Error(`Failed to get email: ${(error as {error?:{message?:string}})?.error?.message || response.statusText}`);
+      await this.readError(response);
     }
 
     return response.json();
@@ -319,29 +321,7 @@ class GmailHandler extends BaseIntegration {
     );
 
     if (!response.ok) {
-      const error = await response.json() as { error?: { message?: string } };
-      throw new Error(`Failed to create draft: ${(error as {error?:{message?:string}})?.error?.message || response.statusText}`);
-    }
-
-    return response.json();
-  }
-
-  private async deleteEmail(
-    baseUrl: string,
-    args: Record<string, unknown>,
-    credentials: Record<string, string>
-  ): Promise<unknown> {
-    const { id } = args;
-
-    const response = await this.apiRequest(
-      `${baseUrl}/users/me/messages/${id}/trash`,
-      { method: "POST" },
-      credentials
-    );
-
-    if (!response.ok) {
-      const error = await response.json() as { error?: { message?: string } };
-      throw new Error(`Failed to delete email: ${(error as {error?:{message?:string}})?.error?.message || response.statusText}`);
+      await this.readError(response);
     }
 
     return response.json();
@@ -349,9 +329,15 @@ class GmailHandler extends BaseIntegration {
 
   async validateCredentials(credentials: Record<string, string>): Promise<boolean> {
     try {
+      const accessToken = getAccessToken(credentials);
+
+      if (!accessToken) {
+        return false;
+      }
+
       const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/profile", {
         headers: {
-          Authorization: `Bearer ${credentials.access_token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
       return response.ok;
@@ -363,9 +349,8 @@ class GmailHandler extends BaseIntegration {
   getOAuthUrl(userId: string, redirectUri: string): string {
     const clientId = process.env.GMAIL_CLIENT_ID;
     const scopes = [
-      "https://www.googleapis.com/auth/gmail.send",
       "https://www.googleapis.com/auth/gmail.readonly",
-      "https://www.googleapis.com/auth/gmail.drafts",
+      "https://www.googleapis.com/auth/gmail.compose",
     ].join(" ");
 
     const params = new URLSearchParams({
@@ -374,6 +359,7 @@ class GmailHandler extends BaseIntegration {
       response_type: "code",
       scope: scopes,
       access_type: "offline",
+      include_granted_scopes: "true",
       prompt: "consent",
       state: userId,
     });

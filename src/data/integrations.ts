@@ -163,16 +163,16 @@ const baseIntegrations: BaseIntegration[] = [
 const integrationMetadata: Record<string, IntegrationMetadata> = {
   gmail: {
     setupMode: "oauth",
-    dashboardStatus: "coming-soon",
+    dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Gmail needs Google OAuth. The worker handler is live, but the dashboard OAuth handshake is not wired yet.",
+    setupGuide:
+      "Connect Gmail with Google OAuth to read recent messages, create drafts, and send email from your Google account.",
     credentialFields: [],
     tools: [
       { name: "send_email", description: "Send a Gmail message" },
       { name: "list_emails", description: "List recent inbox messages" },
       { name: "get_email", description: "Fetch a single message by ID" },
       { name: "create_draft", description: "Create a draft in Gmail" },
-      { name: "delete_email", description: "Move a message to trash" },
     ],
   },
   slack: {
