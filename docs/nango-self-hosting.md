@@ -36,6 +36,11 @@ The frontend Worker also needs:
 
 - `NEXT_PUBLIC_NANGO_BASE_URL`
 
+For the current production split-host setup, use:
+
+- `NANGO_BASE_URL=https://nango.claw-link.dev`
+- `NEXT_PUBLIC_NANGO_BASE_URL=https://connect.nango.claw-link.dev`
+
 And both deploy targets need the secret:
 
 - `NANGO_SECRET_KEY`

@@ -39,10 +39,10 @@ interface UserRow {
 
 interface StoredIntegrationRow {
   id: number;
-  credentials_encrypted: string | null;
+  credentials_encrypted: string;
   auth_state: ConnectionAuthState;
   auth_error: string | null;
-  auth_backend: "local" | "nango";
+  auth_provider: string;
   nango_connection_id: string | null;
   nango_provider_config_key: string | null;
 }
@@ -60,6 +60,10 @@ interface CredentialLookupOptions {
 
 function cacheKey(connectionId: number): string {
   return `cred:${connectionId}`;
+}
+
+function authProviderToBackend(authProvider: string | null | undefined): "local" | "nango" {
+  return authProvider === "nango" ? "nango" : "local";
 }
 
 function isRecordObject(value: unknown): value is Record<string, unknown> {
@@ -447,7 +451,7 @@ async function loadConnectionById(
     .prepare(
       `
         SELECT id, credentials_encrypted, auth_state, auth_error
-               , auth_backend, nango_connection_id, nango_provider_config_key
+               , auth_provider, nango_connection_id, nango_provider_config_key
         FROM user_integrations
         WHERE id = ?
         LIMIT 1
@@ -468,7 +472,7 @@ async function loadConnectionRecord(
       .prepare(
         `
           SELECT id, credentials_encrypted, auth_state, auth_error
-                 , auth_backend, nango_connection_id, nango_provider_config_key
+                 , auth_provider, nango_connection_id, nango_provider_config_key
           FROM user_integrations
           WHERE id = ? AND user_id = ? AND integration = ?
           LIMIT 1
@@ -482,7 +486,7 @@ async function loadConnectionRecord(
     .prepare(
       `
         SELECT id, credentials_encrypted, auth_state, auth_error
-               , auth_backend, nango_connection_id, nango_provider_config_key
+               , auth_provider, nango_connection_id, nango_provider_config_key
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
         ORDER BY is_default DESC, updated_at DESC, created_at DESC, id DESC
@@ -588,7 +592,7 @@ export async function loadCredentialsForIntegration(
     return cached;
   }
 
-  if (record.auth_backend === "nango") {
+  if (authProviderToBackend(record.auth_provider) === "nango") {
     const credentials = await loadNangoCredentials(
       env as Record<string, unknown>,
       integration,
@@ -634,7 +638,7 @@ export async function refreshCredentialsForIntegration(
     throw new Error(buildNeedsReauthMessage(integration, record.auth_error));
   }
 
-  if (record.auth_backend === "nango") {
+  if (authProviderToBackend(record.auth_provider) === "nango") {
     try {
       const credentials = await loadNangoCredentials(
         env as Record<string, unknown>,

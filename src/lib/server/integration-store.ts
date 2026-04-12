@@ -29,11 +29,11 @@ interface StoredIntegrationRow {
   connection_label: string | null;
   account_label: string | null;
   external_account_id: string | null;
-  credentials_encrypted: string | null;
+  credentials_encrypted: string;
   is_default: number;
   auth_state: ConnectionAuthState;
   auth_error: string | null;
-  auth_backend: "local" | "nango";
+  auth_provider: string;
   nango_connection_id: string | null;
   nango_provider_config_key: string | null;
   expires_at: string | null;
@@ -88,6 +88,10 @@ interface DerivedConnectionMetadata {
   connectionLabel: string | null;
   externalAccountId: string | null;
   expiresAt: string | null;
+}
+
+function authProviderToBackend(authProvider: string | null | undefined): "local" | "nango" {
+  return authProvider === "nango" ? "nango" : "local";
 }
 
 function getOptionalRequestContext():
@@ -215,7 +219,7 @@ function mapConnection(row: StoredIntegrationRow): IntegrationConnectionRecord {
     isDefault: Boolean(row.is_default),
     authState: row.auth_state,
     authError: row.auth_error,
-    authBackend: row.auth_backend ?? "local",
+    authBackend: authProviderToBackend(row.auth_provider),
     nangoConnectionId: row.nango_connection_id ?? null,
     nangoProviderConfigKey: row.nango_provider_config_key ?? null,
     expiresAt: row.expires_at,
@@ -248,6 +252,17 @@ async function encryptCredentials(credentials: Record<string, string>): Promise<
   combined.set(new Uint8Array(encrypted), iv.length);
 
   return encodeBase64(combined);
+}
+
+async function encryptNangoPlaceholderCredentials(params: {
+  providerConfigKey: string;
+  connectionId: string;
+}): Promise<string> {
+  return encryptCredentials({
+    managedBy: "nango",
+    providerConfigKey: params.providerConfigKey,
+    nangoConnectionId: params.connectionId,
+  });
 }
 
 export function randomToken(bytes = 24): string {
@@ -330,7 +345,7 @@ export async function getIntegrationConnectionByIdForUserId(
     .prepare(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
-               credentials_encrypted, is_default, auth_state, auth_error, auth_backend,
+               credentials_encrypted, is_default, auth_state, auth_error, auth_provider,
                nango_connection_id, nango_provider_config_key, expires_at, created_at, updated_at
         FROM user_integrations
         WHERE user_id = ? AND id = ?
@@ -492,7 +507,7 @@ export async function listIntegrationConnectionsForUserId(
     .prepare(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
-               credentials_encrypted, is_default, auth_state, auth_error, auth_backend,
+               credentials_encrypted, is_default, auth_state, auth_error, auth_provider,
                nango_connection_id, nango_provider_config_key, expires_at, created_at, updated_at
         FROM user_integrations
         WHERE user_id = ?
@@ -519,7 +534,7 @@ export async function listIntegrationConnectionsForSlug(
     .prepare(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
-               credentials_encrypted, is_default, auth_state, auth_error, auth_backend,
+               credentials_encrypted, is_default, auth_state, auth_error, auth_provider,
                nango_connection_id, nango_provider_config_key, expires_at, created_at, updated_at
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
@@ -552,7 +567,7 @@ export async function getIntegrationConnectionForUserId(
     .prepare(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
-               credentials_encrypted, is_default, auth_state, auth_error, auth_backend,
+               credentials_encrypted, is_default, auth_state, auth_error, auth_provider,
                nango_connection_id, nango_provider_config_key, expires_at, created_at, updated_at
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
@@ -642,7 +657,7 @@ export async function saveIntegrationConnectionForUserId(
               is_default = ?,
               auth_state = 'active',
               auth_error = NULL,
-              auth_backend = 'local',
+              auth_provider = 'clawlink',
               nango_connection_id = NULL,
               nango_provider_config_key = NULL,
               expires_at = ?,
@@ -675,14 +690,14 @@ export async function saveIntegrationConnectionForUserId(
             is_default,
             auth_state,
             auth_error,
-            auth_backend,
+            auth_provider,
             nango_connection_id,
             nango_provider_config_key,
             expires_at,
             created_at,
             updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, 'local', NULL, NULL, ?, datetime('now'), datetime('now'))
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, 'clawlink', NULL, NULL, ?, datetime('now'), datetime('now'))
         `,
       )
       .bind(
@@ -724,6 +739,10 @@ export async function saveNangoIntegrationConnectionForUserId(
   slug: string,
   options: SaveNangoIntegrationConnectionOptions,
 ): Promise<IntegrationConnectionRecord> {
+  const placeholderCredentials = await encryptNangoPlaceholderCredentials({
+    providerConfigKey: options.providerConfigKey,
+    connectionId: options.nangoConnectionId,
+  });
   let targetConnectionId = options.connectionId;
 
   if (!targetConnectionId) {
@@ -768,14 +787,14 @@ export async function saveNangoIntegrationConnectionForUserId(
       .prepare(
         `
           UPDATE user_integrations
-          SET credentials_encrypted = NULL,
+          SET credentials_encrypted = ?,
               connection_label = ?,
               account_label = ?,
               external_account_id = ?,
               is_default = ?,
               auth_state = 'active',
               auth_error = NULL,
-              auth_backend = 'nango',
+              auth_provider = 'nango',
               nango_connection_id = ?,
               nango_provider_config_key = ?,
               expires_at = ?,
@@ -784,6 +803,7 @@ export async function saveNangoIntegrationConnectionForUserId(
         `,
       )
       .bind(
+        placeholderCredentials,
         options.connectionLabel ?? null,
         options.accountLabel ?? null,
         options.externalAccountId ?? null,
@@ -809,14 +829,14 @@ export async function saveNangoIntegrationConnectionForUserId(
             is_default,
             auth_state,
             auth_error,
-            auth_backend,
+            auth_provider,
             nango_connection_id,
             nango_provider_config_key,
             expires_at,
             created_at,
             updated_at
           )
-          VALUES (?, ?, ?, ?, ?, NULL, ?, 'active', NULL, 'nango', ?, ?, ?, datetime('now'), datetime('now'))
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, 'nango', ?, ?, ?, datetime('now'), datetime('now'))
         `,
       )
       .bind(
@@ -825,6 +845,7 @@ export async function saveNangoIntegrationConnectionForUserId(
         options.connectionLabel ?? null,
         options.accountLabel ?? null,
         options.externalAccountId ?? null,
+        placeholderCredentials,
         needsDefault ? 1 : 0,
         options.nangoConnectionId,
         options.providerConfigKey,

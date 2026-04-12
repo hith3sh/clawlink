@@ -7,11 +7,11 @@ CREATE TABLE user_integrations_v3 (
   connection_label TEXT,
   account_label TEXT,
   external_account_id TEXT,
-  credentials_encrypted TEXT,
+  credentials_encrypted TEXT NOT NULL,
   is_default INTEGER NOT NULL DEFAULT 0,
   auth_state TEXT NOT NULL DEFAULT 'active',
   auth_error TEXT,
-  auth_backend TEXT NOT NULL DEFAULT 'local',
+  auth_provider TEXT NOT NULL DEFAULT 'clawlink',
   nango_connection_id TEXT,
   nango_provider_config_key TEXT,
   expires_at DATETIME,
@@ -31,7 +31,7 @@ INSERT INTO user_integrations_v3 (
   is_default,
   auth_state,
   auth_error,
-  auth_backend,
+  auth_provider,
   nango_connection_id,
   nango_provider_config_key,
   expires_at,
@@ -49,7 +49,7 @@ SELECT
   is_default,
   auth_state,
   auth_error,
-  'local',
+  'clawlink',
   NULL,
   NULL,
   expires_at,
@@ -70,8 +70,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_user_integrations_default_unique
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_integrations_external_account_unique
   ON user_integrations(user_id, integration, external_account_id)
   WHERE external_account_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_user_integrations_nango_connection
+  ON user_integrations(nango_connection_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_integrations_nango_connection_unique
-  ON user_integrations(user_id, integration, nango_connection_id)
+  ON user_integrations(nango_connection_id)
   WHERE nango_connection_id IS NOT NULL;
 
 PRAGMA foreign_keys = ON;
