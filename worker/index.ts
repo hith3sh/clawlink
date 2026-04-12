@@ -35,6 +35,9 @@ export interface Env {
   NOTION_CLIENT_SECRET?: string;
   OUTLOOK_CLIENT_ID?: string;
   OUTLOOK_CLIENT_SECRET?: string;
+  NANGO_BASE_URL?: string;
+  NANGO_SECRET_KEY?: string;
+  NANGO_PROVIDER_CONFIG_KEYS?: string;
   [key: string]: unknown;
 }
 

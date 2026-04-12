@@ -6,11 +6,17 @@ import {
   getIntegrationConnectionByIdForUserId,
   getIntegrationConnectionForUserId,
   randomToken,
+  saveNangoIntegrationConnectionForUserId,
   saveIntegrationConnectionForUserId,
   type D1LikeDatabase,
   type IntegrationConnectionRecord,
   type UserRow,
 } from "@/lib/server/integration-store";
+import {
+  getNangoConnection,
+  isNangoManagedIntegration,
+  listNangoConnectionsForSession,
+} from "@/lib/server/nango";
 
 export type ConnectionSessionStatus =
   | "awaiting_user_action"
@@ -37,6 +43,7 @@ interface StoredConnectionSessionRow {
 export interface ConnectionSessionRecord {
   id: string;
   token: string;
+  userId: string;
   displayCode: string;
   integration: string;
   connectionId: number | null;
@@ -57,6 +64,7 @@ function mapSession(
   return {
     id: row.id,
     token: row.public_token,
+    userId: row.user_id,
     displayCode: row.display_code,
     integration: row.integration,
     connectionId: row.connection_id,
@@ -69,6 +77,10 @@ function mapSession(
     updatedAt: row.updated_at,
     connection,
   };
+}
+
+interface CreateConnectionSessionOptions {
+  connectionId?: number | null;
 }
 
 function generateDisplayCode(): string {
@@ -150,9 +162,149 @@ async function expireIfNeeded(
   };
 }
 
+function safeTrim(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function readNestedString(
+  source: Record<string, unknown> | null,
+  key: string,
+): string | null {
+  if (!source) {
+    return null;
+  }
+
+  return safeTrim(source[key]);
+}
+
+function deriveNangoConnectionMetadata(
+  integrationSlug: string,
+  details: Awaited<ReturnType<typeof getNangoConnection>>,
+): {
+  connectionLabel: string | null;
+  accountLabel: string | null;
+  externalAccountId: string;
+  expiresAt: string | null;
+} {
+  const integration = getIntegrationBySlug(integrationSlug);
+  const metadata = details.metadata;
+  const credentials = details.credentials;
+  const fallbackLabel = integration?.name
+    ? `${integration.name} connection`
+    : "Connected account";
+  const connectionLabel =
+    readNestedString(metadata, "connection_label") ??
+    readNestedString(metadata, "display_name") ??
+    readNestedString(metadata, "workspace_name") ??
+    readNestedString(metadata, "email") ??
+    safeTrim(details.endUser?.displayName) ??
+    safeTrim(details.endUser?.email) ??
+    safeTrim(details.connectionId) ??
+    fallbackLabel;
+  const accountLabel =
+    readNestedString(metadata, "account_label") ??
+    readNestedString(metadata, "workspace_name") ??
+    readNestedString(metadata, "email") ??
+    safeTrim(details.endUser?.displayName) ??
+    safeTrim(details.endUser?.email) ??
+    connectionLabel;
+  const externalAccountId =
+    readNestedString(metadata, "external_account_id") ??
+    safeTrim(details.connectionId) ??
+    crypto.randomUUID();
+  const expiresAt =
+    safeTrim(credentials.expires_at) ??
+    safeTrim(credentials.expiresAt) ??
+    null;
+
+  return {
+    connectionLabel,
+    accountLabel,
+    externalAccountId,
+    expiresAt,
+  };
+}
+
+async function reconcileNangoSessionIfNeeded(
+  db: D1LikeDatabase,
+  session: StoredConnectionSessionRow,
+): Promise<StoredConnectionSessionRow> {
+  if (session.status !== "awaiting_user_action") {
+    return session;
+  }
+
+  if (!isNangoManagedIntegration(session.integration)) {
+    return session;
+  }
+
+  const matches = await listNangoConnectionsForSession({
+    sessionId: session.id,
+    userId: session.user_id,
+    integrationSlug: session.integration,
+  });
+  const latest = matches[0];
+
+  if (!latest) {
+    return session;
+  }
+
+  const details = await getNangoConnection(
+    latest.providerConfigKey,
+    latest.connectionId,
+    { forceRefresh: false, includeRefreshToken: false },
+  );
+  const metadata = deriveNangoConnectionMetadata(session.integration, details);
+  const connection = await saveNangoIntegrationConnectionForUserId(
+    db,
+    session.user_id,
+    session.integration,
+    {
+      mode: session.connection_id ? "upsert_default" : "create_or_match_account",
+      connectionId: session.connection_id ?? undefined,
+      setAsDefault: true,
+      providerConfigKey: details.providerConfigKey,
+      nangoConnectionId: details.connectionId,
+      connectionLabel: metadata.connectionLabel,
+      accountLabel: metadata.accountLabel,
+      externalAccountId: metadata.externalAccountId,
+      expiresAt: metadata.expiresAt,
+    },
+  );
+
+  await db
+    .prepare(
+      `
+        UPDATE connection_sessions
+        SET connection_id = ?,
+            status = 'connected',
+            error_message = NULL,
+            completed_at = datetime('now'),
+            updated_at = datetime('now')
+        WHERE id = ?
+      `,
+    )
+    .bind(connection.id, session.id)
+    .run();
+
+  return {
+    ...session,
+    connection_id: connection.id,
+    status: "connected",
+    error_message: null,
+    completed_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
+
 export async function createConnectionSession(
   user: UserRow,
   integrationSlug: string,
+  options: CreateConnectionSessionOptions = {},
 ): Promise<ConnectionSessionRecord> {
   const db = getDatabase();
   const integration = getIntegrationBySlug(integrationSlug);
@@ -195,7 +347,7 @@ export async function createConnectionSession(
       displayCode,
       user.id,
       integration.slug,
-      null,
+      options.connectionId ?? null,
       "awaiting_user_action",
       integration.setupMode,
       expiresAt,
@@ -205,9 +357,10 @@ export async function createConnectionSession(
   return {
     id,
     token,
+    userId: user.id,
     displayCode,
     integration: integration.slug,
-    connectionId: null,
+    connectionId: options.connectionId ?? null,
     status: "awaiting_user_action",
     flowType: integration.setupMode,
     errorMessage: null,
@@ -234,7 +387,10 @@ export async function getConnectionSessionByToken(
     return null;
   }
 
-  const normalized = await expireIfNeeded(db, session);
+  const normalized = await reconcileNangoSessionIfNeeded(
+    db,
+    await expireIfNeeded(db, session),
+  );
   const connection = await loadConnectionForSession(db, normalized);
 
   return mapSession(normalized, connection);
@@ -269,7 +425,10 @@ export async function getLatestActiveConnectionSessionForUser(
     return null;
   }
 
-  const normalized = await expireIfNeeded(db, session);
+  const normalized = await reconcileNangoSessionIfNeeded(
+    db,
+    await expireIfNeeded(db, session),
+  );
   const connection = await loadConnectionForSession(db, normalized);
 
   return mapSession(normalized, connection);

@@ -3,6 +3,7 @@ import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { ConnectionAuthState } from "@/lib/connection-status";
+import { deleteNangoConnection } from "@/lib/server/nango";
 
 export interface D1Statement {
   bind(...values: unknown[]): {
@@ -28,9 +29,13 @@ interface StoredIntegrationRow {
   connection_label: string | null;
   account_label: string | null;
   external_account_id: string | null;
+  credentials_encrypted: string | null;
   is_default: number;
   auth_state: ConnectionAuthState;
   auth_error: string | null;
+  auth_backend: "local" | "nango";
+  nango_connection_id: string | null;
+  nango_provider_config_key: string | null;
   expires_at: string | null;
   created_at: string;
   updated_at?: string | null;
@@ -45,6 +50,9 @@ export interface IntegrationConnectionRecord {
   isDefault: boolean;
   authState: ConnectionAuthState;
   authError: string | null;
+  authBackend: "local" | "nango";
+  nangoConnectionId: string | null;
+  nangoProviderConfigKey: string | null;
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string | null;
@@ -61,6 +69,18 @@ export interface SaveIntegrationConnectionOptions {
   mode?: ConnectionSaveMode;
   connectionId?: number;
   setAsDefault?: boolean;
+}
+
+export interface SaveNangoIntegrationConnectionOptions {
+  mode?: ConnectionSaveMode;
+  connectionId?: number;
+  setAsDefault?: boolean;
+  providerConfigKey: string;
+  nangoConnectionId: string;
+  connectionLabel?: string | null;
+  accountLabel?: string | null;
+  externalAccountId?: string | null;
+  expiresAt?: string | null;
 }
 
 interface DerivedConnectionMetadata {
@@ -195,6 +215,9 @@ function mapConnection(row: StoredIntegrationRow): IntegrationConnectionRecord {
     isDefault: Boolean(row.is_default),
     authState: row.auth_state,
     authError: row.auth_error,
+    authBackend: row.auth_backend ?? "local",
+    nangoConnectionId: row.nango_connection_id ?? null,
+    nangoProviderConfigKey: row.nango_provider_config_key ?? null,
     expiresAt: row.expires_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at ?? null,
@@ -307,7 +330,8 @@ export async function getIntegrationConnectionByIdForUserId(
     .prepare(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
-               is_default, auth_state, auth_error, expires_at, created_at, updated_at
+               credentials_encrypted, is_default, auth_state, auth_error, auth_backend,
+               nango_connection_id, nango_provider_config_key, expires_at, created_at, updated_at
         FROM user_integrations
         WHERE user_id = ? AND id = ?
       `,
@@ -357,6 +381,27 @@ async function hasDefaultConnection(
     .first<{ id: number }>();
 
   return Boolean(row?.id);
+}
+
+async function findConnectionIdByNangoConnectionId(
+  db: D1LikeDatabase,
+  userId: string,
+  slug: string,
+  nangoConnectionId: string,
+): Promise<number | null> {
+  const row = await db
+    .prepare(
+      `
+        SELECT id
+        FROM user_integrations
+        WHERE user_id = ? AND integration = ? AND nango_connection_id = ?
+        LIMIT 1
+      `,
+    )
+    .bind(userId, slug, nangoConnectionId)
+    .first<{ id: number }>();
+
+  return row?.id ?? null;
 }
 
 async function clearDefaultConnectionFlags(
@@ -447,7 +492,8 @@ export async function listIntegrationConnectionsForUserId(
     .prepare(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
-               is_default, auth_state, auth_error, expires_at, created_at, updated_at
+               credentials_encrypted, is_default, auth_state, auth_error, auth_backend,
+               nango_connection_id, nango_provider_config_key, expires_at, created_at, updated_at
         FROM user_integrations
         WHERE user_id = ?
         ORDER BY is_default DESC, created_at DESC, id DESC
@@ -473,7 +519,8 @@ export async function listIntegrationConnectionsForSlug(
     .prepare(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
-               is_default, auth_state, auth_error, expires_at, created_at, updated_at
+               credentials_encrypted, is_default, auth_state, auth_error, auth_backend,
+               nango_connection_id, nango_provider_config_key, expires_at, created_at, updated_at
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
         ORDER BY is_default DESC, created_at DESC, id DESC
@@ -505,7 +552,8 @@ export async function getIntegrationConnectionForUserId(
     .prepare(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
-               is_default, auth_state, auth_error, expires_at, created_at, updated_at
+               credentials_encrypted, is_default, auth_state, auth_error, auth_backend,
+               nango_connection_id, nango_provider_config_key, expires_at, created_at, updated_at
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
         ORDER BY is_default DESC, updated_at DESC, created_at DESC, id DESC
@@ -594,6 +642,9 @@ export async function saveIntegrationConnectionForUserId(
               is_default = ?,
               auth_state = 'active',
               auth_error = NULL,
+              auth_backend = 'local',
+              nango_connection_id = NULL,
+              nango_provider_config_key = NULL,
               expires_at = ?,
               updated_at = datetime('now')
           WHERE id = ? AND user_id = ?
@@ -624,11 +675,14 @@ export async function saveIntegrationConnectionForUserId(
             is_default,
             auth_state,
             auth_error,
+            auth_backend,
+            nango_connection_id,
+            nango_provider_config_key,
             expires_at,
             created_at,
             updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, ?, datetime('now'), datetime('now'))
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, 'local', NULL, NULL, ?, datetime('now'), datetime('now'))
         `,
       )
       .bind(
@@ -659,6 +713,140 @@ export async function saveIntegrationConnectionForUserId(
 
   if (!saved) {
     throw new Error("Integration was saved but could not be reloaded");
+  }
+
+  return saved;
+}
+
+export async function saveNangoIntegrationConnectionForUserId(
+  db: D1LikeDatabase,
+  userId: string,
+  slug: string,
+  options: SaveNangoIntegrationConnectionOptions,
+): Promise<IntegrationConnectionRecord> {
+  let targetConnectionId = options.connectionId;
+
+  if (!targetConnectionId) {
+    targetConnectionId =
+      (await findConnectionIdByNangoConnectionId(
+        db,
+        userId,
+        slug,
+        options.nangoConnectionId,
+      )) ?? undefined;
+  }
+
+  if (
+    !targetConnectionId &&
+    options.mode === "create_or_match_account" &&
+    options.externalAccountId
+  ) {
+    targetConnectionId =
+      (await findConnectionIdByExternalAccountId(
+        db,
+        userId,
+        slug,
+        options.externalAccountId,
+      )) ?? undefined;
+  }
+
+  if (!targetConnectionId && options.mode === "upsert_default") {
+    targetConnectionId =
+      (await getIntegrationConnectionForUserId(db, userId, slug))?.id;
+  }
+
+  const shouldBeDefault = options.setAsDefault ?? true;
+  const needsDefault =
+    shouldBeDefault || !(await hasDefaultConnection(db, userId, slug));
+
+  if (needsDefault) {
+    await clearDefaultConnectionFlags(db, userId, slug);
+  }
+
+  if (targetConnectionId) {
+    await db
+      .prepare(
+        `
+          UPDATE user_integrations
+          SET credentials_encrypted = NULL,
+              connection_label = ?,
+              account_label = ?,
+              external_account_id = ?,
+              is_default = ?,
+              auth_state = 'active',
+              auth_error = NULL,
+              auth_backend = 'nango',
+              nango_connection_id = ?,
+              nango_provider_config_key = ?,
+              expires_at = ?,
+              updated_at = datetime('now')
+          WHERE id = ? AND user_id = ?
+        `,
+      )
+      .bind(
+        options.connectionLabel ?? null,
+        options.accountLabel ?? null,
+        options.externalAccountId ?? null,
+        needsDefault ? 1 : 0,
+        options.nangoConnectionId,
+        options.providerConfigKey,
+        options.expiresAt ?? null,
+        targetConnectionId,
+        userId,
+      )
+      .run();
+  } else {
+    await db
+      .prepare(
+        `
+          INSERT INTO user_integrations (
+            user_id,
+            integration,
+            connection_label,
+            account_label,
+            external_account_id,
+            credentials_encrypted,
+            is_default,
+            auth_state,
+            auth_error,
+            auth_backend,
+            nango_connection_id,
+            nango_provider_config_key,
+            expires_at,
+            created_at,
+            updated_at
+          )
+          VALUES (?, ?, ?, ?, ?, NULL, ?, 'active', NULL, 'nango', ?, ?, ?, datetime('now'), datetime('now'))
+        `,
+      )
+      .bind(
+        userId,
+        slug,
+        options.connectionLabel ?? null,
+        options.accountLabel ?? null,
+        options.externalAccountId ?? null,
+        needsDefault ? 1 : 0,
+        options.nangoConnectionId,
+        options.providerConfigKey,
+        options.expiresAt ?? null,
+      )
+      .run();
+
+    targetConnectionId =
+      (await findConnectionIdByNangoConnectionId(
+        db,
+        userId,
+        slug,
+        options.nangoConnectionId,
+      )) ?? undefined;
+  }
+
+  const saved = targetConnectionId
+    ? await getIntegrationConnectionByIdForUserId(db, userId, targetConnectionId)
+    : await getIntegrationConnectionForUserId(db, userId, slug);
+
+  if (!saved) {
+    throw new Error("Nango connection was saved but could not be reloaded");
   }
 
   return saved;
@@ -727,6 +915,21 @@ export async function deleteIntegrationConnectionForUserId(
   }
 
   await clearConnectionSessionReferences(db, userId, connectionId);
+
+  if (
+    connection.authBackend === "nango" &&
+    connection.nangoProviderConfigKey &&
+    connection.nangoConnectionId
+  ) {
+    try {
+      await deleteNangoConnection(
+        connection.nangoProviderConfigKey,
+        connection.nangoConnectionId,
+      );
+    } catch (error) {
+      console.error("Failed to delete Nango connection:", error);
+    }
+  }
 
   await db
     .prepare("DELETE FROM user_integrations WHERE id = ? AND user_id = ?")

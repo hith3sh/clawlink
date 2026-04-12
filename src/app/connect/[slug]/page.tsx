@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import HostedConnectPage from "@/components/connect/HostedConnectPage";
 import { getIntegrationBySlug } from "@/data/integrations";
 import { getConnectionSessionByToken } from "@/lib/server/connection-sessions";
+import { getPublicNangoClientConfig } from "@/lib/server/nango";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,7 @@ export default async function ConnectIntegrationPage({
   return (
     <HostedConnectPage
       integration={integration}
+      nango={getPublicNangoClientConfig(integration.slug)}
       session={{
         token: session.token,
         displayCode: session.displayCode,
