@@ -73,15 +73,6 @@ export interface IntegrationHandler {
    */
   validateCredentials?(credentials: Record<string, string>): Promise<boolean>;
 
-  /**
-   * Get OAuth URL for this integration (if applicable)
-   */
-  getOAuthUrl?(userId: string, redirectUri: string): string;
-
-  /**
-   * Exchange OAuth code for tokens
-   */
-  exchangeOAuthCode?(code: string, redirectUri: string): Promise<Record<string, string>>;
 }
 
 export class IntegrationRequestError extends Error {

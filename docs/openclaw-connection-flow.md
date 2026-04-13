@@ -29,8 +29,8 @@ This repo now supports the hosted connection-session model for OpenClaw-style in
 ## Current provider coverage
 
 - Manual hosted connect is implemented for integrations that declare `credentialFields` and `dashboardStatus = "available"`.
-- Notion and Outlook now use the hosted OAuth callback flow end to end.
-- Other OAuth-backed integrations still need provider-specific callback work.
+- Nango-managed OAuth integrations use the hosted connect page plus Nango connect sessions and webhook/session reconciliation.
+- Legacy provider-specific OAuth start/callback routes for Gmail, Notion, and Outlook are now disabled.
 
 ## OpenClaw plugin contract
 

@@ -345,27 +345,6 @@ class GmailHandler extends BaseIntegration {
       return false;
     }
   }
-
-  getOAuthUrl(userId: string, redirectUri: string): string {
-    const clientId = process.env.GMAIL_CLIENT_ID;
-    const scopes = [
-      "https://www.googleapis.com/auth/gmail.readonly",
-      "https://www.googleapis.com/auth/gmail.compose",
-    ].join(" ");
-
-    const params = new URLSearchParams({
-      client_id: clientId || "",
-      redirect_uri: redirectUri,
-      response_type: "code",
-      scope: scopes,
-      access_type: "offline",
-      include_granted_scopes: "true",
-      prompt: "consent",
-      state: userId,
-    });
-
-    return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
-  }
 }
 
 // Register the handler

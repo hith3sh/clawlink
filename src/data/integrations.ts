@@ -166,7 +166,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide:
-      "Connect Gmail with Google OAuth to read recent messages, create drafts, and send email from your Google account.",
+      "Connect Gmail through the hosted Nango flow to read recent messages, create drafts, and send email from your Google account.",
     credentialFields: [],
     tools: [
       { name: "send_email", description: "Send a Gmail message" },
@@ -210,7 +210,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     setupMode: "oauth",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Connect Outlook with Microsoft OAuth to grant ClawLink access to your email, calendar, and contacts.",
+    setupGuide: "Connect Outlook through the hosted Nango flow to grant ClawLink access to your email, calendar, and contacts.",
     credentialFields: [],
     tools: [
       { name: "list_messages", description: "List recent Outlook messages" },
@@ -332,7 +332,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     setupMode: "oauth",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Connect your Notion workspace through the hosted OAuth flow and approve the pages ClawLink can access.",
+    setupGuide: "Connect your Notion workspace through the hosted Nango flow and approve the pages ClawLink can access.",
     credentialFields: [],
     tools: [
       { name: "notion_search", description: "Search pages and databases in Notion" },

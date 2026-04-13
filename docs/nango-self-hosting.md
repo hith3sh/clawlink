@@ -64,6 +64,7 @@ wrangler --cwd worker secret put NANGO_SECRET_KEY --config wrangler.worker.toml 
 
 ## Current migration scope
 
-- OAuth integrations can be routed through Nango when a slug has a provider config mapping.
+- OAuth integrations should be treated as Nango-managed when a slug has a provider config mapping.
 - Manual/API-key integrations stay on the existing local credential path.
-- Free self-hosted Nango completion is reconciled by ClawLink polling Nango connections from the backend, not by Nango webhooks.
+- ClawLink now reconciles Nango completion through both webhook handling and backend session polling.
+- Legacy per-provider OAuth routes for the initial Nango-managed providers are now disabled and should not be used.

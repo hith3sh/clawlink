@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
-  completeOAuthConnectionSession,
-  failConnectionSession,
+  completeOAuthConnectionSessionById,
+  failConnectionSessionById,
 } from "@/lib/server/connection-sessions";
 import {
   getDatabase,
@@ -55,13 +55,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, ignored: true });
   }
 
-  const sessionToken = payload.tags?.clawlink_session_token?.trim();
-  const integrationSlug = payload.tags?.clawlink_integration_slug?.trim();
+  const sessionId =
+    payload.tags?.clawlink_session_id?.trim() ??
+    payload.tags?.clawlink_session_token?.trim();
+  const integrationSlug =
+    payload.tags?.clawlink_integration_slug?.trim() ??
+    payload.tags?.clawlink_integration?.trim();
   const nangoConnectionId = payload.connectionId?.trim();
   const providerConfigKey = payload.providerConfigKey?.trim();
 
   if (payload.success && (payload.operation === "creation" || payload.operation === "override")) {
-    if (!sessionToken || !integrationSlug || !nangoConnectionId || !providerConfigKey) {
+    if (!sessionId || !integrationSlug || !nangoConnectionId || !providerConfigKey) {
       return NextResponse.json({ ok: true, ignored: true });
     }
 
@@ -70,7 +74,7 @@ export async function POST(request: NextRequest) {
     });
     const credentials = mapNangoConnectionToClawLinkCredentials(integrationSlug, nangoConnection);
 
-    await completeOAuthConnectionSession(sessionToken, credentials, {
+    await completeOAuthConnectionSessionById(sessionId, credentials, {
       authProvider: "nango",
       nangoConnectionId,
       nangoProviderConfigKey: providerConfigKey,
@@ -79,8 +83,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  if (!payload.success && sessionToken) {
-    await failConnectionSession(sessionToken, getWebhookErrorMessage(payload));
+  if (!payload.success && sessionId) {
+    await failConnectionSessionById(sessionId, getWebhookErrorMessage(payload));
   }
 
   if (payload.operation === "refresh" && !payload.success && nangoConnectionId) {

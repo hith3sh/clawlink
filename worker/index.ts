@@ -11,7 +11,6 @@
 import "./integrations";
 
 import { integrations } from "../src/data/integrations";
-import { getOAuthRefreshConfig } from "../src/lib/oauth/providers";
 import { verifyAuth } from "./auth";
 import {
   loadCredentialsForIntegration,
@@ -32,12 +31,6 @@ export interface Env {
   NANGO_BASE_URL?: string;
   NANGO_SECRET_KEY?: string;
   NANGO_PROVIDER_CONFIG_KEYS?: string;
-  GMAIL_CLIENT_ID?: string;
-  GMAIL_CLIENT_SECRET?: string;
-  NOTION_CLIENT_ID?: string;
-  NOTION_CLIENT_SECRET?: string;
-  OUTLOOK_CLIENT_ID?: string;
-  OUTLOOK_CLIENT_SECRET?: string;
   [key: string]: unknown;
 }
 
@@ -119,7 +112,7 @@ async function handleToolCall(
   }
 
   const canRetryAfterAuthFailure =
-    !hasInlineCredentials && Boolean(getOAuthRefreshConfig(integration));
+    !hasInlineCredentials && integration !== "apollo";
   let result: unknown;
 
   try {

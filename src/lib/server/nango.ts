@@ -185,10 +185,6 @@ export function isNangoManagedIntegration(slug: string): boolean {
   return Boolean(getNangoPublicBaseUrl(getEnvValue) && getOptionalProviderConfigKey(slug));
 }
 
-export function isNangoConfiguredForIntegration(slug: string): boolean {
-  return isNangoManagedIntegration(slug);
-}
-
 export async function createNangoConnectSession(params: {
   sessionId: string;
   userId: string;
@@ -211,8 +207,10 @@ export async function createNangoConnectSession(params: {
           },
           tags: {
             clawlink_session_id: params.sessionId,
+            clawlink_session_token: params.sessionId,
             clawlink_user_id: params.userId,
             clawlink_integration: params.integrationSlug,
+            clawlink_integration_slug: params.integrationSlug,
           },
         }
       : {
@@ -222,8 +220,10 @@ export async function createNangoConnectSession(params: {
           },
           tags: {
             clawlink_session_id: params.sessionId,
+            clawlink_session_token: params.sessionId,
             clawlink_user_id: params.userId,
             clawlink_integration: params.integrationSlug,
+            clawlink_integration_slug: params.integrationSlug,
           },
         };
 

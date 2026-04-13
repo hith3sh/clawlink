@@ -150,12 +150,6 @@ function getCredentialBridgeEnv(): CredentialBridgeEnv | null {
     NANGO_BASE_URL: getEnvBinding<string>("NANGO_BASE_URL"),
     NANGO_SECRET_KEY: getEnvBinding<string>("NANGO_SECRET_KEY"),
     NANGO_PROVIDER_CONFIG_KEYS: getEnvBinding<string>("NANGO_PROVIDER_CONFIG_KEYS"),
-    GMAIL_CLIENT_ID: getEnvBinding<string>("GMAIL_CLIENT_ID"),
-    GMAIL_CLIENT_SECRET: getEnvBinding<string>("GMAIL_CLIENT_SECRET"),
-    NOTION_CLIENT_ID: getEnvBinding<string>("NOTION_CLIENT_ID"),
-    NOTION_CLIENT_SECRET: getEnvBinding<string>("NOTION_CLIENT_SECRET"),
-    OUTLOOK_CLIENT_ID: getEnvBinding<string>("OUTLOOK_CLIENT_ID"),
-    OUTLOOK_CLIENT_SECRET: getEnvBinding<string>("OUTLOOK_CLIENT_SECRET"),
   };
 }
 

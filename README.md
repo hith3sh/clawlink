@@ -34,7 +34,7 @@ Then just ask OpenClaw things like:
 
 ## Why ClawLink proxies every call
 
-- **OAuth handled for you** — click "Connect Gmail," we handle the entire OAuth dance. No tokens, no refresh logic.
+- **OAuth handled for you via Nango** — click "Connect Gmail," the hosted Nango flow handles provider auth while ClawLink manages session state, persistence, and runtime token access without local provider-specific OAuth code.
 - **Credentials never touch your machine** — encrypted at rest, decrypted only at execution time on the edge.
 - **Request logs** — see every API call, success/failure, latency. Debug from the dashboard.
 - **Rate limiting and retries** — built-in reliability so your agent doesn't get throttled.
@@ -147,8 +147,8 @@ clawlink/
 - [ ] Request logging
 
 ### v2 — Growth
-- [ ] OAuth flow support (Gmail, Google Sheets, Google Calendar, etc.)
-- [ ] Token refresh handling
+- [~] Nango-backed OAuth flow support (Gmail, Notion, Outlook first; more providers later)
+- [~] Token refresh handling via Nango-backed connections
 - [ ] 25+ integrations
 - [ ] Error dashboard with alerts
 - [ ] Usage analytics

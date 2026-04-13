@@ -108,6 +108,23 @@ async function loadSession(
     .first<StoredConnectionSessionRow>();
 }
 
+async function loadSessionById(
+  db: D1LikeDatabase,
+  id: string,
+): Promise<StoredConnectionSessionRow | null> {
+  return db
+    .prepare(
+      `
+        SELECT id, public_token, display_code, user_id, integration, connection_id, status, flow_type,
+               error_message, expires_at, completed_at, created_at, updated_at
+        FROM connection_sessions
+        WHERE id = ?
+      `,
+    )
+    .bind(id)
+    .first<StoredConnectionSessionRow>();
+}
+
 async function loadSessionOwner(
   db: D1LikeDatabase,
   session: StoredConnectionSessionRow,
@@ -390,17 +407,10 @@ export async function createConnectionSession(
   };
 }
 
-export async function getConnectionSessionByToken(
-  token: string,
+async function hydrateConnectionSession(
+  db: D1LikeDatabase,
+  session: StoredConnectionSessionRow | null,
 ): Promise<ConnectionSessionRecord | null> {
-  const db = getDatabase();
-
-  if (!db) {
-    return null;
-  }
-
-  const session = await loadSession(db, token);
-
   if (!session) {
     return null;
   }
@@ -414,14 +424,38 @@ export async function getConnectionSessionByToken(
   return mapSession(normalized, connection);
 }
 
-export async function getConnectionSessionUserByToken(token: string): Promise<UserRow | null> {
+export async function getConnectionSessionByToken(
+  token: string,
+): Promise<ConnectionSessionRecord | null> {
   const db = getDatabase();
 
   if (!db) {
     return null;
   }
 
-  const session = await loadSession(db, token);
+  return hydrateConnectionSession(db, await loadSession(db, token));
+}
+
+export async function getConnectionSessionById(
+  id: string,
+): Promise<ConnectionSessionRecord | null> {
+  const db = getDatabase();
+
+  if (!db) {
+    return null;
+  }
+
+  return hydrateConnectionSession(db, await loadSessionById(db, id));
+}
+
+export async function getConnectionSessionUserById(id: string): Promise<UserRow | null> {
+  const db = getDatabase();
+
+  if (!db) {
+    return null;
+  }
+
+  const session = await loadSessionById(db, id);
 
   if (!session) {
     return null;
@@ -535,23 +569,12 @@ export async function completeManualConnectionSession(
   return saved;
 }
 
-export async function completeOAuthConnectionSession(
-  token: string,
+async function completeOAuthConnectionSessionRecord(
+  db: D1LikeDatabase,
+  session: StoredConnectionSessionRow,
   credentials: Record<string, string>,
   saveOptions: SaveIntegrationConnectionOptions = {},
 ): Promise<ConnectionSessionRecord> {
-  const db = getDatabase();
-
-  if (!db) {
-    throw new Error("DB binding is not configured");
-  }
-
-  const session = await loadSession(db, token);
-
-  if (!session) {
-    throw new Error("Connection session not found");
-  }
-
   const integration = getIntegrationBySlug(session.integration);
 
   if (!integration) {
@@ -595,13 +618,53 @@ export async function completeOAuthConnectionSession(
     .bind(connection.id, normalized.id)
     .run();
 
-  const saved = await getConnectionSessionByToken(token);
+  const saved = await getConnectionSessionById(normalized.id);
 
   if (!saved) {
     throw new Error("Connection session was completed but could not be reloaded");
   }
 
   return saved;
+}
+
+export async function completeOAuthConnectionSession(
+  token: string,
+  credentials: Record<string, string>,
+  saveOptions: SaveIntegrationConnectionOptions = {},
+): Promise<ConnectionSessionRecord> {
+  const db = getDatabase();
+
+  if (!db) {
+    throw new Error("DB binding is not configured");
+  }
+
+  const session = await loadSession(db, token);
+
+  if (!session) {
+    throw new Error("Connection session not found");
+  }
+
+  return completeOAuthConnectionSessionRecord(db, session, credentials, saveOptions);
+}
+
+export async function completeOAuthConnectionSessionById(
+  id: string,
+  credentials: Record<string, string>,
+  saveOptions: SaveIntegrationConnectionOptions = {},
+): Promise<ConnectionSessionRecord> {
+  const db = getDatabase();
+
+  if (!db) {
+    throw new Error("DB binding is not configured");
+  }
+
+  const session = await loadSessionById(db, id);
+
+  if (!session) {
+    throw new Error("Connection session not found");
+  }
+
+  return completeOAuthConnectionSessionRecord(db, session, credentials, saveOptions);
 }
 
 export async function failConnectionSession(token: string, message: string): Promise<void> {
@@ -620,5 +683,24 @@ export async function failConnectionSession(token: string, message: string): Pro
       `,
     )
     .bind(message, token)
+    .run();
+}
+
+export async function failConnectionSessionById(id: string, message: string): Promise<void> {
+  const db = getDatabase();
+
+  if (!db) {
+    return;
+  }
+
+  await db
+    .prepare(
+      `
+        UPDATE connection_sessions
+        SET status = 'failed', error_message = ?, updated_at = datetime('now')
+        WHERE id = ?
+      `,
+    )
+    .bind(message, id)
     .run();
 }

@@ -185,6 +185,10 @@ export default function HostedConnectPage({
     integration.dashboardStatus === "available" &&
     nango.enabled &&
     Boolean(nango.baseUrl && nango.apiUrl && nango.providerConfigKey);
+  const showUnavailableOAuth =
+    integration.setupMode === "oauth" &&
+    integration.dashboardStatus === "available" &&
+    !showNangoOAuth;
 
   return (
     <div className="mx-auto w-full max-w-2xl px-6 py-12">
@@ -250,6 +254,13 @@ export default function HostedConnectPage({
                 Continue with {integration.name}
               </button>
             </div>
+          </div>
+        ) : showUnavailableOAuth ? (
+          <div className="rounded-3xl border border-amber-200 bg-amber-50 p-7">
+            <p className="text-lg font-medium text-amber-900">Nango is not configured for {integration.name}.</p>
+            <p className="mt-2 text-base leading-7 text-amber-800">
+              This OAuth connection now depends on Nango. Add the provider config in ClawLink, then start a new connection.
+            </p>
           </div>
         ) : integration.setupMode === "oauth" || integration.credentialFields.length === 0 ? (
           <div className="rounded-3xl border border-gray-200 bg-gray-50 p-7">
