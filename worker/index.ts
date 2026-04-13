@@ -29,6 +29,8 @@ export interface Env {
   CREDENTIAL_ENCRYPTION_KEY?: string;
   CLERK_PUBLISHABLE_KEY?: string;
   CLERK_JWT_KEY?: string;
+  NANGO_BASE_URL?: string;
+  NANGO_SECRET_KEY?: string;
   GMAIL_CLIENT_ID?: string;
   GMAIL_CLIENT_SECRET?: string;
   NOTION_CLIENT_ID?: string;

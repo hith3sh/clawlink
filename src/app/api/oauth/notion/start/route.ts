@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { failConnectionSession, getConnectionSessionByToken } from "@/lib/server/connection-sessions";
+import {
+  failConnectionSession,
+  getConnectionSessionByToken,
+  getConnectionSessionUserByToken,
+} from "@/lib/server/connection-sessions";
+import { createNangoConnectSession, isNangoConfiguredForIntegration } from "@/lib/server/nango";
 import { buildNotionAuthorizationUrl, buildNotionConnectPath } from "@/lib/server/oauth/notion";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +30,22 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    if (isNangoConfiguredForIntegration("notion")) {
+      const user = await getConnectionSessionUserByToken(sessionToken);
+
+      if (!user) {
+        throw new Error("Connection session owner not found");
+      }
+
+      const nangoSession = await createNangoConnectSession({
+        integrationSlug: "notion",
+        sessionToken,
+        user,
+      });
+
+      return NextResponse.redirect(nangoSession.connectLink);
+    }
+
     const authorizationUrl = buildNotionAuthorizationUrl({
       origin: request.nextUrl.origin,
       state: sessionToken,

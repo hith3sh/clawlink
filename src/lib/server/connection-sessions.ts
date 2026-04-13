@@ -7,6 +7,7 @@ import {
   getIntegrationConnectionForUserId,
   randomToken,
   saveIntegrationConnectionForUserId,
+  type SaveIntegrationConnectionOptions,
   type D1LikeDatabase,
   type IntegrationConnectionRecord,
   type UserRow,
@@ -93,6 +94,23 @@ async function loadSession(
     )
     .bind(token)
     .first<StoredConnectionSessionRow>();
+}
+
+async function loadSessionOwner(
+  db: D1LikeDatabase,
+  session: StoredConnectionSessionRow,
+): Promise<UserRow | null> {
+  return db
+    .prepare(
+      `
+        SELECT id, clerk_id, email
+        FROM users
+        WHERE id = ?
+        LIMIT 1
+      `,
+    )
+    .bind(session.user_id)
+    .first<UserRow>();
 }
 
 async function loadConnectionForSession(
@@ -240,6 +258,22 @@ export async function getConnectionSessionByToken(
   return mapSession(normalized, connection);
 }
 
+export async function getConnectionSessionUserByToken(token: string): Promise<UserRow | null> {
+  const db = getDatabase();
+
+  if (!db) {
+    return null;
+  }
+
+  const session = await loadSession(db, token);
+
+  if (!session) {
+    return null;
+  }
+
+  return loadSessionOwner(db, session);
+}
+
 export async function getLatestActiveConnectionSessionForUser(
   user: UserRow,
   integrationSlug: string,
@@ -345,6 +379,7 @@ export async function completeManualConnectionSession(
 export async function completeOAuthConnectionSession(
   token: string,
   credentials: Record<string, string>,
+  saveOptions: SaveIntegrationConnectionOptions = {},
 ): Promise<ConnectionSessionRecord> {
   const db = getDatabase();
 
@@ -382,6 +417,7 @@ export async function completeOAuthConnectionSession(
     {
       mode: "create_or_match_account",
       setAsDefault: true,
+      ...saveOptions,
     },
   );
 

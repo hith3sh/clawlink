@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { failConnectionSession, getConnectionSessionByToken } from "@/lib/server/connection-sessions";
+import {
+  failConnectionSession,
+  getConnectionSessionByToken,
+  getConnectionSessionUserByToken,
+} from "@/lib/server/connection-sessions";
+import { createNangoConnectSession, isNangoConfiguredForIntegration } from "@/lib/server/nango";
 import { buildOutlookAuthorizationUrl, buildOutlookConnectPath } from "@/lib/server/oauth/outlook";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +30,22 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    if (isNangoConfiguredForIntegration("outlook")) {
+      const user = await getConnectionSessionUserByToken(sessionToken);
+
+      if (!user) {
+        throw new Error("Connection session owner not found");
+      }
+
+      const nangoSession = await createNangoConnectSession({
+        integrationSlug: "outlook",
+        sessionToken,
+        user,
+      });
+
+      return NextResponse.redirect(nangoSession.connectLink);
+    }
+
     const authorizationUrl = buildOutlookAuthorizationUrl({
       origin: request.nextUrl.origin,
       state: sessionToken,

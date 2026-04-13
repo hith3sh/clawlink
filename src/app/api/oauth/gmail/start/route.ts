@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { failConnectionSession, getConnectionSessionByToken } from "@/lib/server/connection-sessions";
+import {
+  failConnectionSession,
+  getConnectionSessionByToken,
+  getConnectionSessionUserByToken,
+} from "@/lib/server/connection-sessions";
+import { createNangoConnectSession, isNangoConfiguredForIntegration } from "@/lib/server/nango";
 import { buildGmailAuthorizationUrl, buildGmailConnectPath } from "@/lib/server/oauth/gmail";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +30,22 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    if (isNangoConfiguredForIntegration("gmail")) {
+      const user = await getConnectionSessionUserByToken(sessionToken);
+
+      if (!user) {
+        throw new Error("Connection session owner not found");
+      }
+
+      const nangoSession = await createNangoConnectSession({
+        integrationSlug: "gmail",
+        sessionToken,
+        user,
+      });
+
+      return NextResponse.redirect(nangoSession.connectLink);
+    }
+
     const authorizationUrl = buildGmailAuthorizationUrl({
       origin: request.nextUrl.origin,
       state: sessionToken,

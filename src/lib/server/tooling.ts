@@ -147,6 +147,8 @@ function getCredentialBridgeEnv(): CredentialBridgeEnv | null {
     DB: db,
     CREDENTIALS: getEnvBinding("CREDENTIALS") as CredentialBridgeEnv["CREDENTIALS"],
     CREDENTIAL_ENCRYPTION_KEY: getEnvBinding<string>("CREDENTIAL_ENCRYPTION_KEY"),
+    NANGO_BASE_URL: getEnvBinding<string>("NANGO_BASE_URL"),
+    NANGO_SECRET_KEY: getEnvBinding<string>("NANGO_SECRET_KEY"),
     GMAIL_CLIENT_ID: getEnvBinding<string>("GMAIL_CLIENT_ID"),
     GMAIL_CLIENT_SECRET: getEnvBinding<string>("GMAIL_CLIENT_SECRET"),
     NOTION_CLIENT_ID: getEnvBinding<string>("NOTION_CLIENT_ID"),
