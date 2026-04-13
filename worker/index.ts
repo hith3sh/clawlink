@@ -31,6 +31,7 @@ export interface Env {
   CLERK_JWT_KEY?: string;
   NANGO_BASE_URL?: string;
   NANGO_SECRET_KEY?: string;
+  NANGO_PROVIDER_CONFIG_KEYS?: string;
   GMAIL_CLIENT_ID?: string;
   GMAIL_CLIENT_SECRET?: string;
   NOTION_CLIENT_ID?: string;

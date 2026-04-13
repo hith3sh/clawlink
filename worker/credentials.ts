@@ -12,6 +12,7 @@ import {
   type NangoConnectionResponse,
 } from "../src/lib/nango/credentials";
 import { decryptCredential, encryptCredential } from "./crypto";
+import { loadNangoCredentials, NangoConnectionError } from "./nango";
 
 interface D1RunResult {
   meta?: {
@@ -45,6 +46,7 @@ interface StoredIntegrationRow {
   credentials_encrypted: string;
   auth_state: ConnectionAuthState;
   auth_error: string | null;
+  auth_provider: string;
   nango_connection_id: string | null;
   nango_provider_config_key: string | null;
 }
@@ -64,6 +66,10 @@ interface CredentialLookupOptions {
 
 function cacheKey(connectionId: number): string {
   return `cred:${connectionId}`;
+}
+
+function authProviderToBackend(authProvider: string | null | undefined): "local" | "nango" {
+  return authProvider === "nango" ? "nango" : "local";
 }
 
 function isRecordObject(value: unknown): value is Record<string, unknown> {
@@ -464,7 +470,7 @@ async function loadConnectionById(
     .prepare(
       `
         SELECT id, credentials_encrypted, auth_state, auth_error,
-               nango_connection_id, nango_provider_config_key
+               auth_provider, nango_connection_id, nango_provider_config_key
         FROM user_integrations
         WHERE id = ?
         LIMIT 1
@@ -485,7 +491,7 @@ async function loadConnectionRecord(
       .prepare(
         `
           SELECT id, credentials_encrypted, auth_state, auth_error,
-                 nango_connection_id, nango_provider_config_key
+                 auth_provider, nango_connection_id, nango_provider_config_key
           FROM user_integrations
           WHERE id = ? AND user_id = ? AND integration = ?
           LIMIT 1
@@ -499,7 +505,7 @@ async function loadConnectionRecord(
     .prepare(
       `
         SELECT id, credentials_encrypted, auth_state, auth_error,
-               nango_connection_id, nango_provider_config_key
+               auth_provider, nango_connection_id, nango_provider_config_key
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
         ORDER BY is_default DESC, updated_at DESC, created_at DESC, id DESC
@@ -677,7 +683,7 @@ export async function loadCredentialsForIntegration(
 ): Promise<Record<string, string>> {
   const record = await loadConnectionRecord(env, userId, integration, options);
 
-  if (!record?.credentials_encrypted) {
+  if (!record) {
     throw new Error(`No credentials found for ${integration}. Please connect it first.`);
   }
 
@@ -698,6 +704,21 @@ export async function loadCredentialsForIntegration(
 
   if (cached && (!refreshConfig || !shouldRefreshCredentials(refreshConfig, cached))) {
     return cached;
+  }
+
+  if (authProviderToBackend(record.auth_provider) === "nango") {
+    const credentials = await loadNangoCredentials(
+      env as Record<string, unknown>,
+      integration,
+      record,
+      { forceRefresh: false },
+    );
+    await cacheCredentials(env, record.id, credentials);
+    return credentials;
+  }
+
+  if (!record.credentials_encrypted) {
+    throw new Error(`No credentials found for ${integration}. Please connect it first.`);
   }
 
   const decryptedCredentials = await decryptCredential(
@@ -723,7 +744,43 @@ export async function refreshCredentialsForIntegration(
 ): Promise<{ connectionId: number; credentials: Record<string, string> }> {
   const record = await loadConnectionRecord(env, userId, integration, options);
 
-  if (!record?.credentials_encrypted) {
+  if (!record) {
+    throw new Error(`No credentials found for ${integration}. Please connect it first.`);
+  }
+
+  if (record.auth_state === "needs_reauth") {
+    throw new Error(buildNeedsReauthMessage(integration, record.auth_error));
+  }
+
+  if (authProviderToBackend(record.auth_provider) === "nango") {
+    try {
+      const credentials = await loadNangoCredentials(
+        env as Record<string, unknown>,
+        integration,
+        record,
+        { forceRefresh: true },
+      );
+      await cacheCredentials(env, record.id, credentials);
+      return {
+        connectionId: record.id,
+        credentials,
+      };
+    } catch (error) {
+      const detail =
+        error instanceof Error
+          ? error.message
+          : `Failed to refresh ${integration} credentials through Nango.`;
+
+      if (error instanceof NangoConnectionError && error.isAuthError) {
+        await markConnectionNeedsReauth(env, record.id, detail);
+        throw new Error(buildNeedsReauthMessage(integration, detail));
+      }
+
+      throw new Error(detail);
+    }
+  }
+
+  if (!record.credentials_encrypted) {
     throw new Error(`No credentials found for ${integration}. Please connect it first.`);
   }
 
@@ -731,23 +788,6 @@ export async function refreshCredentialsForIntegration(
 
   if (!refreshConfig) {
     throw new Error(`${integration} does not support token refresh.`);
-  }
-
-  if (record.auth_state === "needs_reauth") {
-    throw new Error(
-      isNangoBackedConnection(record)
-        ? buildNeedsReauthMessageFromNango(integration, record.auth_error)
-        : buildNeedsReauthMessage(integration, record.auth_error),
-    );
-  }
-
-  if (isNangoBackedConnection(record)) {
-    const credentials = await fetchNangoConnection(env, integration, record, { forceRefresh: true });
-
-    return {
-      connectionId: record.id,
-      credentials,
-    };
   }
 
   const credentials = await decryptCredential(

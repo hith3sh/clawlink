@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertCircle, CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
 
 import type { Integration } from "@/data/integrations";
@@ -13,27 +13,95 @@ interface SessionSummary {
   errorMessage: string | null;
 }
 
+interface NangoClientConfig {
+  enabled: boolean;
+  baseUrl: string | null;
+  apiUrl: string | null;
+  publicKey: string | null;
+  providerConfigKey: string | null;
+}
+
 interface Props {
   integration: Integration;
   session: SessionSummary;
+  nango: NangoClientConfig;
 }
 
-export default function HostedConnectPage({ integration, session }: Props) {
+export default function HostedConnectPage({
+  integration,
+  session,
+  nango,
+}: Props) {
   const [values, setValues] = useState<Record<string, string>>(
     Object.fromEntries(integration.credentialFields.map((field) => [field.key, ""])),
   );
   const [submitting, setSubmitting] = useState(false);
+  const [startingOAuth, setStartingOAuth] = useState(false);
   const [status, setStatus] = useState(session.status);
   const [error, setError] = useState<string | null>(session.errorMessage);
-  const oauthStartUrl =
-    integration.setupMode === "oauth" && integration.dashboardStatus === "available"
-      ? `/api/oauth/${integration.slug}/start?session=${encodeURIComponent(session.token)}`
-      : null;
+  const [info, setInfo] = useState<string | null>(null);
+  const connectUiRef = useRef<{ close: () => void } | null>(null);
+
+  useEffect(() => {
+    if (status !== "awaiting_user_action") {
+      return;
+    }
+
+    const interval = window.setInterval(async () => {
+      const response = await fetch(`/api/connect/sessions/${session.token}`, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data = (await response.json()) as {
+        session?: {
+          status?: SessionSummary["status"];
+          errorMessage?: string | null;
+        };
+      };
+
+      if (!data.session) {
+        return;
+      }
+
+      const nextStatus: SessionSummary["status"] =
+        data.session.status ?? "awaiting_user_action";
+      setStatus(nextStatus);
+
+      if (nextStatus === "connected") {
+        connectUiRef.current?.close();
+        connectUiRef.current = null;
+        setError(null);
+        setInfo(null);
+      } else if (nextStatus === "failed") {
+        setError(data.session.errorMessage ?? `Failed to connect ${integration.name}.`);
+      } else if (nextStatus === "expired") {
+        connectUiRef.current?.close();
+        connectUiRef.current = null;
+        setError("This link expired. Start a new connection from OpenClaw and try again.");
+      }
+    }, 3000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [integration.name, session.token, status]);
+
+  useEffect(() => {
+    return () => {
+      connectUiRef.current?.close();
+      connectUiRef.current = null;
+    };
+  }, []);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
+    setInfo(null);
 
     try {
       const response = await fetch(`/api/connect/sessions/${session.token}/complete`, {
@@ -42,7 +110,10 @@ export default function HostedConnectPage({ integration, session }: Props) {
         body: JSON.stringify({ credentials: values }),
       });
 
-      const data = (await response.json()) as { error?: string; session?: { status?: typeof status } };
+      const data = (await response.json()) as {
+        error?: string;
+        session?: { status?: SessionSummary["status"] };
+      };
 
       if (!response.ok) {
         throw new Error(data.error ?? "Failed to complete connection");
@@ -56,12 +127,71 @@ export default function HostedConnectPage({ integration, session }: Props) {
     }
   }
 
+  async function handleStartOAuth() {
+    setStartingOAuth(true);
+    setError(null);
+    setInfo(null);
+
+    try {
+      const response = await fetch(`/api/connect/sessions/${session.token}/nango`, {
+        method: "POST",
+      });
+      const data = (await response.json()) as {
+        error?: string;
+        sessionToken?: string;
+        baseUrl?: string | null;
+        apiUrl?: string | null;
+      };
+
+      if (!response.ok || !data.sessionToken || !data.baseUrl || !data.apiUrl) {
+        throw new Error(data.error ?? "Failed to start the hosted OAuth flow.");
+      }
+
+      const { ConnectUI } = await import("@nangohq/frontend");
+      connectUiRef.current?.close();
+
+      const connectUi = new ConnectUI({
+        sessionToken: data.sessionToken,
+        baseURL: data.baseUrl,
+        apiURL: data.apiUrl,
+        detectClosedAuthWindow: true,
+        onEvent: async (event) => {
+          if (event.type === "connect") {
+            setInfo(`Waiting for ${integration.name} to finish connecting...`);
+
+            await fetch(`/api/connect/sessions/${session.token}`, {
+              cache: "no-store",
+            }).catch(() => null);
+          }
+
+          if (event.type === "error") {
+            setError(event.payload.errorMessage);
+          }
+        },
+      });
+
+      connectUi.open();
+      connectUiRef.current = connectUi;
+      setInfo(`Continue in the ${integration.name} window. This page will update automatically.`);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Failed to start OAuth");
+    } finally {
+      setStartingOAuth(false);
+    }
+  }
+
+  const showNangoOAuth =
+    integration.setupMode === "oauth" &&
+    integration.dashboardStatus === "available" &&
+    nango.enabled &&
+    Boolean(nango.baseUrl && nango.apiUrl && nango.providerConfigKey);
+
   return (
     <div className="mx-auto w-full max-w-2xl px-6 py-12">
       <div className="rounded-[32px] border border-gray-200 bg-white p-8 shadow-sm sm:p-10">
         <div className="mb-8">
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="mb-1 flex items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/images/logo/clawlink.svg" alt="ClawLink" className="h-6 w-auto" />
               <span className="text-sm font-semibold text-gray-900">ClawLink</span>
@@ -82,6 +212,13 @@ export default function HostedConnectPage({ integration, session }: Props) {
           </div>
         ) : null}
 
+        {info ? (
+          <div className="mb-6 flex items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+            <span>{info}</span>
+          </div>
+        ) : null}
+
         {status === "connected" ? (
           <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-7">
             <div className="flex items-center gap-2 text-emerald-700">
@@ -96,20 +233,22 @@ export default function HostedConnectPage({ integration, session }: Props) {
           <div className="rounded-3xl border border-amber-200 bg-amber-50 p-7 text-base leading-7 text-amber-900">
             This link expired. Start a new connection from OpenClaw and try again.
           </div>
-        ) : oauthStartUrl ? (
+        ) : showNangoOAuth ? (
           <div className="rounded-3xl border border-gray-200 bg-gray-50 p-7">
             <p className="text-xl font-semibold text-gray-900">Continue with {integration.name}</p>
             <p className="mt-2 text-base leading-7 text-gray-600">
-              This opens {integration.name} so you can approve access.
+              This opens the hosted approval flow so you can connect {integration.name} and come right back here.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <a
-                href={oauthStartUrl}
-                className="inline-flex items-center gap-2 rounded-2xl bg-gray-900 px-6 py-4 text-base font-medium text-white transition-colors hover:bg-gray-800"
+              <button
+                type="button"
+                onClick={() => void handleStartOAuth()}
+                disabled={startingOAuth}
+                className="inline-flex items-center gap-2 rounded-2xl bg-gray-900 px-6 py-4 text-base font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
+                {startingOAuth ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
                 Continue with {integration.name}
-                <ExternalLink className="h-4 w-4" />
-              </a>
+              </button>
             </div>
           </div>
         ) : integration.setupMode === "oauth" || integration.credentialFields.length === 0 ? (

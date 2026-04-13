@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  nango:
+    image: nangohq/nango-server:${NANGO_IMAGE_TAG:-hosted}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NANGO_DB_HOST: ${NANGO_DB_HOST}
+      NANGO_DB_PORT: ${NANGO_DB_PORT}
+      NANGO_DB_DATABASE: ${NANGO_DB_DATABASE}
+      NANGO_DB_USERNAME: ${NANGO_DB_USERNAME}
+      NANGO_DB_PASSWORD: ${NANGO_DB_PASSWORD}
+      NANGO_SERVER_URL: ${NANGO_SERVER_URL}
+      NANGO_PUBLIC_CONNECT_URL: ${NANGO_PUBLIC_CONNECT_URL}
+      NANGO_ENCRYPTION_KEY: ${NANGO_ENCRYPTION_KEY}
+      NANGO_JWT_SECRET: ${NANGO_JWT_SECRET}
+      FLAG_SERVE_CONNECT_UI: ${FLAG_SERVE_CONNECT_UI}
+      SERVER_PORT: ${SERVER_PORT}
+      NANGO_CONNECT_UI_PORT: ${NANGO_CONNECT_UI_PORT}
+      NANGO_LOG_LEVEL: ${NANGO_LOG_LEVEL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${SERVER_PORT:-3003}:${SERVER_PORT:-3003}"
+      - "${NANGO_CONNECT_UI_PORT:-3009}:${NANGO_CONNECT_UI_PORT:-3009}"
+
+volumes:
+  postgres-data:

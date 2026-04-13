@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getIntegrationBySlug } from "@/data/integrations";
 import { getBillingAccessDecisionForUser } from "@/lib/server/billing";
 import { createConnectionSession, getLatestActiveConnectionSessionForUser } from "@/lib/server/connection-sessions";
-import { getDatabase } from "@/lib/server/integration-store";
+import { getDatabase, getIntegrationConnectionForUserId } from "@/lib/server/integration-store";
 import { resolveRequestActor } from "@/lib/server/request-auth";
 
 export const dynamic = "force-dynamic";
@@ -55,7 +55,22 @@ export async function POST(request: NextRequest) {
     }
 
     const existingSession = await getLatestActiveConnectionSessionForUser(actor.user, integration.slug);
-    const session = existingSession ?? (await createConnectionSession(actor.user, integration.slug));
+    const defaultConnection = existingSession
+      ? existingSession.connection
+      : await getIntegrationConnectionForUserId(db, actor.user.id, integration.slug);
+    const reconnectConnectionId =
+      integration.setupMode === "oauth" &&
+      defaultConnection?.authBackend === "nango" &&
+      defaultConnection.authState === "needs_reauth" &&
+      defaultConnection.nangoConnectionId &&
+      defaultConnection.nangoProviderConfigKey
+        ? defaultConnection.id
+        : null;
+    const session =
+      existingSession ??
+      (await createConnectionSession(actor.user, integration.slug, {
+        connectionId: reconnectConnectionId,
+      }));
     const origin = request.nextUrl.origin;
 
     return NextResponse.json({

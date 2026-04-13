@@ -2,19 +2,38 @@ import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-import type { UserRow } from "@/lib/server/integration-store";
-import { getEnvBinding } from "@/lib/server/integration-store";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getIntegrationBySlug } from "@/data/integrations";
+import { getNangoBaseUrl, getNangoProviderConfigKey, getNangoPublicBaseUrl, getNangoPublicKey, getNangoSecretKey } from "@/lib/nango/config";
+import type { IntegrationConnectionRecord } from "@/lib/server/integration-store";
 import type { NangoConnectionResponse } from "@/lib/nango/credentials";
 
 interface NangoConnectSessionResponse {
   data?: {
     token?: string;
-    expires_at?: string;
     connect_link?: string;
+    expires_at?: string;
   };
-  error?: {
-    message?: string;
-  };
+}
+
+interface NangoListConnectionsResponse {
+  connections?: Array<{
+    connection_id?: string;
+    provider_config_key?: string;
+    created?: string;
+  }>;
+}
+
+interface NangoConnectionApiResponse {
+  connection_id?: string;
+  provider_config_key?: string;
+  metadata?: Record<string, unknown> | null;
+  end_user?: {
+    id?: string;
+    email?: string;
+    display_name?: string;
+  } | null;
+  credentials?: Record<string, unknown>;
 }
 
 interface NangoWebhookPayload {
@@ -31,175 +50,314 @@ interface NangoWebhookPayload {
   };
 }
 
-function safeTrim(value: unknown): string | undefined {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
+export interface NangoPublicClientConfig {
+  enabled: boolean;
+  baseUrl: string | null;
+  apiUrl: string | null;
+  publicKey: string | null;
+  providerConfigKey: string | null;
 }
 
-function normalizeBaseUrl(value: string | undefined): string | undefined {
-  return value?.replace(/\/+$/, "");
+export interface NangoConnectSessionResult {
+  sessionToken: string;
+  connectLink: string | null;
+  expiresAt: string | null;
 }
 
-function getNangoBaseUrl(): string | undefined {
-  return normalizeBaseUrl(getEnvBinding<string>("NANGO_BASE_URL"));
+export interface NangoSessionConnectionSummary {
+  connectionId: string;
+  providerConfigKey: string;
+  createdAt: string | null;
 }
 
-function getNangoSecretKey(): string | undefined {
-  return safeTrim(getEnvBinding<string>("NANGO_SECRET_KEY"));
+export interface NangoConnectionDetails {
+  connectionId: string;
+  providerConfigKey: string;
+  metadata: Record<string, unknown> | null;
+  endUser: {
+    id: string | null;
+    email: string | null;
+    displayName: string | null;
+  } | null;
+  credentials: Record<string, unknown>;
 }
 
-function getNangoWebhookSecret(): string | undefined {
-  return safeTrim(getEnvBinding<string>("NANGO_WEBHOOK_SECRET")) ?? getNangoSecretKey();
-}
+function getEnvValue(key: string): string | undefined {
+  try {
+    const context = getCloudflareContext({ async: false }) as unknown as
+      | { env?: Record<string, unknown> }
+      | undefined;
+    const contextValue = context?.env?.[key];
 
-function toProviderKeySuffix(slug: string): string {
-  return slug.replace(/[^a-zA-Z0-9]+/g, "_").toUpperCase();
-}
-
-function buildErrorMessage(response: Response, payload: unknown, fallback: string): string {
-  if (typeof payload === "string" && payload.trim()) {
-    return `${fallback}: ${payload.trim()}`;
-  }
-
-  if (payload && typeof payload === "object") {
-    const record = payload as Record<string, unknown>;
-    const message =
-      safeTrim(record.message) ??
-      safeTrim((record.error as Record<string, unknown> | undefined)?.message);
-
-    if (message) {
-      return `${fallback}: ${message}`;
+    if (typeof contextValue === "string") {
+      return contextValue;
     }
+  } catch {
+    // Fall through to process.env below.
   }
 
-  return `${fallback}: ${response.status} ${response.statusText}`;
+  const processValue = (process.env as Record<string, unknown>)[key];
+  return typeof processValue === "string" ? processValue : undefined;
 }
 
-async function nangoFetch<T>(
-  path: string,
-  init: RequestInit,
-  fallbackError: string,
-): Promise<T> {
-  const baseUrl = getNangoBaseUrl();
-  const secretKey = getNangoSecretKey();
+function getRequiredServerConfig() {
+  const baseUrl = getNangoBaseUrl(getEnvValue);
+  const secretKey = getNangoSecretKey(getEnvValue);
 
   if (!baseUrl || !secretKey) {
-    throw new Error("Nango is not configured. Set NANGO_BASE_URL and NANGO_SECRET_KEY.");
+    throw new Error("Nango is not configured for this environment.");
+  }
+
+  return { baseUrl, secretKey };
+}
+
+function getOptionalProviderConfigKey(slug: string): string | null {
+  return getNangoProviderConfigKey(slug, getEnvValue);
+}
+
+function getRequiredProviderConfigKey(slug: string): string {
+  const providerConfigKey = getOptionalProviderConfigKey(slug);
+
+  if (!providerConfigKey) {
+    const integration = getIntegrationBySlug(slug);
+    const name = integration?.name ?? slug;
+    throw new Error(`${name} is not configured in Nango yet.`);
+  }
+
+  return providerConfigKey;
+}
+
+function getNangoWebhookSecret(): string | null {
+  const webhookSecret = getEnvValue("NANGO_WEBHOOK_SECRET")?.trim();
+  return webhookSecret || getNangoSecretKey(getEnvValue);
+}
+
+async function nangoRequest<T>(
+  path: string,
+  init: RequestInit = {},
+): Promise<T> {
+  const { baseUrl, secretKey } = getRequiredServerConfig();
+  const headers = new Headers(init.headers);
+
+  headers.set("Authorization", `Bearer ${secretKey}`);
+
+  if (init.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
   }
 
   const response = await fetch(`${baseUrl}${path}`, {
     ...init,
-    headers: {
-      Authorization: `Bearer ${secretKey}`,
-      Accept: "application/json",
-      ...(init.headers ?? {}),
-    },
+    headers,
   });
 
-  const rawText = await response.text();
-  const payload = rawText
-    ? (() => {
-        try {
-          return JSON.parse(rawText) as unknown;
-        } catch {
-          return rawText;
-        }
-      })()
-    : null;
+  const rawPayload = (await response.json().catch(() => null)) as
+    | Record<string, unknown>
+    | null;
 
   if (!response.ok) {
-    throw new Error(buildErrorMessage(response, payload, fallbackError));
+    const message =
+      (typeof rawPayload?.message === "string" && rawPayload.message) ||
+      (typeof rawPayload?.error === "string" && rawPayload.error) ||
+      `Nango request failed with status ${response.status}`;
+    throw new Error(message);
   }
 
-  return payload as T;
+  return rawPayload as T;
 }
 
-export function isNangoConfiguredForIntegration(slug: string): boolean {
-  return Boolean(getNangoBaseUrl() && getNangoSecretKey() && getNangoProviderConfigKey(slug));
-}
-
-export function getNangoProviderConfigKey(slug: string): string {
-  const override = safeTrim(
-    getEnvBinding<string>(`NANGO_PROVIDER_CONFIG_KEY_${toProviderKeySuffix(slug)}`),
-  );
-
-  return override ?? slug;
-}
-
-export async function createNangoConnectSession(params: {
-  integrationSlug: string;
-  sessionToken: string;
-  user: UserRow;
-}): Promise<{ token: string; expiresAt: string | null; connectLink: string; providerConfigKey: string }> {
-  const providerConfigKey = getNangoProviderConfigKey(params.integrationSlug);
-  const payload = await nangoFetch<NangoConnectSessionResponse>(
-    "/connect/sessions",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        tags: {
-          clawlink_session_token: params.sessionToken,
-          clawlink_integration_slug: params.integrationSlug,
-          end_user_id: params.user.id,
-          end_user_email: params.user.email ?? "",
-        },
-        allowed_integrations: [providerConfigKey],
-      }),
-    },
-    "Failed to create Nango connect session",
-  );
-
-  const token = safeTrim(payload.data?.token);
-  const connectLink = safeTrim(payload.data?.connect_link);
-
-  if (!token || !connectLink) {
-    throw new Error("Nango created a connect session but did not return a token and connect link.");
-  }
+export function getPublicNangoClientConfig(
+  slug: string,
+): NangoPublicClientConfig {
+  const providerConfigKey = getOptionalProviderConfigKey(slug);
+  const baseUrl = getNangoPublicBaseUrl(getEnvValue);
+  const apiUrl = getNangoBaseUrl(getEnvValue);
 
   return {
-    token,
-    expiresAt: safeTrim(payload.data?.expires_at) ?? null,
-    connectLink,
+    enabled: Boolean(baseUrl && apiUrl && providerConfigKey),
+    baseUrl,
+    apiUrl,
+    publicKey: getNangoPublicKey(getEnvValue),
     providerConfigKey,
   };
 }
 
-export async function getNangoConnection(
-  connectionId: string,
-  providerConfigKey: string,
-  options: { forceRefresh?: boolean; includeRefreshToken?: boolean } = {},
-): Promise<NangoConnectionResponse> {
-  const params = new URLSearchParams({
-    provider_config_key: providerConfigKey,
+export function isNangoManagedIntegration(slug: string): boolean {
+  return Boolean(getNangoPublicBaseUrl(getEnvValue) && getOptionalProviderConfigKey(slug));
+}
+
+export function isNangoConfiguredForIntegration(slug: string): boolean {
+  return isNangoManagedIntegration(slug);
+}
+
+export async function createNangoConnectSession(params: {
+  sessionId: string;
+  userId: string;
+  integrationSlug: string;
+  reconnectConnection?: Pick<
+    IntegrationConnectionRecord,
+    "nangoConnectionId" | "nangoProviderConfigKey"
+  > | null;
+}): Promise<NangoConnectSessionResult> {
+  const providerConfigKey = getRequiredProviderConfigKey(params.integrationSlug);
+
+  const payload =
+    params.reconnectConnection?.nangoConnectionId &&
+    params.reconnectConnection.nangoProviderConfigKey
+      ? {
+          connection_id: params.reconnectConnection.nangoConnectionId,
+          integration_id: params.reconnectConnection.nangoProviderConfigKey,
+          end_user: {
+            id: params.userId,
+          },
+          tags: {
+            clawlink_session_id: params.sessionId,
+            clawlink_user_id: params.userId,
+            clawlink_integration: params.integrationSlug,
+          },
+        }
+      : {
+          allowed_integrations: [providerConfigKey],
+          end_user: {
+            id: params.userId,
+          },
+          tags: {
+            clawlink_session_id: params.sessionId,
+            clawlink_user_id: params.userId,
+            clawlink_integration: params.integrationSlug,
+          },
+        };
+
+  const response = await nangoRequest<NangoConnectSessionResponse>(
+    params.reconnectConnection?.nangoConnectionId &&
+      params.reconnectConnection.nangoProviderConfigKey
+      ? "/connect/sessions/reconnect"
+      : "/connect/sessions",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+
+  const sessionToken = response.data?.token?.trim();
+
+  if (!sessionToken) {
+    throw new Error("Nango did not return a connect session token.");
+  }
+
+  return {
+    sessionToken,
+    connectLink: response.data?.connect_link?.trim() ?? null,
+    expiresAt: response.data?.expires_at?.trim() ?? null,
+  };
+}
+
+export async function listNangoConnectionsForSession(params: {
+  sessionId: string;
+  userId: string;
+  integrationSlug: string;
+}): Promise<NangoSessionConnectionSummary[]> {
+  const providerConfigKey = getRequiredProviderConfigKey(params.integrationSlug);
+  const query = new URLSearchParams({
+    integrationId: providerConfigKey,
+    endUserId: params.userId,
+    limit: "10",
+    "tags[clawlink_session_id]": params.sessionId,
   });
 
-  if (options.forceRefresh) {
-    params.set("force_refresh", "true");
-  }
+  const response = await nangoRequest<NangoListConnectionsResponse>(
+    `/connections?${query.toString()}`,
+  );
 
-  if (options.includeRefreshToken) {
-    params.set("refresh_token", "true");
-  }
+  return (response.connections ?? [])
+    .map((connection) => ({
+      connectionId: connection.connection_id?.trim() ?? "",
+      providerConfigKey:
+        connection.provider_config_key?.trim() ?? providerConfigKey,
+      createdAt: connection.created?.trim() ?? null,
+    }))
+    .filter(
+      (connection) =>
+        connection.connectionId.length > 0 &&
+        connection.providerConfigKey.length > 0,
+    )
+    .sort((left, right) => {
+      const leftTime = left.createdAt ? Date.parse(left.createdAt) : 0;
+      const rightTime = right.createdAt ? Date.parse(right.createdAt) : 0;
+      return rightTime - leftTime;
+    });
+}
 
-  return nangoFetch<NangoConnectionResponse>(
-    `/connections/${encodeURIComponent(connectionId)}?${params.toString()}`,
+export async function getNangoConnection(
+  providerConfigKey: string,
+  connectionId: string,
+  options: { forceRefresh?: boolean; includeRefreshToken?: boolean } = {},
+): Promise<NangoConnectionDetails> {
+  const query = new URLSearchParams({
+    provider_config_key: providerConfigKey,
+    ...(options.forceRefresh ? { force_refresh: "true" } : {}),
+    ...(options.includeRefreshToken ? { refresh_token: "true" } : {}),
+  });
+
+  const response = await nangoRequest<NangoConnectionApiResponse>(
+    `/connection/${encodeURIComponent(connectionId)}?${query.toString()}`,
+  );
+
+  const resolvedConnectionId = response.connection_id?.trim() ?? connectionId;
+  const resolvedProviderConfigKey =
+    response.provider_config_key?.trim() ?? providerConfigKey;
+
+  return {
+    connectionId: resolvedConnectionId,
+    providerConfigKey: resolvedProviderConfigKey,
+    metadata:
+      response.metadata && typeof response.metadata === "object"
+        ? response.metadata
+        : null,
+    endUser: response.end_user
+      ? {
+          id: response.end_user.id?.trim() ?? null,
+          email: response.end_user.email?.trim() ?? null,
+          displayName: response.end_user.display_name?.trim() ?? null,
+        }
+      : null,
+    credentials:
+      response.credentials && typeof response.credentials === "object"
+        ? response.credentials
+        : {},
+  };
+}
+
+export async function getRawNangoConnection(
+  providerConfigKey: string,
+  connectionId: string,
+  options: { forceRefresh?: boolean; includeRefreshToken?: boolean } = {},
+): Promise<NangoConnectionResponse> {
+  const query = new URLSearchParams({
+    provider_config_key: providerConfigKey,
+    ...(options.forceRefresh ? { force_refresh: "true" } : {}),
+    ...(options.includeRefreshToken ? { refresh_token: "true" } : {}),
+  });
+
+  return nangoRequest<NangoConnectionResponse>(
+    `/connection/${encodeURIComponent(connectionId)}?${query.toString()}`,
+  );
+}
+
+export async function deleteNangoConnection(
+  providerConfigKey: string,
+  connectionId: string,
+): Promise<void> {
+  await nangoRequest<{ success?: boolean }>(
+    `/connection/${encodeURIComponent(connectionId)}?provider_config_key=${encodeURIComponent(providerConfigKey)}`,
     {
-      method: "GET",
+      method: "DELETE",
     },
-    "Failed to fetch Nango connection",
   );
 }
 
 export function verifyNangoWebhookSignature(rawBody: string, signatureHeader: string | null): boolean {
   const secret = getNangoWebhookSecret();
-  const signature = safeTrim(signatureHeader);
+  const signature = signatureHeader?.trim();
 
   if (!secret || !signature) {
     return false;

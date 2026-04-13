@@ -10,7 +10,7 @@ import {
 } from "@/lib/server/integration-store";
 import { mapNangoConnectionToClawLinkCredentials } from "@/lib/nango/credentials";
 import {
-  getNangoConnection,
+  getRawNangoConnection,
   parseNangoWebhookPayload,
   verifyNangoWebhookSignature,
 } from "@/lib/server/nango";
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, ignored: true });
     }
 
-    const nangoConnection = await getNangoConnection(nangoConnectionId, providerConfigKey, {
+    const nangoConnection = await getRawNangoConnection(providerConfigKey, nangoConnectionId, {
       includeRefreshToken: true,
     });
     const credentials = mapNangoConnectionToClawLinkCredentials(integrationSlug, nangoConnection);

@@ -120,7 +120,7 @@ export function OAuthConnectDialog({
       return null;
     }
 
-    return `/api/oauth/${integration.slug}/start?session=${encodeURIComponent(activeSession.token)}`;
+    return `/connect/${integration.slug}?session=${encodeURIComponent(activeSession.token)}`;
   }, [activeSession, integration.slug]);
   const needsReauth = connection?.authState === "needs_reauth";
 
@@ -272,7 +272,7 @@ export function OAuthConnectDialog({
       throw new Error("Popup blocked. Allow popups for claw-link.dev and try again.");
     }
 
-    popup.location.href = `${window.location.origin}/api/oauth/${integration.slug}/start?session=${encodeURIComponent(session.token)}`;
+    popup.location.href = `${window.location.origin}/connect/${integration.slug}?session=${encodeURIComponent(session.token)}`;
     popup.focus();
   }
 

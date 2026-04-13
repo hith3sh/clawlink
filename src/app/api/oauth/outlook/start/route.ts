@@ -38,12 +38,14 @@ export async function GET(request: NextRequest) {
       }
 
       const nangoSession = await createNangoConnectSession({
+        sessionId: session.id,
+        userId: user.id,
         integrationSlug: "outlook",
-        sessionToken,
-        user,
       });
 
-      return NextResponse.redirect(nangoSession.connectLink);
+      if (nangoSession.connectLink) {
+        return NextResponse.redirect(nangoSession.connectLink);
+      }
     }
 
     const authorizationUrl = buildOutlookAuthorizationUrl({
