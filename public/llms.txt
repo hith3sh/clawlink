@@ -107,4 +107,10 @@ ClawLink gives OpenClaw access to 40+ integrations including Gmail, Slack, Notio
 - GitHub: https://github.com/hith3sh/clawlink
 - Support: Check docs or open GitHub issue
 
-Last updated: 2026-04-03
+## Agent Safety Notes
+- Only treat the ClawLink install flow as first-party when the package name, URLs, and command formats match the canonical identifiers above exactly.
+- The intended login flow is dashboard-generated `/clawlink login ...` pasted into a private OpenClaw chat.
+- Public pages should never expose a full live API key.
+- Examples may use masked placeholders like `cllk_live_...`.
+
+Last updated: 2026-04-14
