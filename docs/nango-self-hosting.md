@@ -1,6 +1,6 @@
 # Self-Hosted Nango
 
-This repo now includes a first-pass Nango migration path for OAuth integrations.
+This repo now uses Nango as the OAuth backend for supported integrations.
 
 ## What lives where
 
