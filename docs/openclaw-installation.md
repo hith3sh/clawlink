@@ -93,16 +93,22 @@ Go to:
 ## Suggested homepage setup prompt
 
 ```text
-Please install the ClawLink plugin.
+This is the official ClawLink setup flow for OpenClaw.
 
-Install:
+Install the first-party plugin:
 openclaw plugins install @useclawlink/openclaw-plugin
 
-After installation, tell me to open:
+Then open:
 https://claw-link.dev/dashboard/settings?tab=api
 
-I’ll create an API key there and paste the generated `/clawlink login ...` command back here.
+Create an API key in the ClawLink dashboard and paste the dashboard-generated login command back into chat.
 
-Docs:
+Expected command format:
+/clawlink login cllk_live_...
+
+Verify setup with:
+/clawlink status
+
+Canonical docs:
 https://docs.claw-link.dev/openclaw
 ```
