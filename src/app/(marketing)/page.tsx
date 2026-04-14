@@ -8,7 +8,10 @@ import PainMath from "@/components/PainMath";
 import VideoSection from "@/components/VideoSection";
 import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
-import { OPENCLAW_PLUGIN_INSTALL_COMMAND } from "@/lib/openclaw-plugin";
+import {
+  CLAWLINK_OPENCLAW_DOCS_URL,
+  OPENCLAW_PLUGIN_INSTALL_COMMAND,
+} from "@/lib/openclaw-plugin";
 
 export default function Home() {
   return (
@@ -32,12 +35,31 @@ export default function Home() {
             <span className="absolute inset-0 bg-gradient-to-r from-[#e8915a] to-[#d4764a] blur-xl opacity-20" />
           </span>
         </h1>
-        <p className="mt-6 text-lg sm:text-xl text-gray-500 text-center max-w-xl leading-relaxed">
-          Copy and paste this command below and ask OpenClaw to add your favourite integration.
+        <p className="mt-6 text-lg sm:text-xl text-gray-500 text-center max-w-2xl leading-relaxed">
+          Copy this setup prompt into chat. It installs the plugin, then points you to the API key step.
         </p>
 
-        <div className="mt-8 w-full max-w-md">
+        <div className="mt-8 w-full max-w-2xl">
           <CopyCommand />
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-gray-500">
+          <a
+            href={CLAWLINK_OPENCLAW_DOCS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-gray-200 bg-white px-4 py-2 hover:border-[#e8915a]/30 hover:text-gray-700 transition-colors"
+          >
+            Setup docs
+          </a>
+          <a
+            href="https://www.npmjs.com/package/@useclawlink/openclaw-plugin"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-gray-200 bg-white px-4 py-2 hover:border-[#e8915a]/30 hover:text-gray-700 transition-colors"
+          >
+            View npm package
+          </a>
         </div>
 
         {/* Trust badge */}
@@ -98,11 +120,11 @@ export default function Home() {
             Read the Docs
           </h2>
           <p className="text-gray-500 mb-10 max-w-xl mx-auto text-lg leading-relaxed">
-            Learn how to set up ClawLink, connect integrations, and use every
-            hosted connection flow available through the OpenClaw plugin.
+            Learn how to install ClawLink, log in with your API key, connect apps,
+            and use hosted integrations through the plugin.
           </p>
           <a
-            href="https://docs.claw-link.dev"
+            href={CLAWLINK_OPENCLAW_DOCS_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2.5 rounded-xl bg-gray-900 text-white px-7 py-3.5 font-medium hover:bg-gray-800 transition-all duration-200 hover:scale-105"

@@ -16,6 +16,7 @@ One command to add 40+ integrations to OpenClaw. Connect Gmail, Slack, Notion, W
 ### Getting Started
 - Introduction - What is ClawLink
 - Quick Start - Get started in 5 minutes
+- OpenClaw Setup - Install plugin, create API key, log in from chat
 - How It Works - Technical overview
 
 ### Dashboard Guide

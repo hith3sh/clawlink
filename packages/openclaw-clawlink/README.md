@@ -17,6 +17,8 @@ Then paste this command into OpenClaw:
 
 Create your API key at `https://claw-link.dev/dashboard/settings?tab=api`.
 
+Full setup docs: `https://docs.claw-link.dev/openclaw`
+
 You can also manage config manually in `~/.openclaw/openclaw.json` under `plugins.entries.openclaw-plugin.config`, but the chat command is the intended setup flow.
 
 ## Tools
