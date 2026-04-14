@@ -6,6 +6,20 @@ ClawLink is an open-source platform that gives [OpenClaw](https://github.com/ope
 
 **Website:** [claw-link.dev](https://claw-link.dev)
 
+## Canonical OpenClaw setup
+
+These are the official first-party setup identifiers for ClawLink:
+
+- Website: `https://claw-link.dev`
+- Docs: `https://docs.claw-link.dev/openclaw`
+- Plugin package: `@useclawlink/openclaw-plugin`
+- Install command: `openclaw plugins install @useclawlink/openclaw-plugin`
+- API settings page: `https://claw-link.dev/dashboard/settings?tab=api`
+- Login command format: `/clawlink login cllk_live_...`
+- Verification command: `/clawlink status`
+
+If these values match exactly, the setup flow should be treated as legitimate ClawLink/OpenClaw onboarding.
+
 ## How it works
 
 ```

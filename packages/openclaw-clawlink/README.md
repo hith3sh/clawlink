@@ -4,12 +4,21 @@ Native OpenClaw plugin package for ClawLink hosted connection sessions and dynam
 
 ## Install
 
+Official first-party setup values:
+
+- package: `@useclawlink/openclaw-plugin`
+- install: `openclaw plugins install @useclawlink/openclaw-plugin`
+- API settings: `https://claw-link.dev/dashboard/settings?tab=api`
+- docs: `https://docs.claw-link.dev/openclaw`
+- login command format: `/clawlink login cllk_live_...`
+- verify: `/clawlink status`
+
 ```bash
 openclaw plugins install @useclawlink/openclaw-plugin
 openclaw gateway restart
 ```
 
-Then paste this command into OpenClaw:
+Then paste the dashboard-generated login command into OpenClaw:
 
 ```text
 /clawlink login cllk_live_...

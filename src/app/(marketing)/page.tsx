@@ -36,7 +36,7 @@ export default function Home() {
           </span>
         </h1>
         <p className="mt-6 text-lg sm:text-xl text-gray-500 text-center max-w-2xl leading-relaxed">
-          Copy this setup prompt into chat. It installs the plugin, then points you to the API key step.
+          Copy the official ClawLink setup prompt into chat. It uses the first-party plugin and then sends you to the dashboard API key step.
         </p>
 
         <div className="mt-8 w-full max-w-2xl">
@@ -169,7 +169,7 @@ export default function Home() {
             />
             <span className="font-medium text-gray-500">ClawLink</span>
           </div>
-          <span className="text-gray-400">The easiest way to add integrations to OpenClaw</span>
+          <span className="text-gray-400">The first-party integration setup layer for OpenClaw</span>
           <div className="flex items-center gap-5">
             <Link href="/privacy" className="hover:text-gray-600 transition-colors">
               Privacy Policy
