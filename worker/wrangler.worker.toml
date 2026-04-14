@@ -21,4 +21,4 @@ id = "82482703a83c4bc28af059eb092bd9a2"
 [vars]
 ENV = "production"
 NANGO_BASE_URL = "https://nango.claw-link.dev"
-NANGO_PROVIDER_CONFIG_KEYS = "{\"gmail\":\"gmail\",\"notion\":\"notion\",\"outlook\":\"outlook\"}"
+NANGO_PROVIDER_CONFIG_KEYS = "{\"apollo\":\"apollo\",\"gmail\":\"gmail\",\"notion\":\"notion\",\"outlook\":\"outlook\"}"

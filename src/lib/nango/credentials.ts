@@ -138,6 +138,33 @@ export function mapNangoConnectionToClawLinkCredentials(
     if (botId) {
       result.botId = botId;
     }
+  } else if (integrationSlug === "apollo") {
+    const workspaceName = pickString(
+      raw.organization_name,
+      raw.organizationName,
+      raw.account_name,
+      raw.accountName,
+      connection.end_user?.organization?.display_name,
+    );
+    const workspaceId = pickString(
+      raw.organization_id,
+      raw.organizationId,
+      raw.account_id,
+      raw.accountId,
+      connection.end_user?.organization?.id,
+    );
+
+    if (workspaceName) {
+      result.workspaceName = workspaceName;
+    }
+
+    if (workspaceId) {
+      result.workspaceId = workspaceId;
+    }
+
+    if (email) {
+      result.email = email;
+    }
   }
 
   const accountId = pickString(

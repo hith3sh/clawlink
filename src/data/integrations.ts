@@ -306,18 +306,11 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   apollo: {
-    setupMode: "manual",
+    setupMode: "oauth",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Create an Apollo API key in Apollo's developer dashboard and paste it here. Search tools work with endpoint-enabled keys, but prospecting and some creation flows may require a master API key.",
-    credentialFields: [
-      apiKeyField(
-        "apiKey",
-        "API Key",
-        "Paste your Apollo API key",
-        "Use a master API key if you want Apollo prospecting or contact-creation endpoints in addition to narrower account data APIs.",
-      ),
-    ],
+    setupGuide: "Connect Apollo through the hosted Nango flow. ClawLink will use the connected Apollo account for prospecting, enrichment, and contact-management tools.",
+    credentialFields: [],
     tools: [
       { name: "search_people", description: "Search net-new people in Apollo using prospecting filters" },
       { name: "search_organizations", description: "Search companies in Apollo's organization database" },

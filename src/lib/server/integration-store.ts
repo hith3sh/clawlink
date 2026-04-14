@@ -188,9 +188,9 @@ function deriveConnectionMetadata(
 
   if (slug === "apollo") {
     return {
-      accountLabel: "Apollo workspace",
-      connectionLabel: "Apollo API key",
-      externalAccountId: null,
+      accountLabel: workspaceName ?? displayName ?? email ?? "Apollo workspace",
+      connectionLabel: workspaceName ?? displayName ?? email ?? "Apollo account",
+      externalAccountId: workspaceId ?? accountId ?? email ?? null,
       expiresAt,
     };
   }

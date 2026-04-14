@@ -1,4 +1,5 @@
 const OAUTH_PROVIDER_DISPLAY_NAMES: Record<string, string> = {
+  apollo: "Apollo",
   gmail: "Gmail",
   notion: "Notion",
   outlook: "Outlook",

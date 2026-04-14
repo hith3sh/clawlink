@@ -111,8 +111,7 @@ async function handleToolCall(
     throw new Error(`Unknown integration: ${integration}`);
   }
 
-  const canRetryAfterAuthFailure =
-    !hasInlineCredentials && integration !== "apollo";
+  const canRetryAfterAuthFailure = !hasInlineCredentials;
   let result: unknown;
 
   try {

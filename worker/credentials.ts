@@ -85,7 +85,7 @@ function getNangoConfig(
 }
 
 function isOAuthIntegration(integration: string): boolean {
-  return integration === "gmail" || integration === "notion" || integration === "outlook";
+  return integration === "apollo" || integration === "gmail" || integration === "notion" || integration === "outlook";
 }
 
 function buildNeedsReauthMessage(
@@ -304,7 +304,7 @@ async function fetchNangoConnection(
   }
 
   const response = await fetch(
-    `${config.baseUrl}/connections/${encodeURIComponent(nangoConnectionId)}?${params.toString()}`,
+    `${config.baseUrl}/connection/${encodeURIComponent(nangoConnectionId)}?${params.toString()}`,
     {
       method: "GET",
       headers: {
