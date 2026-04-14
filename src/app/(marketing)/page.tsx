@@ -142,16 +142,32 @@ export default function Home() {
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#e8915a]/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-[#d4764a]/10 rounded-full blur-3xl" />
 
-        <div className="max-w-2xl mx-auto text-center relative">
+        <div className="max-w-3xl mx-auto text-center relative">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 tracking-tight">
-            Ready to supercharge OpenClaw?
+            Use the official ClawLink setup flow
           </h2>
-          <p className="text-gray-300 mb-10 text-lg">
-            Install once. Connect with one click. Use anywhere.
+          <p className="text-gray-300 mb-10 text-lg max-w-2xl mx-auto">
+            Install the first-party plugin, create your API key in the dashboard, then verify the connection from chat.
           </p>
-          <div className="inline-flex items-center gap-3 rounded-xl bg-[#e8915a]/10 backdrop-blur-sm border border-[#e8915a]/20 px-6 py-4 font-mono text-sm text-orange-100">
-            <span className="text-[#e8915a]/60">$</span>
-            <span>{OPENCLAW_PLUGIN_INSTALL_COMMAND}</span>
+          <div className="mx-auto max-w-2xl rounded-2xl border border-[#e8915a]/20 bg-[#e8915a]/10 backdrop-blur-sm p-6 text-left text-sm text-orange-50 shadow-lg shadow-black/10">
+            <div className="space-y-4 font-mono">
+              <div>
+                <div className="mb-1 text-xs uppercase tracking-[0.2em] text-[#f5b892]">1. Install</div>
+                <div className="break-all text-orange-100">openclaw plugins install @useclawlink/openclaw-plugin</div>
+              </div>
+              <div>
+                <div className="mb-1 text-xs uppercase tracking-[0.2em] text-[#f5b892]">2. Open dashboard</div>
+                <div className="break-all text-orange-100">https://claw-link.dev/dashboard/settings?tab=api</div>
+              </div>
+              <div>
+                <div className="mb-1 text-xs uppercase tracking-[0.2em] text-[#f5b892]">3. Log in from chat</div>
+                <div className="break-all text-orange-100">/clawlink login cllk_live_...</div>
+              </div>
+              <div>
+                <div className="mb-1 text-xs uppercase tracking-[0.2em] text-[#f5b892]">4. Verify</div>
+                <div className="break-all text-orange-100">/clawlink status</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
