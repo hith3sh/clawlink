@@ -166,6 +166,7 @@ function deriveConnectionMetadata(
   const botId = safeTrim(credentials.botId);
   const username = safeTrim(credentials.username);
   const accountId = safeTrim(credentials.accountId);
+  const email = safeTrim(credentials.email);
   const expiresAt = safeTrim(credentials.expiresAt) ?? null;
 
   if (slug === "outlook") {

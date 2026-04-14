@@ -6,12 +6,6 @@ import { getIntegrationIcon } from "@/lib/integration-icons";
 import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
 import SearchBar from "./SearchBar";
 
-// Featured integrations shown by default (most popular ones)
-const FEATURED_SLUGS = [
-  "gmail", "outlook", "slack", "github", "stripe", "notion", "google-sheets",
-  "wordpress", "youtube", "shopify", "discord", "hubspot", "openai",
-];
-
 export default function IntegrationGrid() {
   const [search, setSearch] = useState("");
 

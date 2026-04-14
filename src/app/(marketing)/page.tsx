@@ -8,10 +8,7 @@ import PainMath from "@/components/PainMath";
 import VideoSection from "@/components/VideoSection";
 import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
-import {
-  CLAWLINK_OPENCLAW_DOCS_URL,
-  OPENCLAW_PLUGIN_INSTALL_COMMAND,
-} from "@/lib/openclaw-plugin";
+import { CLAWLINK_OPENCLAW_DOCS_URL } from "@/lib/openclaw-plugin";
 
 export default function Home() {
   return (
