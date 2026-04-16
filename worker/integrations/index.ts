@@ -11,6 +11,7 @@ import "./slack";
 import "./github";
 import "./notion";
 import "./apollo";
+import "./postiz";
 // import "./stripe";
 // etc.
 

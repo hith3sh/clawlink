@@ -45,10 +45,10 @@ And both deploy targets need the secret:
 
 - `NANGO_SECRET_KEY`
 
-Recommended provider map with Apollo added alongside Gmail, Notion, and Outlook:
+Recommended provider map with Apollo, Postiz, Gmail, Notion, and Outlook:
 
 ```json
-{"apollo":"apollo","gmail":"gmail","notion":"notion","outlook":"outlook"}
+{"apollo":"apollo","gmail":"gmail","notion":"notion","outlook":"outlook","postiz":"postiz"}
 ```
 
 If your Nango integration ids differ, change the JSON before deploying.
@@ -65,6 +65,7 @@ wrangler --cwd worker secret put NANGO_SECRET_KEY --config wrangler.worker.toml 
 ## Current migration scope
 
 - OAuth integrations should be treated as Nango-managed when a slug has a provider config mapping.
+- This is the preferred path for future standard OAuth/API providers, including custom providers added to your self-hosted Nango fork.
 - Manual/API-key integrations stay on the existing local credential path.
 - ClawLink now reconciles Nango completion through both webhook handling and backend session polling.
 - Legacy per-provider OAuth routes for the initial Nango-managed providers are now removed and should not be used.

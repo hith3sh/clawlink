@@ -85,7 +85,7 @@ function getNangoConfig(
 }
 
 function isOAuthIntegration(integration: string): boolean {
-  return integration === "apollo" || integration === "gmail" || integration === "notion" || integration === "outlook";
+  return integration === "apollo" || integration === "gmail" || integration === "notion" || integration === "outlook" || integration === "postiz";
 }
 
 function buildNeedsReauthMessage(

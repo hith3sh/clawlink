@@ -3,6 +3,7 @@ const OAUTH_PROVIDER_DISPLAY_NAMES: Record<string, string> = {
   gmail: "Gmail",
   notion: "Notion",
   outlook: "Outlook",
+  postiz: "Postiz",
 };
 
 export function getOAuthProviderDisplayName(slug: string): string {

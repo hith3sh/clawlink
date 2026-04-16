@@ -595,6 +595,20 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     credentialFields: [],
     tools: [],
   },
+  postiz: {
+    setupMode: "oauth",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect Postiz through the hosted Nango flow. ClawLink will use your Postiz account for listing channels, uploading media, and creating or managing posts.",
+    credentialFields: [],
+    tools: [
+      { name: "list_integrations", description: "List connected Postiz channels/integrations" },
+      { name: "create_post", description: "Create or schedule a post in Postiz" },
+      { name: "list_posts", description: "List posts in a date range" },
+      { name: "delete_post", description: "Delete a Postiz post by ID" },
+      { name: "upload_media", description: "Upload a media file to Postiz from a URL" },
+    ],
+  },
   youtube: {
     setupMode: "oauth",
     dashboardStatus: "coming-soon",

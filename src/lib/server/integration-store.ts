@@ -196,6 +196,15 @@ function deriveConnectionMetadata(
     };
   }
 
+  if (slug === "postiz") {
+    return {
+      accountLabel: workspaceName ?? displayName ?? accountId ?? "Postiz workspace",
+      connectionLabel: workspaceName ?? displayName ?? accountId ?? "Postiz account",
+      externalAccountId: workspaceId ?? accountId ?? null,
+      expiresAt,
+    };
+  }
+
   return {
     accountLabel:
       formatCombinedLabel(displayName, primaryEmail) ??
