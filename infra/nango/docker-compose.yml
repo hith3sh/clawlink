@@ -17,7 +17,7 @@ services:
       retries: 10
 
   nango:
-    image: nangohq/nango-server:${NANGO_IMAGE_TAG:-hosted}
+    image: ${NANGO_IMAGE_REGISTRY:-nangohq/nango-server}:${NANGO_IMAGE_TAG:-hosted}
     restart: unless-stopped
     env_file:
       - .env
