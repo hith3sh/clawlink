@@ -146,6 +146,7 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "Mailchimp", slug: "mailchimp", description: "Create email campaigns and manage audiences", category: "Marketing", icon: "SiMailchimp", color: "#FFE01B" },
   { name: "Klaviyo", slug: "klaviyo", description: "Email and SMS marketing automation", category: "Marketing", icon: "SiKlaviyo", color: "#F5C518" },
   { name: "Buffer", slug: "buffer", description: "Schedule and publish social media content", category: "Marketing", icon: "SiBuffer", color: "#232323" },
+  { name: "Postiz", slug: "postiz", description: "Manage social channels and publish posts", category: "Social Media", icon: "TbPlugConnected", color: "#111827" },
   { name: "YouTube", slug: "youtube", description: "Upload videos and manage channels", category: "Social Media", icon: "SiYoutube", color: "#FF0000" },
   { name: "LinkedIn", slug: "linkedin", description: "Post updates and manage connections", category: "Social Media", icon: "FaLinkedin", color: "#0A66C2" },
   { name: "Instagram", slug: "instagram", description: "Publish posts and manage media", category: "Social Media", icon: "SiInstagram", color: "#E4405F" },
