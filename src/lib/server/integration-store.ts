@@ -293,22 +293,37 @@ export async function sha256Hex(input: string): Promise<string> {
 }
 
 export async function getAuthenticatedIdentity(): Promise<Identity | null> {
-  const { userId } = await auth();
+  try {
+    const { userId } = await auth();
 
-  if (!userId) {
-    return null;
+    if (!userId) {
+      console.warn("[auth] getAuthenticatedIdentity: no userId from Clerk auth()");
+      return null;
+    }
+
+    const user = await currentUser();
+    const email =
+      user?.primaryEmailAddress?.emailAddress ??
+      user?.emailAddresses[0]?.emailAddress ??
+      `${userId}@clawlink.local`;
+
+    console.log("[auth] getAuthenticatedIdentity: resolved identity", {
+      userId,
+      hasPrimaryEmail: Boolean(user?.primaryEmailAddress?.emailAddress),
+      emailCount: user?.emailAddresses?.length ?? 0,
+    });
+
+    return {
+      clerkId: userId,
+      email,
+    };
+  } catch (error) {
+    console.error("[auth] getAuthenticatedIdentity: failed", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw error;
   }
-
-  const user = await currentUser();
-  const email =
-    user?.primaryEmailAddress?.emailAddress ??
-    user?.emailAddresses[0]?.emailAddress ??
-    `${userId}@clawlink.local`;
-
-  return {
-    clerkId: userId,
-    email,
-  };
 }
 
 export async function ensureUser(db: D1LikeDatabase, identity: Identity): Promise<UserRow> {
@@ -344,11 +359,32 @@ export async function getUserForCurrentIdentity(): Promise<UserRow | null> {
   const db = getDatabase();
   const identity = await getAuthenticatedIdentity();
 
-  if (!db || !identity) {
+  if (!db) {
+    console.error("[auth] getUserForCurrentIdentity: DB binding missing");
     return null;
   }
 
-  return ensureUser(db, identity);
+  if (!identity) {
+    console.warn("[auth] getUserForCurrentIdentity: no authenticated identity");
+    return null;
+  }
+
+  try {
+    const user = await ensureUser(db, identity);
+    console.log("[auth] getUserForCurrentIdentity: resolved app user", {
+      clerkId: identity.clerkId,
+      userId: user.id,
+      email: user.email,
+    });
+    return user;
+  } catch (error) {
+    console.error("[auth] getUserForCurrentIdentity: ensureUser failed", {
+      clerkId: identity.clerkId,
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw error;
+  }
 }
 
 export async function getIntegrationConnectionByIdForUserId(
