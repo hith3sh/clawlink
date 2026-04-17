@@ -28,26 +28,33 @@ class PostizHandler extends BaseIntegration {
         tags: ["postiz", "social", "channels", "integrations"],
         whenToUse: [
           "User wants to know which Postiz channels/accounts are connected.",
-          "You need an integration id before creating a post.",
+          "You need an integration id before scheduling a post.",
         ],
         followups: [
-          "Offer to create a post for a chosen integration.",
+          "Offer to schedule a post for a chosen integration.",
           "Offer to list recent posts after identifying the right channel.",
         ],
       }),
-      defineTool(integrationSlug, "create_post", {
-        description: "Create or schedule a post in Postiz",
+      defineTool(integrationSlug, "schedule_post", {
+        description: "Publish now or schedule a Postiz post using a simpler agent-friendly input shape",
         inputSchema: {
           type: "object",
           properties: {
-            postType: {
+            integrationId: {
               type: "string",
-              enum: ["now", "schedule"],
-              description: "Whether to publish immediately or schedule for later",
+              description: "Postiz integration/channel id to publish to",
             },
-            date: {
+            content: {
               type: "string",
-              description: "UTC ISO date-time. Required for scheduled posts and accepted for immediate posts too.",
+              description: "Main post content",
+            },
+            platformType: {
+              type: "string",
+              description: "Target platform type for Postiz settings.__type, for example linkedin, twitter, instagram, facebook, tiktok, youtube, or threads",
+            },
+            publishAt: {
+              type: "string",
+              description: "UTC ISO date-time. If omitted, the post is published immediately.",
             },
             shortLink: {
               type: "boolean",
@@ -58,17 +65,9 @@ class PostizHandler extends BaseIntegration {
               items: { type: "string" },
               description: "Optional tags to attach to the post",
             },
-            integrationId: {
-              type: "string",
-              description: "Postiz integration/channel id to publish to",
-            },
-            content: {
-              type: "string",
-              description: "Main post content",
-            },
-            images: {
+            media: {
               type: "array",
-              description: "Uploaded media objects or URLs. Use upload_media first when needed.",
+              description: "Uploaded media objects or public URLs. Use upload_media first when needed.",
               items: {
                 anyOf: [
                   { type: "string" },
@@ -84,10 +83,10 @@ class PostizHandler extends BaseIntegration {
             },
             settings: {
               type: "object",
-              description: "Provider-specific Postiz settings object. Must include __type.",
+              description: "Optional provider-specific Postiz settings object. If platformType is provided, it will be merged into settings.__type.",
             },
           },
-          required: ["postType", "integrationId", "content", "settings"],
+          required: ["integrationId", "content"],
         },
         accessLevel: "write",
         tags: ["postiz", "social", "publish", "schedule"],
@@ -96,24 +95,29 @@ class PostizHandler extends BaseIntegration {
         ],
         askBefore: [
           "Ask which connected channel should receive the post if integrationId is missing.",
-          "Ask for provider-specific settings if the target platform requires them and they are not obvious.",
+          "Ask which platform type to use if it cannot be inferred from the selected Postiz integration and settings.__type is missing.",
         ],
         safeDefaults: {
-          postType: "now",
           shortLink: false,
           tags: [],
-          images: [],
+          media: [],
         },
         examples: [
           {
             user: "post this to my LinkedIn via Postiz right now",
             args: {
-              postType: "now",
               integrationId: "your-linkedin-id",
               content: "Excited to ship this today.",
-              settings: {
-                __type: "linkedin",
-              },
+              platformType: "linkedin",
+            },
+          },
+          {
+            user: "schedule this Postiz post for tomorrow morning",
+            args: {
+              integrationId: "your-linkedin-id",
+              content: "Launching tomorrow.",
+              platformType: "linkedin",
+              publishAt: "2026-04-18T09:00:00.000Z",
             },
           },
         ],
@@ -214,7 +218,28 @@ class PostizHandler extends BaseIntegration {
           },
         ],
         followups: [
-          "Offer to create a post using the uploaded media result.",
+          "Offer to schedule a post using the uploaded media result.",
+        ],
+      }),
+      defineTool(integrationSlug, "get_requirements", {
+        description: "Return the expected Postiz posting requirements, required identifiers, and platform settings hints before scheduling a post",
+        inputSchema: {
+          type: "object",
+          properties: {
+            platformType: {
+              type: "string",
+              description: "Optional platform type hint such as linkedin, twitter, instagram, facebook, tiktok, youtube, or threads",
+            },
+          },
+        },
+        accessLevel: "read",
+        tags: ["postiz", "social", "requirements", "schema"],
+        whenToUse: [
+          "You need to know which fields are required before calling schedule_post.",
+          "You need a reminder about integrationId, platformType, media expectations, or scheduling format.",
+        ],
+        followups: [
+          "Offer to list integrations next if the user still needs a channel id.",
         ],
       }),
     ];
@@ -237,14 +262,16 @@ class PostizHandler extends BaseIntegration {
     switch (action) {
       case "list_integrations":
         return this.listIntegrations(credentials);
-      case "create_post":
-        return this.createPost(args, credentials);
+      case "schedule_post":
+        return this.schedulePost(args, credentials);
       case "list_posts":
         return this.listPosts(args, credentials);
       case "delete_post":
         return this.deletePost(args, credentials);
       case "upload_media":
         return this.uploadMedia(args, credentials);
+      case "get_requirements":
+        return this.getRequirements(args);
       default:
         throw new Error(`Unknown action: ${action}`);
     }
@@ -269,23 +296,40 @@ class PostizHandler extends BaseIntegration {
     return response.json();
   }
 
-  private async createPost(
+  private async schedulePost(
     args: Record<string, unknown>,
     credentials: Record<string, string>,
   ): Promise<unknown> {
-    const settings = this.requireObject(args.settings, "settings");
+    const integrationId = String(args.integrationId ?? "").trim();
+    const content = String(args.content ?? "").trim();
+    const publishAt = typeof args.publishAt === "string" ? args.publishAt.trim() : "";
+    const platformType = typeof args.platformType === "string" ? args.platformType.trim() : "";
+    const settings = this.mergeSettings(args.settings, platformType);
+
+    if (!integrationId) {
+      throw new Error("integrationId is required");
+    }
+
+    if (!content) {
+      throw new Error("content is required");
+    }
+
+    if (!settings.__type || typeof settings.__type !== "string" || !String(settings.__type).trim()) {
+      throw new Error("platformType or settings.__type is required");
+    }
+
     const payload = {
-      type: String(args.postType ?? "now"),
-      date: typeof args.date === "string" && args.date.trim() ? args.date : new Date().toISOString(),
+      type: publishAt ? "schedule" : "now",
+      date: publishAt || new Date().toISOString(),
       shortLink: Boolean(args.shortLink ?? false),
       tags: Array.isArray(args.tags) ? args.tags.map((value) => String(value)) : [],
       posts: [
         {
-          integration: { id: String(args.integrationId ?? "") },
+          integration: { id: integrationId },
           value: [
             {
-              content: String(args.content ?? ""),
-              image: this.normalizeImages(args.images),
+              content,
+              image: this.normalizeImages(args.media),
             },
           ],
           settings,
@@ -303,7 +347,7 @@ class PostizHandler extends BaseIntegration {
     );
 
     if (!response.ok) {
-      throw await this.createApiError("Failed to create Postiz post", response);
+      throw await this.createApiError("Failed to schedule Postiz post", response);
     }
 
     return response.json();
@@ -400,12 +444,73 @@ class PostizHandler extends BaseIntegration {
       .filter((value): value is { id?: string; path: string } => Boolean(value));
   }
 
-  private requireObject(value: unknown, fieldName: string): PostizSettings {
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
+  private mergeSettings(settings: unknown, platformType: string): PostizSettings {
+    const baseSettings = this.optionalObject(settings, "settings");
+
+    if (platformType) {
+      return {
+        ...baseSettings,
+        __type: platformType,
+      };
+    }
+
+    return baseSettings;
+  }
+
+  private optionalObject(value: unknown, fieldName: string): PostizSettings {
+    if (value === undefined || value === null) {
+      return {};
+    }
+
+    if (typeof value !== "object" || Array.isArray(value)) {
       throw new Error(`${fieldName} must be an object`);
     }
 
     return value as PostizSettings;
+  }
+
+  private getRequirements(args: Record<string, unknown>): unknown {
+    const platformType = typeof args.platformType === "string" ? args.platformType.trim() : "";
+
+    return {
+      integration: "postiz",
+      recommendedTools: [
+        "postiz_list_integrations",
+        "postiz_schedule_post",
+        "postiz_list_posts",
+        "postiz_delete_post",
+        "postiz_upload_media",
+      ],
+      requiredFields: ["integrationId", "content"],
+      conditionalFields: [
+        {
+          field: "platformType",
+          requiredWhen: "settings.__type is not already provided",
+          description: "Sets Postiz settings.__type for the target social platform.",
+        },
+        {
+          field: "publishAt",
+          requiredWhen: "the post should be scheduled for later instead of publishing immediately",
+          description: "Must be a UTC ISO date-time string.",
+        },
+        {
+          field: "media",
+          requiredWhen: "the target post should include media",
+          description: "Provide uploaded Postiz media objects or public URLs. Use postiz_upload_media first when needed.",
+        },
+      ],
+      settings: {
+        mustBeObject: true,
+        requiredKey: "__type unless platformType is supplied",
+        platformTypeHint: platformType || null,
+        commonPlatformTypes: ["linkedin", "twitter", "instagram", "facebook", "tiktok", "youtube", "threads"],
+      },
+      notes: [
+        "Use postiz_list_integrations to discover the correct integrationId before scheduling.",
+        "If both platformType and settings.__type are supplied, platformType wins.",
+        "publishAt omitted means publish now.",
+      ],
+    };
   }
 
   private async createApiError(prefix: string, response: Response): Promise<Error> {

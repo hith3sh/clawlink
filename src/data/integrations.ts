@@ -604,10 +604,11 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     credentialFields: [],
     tools: [
       { name: "list_integrations", description: "List connected Postiz channels/integrations" },
-      { name: "create_post", description: "Create or schedule a post in Postiz" },
+      { name: "schedule_post", description: "Publish now or schedule a Postiz post with a simpler agent-friendly input shape" },
       { name: "list_posts", description: "List posts in a date range" },
       { name: "delete_post", description: "Delete a Postiz post by ID" },
       { name: "upload_media", description: "Upload a media file to Postiz from a URL" },
+      { name: "get_requirements", description: "Return the expected Postiz posting requirements and settings hints" },
     ],
   },
   youtube: {
