@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import CopyPromptButton from "@/components/CopyPromptButton";
 import {
   CLAWLINK_API_SETTINGS_URL,
   CLAWLINK_GITHUB_URL,
@@ -95,6 +96,9 @@ export default function Home() {
           </div>
 
           <div className="mx-auto max-w-3xl rounded-[28px] border border-gray-200 bg-white p-8 shadow-[0_4px_24px_rgba(0,0,0,0.04)] sm:p-10">
+            <div className="-mt-2 mb-4 flex justify-end">
+              <CopyPromptButton />
+            </div>
             <p className="text-[15px] leading-[1.9] text-gray-700">
               ClawLink setup for OpenClaw — third-party plugin, not affiliated with OpenClaw. Verify the package at{" "}
               <a

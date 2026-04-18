@@ -1,10 +1,14 @@
 # ClawLink
 
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/hith3sh/clawlink/badge)](https://scorecard.dev/viewer/?uri=github.com/hith3sh/clawlink)
+[![npm](https://img.shields.io/npm/v/%40useclawlink%2Fopenclaw-plugin?label=npm%20%40useclawlink%2Fopenclaw-plugin)](https://www.npmjs.com/package/@useclawlink/openclaw-plugin)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **Install once. Connect with one click.**
 
 ClawLink is an open-source platform that gives [OpenClaw](https://github.com/openclaw/openclaw) instant access to 40+ API integrations — Gmail, Slack, Stripe, GitHub, Notion, and more. Install the ClawLink plugin once, start a hosted connection session, and let ClawLink handle the browser-side auth flow for you.
 
-**Website:** [claw-link.dev](https://claw-link.dev)
+**Website:** [claw-link.dev](https://claw-link.dev) · **Verify:** [claw-link.dev/verify](https://claw-link.dev/verify)
 
 ## Canonical OpenClaw setup
 
