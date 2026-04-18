@@ -1,196 +1,362 @@
-
 import Image from "next/image";
 import Link from "next/link";
-import CopyCommand from "@/components/CopyCommand";
-import VisualEquation from "@/components/VisualEquation";
-import IntegrationGrid from "@/components/IntegrationGrid";
-import PainMath from "@/components/PainMath";
-import VideoSection from "@/components/VideoSection";
-import Testimonials from "@/components/Testimonials";
-import FAQ from "@/components/FAQ";
-import { CLAWLINK_OPENCLAW_DOCS_URL } from "@/lib/openclaw-plugin";
+import {
+  CLAWLINK_API_SETTINGS_URL,
+  CLAWLINK_GITHUB_URL,
+  CLAWLINK_NPM_URL,
+  CLAWLINK_OPENCLAW_DOCS_URL,
+  CLAWLINK_VERIFY_URL,
+  OPENCLAW_PLUGIN_INSTALL_COMMAND,
+  OPENCLAW_PLUGIN_PACKAGE,
+} from "@/lib/openclaw-plugin";
+
+const AVATARS = Array.from({ length: 10 }, (_, i) => `/brand/avatars/avatar-${i + 1}.png`);
 
 export default function Home() {
   return (
-    <main className="flex-1">
-      {/* Visual Equation — top */}
-      <section className="pt-16 pb-8 px-6">
-        <VisualEquation />
-      </section>
-
+    <main className="flex-1 bg-white">
       {/* Hero */}
-      <section className="flex flex-col items-center pb-24 px-6 relative">
-        {/* Warm ambient background */}
-        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#ffe4cc]/20 rounded-full blur-3xl" />
-          <div className="absolute top-20 left-1/4 w-96 h-96 bg-[#ffe4cc]/10 rounded-full blur-2xl" />
+      <section className="relative mx-auto max-w-[1200px] px-6 pt-6 pb-20">
+        {/* Left sticker: Notion widget with handwritten label */}
+        <div className="pointer-events-none absolute left-2 top-6 hidden w-[200px] lg:block">
+          <Image
+            src="/brand/bento/widget-notion.png"
+            alt=""
+            width={183}
+            height={183}
+            className="drop-shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+          />
+          <p
+            className="mt-1 text-center text-xl leading-tight text-gray-900"
+            style={{ fontFamily: "var(--font-caveat), 'Comic Sans MS', cursive" }}
+          >
+            check my
+            <br />
+            notion pages
+          </p>
         </div>
-        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-center max-w-3xl text-gray-900 relative">
-          Plug anything into{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#e8915a] to-[#d4764a] relative">
-            OpenClaw.
-            <span className="absolute inset-0 bg-gradient-to-r from-[#e8915a] to-[#d4764a] blur-xl opacity-20" />
+        {/* Right sticker: Docs widget with handwritten label */}
+        <div className="pointer-events-none absolute right-2 top-6 hidden w-[200px] lg:block">
+          <Image
+            src="/brand/bento/widget-docs.png"
+            alt=""
+            width={183}
+            height={183}
+            className="ml-auto drop-shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+          />
+          <p
+            className="mt-1 text-center text-xl leading-tight text-gray-900"
+            style={{ fontFamily: "var(--font-caveat), 'Comic Sans MS', cursive" }}
+          >
+            connect to
+            <br />
+            google docs
+          </p>
+        </div>
+
+        {/* Main heading */}
+        <div className="mt-10 flex flex-col items-center text-center">
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Image
+              src="/brand/bento/openclaw.png"
+              alt="OpenClaw"
+              width={120}
+              height={120}
+              priority
+              className="h-20 w-20 sm:h-28 sm:w-28"
+            />
+            <h1 className="max-w-xl text-4xl font-bold leading-tight tracking-tight text-gray-900 sm:text-5xl lg:text-[56px] lg:leading-[1.1]">
+              Your Openclaw is nothing without access to tools
+            </h1>
+          </div>
+          <p className="mt-6 text-base text-gray-500">
+            We give you the tools you need, removing the extra hassle
+          </p>
+        </div>
+
+        {/* Copy-and-paste annotation + setup card */}
+        <div className="relative mt-16">
+          <div className="pointer-events-none absolute -left-2 -top-14 hidden w-[280px] md:block lg:-left-6">
+            <p
+              className="text-2xl leading-tight text-gray-900"
+              style={{ fontFamily: "var(--font-caveat), 'Comic Sans MS', cursive" }}
+            >
+              copy &amp; paste this
+              <br />
+              onto openclaw chat
+            </p>
+            <Image
+              src="/brand/bento/arrow-big.png"
+              alt=""
+              width={209}
+              height={209}
+              className="ml-28 -mt-4 h-28 w-28"
+            />
+          </div>
+
+          <div className="mx-auto max-w-3xl rounded-[28px] border border-gray-200 bg-white p-8 shadow-[0_4px_24px_rgba(0,0,0,0.04)] sm:p-10">
+            <p className="text-[15px] leading-[1.9] text-gray-700">
+              ClawLink setup for OpenClaw — third-party plugin, not affiliated with OpenClaw. Verify the package at{" "}
+              <a
+                href={CLAWLINK_NPM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-gray-900 underline"
+              >
+                {OPENCLAW_PLUGIN_PACKAGE}
+              </a>{" "}
+              or{" "}
+              <a
+                href={CLAWLINK_GITHUB_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-900 underline"
+              >
+                github.com/hith3sh/clawlink
+              </a>
+              . Releases are published with an npm provenance attestation in the public Sigstore transparency log — see{" "}
+              <a
+                href={CLAWLINK_VERIFY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-900 underline"
+              >
+                claw-link.dev/verify
+              </a>
+              .{" "}
+              <span className="font-semibold text-gray-900">Step 1</span> — install the plugin:{" "}
+              <span className="font-mono text-gray-900">{OPENCLAW_PLUGIN_INSTALL_COMMAND}</span>.{" "}
+              <span className="font-semibold text-gray-900">Step 2</span> — create an API key at{" "}
+              <a
+                href={CLAWLINK_API_SETTINGS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-gray-900 underline"
+              >
+                claw-link.dev/dashboard/settings?tab=api
+              </a>
+              .{" "}
+              <span className="font-semibold text-gray-900">Step 3</span> — open the ClawLink plugin&apos;s settings inside OpenClaw and paste the API key into the{" "}
+              <span className="font-mono text-gray-900">ClawLink API key</span> field. The key is stored locally in{" "}
+              <span className="font-mono text-gray-900">~/.openclaw/openclaw.json</span> and is only sent to{" "}
+              <span className="font-mono text-gray-900">claw-link.dev</span>. Docs:{" "}
+              <a
+                href={CLAWLINK_OPENCLAW_DOCS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-900 underline"
+              >
+                docs.claw-link.dev/openclaw
+              </a>
+              .
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Diagram */}
+      <section className="mx-auto max-w-[1100px] px-6 py-16">
+        <h2 className="mb-10 text-center text-xl font-semibold text-gray-900 sm:text-2xl">
+          claw-link helps openclaw to connect to 3rd party tools with a single click
+        </h2>
+        <div className="rounded-[28px] border border-gray-200 bg-white p-8">
+          <Image
+            src="/brand/bento/diagram.png"
+            alt="ClawLink connects OpenClaw to third-party tools"
+            width={1160}
+            height={977}
+            className="mx-auto w-full max-w-[900px]"
+            priority
+          />
+        </div>
+      </section>
+
+      {/* Social proof */}
+      <section className="mx-auto max-w-[900px] px-6 py-16 text-center">
+        <h3 className="mb-8 text-2xl font-semibold text-gray-900">Loved by 100+ users</h3>
+        <div className="mb-8 flex flex-wrap items-center justify-center gap-2">
+          {AVATARS.map((src, i) => (
+            <Image
+              key={src}
+              src={src}
+              alt=""
+              width={48}
+              height={48}
+              className="h-12 w-12 rounded-full border-2 border-white shadow-sm"
+              priority={i < 4}
+            />
+          ))}
+        </div>
+        <Link
+          href="/sign-up"
+          className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-6 py-2.5 text-sm font-medium text-gray-900 shadow-sm transition hover:border-gray-300"
+        >
+          <span aria-hidden>→</span>
+          Get started
+        </Link>
+      </section>
+
+      {/* Give access to Your... */}
+      <section className="mx-auto max-w-[900px] px-6 pt-16 pb-10 text-center">
+        <h2 className="text-4xl font-bold leading-[1.15] tracking-tight text-gray-900 sm:text-5xl">
+          Give access to Your
+          <br />
+          <span className="text-gray-900">email, calendar, youtube,</span>
+          <br />
+          <span className="bg-gradient-to-b from-gray-400 to-gray-200 bg-clip-text text-transparent">
+            social media , websites,
           </span>
-        </h1>
-        <p className="mt-6 text-lg sm:text-xl text-gray-500 text-center max-w-2xl leading-relaxed">
-          Copy the official ClawLink setup prompt into chat. It uses the first-party plugin and then sends you to the dashboard API key step.
+          <br />
+          <span className="bg-gradient-to-b from-gray-300 to-white bg-clip-text text-transparent">payments</span>
+        </h2>
+        <p className="mx-auto mt-10 max-w-xl text-base text-gray-500">
+          All your content integrated into your personal page.
+          <br />
+          No more hiding your content behind links.
         </p>
-
-        <div className="mt-8 w-full max-w-2xl">
-          <CopyCommand />
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm text-gray-500">
-          <a
-            href={CLAWLINK_OPENCLAW_DOCS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-full border border-gray-200 bg-white px-4 py-2 hover:border-[#e8915a]/30 hover:text-gray-700 transition-colors"
-          >
-            Setup docs
-          </a>
-          <a
-            href="https://www.npmjs.com/package/@useclawlink/openclaw-plugin"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-full border border-gray-200 bg-white px-4 py-2 hover:border-[#e8915a]/30 hover:text-gray-700 transition-colors"
-          >
-            View npm package
-          </a>
-        </div>
-
-        {/* Trust badge */}
-        <div className="mt-10 flex items-center gap-2 text-sm text-gray-400">
-            <div className="flex -space-x-2">
-              <div className="w-7 h-7 rounded-full bg-[#ffe4cc] border-2 border-white flex items-center justify-center text-[10px] font-bold text-[#d4764a]">H</div>
-              <div className="w-7 h-7 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-500">M</div>
-              <div className="w-7 h-7 rounded-full bg-[#ffe4cc] border-2 border-white flex items-center justify-center text-[10px] font-bold text-[#d4764a]">S</div>
-              <div className="w-7 h-7 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-500">A</div>
-            </div>
-            <span>100+ users connected</span>
-          </div>
       </section>
 
-      {/* Problem — why you need ClawLink */}
-      <section className="py-24 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+      {/* Bento grid */}
+      <section className="mx-auto max-w-[1200px] px-6 py-16">
+        <BentoGrid />
+      </section>
 
-        <div className="max-w-4xl mx-auto relative">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 mb-3 tracking-tight">
-            Stop wasting time on API plumbing
-          </h2>
-          <p className="text-center text-gray-500 mb-12 text-lg">
-            Every integration built from scratch costs you hours you&apos;ll never get back
-          </p>
-          <PainMath />
+      {/* Privacy First */}
+      <section className="mx-auto max-w-[900px] px-6 py-16 text-center">
+        <h2 className="text-3xl font-bold text-gray-900">Privacy First</h2>
+        <p className="mt-4 text-sm text-gray-500">
+          Nobody other than you should have access to your data — claw-link never sees your emails, chats, or anything
+          else.
+        </p>
+        <div className="mt-10 flex items-center justify-center gap-10">
+          <Image src="/brand/bento/aicpa-soc.png" alt="AICPA SOC" width={158} height={158} className="h-32 w-32" />
+          <Image src="/brand/bento/iso-27001.png" alt="ISO 27001" width={127} height={127} className="h-28 w-28" />
         </div>
       </section>
 
-      {/* Solution — integrations grid */}
-      <section className="max-w-5xl mx-auto px-6 pb-24">
-        <IntegrationGrid />
-      </section>
-
-      {/* Video */}
-      <section className="py-24 px-6">
-        <VideoSection />
-      </section>
-
-      {/* Social Proof — testimonials */}
-      <section className="py-24 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-white to-gray-50" />
-        <div className="max-w-5xl mx-auto relative">
-          <Testimonials />
-        </div>
-      </section>
-
-      {/* Authority — FAQ + Docs */}
-      <section className="py-24 px-6">
-        <FAQ />
-      </section>
-
-      <section className="py-24 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gray-50" />
-        <div className="max-w-3xl mx-auto text-center relative">
-          <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">
-            Read the Docs
-          </h2>
-          <p className="text-gray-500 mb-10 max-w-xl mx-auto text-lg leading-relaxed">
-            Learn how to install ClawLink, log in with your API key, connect apps,
-            and use hosted integrations through the plugin.
-          </p>
-          <a
-            href={CLAWLINK_OPENCLAW_DOCS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2.5 rounded-xl bg-gray-900 text-white px-7 py-3.5 font-medium hover:bg-gray-800 transition-all duration-200 hover:scale-105"
-          >
-            View Documentation
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-          </a>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="relative py-24 px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-900 to-[#3d2a1a]" />
-        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '32px 32px', color: 'rgba(232, 145, 90, 0.3)' }} />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#e8915a]/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-[#d4764a]/10 rounded-full blur-3xl" />
-
-        <div className="max-w-3xl mx-auto text-center relative">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 tracking-tight">
-            Use the official ClawLink setup flow
-          </h2>
-          <p className="text-gray-300 mb-10 text-lg max-w-2xl mx-auto">
-            Install the first-party plugin, create your API key in the dashboard, then verify the connection from chat.
-          </p>
-          <div className="mx-auto max-w-2xl rounded-2xl border border-[#e8915a]/20 bg-[#e8915a]/10 backdrop-blur-sm p-6 text-left text-sm text-orange-50 shadow-lg shadow-black/10">
-            <div className="space-y-4 font-mono">
-              <div>
-                <div className="mb-1 text-xs uppercase tracking-[0.2em] text-[#f5b892]">1. Install</div>
-                <div className="break-all text-orange-100">openclaw plugins install @useclawlink/openclaw-plugin</div>
-              </div>
-              <div>
-                <div className="mb-1 text-xs uppercase tracking-[0.2em] text-[#f5b892]">2. Open dashboard</div>
-                <div className="break-all text-orange-100">https://claw-link.dev/dashboard/settings?tab=api</div>
-              </div>
-              <div>
-                <div className="mb-1 text-xs uppercase tracking-[0.2em] text-[#f5b892]">3. Log in from chat</div>
-                <div className="break-all text-orange-100">/clawlink login cllk_live_...</div>
-              </div>
-              <div>
-                <div className="mb-1 text-xs uppercase tracking-[0.2em] text-[#f5b892]">4. Verify</div>
-                <div className="break-all text-orange-100">/clawlink status</div>
-              </div>
-            </div>
-          </div>
+      {/* Pricing */}
+      <section className="mx-auto max-w-[900px] px-6 py-16 text-center">
+        <h2 className="mb-12 text-3xl font-bold text-gray-900">Pricing</h2>
+        <div className="grid grid-cols-1 justify-items-center gap-8 sm:grid-cols-2">
+          <PricingCard
+            title="Free"
+            price="0"
+            features={["1 integration only"]}
+            footnote="No card required."
+          />
+          <PricingCard
+            title="Cheap"
+            price="5"
+            features={["All integrations", "Email support"]}
+          />
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 bg-gray-50/50 py-10 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-gray-400">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/images/logo/clawlink.svg"
-              alt="ClawLink"
-              width={100}
-              height={28}
-              className="h-6 w-auto"
-            />
-            <span className="font-medium text-gray-500">ClawLink</span>
-          </div>
-          <span className="text-gray-400">The first-party integration setup layer for OpenClaw</span>
-          <div className="flex items-center gap-5">
-            <Link href="/privacy" className="hover:text-gray-600 transition-colors">
-              Privacy Policy
-            </Link>
-          </div>
-        </div>
+      <footer className="mx-auto max-w-[1200px] px-6 py-20 text-center">
+        <Image
+          src="/brand/bento/footer-claw.png"
+          alt="ClawLink"
+          width={65}
+          height={65}
+          className="mx-auto h-16 w-16"
+        />
+        <div className="mt-4 text-sm font-medium text-gray-900">Built for Agents</div>
+        <nav className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-gray-500">
+          <Link href="/about" className="transition hover:text-gray-900">
+            About us
+          </Link>
+          <Link href="/changelog" className="transition hover:text-gray-900">
+            Changelog
+          </Link>
+          <a href={CLAWLINK_OPENCLAW_DOCS_URL} target="_blank" rel="noopener noreferrer" className="transition hover:text-gray-900">
+            Docs
+          </a>
+          <Link href="/explore" className="transition hover:text-gray-900">
+            Explore
+          </Link>
+          <Link href="/privacy" className="transition hover:text-gray-900">
+            Privacy Policy
+          </Link>
+        </nav>
       </footer>
     </main>
   );
 }
-// edge runtime
+
+function BentoGrid() {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:[grid-template-columns:175fr_390fr_390fr]">
+      {/* Column 1 — narrow */}
+      <div className="flex flex-col gap-4">
+        <BentoTile src="/brand/bento/col1-tile1-175.png" alt="Buy me a coffee" aspect="1/1" />
+        <BentoTile src="/brand/bento/col1-tile2-tall.png" alt="Medium article" aspect="175/389" />
+        <BentoTile src="/brand/bento/col1-tile3-spotify.png" alt="Spotify playlist" aspect="175/389" />
+      </div>
+      {/* Column 2 — wide */}
+      <div className="flex flex-col gap-4">
+        <BentoTile src="/brand/bento/col2-tile1.png" alt="Widget" aspect="390/175" />
+        <BentoTile src="/brand/bento/col2-tile2.png" alt="App store widget" aspect="390/175" />
+        <BentoTile src="/brand/bento/col2-tile3-think.png" alt="Think Different" aspect="1/1" />
+        <BentoTile src="/brand/bento/col2-tile4-calendly.png" alt="Calendly" aspect="1/1" />
+        <BentoTile src="/brand/bento/col2-tile5-medium.png" alt="Medium photo" aspect="390/200" />
+      </div>
+      {/* Column 3 — wide */}
+      <div className="flex flex-col gap-4">
+        <BentoTile src="/brand/bento/col3-tile1-youtube.png" alt="YouTube" aspect="1/1" />
+        <BentoTile src="/brand/bento/col3-tile2-github.png" alt="GitHub contributions" aspect="390/174" />
+        <BentoTile src="/brand/bento/col3-tile3-link.png" alt="Link preview" aspect="1/1" />
+        <BentoTile src="/brand/bento/col3-tile4-map.png" alt="Map" aspect="1/1" />
+      </div>
+    </div>
+  );
+}
+
+function BentoTile({ src, alt, aspect }: { src: string; alt: string; aspect: string }) {
+  return (
+    <div
+      className="overflow-hidden rounded-2xl bg-white shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
+      style={{ aspectRatio: aspect }}
+    >
+      <Image src={src} alt={alt} width={800} height={800} className="h-full w-full object-cover" />
+    </div>
+  );
+}
+
+function PricingCard({
+  title,
+  price,
+  features,
+  footnote,
+}: {
+  title: string;
+  price: string;
+  features: string[];
+  footnote?: string;
+}) {
+  return (
+    <div className="flex h-[518px] w-full max-w-[364px] flex-col items-center rounded-3xl bg-white px-10 pt-14 pb-10 shadow-[0_8px_40px_rgba(0,0,0,0.06)] ring-1 ring-gray-100">
+      <h3 className="text-3xl font-bold text-gray-900">{title}</h3>
+      <div className="mt-8 flex items-baseline gap-2">
+        <span className="text-5xl font-bold text-gray-900">${price}</span>
+        <span className="text-xl text-gray-500">/ mo</span>
+      </div>
+      <ul className="mt-10 w-full divide-y divide-gray-200 border-y border-gray-200">
+        {features.map((f) => (
+          <li key={f} className="py-4 text-center text-lg text-gray-800">
+            {f}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-auto flex w-full flex-col items-center gap-4">
+        {footnote && <p className="text-sm font-semibold text-gray-900">{footnote}</p>}
+        <Link
+          href="/sign-up"
+          className="inline-flex w-full items-center justify-center rounded-xl bg-gray-900 px-6 py-4 text-base font-semibold text-white transition hover:bg-gray-800"
+        >
+          Get Started Now
+        </Link>
+      </div>
+    </div>
+  );
+}
