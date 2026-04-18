@@ -1,58 +1,61 @@
 # ClawLink OpenClaw Plugin
 
-Native OpenClaw plugin package for ClawLink hosted connection sessions and dynamic integration tooling.
+Third-party OpenClaw plugin that lets OpenClaw talk to external SaaS apps through [ClawLink](https://claw-link.dev)'s hosted integration layer.
+
+> **Not affiliated with OpenClaw.** ClawLink is an independent service. This package is published by the ClawLink team under the npm scope [`@useclawlink`](https://www.npmjs.com/package/@useclawlink/openclaw-plugin). Source: [github.com/hith3sh/clawlink](https://github.com/hith3sh/clawlink). License: MIT.
+
+## What it does
+
+ClawLink stores OAuth tokens and API keys for apps like Notion, Gmail, Slack, GitHub, Apollo, and OneDrive on your behalf, then exposes a uniform set of tools so OpenClaw can read from and write to those apps without per-provider setup. You authenticate once in the ClawLink dashboard; OpenClaw calls into ClawLink over HTTPS with a single API key.
 
 ## Install
-
-Official first-party setup values:
-
-- package: `@useclawlink/openclaw-plugin`
-- install: `openclaw plugins install @useclawlink/openclaw-plugin`
-- API settings: `https://claw-link.dev/dashboard/settings?tab=api`
-- docs: `https://docs.claw-link.dev/openclaw`
-- login command format: `/clawlink login cllk_live_...`
-- verify: `/clawlink status`
 
 ```bash
 openclaw plugins install @useclawlink/openclaw-plugin
 openclaw gateway restart
 ```
 
-Then paste the dashboard-generated login command into OpenClaw:
+## Configure
 
-```text
-/clawlink login cllk_live_...
-```
+1. Generate an API key at https://claw-link.dev/dashboard/settings?tab=api.
+2. Open the ClawLink plugin settings inside OpenClaw and paste the key into the **ClawLink API key** field.
 
-Create your API key at `https://claw-link.dev/dashboard/settings?tab=api`.
+The key is stored locally in `~/.openclaw/openclaw.json` under `plugins.entries.openclaw-plugin.config.apiKey`. It is never sent to the assistant or shared with any third party beyond `claw-link.dev`.
 
-Full setup docs: `https://docs.claw-link.dev/openclaw`
-
-You can also manage config manually in `~/.openclaw/openclaw.json` under `plugins.entries.openclaw-plugin.config`, but the chat command is the intended setup flow.
+Full setup walkthrough: https://docs.claw-link.dev/openclaw
 
 ## Tools
 
-- `clawlink_start_connection`
-- `clawlink_get_connection_status`
-- `clawlink_list_integrations`
-- `clawlink_list_tools`
-- `clawlink_describe_tool`
-- `clawlink_call_tool`
+The plugin registers six tools. OpenClaw's assistant discovers available integrations dynamically — you don't need to configure individual apps here.
 
-## Commands
+- `clawlink_start_connection` — start a hosted OAuth/connect session for a new app
+- `clawlink_get_connection_status` — poll an in-progress connect session
+- `clawlink_list_integrations` — list apps already connected
+- `clawlink_list_tools` — list callable tools across connected apps
+- `clawlink_describe_tool` — fetch schema and usage guidance for one tool
+- `clawlink_call_tool` — execute a tool against a connected app
 
-- `/clawlink status`
-- `/clawlink login <apiKey>`
-- `/clawlink logout`
+## Commands (optional)
+
+These exist for power users; normal setup goes through the plugin settings UI above.
+
+- `/clawlink status` — show whether an API key is configured
+- `/clawlink login <apiKey>` — save an API key from chat (stored in local config)
+- `/clawlink logout` — remove the saved API key
+
+## Security
+
+- The plugin only makes outbound HTTPS requests to `https://claw-link.dev`.
+- Your API key is stored locally under `~/.openclaw/openclaw.json` and sent only as the `X-ClawLink-API-Key` header to ClawLink.
+- Rotate or revoke keys any time at https://claw-link.dev/dashboard/settings?tab=api.
+- Report security issues to security@claw-link.dev.
 
 ## Releases
 
-This repo includes a GitHub Actions workflow at `.github/workflows/publish-openclaw-plugin.yml`.
-
-Recommended release flow:
+Tag-based publish via GitHub Actions — see `.github/workflows/publish-openclaw-plugin.yml`.
 
 1. Bump the version in `package.json` and `openclaw.plugin.json`.
-2. Commit the version change to `main`.
+2. Commit the version bump to `main`.
 3. Create and push a matching tag:
 
 ```bash
@@ -60,9 +63,7 @@ git tag openclaw-plugin-v0.1.2
 git push origin openclaw-plugin-v0.1.2
 ```
 
-The workflow verifies that the tag version matches both package files, runs `npm pack --dry-run`, and then publishes to npm.
-
-Before this will work, configure npm Trusted Publishing for the GitHub repository `hith3sh/clawlink` and this workflow file.
+The workflow verifies that the tag version matches both package files, runs `npm pack --dry-run`, and publishes to npm via Trusted Publishing.
 
 ## Local development
 

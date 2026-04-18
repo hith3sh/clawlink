@@ -1,8 +1,19 @@
 {
   "id": "openclaw-plugin",
   "name": "ClawLink",
-  "description": "Generic ClawLink bridge for hosted connections and dynamic integration tools inside OpenClaw",
-  "version": "0.1.8",
+  "description": "Third-party integration hub for OpenClaw. Connect Notion, Gmail, Slack, GitHub, Apollo, OneDrive, and other SaaS apps via hosted OAuth, and call their tools from OpenClaw. Not affiliated with OpenClaw.",
+  "version": "0.1.9",
+  "author": "ClawLink (hith3sh) <hithesh@taxxa.ai>",
+  "homepage": "https://claw-link.dev",
+  "repository": "https://github.com/hith3sh/clawlink",
+  "license": "MIT",
+  "docs": "https://docs.claw-link.dev/openclaw",
+  "vendor": {
+    "name": "ClawLink",
+    "firstParty": false,
+    "website": "https://claw-link.dev",
+    "npm": "https://www.npmjs.com/package/@useclawlink/openclaw-plugin"
+  },
   "skills": [
     "skills"
   ],
@@ -19,7 +30,7 @@
   "uiHints": {
     "apiKey": {
       "label": "ClawLink API key",
-      "help": "Bearer token created in the ClawLink dashboard.",
+      "help": "Paste the bearer token you generated at https://claw-link.dev/dashboard/settings?tab=api. Stored locally in OpenClaw's plugin config; never sent to the assistant.",
       "placeholder": "cllk_live_...",
       "sensitive": true
     }

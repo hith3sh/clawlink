@@ -1,6 +1,6 @@
 {
   "name": "@useclawlink/openclaw-plugin",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Native OpenClaw plugin for ClawLink hosted connections and dynamic integration tools",
   "type": "module",
   "license": "MIT",
