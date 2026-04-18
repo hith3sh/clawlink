@@ -255,35 +255,6 @@ export default function Home() {
           />
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="mx-auto max-w-[1200px] px-6 py-20 text-center">
-        <Image
-          src="/brand/bento/footer-claw.png"
-          alt="ClawLink"
-          width={65}
-          height={65}
-          className="mx-auto h-16 w-16"
-        />
-        <div className="mt-4 text-sm font-medium text-gray-900">Built for Agents</div>
-        <nav className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-gray-500">
-          <Link href="/about" className="transition hover:text-gray-900">
-            About us
-          </Link>
-          <Link href="/changelog" className="transition hover:text-gray-900">
-            Changelog
-          </Link>
-          <a href={CLAWLINK_OPENCLAW_DOCS_URL} target="_blank" rel="noopener noreferrer" className="transition hover:text-gray-900">
-            Docs
-          </a>
-          <Link href="/explore" className="transition hover:text-gray-900">
-            Explore
-          </Link>
-          <Link href="/privacy" className="transition hover:text-gray-900">
-            Privacy Policy
-          </Link>
-        </nav>
-      </footer>
     </main>
   );
 }

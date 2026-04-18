@@ -134,6 +134,16 @@ body {
 }
 
 
+/* Public marketing site text selection */
+.public-site ::selection {
+  background-color: #e8915a;
+  color: #ffffff;
+}
+.public-site ::-moz-selection {
+  background-color: #e8915a;
+  color: #ffffff;
+}
+
 /* Entrance animation utility */
 .animate-enter {
   animation: animate-enter 0.5s ease-out both;
