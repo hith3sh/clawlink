@@ -61,3 +61,4 @@ packages/*/node_modules
 # local / scratch content
 /matona/
 /playwright-signin-snapshot*.md
+public/figma/
