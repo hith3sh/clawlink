@@ -140,9 +140,9 @@ export default function Home() {
                 claw-link.dev/dashboard/settings?tab=api
               </a>
               .{" "}
-              <span className="font-semibold text-gray-900">Step 3</span> — open the ClawLink plugin&apos;s settings inside OpenClaw and paste the API key into the{" "}
-              <span className="font-mono text-gray-900">ClawLink API key</span> field. The key is stored locally in{" "}
-              <span className="font-mono text-gray-900">~/.openclaw/openclaw.json</span> and is only sent to{" "}
+              <span className="font-semibold text-gray-900">Step 3</span> — paste the{" "}
+              <span className="font-mono text-gray-900">/clawlink login &lt;key&gt;</span> command from the dashboard into your OpenClaw chat as a standalone message. OpenClaw&apos;s gateway routes slash commands directly to the ClawLink plugin handler (fast path bypasses the model), so the AI never sees the key. It&apos;s stored locally in{" "}
+              <span className="font-mono text-gray-900">~/.openclaw/openclaw.json</span> and only sent to{" "}
               <span className="font-mono text-gray-900">claw-link.dev</span>. Docs:{" "}
               <a
                 href={CLAWLINK_OPENCLAW_DOCS_URL}

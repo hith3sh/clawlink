@@ -330,11 +330,11 @@ export default function SettingsPage() {
               ) : null}
 
               {apiKeyValue ? (
-                <div className="space-y-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                <div className="space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
                   <div className="space-y-1">
-                    <Label>Paste this into OpenClaw</Label>
+                    <Label>Paste this into your OpenClaw chat</Label>
                     <p className="text-sm text-muted-foreground">
-                      This raw key is only shown once. The easiest path is to copy the full command below and paste it into OpenClaw.
+                      This raw key is only shown once. Paste the command below into your OpenClaw chat as a standalone message. OpenClaw&apos;s gateway routes slash commands directly to the ClawLink plugin (fast path — the AI model never sees the key). It&apos;s stored locally in OpenClaw&apos;s config and only sent to claw-link.dev.
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row">
@@ -348,13 +348,24 @@ export default function SettingsPage() {
                       {copiedCommand ? "Copied" : "Copy command"}
                     </Button>
                   </div>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <Input readOnly value={apiKeyValue} className="flex-1 font-mono text-sm" />
-                    <Button variant="outline" onClick={copyApiKey}>
-                      {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
-                      {copied ? "Copied" : "Copy raw key"}
-                    </Button>
-                  </div>
+
+                  <details className="group rounded-lg border border-border/60 bg-background/40 px-3 py-2 text-sm">
+                    <summary className="cursor-pointer select-none text-muted-foreground group-open:mb-3 group-open:text-foreground">
+                      Using a client with a plugin settings screen? Copy just the key
+                    </summary>
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        If your OpenClaw client exposes a plugin settings screen, paste the raw key into the &quot;ClawLink API key&quot; field instead of running the command.
+                      </p>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <Input readOnly value={apiKeyValue} className="flex-1 font-mono text-sm" />
+                        <Button variant="outline" onClick={copyApiKey}>
+                          {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                          {copied ? "Copied" : "Copy key"}
+                        </Button>
+                      </div>
+                    </div>
+                  </details>
                 </div>
               ) : null}
 
@@ -435,7 +446,7 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-border/70 p-4 text-sm text-muted-foreground">
-                    No API keys yet. Create one and paste the generated `/clawlink login ...` command into OpenClaw.
+                    No API keys yet. Create one and paste the generated <span className="font-mono">/clawlink login ...</span> command into OpenClaw.
                   </div>
                 )}
               </div>

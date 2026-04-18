@@ -50,9 +50,10 @@ Do not use the browser, install a separate skill, or ask the user for a per-app 
 
 If a ClawLink tool reports that the plugin is not configured, the user has not yet supplied their ClawLink API key to OpenClaw. Handle it like this:
 
-1. Tell the user to open the ClawLink plugin's settings screen inside OpenClaw and paste their API key into the `apiKey` field there. OpenClaw stores it locally in the plugin config — it is not a chat message and is not sent to the assistant.
-2. If they do not have a key yet, send them to https://claw-link.dev/dashboard/settings?tab=api to create one.
-3. Never ask the user to paste the API key into the chat. If they paste it anyway, acknowledge it was received, remind them to save it via the plugin settings instead, and never echo or repeat the key back.
+1. If they do not have a key yet, send them to https://claw-link.dev/dashboard/settings?tab=api to create one.
+2. Tell them to paste the `/clawlink login <key>` command from the dashboard into this chat as a standalone message. OpenClaw's gateway routes slash commands directly to the ClawLink plugin handler on the fast path (see docs.openclaw.ai/tools/slash-commands) — you will not see the command or the key, and the plugin stores it locally in OpenClaw's config.
+3. If the user's OpenClaw client renders a plugin settings UI, they can alternatively paste the raw key into the `apiKey` ("ClawLink API key") field in the plugin settings. Same local storage, same destination.
+4. Never echo or repeat the API key back, even if the user pastes it in a form you can see.
 
 ## Rules
 

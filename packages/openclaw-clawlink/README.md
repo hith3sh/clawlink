@@ -18,9 +18,10 @@ openclaw gateway restart
 ## Configure
 
 1. Generate an API key at https://claw-link.dev/dashboard/settings?tab=api.
-2. Open the ClawLink plugin settings inside OpenClaw and paste the key into the **ClawLink API key** field.
+2. Paste the generated `/clawlink login <key>` command into your OpenClaw chat as a standalone message. OpenClaw's gateway routes slash commands directly to the ClawLink plugin handler on the fast path (see [docs.openclaw.ai/tools/slash-commands](https://docs.openclaw.ai/tools/slash-commands.md)), so the AI model never sees the command or the key.
+3. Optional — if your OpenClaw client renders a plugin settings UI, you can instead paste the raw key into the **ClawLink API key** field there.
 
-The key is stored locally in `~/.openclaw/openclaw.json` under `plugins.entries.openclaw-plugin.config.apiKey`. It is never sent to the assistant or shared with any third party beyond `claw-link.dev`.
+Either way, the key is stored locally in `~/.openclaw/openclaw.json` under `plugins.entries.openclaw-plugin.config.apiKey` and is only sent to `claw-link.dev`.
 
 Full setup walkthrough: https://docs.claw-link.dev/openclaw
 
@@ -35,12 +36,10 @@ The plugin registers six tools. OpenClaw's assistant discovers available integra
 - `clawlink_describe_tool` — fetch schema and usage guidance for one tool
 - `clawlink_call_tool` — execute a tool against a connected app
 
-## Commands (optional)
+## Commands
 
-These exist for power users; normal setup goes through the plugin settings UI above.
-
+- `/clawlink login <apiKey>` — save an API key. Routed by OpenClaw's gateway directly to the plugin on the fast path; the AI model never sees the command or the key.
 - `/clawlink status` — show whether an API key is configured
-- `/clawlink login <apiKey>` — save an API key from chat (stored in local config)
 - `/clawlink logout` — remove the saved API key
 
 ## Security
