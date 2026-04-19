@@ -169,6 +169,34 @@ export function mapNangoConnectionToClawLinkCredentials(
     if (email) {
       result.email = email;
     }
+  } else if (integrationSlug === "google-analytics") {
+    const workspaceName = pickString(
+      raw.property_name,
+      raw.propertyName,
+      raw.account_name,
+      raw.accountName,
+      connection.end_user?.organization?.display_name,
+    );
+    const workspaceId = pickString(
+      raw.property_id,
+      raw.propertyId,
+      raw.account_id,
+      raw.accountId,
+      connection.end_user?.organization?.id,
+    );
+
+    if (workspaceName) {
+      result.workspaceName = workspaceName;
+    }
+
+    if (workspaceId) {
+      result.workspaceId = workspaceId;
+    }
+
+    if (email) {
+      result.email = email;
+      result.primaryEmail = email;
+    }
   }
 
   const accountId = pickString(

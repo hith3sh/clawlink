@@ -168,7 +168,7 @@ clawlink/
 - [ ] Request logging
 
 ### v2 — Growth
-- [x] Nango-backed OAuth flow support for Gmail, Notion, and Outlook
+- [x] Nango-backed OAuth flow support for Gmail, Google Analytics, Notion, and Outlook
 - [x] Token refresh handling via Nango-backed connections
 - [ ] 25+ integrations
 - [ ] Error dashboard with alerts

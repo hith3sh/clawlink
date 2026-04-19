@@ -12,6 +12,7 @@ import "./github";
 import "./notion";
 import "./apollo";
 import "./postiz";
+import "./google-analytics";
 // import "./stripe";
 // etc.
 

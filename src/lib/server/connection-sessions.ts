@@ -236,6 +236,8 @@ function deriveNangoConnectionMetadata(
     readNestedString(metadata, "connection_label") ??
     readNestedString(metadata, "display_name") ??
     readNestedString(metadata, "workspace_name") ??
+    readNestedString(metadata, "property_name") ??
+    readNestedString(metadata, "account_name") ??
     readNestedString(metadata, "email") ??
     safeTrim(details.endUser?.displayName) ??
     safeTrim(details.endUser?.email) ??
@@ -244,12 +246,16 @@ function deriveNangoConnectionMetadata(
   const accountLabel =
     readNestedString(metadata, "account_label") ??
     readNestedString(metadata, "workspace_name") ??
+    readNestedString(metadata, "account_name") ??
+    readNestedString(metadata, "property_name") ??
     readNestedString(metadata, "email") ??
     safeTrim(details.endUser?.displayName) ??
     safeTrim(details.endUser?.email) ??
     connectionLabel;
   const externalAccountId =
     readNestedString(metadata, "external_account_id") ??
+    readNestedString(metadata, "property_id") ??
+    readNestedString(metadata, "account_id") ??
     safeTrim(details.connectionId) ??
     crypto.randomUUID();
   const expiresAt =

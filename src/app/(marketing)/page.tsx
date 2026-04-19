@@ -11,7 +11,7 @@ import {
   OPENCLAW_PLUGIN_PACKAGE,
 } from "@/lib/openclaw-plugin";
 
-const AVATARS = Array.from({ length: 10 }, (_, i) => `/brand/avatars/avatar-${i + 1}.png`);
+const AVATARS = Array.from({ length: 9 }, (_, i) => `/brand/avatars/avatar-${i + 1}.png`);
 
 export default function Home() {
   return (
@@ -81,6 +81,7 @@ export default function Home() {
 
         {/* Copy-and-paste annotation + setup card */}
         <div className="relative mt-16">
+          {/* Desktop annotation */}
           <div className="pointer-events-none absolute -left-2 -top-14 hidden w-[280px] md:block lg:-left-6">
             <p
               className="text-2xl leading-tight text-gray-900"
@@ -98,66 +99,90 @@ export default function Home() {
               className="ml-28 -mt-4 h-28 w-28"
             />
           </div>
+          {/* Mobile hint */}
+          <div className="mb-3 flex items-center gap-2 md:hidden">
+            <p
+              className="text-xl leading-tight text-gray-900"
+              style={{ fontFamily: "var(--font-caveat), 'Comic Sans MS', cursive" }}
+            >
+              copy &amp; paste this onto openclaw chat
+            </p>
+            <Image
+              src="/brand/bento/arrow-big.png"
+              alt=""
+              width={64}
+              height={64}
+              className="h-10 w-10 rotate-90"
+            />
+          </div>
 
-          <div className="mx-auto max-w-3xl rounded-[28px] border border-gray-200 bg-white p-8 shadow-[0_4px_24px_rgba(0,0,0,0.04)] sm:p-10">
+          <div className="mx-auto max-w-3xl rounded-[28px] border border-gray-200 bg-white p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] sm:p-10">
             <div className="-mt-2 mb-4 flex justify-end">
               <CopyPromptButton />
             </div>
-            <p className="text-[15px] leading-[1.9] text-gray-700">
-              ClawLink setup for OpenClaw — third-party plugin, not affiliated with OpenClaw. Verify the package at{" "}
-              <a
-                href={CLAWLINK_NPM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-gray-900 underline"
-              >
-                {OPENCLAW_PLUGIN_PACKAGE}
-              </a>{" "}
-              or{" "}
-              <a
-                href={CLAWLINK_GITHUB_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-900 underline"
-              >
-                github.com/hith3sh/clawlink
-              </a>
-              . Releases are published with an npm provenance attestation in the public Sigstore transparency log — see{" "}
-              <a
-                href={CLAWLINK_VERIFY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-900 underline"
-              >
-                claw-link.dev/verify
-              </a>
-              .{" "}
-              <span className="font-semibold text-gray-900">Step 1</span> — install the plugin:{" "}
-              <span className="font-mono text-gray-900">{OPENCLAW_PLUGIN_INSTALL_COMMAND}</span>.{" "}
-              <span className="font-semibold text-gray-900">Step 2</span> — create an API key at{" "}
-              <a
-                href={CLAWLINK_API_SETTINGS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-gray-900 underline"
-              >
-                claw-link.dev/dashboard/settings?tab=api
-              </a>
-              .{" "}
-              <span className="font-semibold text-gray-900">Step 3</span> — paste the{" "}
-              <span className="font-mono text-gray-900">/clawlink login &lt;key&gt;</span> command from the dashboard into your OpenClaw chat as a standalone message. OpenClaw&apos;s gateway routes slash commands directly to the ClawLink plugin handler (fast path bypasses the model), so the AI never sees the key. It&apos;s stored locally in{" "}
-              <span className="font-mono text-gray-900">~/.openclaw/openclaw.json</span> and only sent to{" "}
-              <span className="font-mono text-gray-900">claw-link.dev</span>. Docs:{" "}
-              <a
-                href={CLAWLINK_OPENCLAW_DOCS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-900 underline"
-              >
-                docs.claw-link.dev/openclaw
-              </a>
-              .
-            </p>
+            <div className="space-y-4 text-[15px] leading-[1.9] text-gray-700">
+              <p>
+                ClawLink setup for OpenClaw — third-party plugin, not affiliated with OpenClaw. Verify the package at{" "}
+                <a
+                  href={CLAWLINK_NPM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-gray-900 underline"
+                >
+                  {OPENCLAW_PLUGIN_PACKAGE}
+                </a>{" "}
+                or{" "}
+                <a
+                  href={CLAWLINK_GITHUB_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-900 underline"
+                >
+                  github.com/hith3sh/clawlink
+                </a>
+                . Releases are published with an npm provenance attestation in the public Sigstore transparency log — see{" "}
+                <a
+                  href={CLAWLINK_VERIFY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-900 underline"
+                >
+                  claw-link.dev/verify
+                </a>
+                .
+              </p>
+              <p>
+                <span className="font-semibold text-gray-900">Step 1</span> — install the plugin:{" "}
+                <span className="font-mono text-gray-900">{OPENCLAW_PLUGIN_INSTALL_COMMAND}</span>.
+              </p>
+              <p>
+                <span className="font-semibold text-gray-900">Step 2</span> — create an API key at{" "}
+                <a
+                  href={CLAWLINK_API_SETTINGS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-gray-900 underline"
+                >
+                  claw-link.dev/dashboard/settings?tab=api
+                </a>
+                .
+              </p>
+              <p>
+                <span className="font-semibold text-gray-900">Step 3</span> — paste the{" "}
+                <span className="font-mono text-gray-900">/clawlink login &lt;key&gt;</span> command from the dashboard into your OpenClaw chat as a standalone message. OpenClaw&apos;s gateway routes slash commands directly to the ClawLink plugin handler (fast path bypasses the model), so the AI never sees the key. It&apos;s stored locally in{" "}
+                <span className="font-mono text-gray-900">~/.openclaw/openclaw.json</span> and only sent to{" "}
+                <span className="font-mono text-gray-900">claw-link.dev</span>. Docs:{" "}
+                <a
+                  href={CLAWLINK_OPENCLAW_DOCS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-900 underline"
+                >
+                  docs.claw-link.dev/openclaw
+                </a>
+                .
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -167,7 +192,7 @@ export default function Home() {
         <h2 className="mb-10 text-center text-xl font-semibold text-gray-900 sm:text-2xl">
           claw-link helps openclaw to connect to 3rd party tools with a single click
         </h2>
-        <div className="rounded-[28px] border border-gray-200 bg-white p-8">
+        <div className="rounded-[28px] border border-gray-200 bg-white p-4 sm:p-8">
           <Image
             src="/brand/bento/diagram.png"
             alt="ClawLink connects OpenClaw to third-party tools"
@@ -206,20 +231,16 @@ export default function Home() {
 
       {/* Give access to Your... */}
       <section className="mx-auto max-w-[900px] px-6 pt-16 pb-10 text-center">
-        <h2 className="text-4xl font-bold leading-[1.15] tracking-tight text-gray-900 sm:text-5xl">
-          Give access to Your
-          <br />
-          <span className="text-gray-900">email, calendar, youtube,</span>
-          <br />
-          <span className="bg-gradient-to-b from-gray-400 to-gray-200 bg-clip-text text-transparent">
-            social media , websites,
+        <h2 className="text-3xl font-bold leading-[1.15] tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
+          <span className="block">Give access to Your</span>
+          <span className="block text-gray-900">email, calendar, youtube,</span>
+          <span className="block bg-gradient-to-b from-gray-400 to-gray-200 bg-clip-text text-transparent">
+            social media, websites,
           </span>
-          <br />
-          <span className="bg-gradient-to-b from-gray-300 to-white bg-clip-text text-transparent">payments</span>
+          <span className="block bg-gradient-to-b from-gray-300 to-white bg-clip-text text-transparent">payments</span>
         </h2>
         <p className="mx-auto mt-10 max-w-xl text-base text-gray-500">
           All your content integrated into your personal page.
-          <br />
           No more hiding your content behind links.
         </p>
       </section>
@@ -300,31 +321,51 @@ export default function Home() {
   );
 }
 
+const MOBILE_BENTO_TILES = [
+  { src: "/brand/bento/col2-tile3-think.png", alt: "Think Different" },
+  { src: "/brand/bento/col3-tile1-youtube.png", alt: "YouTube" },
+  { src: "/brand/bento/col1-tile1-175.png", alt: "Buy me a coffee" },
+  { src: "/brand/bento/col3-tile3-link.png", alt: "Link preview" },
+  { src: "/brand/bento/col2-tile4-calendly.png", alt: "Calendly" },
+  { src: "/brand/bento/col3-tile4-map.png", alt: "Map" },
+];
+
 function BentoGrid() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:[grid-template-columns:175fr_390fr_390fr]">
-      {/* Column 1 — narrow */}
-      <div className="flex flex-col gap-4">
-        <BentoTile src="/brand/bento/col1-tile1-175.png" alt="Buy me a coffee" aspect="1/1" />
-        <BentoTile src="/brand/bento/col1-tile2-tall.png" alt="Medium article" aspect="175/389" />
-        <BentoTile src="/brand/bento/col1-tile3-spotify.png" alt="Spotify playlist" aspect="175/389" />
+    <>
+      {/* Mobile: 2-column square grid */}
+      <div className="grid grid-cols-2 gap-3 sm:hidden">
+        {MOBILE_BENTO_TILES.map(({ src, alt }) => (
+          <div key={src} className="aspect-square overflow-hidden rounded-2xl bg-white shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+            <Image src={src} alt={alt} width={400} height={400} className="h-full w-full object-cover" />
+          </div>
+        ))}
       </div>
-      {/* Column 2 — wide */}
-      <div className="flex flex-col gap-4">
-        <BentoTile src="/brand/bento/col2-tile1.png" alt="Widget" aspect="390/175" />
-        <BentoTile src="/brand/bento/col2-tile2.png" alt="App store widget" aspect="390/175" />
-        <BentoTile src="/brand/bento/col2-tile3-think.png" alt="Think Different" aspect="1/1" />
-        <BentoTile src="/brand/bento/col2-tile4-calendly.png" alt="Calendly" aspect="1/1" />
-        <BentoTile src="/brand/bento/col2-tile5-medium.png" alt="Medium photo" aspect="390/200" />
+      {/* Desktop: original 3-column bento */}
+      <div className="hidden sm:grid sm:gap-5 sm:[grid-template-columns:175fr_390fr_390fr]">
+        {/* Column 1 — narrow */}
+        <div className="flex flex-col gap-4 sm:gap-5">
+          <BentoTile src="/brand/bento/col1-tile1-175.png" alt="Buy me a coffee" aspect="1/1" />
+          <BentoTile src="/brand/bento/col1-tile2-tall.png" alt="Medium article" aspect="175/389" />
+          <BentoTile src="/brand/bento/col1-tile3-spotify.png" alt="Spotify playlist" aspect="175/389" />
+        </div>
+        {/* Column 2 — wide */}
+        <div className="flex flex-col gap-4 sm:gap-5">
+          <BentoTile src="/brand/bento/col2-tile1.png" alt="Widget" aspect="390/175" />
+          <BentoTile src="/brand/bento/col2-tile2.png" alt="App store widget" aspect="390/175" />
+          <BentoTile src="/brand/bento/col2-tile3-think.png" alt="Think Different" aspect="1/1" />
+          <BentoTile src="/brand/bento/col2-tile4-calendly.png" alt="Calendly" aspect="1/1" />
+          <BentoTile src="/brand/bento/col2-tile5-medium.png" alt="Medium photo" aspect="390/200" />
+        </div>
+        {/* Column 3 — wide */}
+        <div className="flex flex-col gap-4 sm:gap-5">
+          <BentoTile src="/brand/bento/col3-tile1-youtube.png" alt="YouTube" aspect="1/1" />
+          <BentoTile src="/brand/bento/col3-tile2-github.png" alt="GitHub contributions" aspect="390/174" />
+          <BentoTile src="/brand/bento/col3-tile3-link.png" alt="Link preview" aspect="1/1" />
+          <BentoTile src="/brand/bento/col3-tile4-map.png" alt="Map" aspect="1/1" />
+        </div>
       </div>
-      {/* Column 3 — wide */}
-      <div className="flex flex-col gap-4">
-        <BentoTile src="/brand/bento/col3-tile1-youtube.png" alt="YouTube" aspect="1/1" />
-        <BentoTile src="/brand/bento/col3-tile2-github.png" alt="GitHub contributions" aspect="390/174" />
-        <BentoTile src="/brand/bento/col3-tile3-link.png" alt="Link preview" aspect="1/1" />
-        <BentoTile src="/brand/bento/col3-tile4-map.png" alt="Map" aspect="1/1" />
-      </div>
-    </div>
+    </>
   );
 }
 

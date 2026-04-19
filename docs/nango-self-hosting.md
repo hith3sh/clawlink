@@ -45,10 +45,10 @@ And both deploy targets need the secret:
 
 - `NANGO_SECRET_KEY`
 
-Recommended provider map with Apollo, Postiz, Gmail, Notion, and Outlook:
+Recommended provider map with Apollo, Google Analytics, Postiz, Gmail, Notion, and Outlook:
 
 ```json
-{"apollo":"apollo","gmail":"gmail","notion":"notion","outlook":"outlook","postiz":"postiz"}
+{"apollo":"apollo","gmail":"gmail","google-analytics":"google-analytics","notion":"notion","outlook":"outlook","postiz":"postiz"}
 ```
 
 If your Nango integration ids differ, change the JSON before deploying.

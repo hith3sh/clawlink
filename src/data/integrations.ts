@@ -99,7 +99,6 @@ const textareaField = (
 
 const baseIntegrations: BaseIntegration[] = [
   { name: "Gmail", slug: "gmail", description: "Send, read, and manage emails", category: "Communication", icon: "SiGmail", color: "#EA4335" },
-  { name: "Slack", slug: "slack", description: "Send messages and manage channels", category: "Communication", icon: "SiSlack", color: "#4A154B" },
   { name: "Discord", slug: "discord", description: "Send messages and manage servers", category: "Communication", icon: "SiDiscord", color: "#5865F2" },
   { name: "Microsoft Teams", slug: "microsoft-teams", description: "Chat, meetings, and team collaboration", category: "Communication", icon: "FaMicrosoft", color: "#6264A7" },
   { name: "Outlook", slug: "outlook", description: "Read mail, manage calendar, and browse contacts", category: "Communication", icon: "PiMicrosoftOutlookLogo", color: "#0078D4" },
@@ -158,6 +157,7 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "Firebase", slug: "firebase", description: "Manage Firestore, Auth, and storage", category: "Storage & Databases", icon: "SiFirebase", color: "#FFCA28" },
   { name: "OpenAI", slug: "openai", description: "Generate text, images, and embeddings", category: "AI & ML", icon: "SiOpenai", color: "#412991" },
   { name: "ElevenLabs", slug: "elevenlabs", description: "Generate speech and voice cloning", category: "AI & ML", icon: "SiElevenlabs", color: "#000000" },
+  { name: "Google Analytics", slug: "google-analytics", description: "Connect Google Analytics properties through hosted Google OAuth", category: "Data & Analytics", icon: "SiGoogleanalytics", color: "#E8710A" },
   { name: "PostHog", slug: "posthog", description: "Track user behavior and feature flags", category: "Data & Analytics", icon: "SiPosthog", color: "#000000" },
 ];
 
@@ -178,7 +178,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   slack: {
     setupMode: "manual",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Create a Slack app, install it to your workspace, and paste the bot token here.",
     credentialFields: [
@@ -361,6 +361,33 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     setupGuide: "Google Drive uses Google OAuth. The dashboard flow is planned but not implemented.",
     credentialFields: [],
     tools: [],
+  },
+  "google-analytics": {
+    setupMode: "oauth",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect Google Analytics through the hosted Nango flow so ClawLink can run GA4 reports and property updates without manual credential setup.",
+    credentialFields: [],
+    tools: [
+      { name: "run_report", description: "Run a customized GA4 core report" },
+      { name: "provision_account_ticket", description: "Request an account-provisioning ticket for Google Analytics Terms acceptance" },
+      { name: "run_realtime_report", description: "Run a customized GA4 realtime report" },
+      { name: "create_audience_export", description: "Create a GA4 audience export for later retrieval" },
+      { name: "get_audience_export", description: "Get metadata and readiness state for a GA4 audience export" },
+      { name: "query_audience_export", description: "Query a completed GA4 audience export with pagination" },
+      { name: "check_compatibility", description: "Validate GA4 dimension and metric compatibility for a core report" },
+      { name: "create_audience_list", description: "Create a GA4 audience list for later retrieval" },
+      { name: "get_audience_list", description: "Get metadata and readiness state for a GA4 audience list" },
+      { name: "query_audience_list", description: "Query a completed GA4 audience list with pagination" },
+      { name: "run_pivot_report", description: "Run a customized GA4 pivot report" },
+      { name: "create_report_task", description: "Create an asynchronous GA4 report task" },
+      { name: "get_report_task", description: "Get metadata and processing state for a GA4 report task" },
+      { name: "query_report_task", description: "Query a completed GA4 report task with pagination" },
+      { name: "run_funnel_report", description: "Run a customized GA4 funnel report" },
+      { name: "update_property", description: "Update an existing GA4 property" },
+      { name: "validate_events", description: "Validate Measurement Protocol events before sending them to production" },
+      { name: "send_events", description: "Send Measurement Protocol events to Google Analytics" },
+    ],
   },
   "google-docs": {
     setupMode: "oauth",

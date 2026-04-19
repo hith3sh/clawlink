@@ -20,6 +20,7 @@
     "@nangohq/frontend": "^0.69.48",
     "@opennextjs/cloudflare": "^1.18.0",
     "@polar-sh/nextjs": "^0.9.5",
+    "@useclawlink/openclaw-plugin": "^0.1.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.7.0",

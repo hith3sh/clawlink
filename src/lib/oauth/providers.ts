@@ -1,6 +1,7 @@
 const OAUTH_PROVIDER_DISPLAY_NAMES: Record<string, string> = {
   apollo: "Apollo",
   gmail: "Gmail",
+  "google-analytics": "Google Analytics",
   notion: "Notion",
   outlook: "Outlook",
   postiz: "Postiz",
