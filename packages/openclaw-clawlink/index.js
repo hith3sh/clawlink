@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 const PLUGIN_ID = "openclaw-plugin";
 const LEGACY_PLUGIN_IDS = ["clawlink"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.9";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.10";
 
 function tokenizeArgs(value) {
   const input = typeof value === "string" ? value.trim() : "";
@@ -142,6 +142,19 @@ function textResult(text, details) {
 }
 
 function buildStartConnectionText(payload) {
+  if (payload?.alreadyConnected) {
+    const summary = {
+      integration: payload.integration,
+      connection: payload.connection ?? null,
+    };
+
+    return [
+      `${payload.integration} is already connected through ClawLink. No new connection needed — use clawlink_list_tools and clawlink_call_tool to act on it.`,
+      "",
+      stringifyPayload(summary),
+    ].join("\n");
+  }
+
   const summary = {
     integration: payload.integration,
     sessionToken: payload.sessionToken,
@@ -443,12 +456,15 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_start_connection",
-      description: "Start a hosted connection session to connect a new external app or service through ClawLink. Use this when the user wants to set up an app that is not yet connected.",
+      description: "Start (or reuse) a ClawLink connection to an external app. If the user already has an active connection for this integration, the response will be `alreadyConnected: true` and no new OAuth flow is needed — just proceed with clawlink_list_tools / clawlink_call_tool. Otherwise a hosted setup URL is returned for the user to authenticate.",
       parameters: Type.Object({
         integration: Type.String({
           description: "Integration slug to connect, for example slack, github, or notion.",
           minLength: 1,
         }),
+        forceNew: Type.Optional(Type.Boolean({
+          description: "Set to true only if the user explicitly wants to add an additional connection alongside an existing one. Defaults to false, which reuses the existing active connection when present.",
+        })),
       }),
       async execute(_id, params) {
         const integration = isNonEmptyString(params.integration) ? params.integration.trim() : "";
@@ -459,7 +475,10 @@ const clawlinkPlugin = {
 
         const payload = await callClawLink(api, "/api/connect/start", {
           method: "POST",
-          body: { integration },
+          body: {
+            integration,
+            reuseIfConnected: params.forceNew !== true,
+          },
         });
 
         return textResult(buildStartConnectionText(payload), payload);

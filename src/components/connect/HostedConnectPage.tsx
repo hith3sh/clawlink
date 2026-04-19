@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertCircle, CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
 
 import type { Integration } from "@/data/integrations";
@@ -40,7 +40,9 @@ export default function HostedConnectPage({
   const [status, setStatus] = useState(session.status);
   const [error, setError] = useState<string | null>(session.errorMessage);
   const [info, setInfo] = useState<string | null>(null);
+  const [nangoClosed, setNangoClosed] = useState(false);
   const connectUiRef = useRef<{ close: () => void } | null>(null);
+  const autoOpenedRef = useRef(false);
 
   useEffect(() => {
     if (status !== "awaiting_user_action") {
@@ -97,6 +99,14 @@ export default function HostedConnectPage({
     };
   }, []);
 
+  useEffect(() => {
+    if (status !== "connected") return;
+    const timer = window.setTimeout(() => {
+      window.close();
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [status]);
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
@@ -127,10 +137,11 @@ export default function HostedConnectPage({
     }
   }
 
-  async function handleStartOAuth() {
+  const handleStartOAuth = useCallback(async () => {
     setStartingOAuth(true);
     setError(null);
     setInfo(null);
+    setNangoClosed(false);
 
     try {
       const response = await fetch(`/api/connect/sessions/${session.token}/nango`, {
@@ -164,7 +175,12 @@ export default function HostedConnectPage({
             }).catch(() => null);
           }
 
+          if (event.type === "close") {
+            setNangoClosed(true);
+          }
+
           if (event.type === "error") {
+            setNangoClosed(true);
             setError(event.payload.errorMessage);
           }
         },
@@ -178,13 +194,32 @@ export default function HostedConnectPage({
     } finally {
       setStartingOAuth(false);
     }
-  }
+  }, [integration.name, session.token]);
 
   const showNangoOAuth =
     integration.setupMode === "oauth" &&
     integration.dashboardStatus === "available" &&
     nango.enabled &&
     Boolean(nango.baseUrl && nango.apiUrl && nango.providerConfigKey);
+
+  useEffect(() => {
+    if (!showNangoOAuth) return;
+    if (status !== "awaiting_user_action") return;
+    if (autoOpenedRef.current) return;
+    autoOpenedRef.current = true;
+    void handleStartOAuth();
+  }, [showNangoOAuth, status, handleStartOAuth]);
+
+  const hideCardForNango =
+    showNangoOAuth &&
+    status === "awaiting_user_action" &&
+    !nangoClosed &&
+    !error;
+
+  if (hideCardForNango) {
+    return <div className="min-h-screen bg-white" />;
+  }
+
   const showUnavailableOAuth =
     integration.setupMode === "oauth" &&
     integration.dashboardStatus === "available" &&
@@ -239,19 +274,21 @@ export default function HostedConnectPage({
           </div>
         ) : showNangoOAuth ? (
           <div className="rounded-3xl border border-gray-200 bg-gray-50 p-7">
-            <p className="text-xl font-semibold text-gray-900">Continue with {integration.name}</p>
-            <p className="mt-2 text-base leading-7 text-gray-600">
-              This opens the hosted approval flow so you can connect {integration.name} and come right back here.
-            </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-3 text-gray-700">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <p className="text-base leading-7">
+                Opening {integration.name}. If nothing happens, reopen the window below.
+              </p>
+            </div>
+            <div className="mt-5">
               <button
                 type="button"
                 onClick={() => void handleStartOAuth()}
                 disabled={startingOAuth}
-                className="inline-flex items-center gap-2 rounded-2xl bg-gray-900 px-6 py-4 text-base font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {startingOAuth ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                Continue with {integration.name}
+                Reopen {integration.name} window
               </button>
             </div>
           </div>

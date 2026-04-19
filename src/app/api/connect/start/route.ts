@@ -16,8 +16,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const payload = (await request.json().catch(() => ({}))) as { integration?: string };
+    const payload = (await request.json().catch(() => ({}))) as {
+      integration?: string;
+      reuseIfConnected?: boolean;
+    };
     const integrationSlug = payload.integration?.trim();
+    const reuseIfConnected = payload.reuseIfConnected === true;
 
     if (!integrationSlug) {
       return NextResponse.json({ error: "Integration is required" }, { status: 400 });
@@ -58,6 +62,26 @@ export async function POST(request: NextRequest) {
     const defaultConnection = existingSession
       ? existingSession.connection
       : await getIntegrationConnectionForUserId(db, actor.user.id, integration.slug);
+
+    if (
+      reuseIfConnected &&
+      defaultConnection &&
+      defaultConnection.authState === "active"
+    ) {
+      return NextResponse.json({
+        alreadyConnected: true,
+        integration: integration.slug,
+        connection: {
+          id: defaultConnection.id,
+          isDefault: defaultConnection.isDefault,
+          authState: defaultConnection.authState,
+          connectionLabel: defaultConnection.connectionLabel,
+          accountLabel: defaultConnection.accountLabel,
+          expiresAt: defaultConnection.expiresAt ?? null,
+        },
+      });
+    }
+
     const reconnectConnectionId =
       integration.setupMode === "oauth" &&
       defaultConnection?.authBackend === "nango" &&

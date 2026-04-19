@@ -2,7 +2,7 @@
   "id": "openclaw-plugin",
   "name": "ClawLink",
   "description": "Third-party integration hub for OpenClaw. Connect Notion, Gmail, Slack, GitHub, Apollo, OneDrive, and other SaaS apps via hosted OAuth, and call their tools from OpenClaw. Not affiliated with OpenClaw.",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "author": "ClawLink (hith3sh) <hithesh@taxxa.ai>",
   "homepage": "https://claw-link.dev",
   "repository": "https://github.com/hith3sh/clawlink",
