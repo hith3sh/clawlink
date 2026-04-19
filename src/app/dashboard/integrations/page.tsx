@@ -5,7 +5,7 @@ import { createElement, useCallback, useDeferredValue, useEffect, useMemo, useSt
 import { useUser } from "@clerk/nextjs";
 import { Check, Copy, Loader2, Plus, Search, Trash2 } from "lucide-react";
 
-import { OAuthConnectDialog } from "@/components/dashboard/OAuthConnectDialog";
+import { useOAuthConnect } from "@/components/dashboard/useOAuthConnect";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -108,6 +108,28 @@ function getStatusLabel(status: ConnectionStatus): string {
   }
 
   return "Active";
+}
+
+function OAuthConnectButton({
+  integration,
+  onConnected,
+}: {
+  integration: Integration;
+  onConnected: () => void;
+}) {
+  const { start, starting } = useOAuthConnect(integration, onConnected);
+
+  return (
+    <Button
+      variant="outline"
+      className="rounded-full px-4"
+      onClick={() => start()}
+      disabled={starting}
+    >
+      {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+      Connect
+    </Button>
+  );
 }
 
 function IntegrationMark({ integration }: { integration: Integration }) {
@@ -602,14 +624,12 @@ export default function IntegrationsPage() {
                     </div>
 
                     {integration.setupMode === "oauth" ? (
-                      <OAuthConnectDialog
+                      <OAuthConnectButton
                         integration={integration}
                         onConnected={() => {
                           setSheetOpen(false);
                           void loadConnections();
                         }}
-                        triggerLabel="Connect"
-                        triggerClassName="rounded-full px-4"
                       />
                     ) : (
                       <Button

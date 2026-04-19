@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { createElement, useEffect, useState } from "react";
-import { CheckCircle2, Plus } from "lucide-react";
+import { CheckCircle2, Loader2, Plus } from "lucide-react";
 
 import type { Integration } from "@/data/integrations";
 import { getIntegrationIcon } from "@/lib/integration-icons";
@@ -10,7 +10,7 @@ import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { OAuthConnectDialog } from "@/components/dashboard/OAuthConnectDialog";
+import { useOAuthConnect } from "@/components/dashboard/useOAuthConnect";
 
 interface IntegrationCardProps {
   integration: Integration;
@@ -24,6 +24,7 @@ export function IntegrationCard({
   className,
 }: IntegrationCardProps) {
   const [connected, setConnected] = useState(isConnected);
+  const { start, starting } = useOAuthConnect(integration, () => setConnected(true));
 
   useEffect(() => {
     setConnected(isConnected);
@@ -66,13 +67,16 @@ export function IntegrationCard({
               Coming soon
             </span>
           ) : integration.setupMode === "oauth" && integration.dashboardStatus === "available" ? (
-            <OAuthConnectDialog
-              integration={integration}
-              onConnected={() => setConnected(true)}
-              triggerLabel="Connect"
-              triggerIcon={<Plus className="h-3.5 w-3.5" />}
-              triggerClassName="h-9 rounded-full border-black/10 bg-white px-4 text-sm font-medium text-foreground shadow-none hover:bg-black/[0.03]"
-            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 rounded-full border-black/10 bg-white px-4 text-sm font-medium text-foreground shadow-none hover:bg-black/[0.03]"
+              onClick={() => start()}
+              disabled={starting}
+            >
+              {starting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+              Connect
+            </Button>
           ) : (
             <Button
               variant="outline"

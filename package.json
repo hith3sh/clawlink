@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
+    "dev:turbo": "next dev --turbopack",
     "build": "next build",
     "build:web": "opennextjs-cloudflare build --config wrangler.toml",
     "deploy:web": "env $(grep -v '^#' .env.production | grep '=' | xargs) opennextjs-cloudflare build --config wrangler.toml && wrangler deploy",

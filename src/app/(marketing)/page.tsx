@@ -19,40 +19,44 @@ export default function Home() {
       {/* Hero */}
       <section className="relative mx-auto max-w-[1200px] px-6 pt-6 pb-20">
         {/* Left sticker: Notion widget with handwritten label */}
-        <div className="pointer-events-none absolute left-2 top-6 hidden w-[200px] lg:block">
-          <Image
-            src="/brand/bento/widget-notion.png"
-            alt=""
-            width={183}
-            height={183}
-            className="drop-shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
-          />
-          <p
-            className="mt-1 text-center text-xl leading-tight text-gray-900"
-            style={{ fontFamily: "var(--font-caveat), 'Comic Sans MS', cursive" }}
-          >
-            check my
-            <br />
-            notion pages
-          </p>
+        <div className="pointer-events-none absolute left-2 top-6 hidden w-[183px] lg:block">
+          <div className="relative">
+            <Image
+              src="/brand/bento/widget-notion.png"
+              alt=""
+              width={183}
+              height={183}
+              className="drop-shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+            />
+            <p
+              className="absolute inset-x-0 bottom-4 text-center text-xl leading-tight text-gray-900"
+              style={{ fontFamily: "var(--font-caveat), 'Comic Sans MS', cursive" }}
+            >
+              check my
+              <br />
+              notion pages
+            </p>
+          </div>
         </div>
         {/* Right sticker: Docs widget with handwritten label */}
-        <div className="pointer-events-none absolute right-2 top-6 hidden w-[200px] lg:block">
-          <Image
-            src="/brand/bento/widget-docs.png"
-            alt=""
-            width={183}
-            height={183}
-            className="ml-auto drop-shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
-          />
-          <p
-            className="mt-1 text-center text-xl leading-tight text-gray-900"
-            style={{ fontFamily: "var(--font-caveat), 'Comic Sans MS', cursive" }}
-          >
-            connect to
-            <br />
-            google docs
-          </p>
+        <div className="pointer-events-none absolute right-2 top-6 hidden w-[183px] lg:block">
+          <div className="relative">
+            <Image
+              src="/brand/bento/widget-docs.png"
+              alt=""
+              width={183}
+              height={183}
+              className="drop-shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+            />
+            <p
+              className="absolute inset-x-0 bottom-4 text-center text-xl leading-tight text-gray-900"
+              style={{ fontFamily: "var(--font-caveat), 'Comic Sans MS', cursive" }}
+            >
+              connect to
+              <br />
+              google docs
+            </p>
+          </div>
         </div>
 
         {/* Main heading */}
@@ -239,19 +243,56 @@ export default function Home() {
       </section>
 
       {/* Pricing */}
-      <section className="mx-auto max-w-[900px] px-6 py-16 text-center">
-        <h2 className="mb-12 text-3xl font-bold text-gray-900">Pricing</h2>
-        <div className="grid grid-cols-1 justify-items-center gap-8 sm:grid-cols-2">
+      <section className="relative mx-auto max-w-[1040px] px-6 py-24">
+        {/* Warm atmospheric glow behind the highlighted card */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-24 -z-10 mx-auto h-[420px] max-w-[720px]"
+          style={{
+            background:
+              "radial-gradient(60% 60% at 75% 40%, rgba(232,145,90,0.18) 0%, rgba(232,145,90,0) 70%)",
+          }}
+        />
+        <div className="mb-14 flex flex-col items-center text-center">
+          <span
+            className="text-sm uppercase tracking-[0.28em] text-gray-500"
+            style={{ fontFeatureSettings: '"ss01"' }}
+          >
+            Pricing
+          </span>
+          <h2 className="mt-3 max-w-xl text-4xl font-bold leading-tight tracking-tight text-gray-900 sm:text-[44px]">
+            Simple pricing. No surprises.
+          </h2>
+          <p className="mt-4 max-w-md text-base text-gray-500">
+            Start free with your first app. Upgrade when you&apos;re ready for the full set.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2">
           <PricingCard
+            eyebrow="Starter"
             title="Free"
             price="0"
-            features={["1 integration only"]}
+            tagline="Try your first integration"
+            features={["1 integration included", "Hosted OAuth connect flow", "Community support"]}
             footnote="No card required."
+            ctaLabel="Start free"
+            ctaHref="/sign-up"
           />
           <PricingCard
+            eyebrow="Most popular"
             title="Cheap"
             price="5"
-            features={["All integrations", "Email support"]}
+            tagline="All 40+ integrations unlocked"
+            features={[
+              "Every integration, unlimited",
+              "Priority email support",
+              "New integrations as they ship",
+            ]}
+            footnote="Cancel anytime."
+            ctaLabel="Get Cheap"
+            ctaHref="/sign-up"
+            highlighted
           />
         </div>
       </section>
@@ -299,38 +340,116 @@ function BentoTile({ src, alt, aspect }: { src: string; alt: string; aspect: str
 }
 
 function PricingCard({
+  eyebrow,
   title,
   price,
+  tagline,
   features,
   footnote,
+  ctaLabel,
+  ctaHref,
+  highlighted = false,
 }: {
+  eyebrow: string;
   title: string;
   price: string;
+  tagline: string;
   features: string[];
   footnote?: string;
+  ctaLabel: string;
+  ctaHref: string;
+  highlighted?: boolean;
 }) {
+  const brandOrange = "#e8915a";
+
+  const containerClass = highlighted
+    ? "relative flex w-full flex-col rounded-[28px] bg-white p-8 ring-1 ring-[#e8915a]/40 shadow-[0_24px_60px_-20px_rgba(232,145,90,0.35),0_6px_20px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_34px_70px_-20px_rgba(232,145,90,0.4),0_8px_24px_rgba(15,23,42,0.05)] sm:p-10"
+    : "relative flex w-full flex-col rounded-[28px] bg-white p-8 ring-1 ring-gray-200/80 shadow-[0_2px_4px_rgba(15,23,42,0.02),0_12px_28px_-10px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_14px_rgba(15,23,42,0.04),0_22px_44px_-14px_rgba(15,23,42,0.1)] sm:p-10";
+
   return (
-    <div className="flex h-[518px] w-full max-w-[364px] flex-col items-center rounded-3xl bg-white px-10 pt-14 pb-10 shadow-[0_8px_40px_rgba(0,0,0,0.06)] ring-1 ring-gray-100">
-      <h3 className="text-3xl font-bold text-gray-900">{title}</h3>
-      <div className="mt-8 flex items-baseline gap-2">
-        <span className="text-5xl font-bold text-gray-900">${price}</span>
-        <span className="text-xl text-gray-500">/ mo</span>
+    <div className={containerClass}>
+      {highlighted ? (
+        <div className="absolute -top-3 left-8 inline-flex items-center gap-1.5 rounded-full bg-[#e8915a] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white shadow-[0_6px_16px_rgba(232,145,90,0.35)]">
+          <span className="h-1.5 w-1.5 rounded-full bg-white" />
+          {eyebrow}
+        </div>
+      ) : (
+        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400">
+          {eyebrow}
+        </span>
+      )}
+
+      <h3
+        className={`text-2xl font-semibold tracking-tight ${highlighted ? "mt-2" : "mt-3"} text-gray-900`}
+      >
+        {title}
+      </h3>
+      <p className="mt-2 text-sm text-gray-500">{tagline}</p>
+
+      <div className="mt-6 flex items-baseline gap-2">
+        <span className="text-[22px] font-medium text-gray-400">$</span>
+        <span className="text-6xl font-bold leading-none tracking-tight text-gray-900">
+          {price}
+        </span>
+        <span className="pb-1 text-sm text-gray-500">/ month</span>
       </div>
-      <ul className="mt-10 w-full divide-y divide-gray-200 border-y border-gray-200">
+
+      <div className="mt-8 h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+
+      <ul className="mt-6 space-y-3.5">
         {features.map((f) => (
-          <li key={f} className="py-4 text-center text-lg text-gray-800">
-            {f}
+          <li key={f} className="flex items-start gap-3 text-[15px] leading-6 text-gray-700">
+            <span
+              aria-hidden="true"
+              className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+              style={{
+                backgroundColor: highlighted ? `${brandOrange}1f` : "#f3f4f6",
+                color: highlighted ? brandOrange : "#111827",
+              }}
+            >
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path
+                  d="M2.5 6.3L5 8.8L9.5 3.2"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span>{f}</span>
           </li>
         ))}
       </ul>
-      <div className="mt-auto flex w-full flex-col items-center gap-4">
-        {footnote && <p className="text-sm font-semibold text-gray-900">{footnote}</p>}
+
+      <div className="mt-10 flex flex-col gap-3 pt-2">
         <Link
-          href="/sign-up"
-          className="inline-flex w-full items-center justify-center rounded-xl bg-gray-900 px-6 py-4 text-base font-semibold text-white transition hover:bg-gray-800"
+          href={ctaHref}
+          className={
+            highlighted
+              ? "inline-flex w-full items-center justify-center rounded-2xl bg-[#e8915a] px-6 py-3.5 text-[15px] font-semibold text-white shadow-[0_10px_24px_-6px_rgba(232,145,90,0.5)] transition hover:bg-[#dc804a]"
+              : "inline-flex w-full items-center justify-center rounded-2xl bg-gray-900 px-6 py-3.5 text-[15px] font-semibold text-white transition hover:bg-gray-800"
+          }
         >
-          Get Started Now
+          {ctaLabel}
+          <svg
+            className="ml-2 h-4 w-4 transition group-hover:translate-x-0.5"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M3.5 8h9m0 0L8 3.5M12.5 8L8 12.5"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </Link>
+        {footnote ? (
+          <p className="text-center text-xs text-gray-400">{footnote}</p>
+        ) : null}
       </div>
     </div>
   );
