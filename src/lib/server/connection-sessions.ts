@@ -277,63 +277,72 @@ async function reconcileNangoSessionIfNeeded(
     return session;
   }
 
-  const matches = await listNangoConnectionsForSession({
-    sessionId: session.id,
-    userId: session.user_id,
-    integrationSlug: session.integration,
-  });
-  const latest = matches[0];
+  try {
+    const matches = await listNangoConnectionsForSession({
+      sessionId: session.id,
+      userId: session.user_id,
+      integrationSlug: session.integration,
+    });
+    const latest = matches[0];
 
-  if (!latest) {
+    if (!latest) {
+      return session;
+    }
+
+    const details = await getNangoConnection(
+      latest.providerConfigKey,
+      latest.connectionId,
+      { forceRefresh: false, includeRefreshToken: false },
+    );
+    const metadata = deriveNangoConnectionMetadata(session.integration, details);
+    const connection = await saveNangoIntegrationConnectionForUserId(
+      db,
+      session.user_id,
+      session.integration,
+      {
+        mode: session.connection_id ? "upsert_default" : "create_or_match_account",
+        connectionId: session.connection_id ?? undefined,
+        setAsDefault: true,
+        providerConfigKey: details.providerConfigKey,
+        nangoConnectionId: details.connectionId,
+        connectionLabel: metadata.connectionLabel,
+        accountLabel: metadata.accountLabel,
+        externalAccountId: metadata.externalAccountId,
+        expiresAt: metadata.expiresAt,
+      },
+    );
+
+    await db
+      .prepare(
+        `
+          UPDATE connection_sessions
+          SET connection_id = ?,
+              status = 'connected',
+              error_message = NULL,
+              completed_at = datetime('now'),
+              updated_at = datetime('now')
+          WHERE id = ?
+        `,
+      )
+      .bind(connection.id, session.id)
+      .run();
+
+    return {
+      ...session,
+      connection_id: connection.id,
+      status: "connected",
+      error_message: null,
+      completed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("Failed to reconcile Nango session:", {
+      sessionId: session.id,
+      integration: session.integration,
+      error,
+    });
     return session;
   }
-
-  const details = await getNangoConnection(
-    latest.providerConfigKey,
-    latest.connectionId,
-    { forceRefresh: false, includeRefreshToken: false },
-  );
-  const metadata = deriveNangoConnectionMetadata(session.integration, details);
-  const connection = await saveNangoIntegrationConnectionForUserId(
-    db,
-    session.user_id,
-    session.integration,
-    {
-      mode: session.connection_id ? "upsert_default" : "create_or_match_account",
-      connectionId: session.connection_id ?? undefined,
-      setAsDefault: true,
-      providerConfigKey: details.providerConfigKey,
-      nangoConnectionId: details.connectionId,
-      connectionLabel: metadata.connectionLabel,
-      accountLabel: metadata.accountLabel,
-      externalAccountId: metadata.externalAccountId,
-      expiresAt: metadata.expiresAt,
-    },
-  );
-
-  await db
-    .prepare(
-      `
-        UPDATE connection_sessions
-        SET connection_id = ?,
-            status = 'connected',
-            error_message = NULL,
-            completed_at = datetime('now'),
-            updated_at = datetime('now')
-        WHERE id = ?
-      `,
-    )
-    .bind(connection.id, session.id)
-    .run();
-
-  return {
-    ...session,
-    connection_id: connection.id,
-    status: "connected",
-    error_message: null,
-    completed_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
 }
 
 export async function createConnectionSession(

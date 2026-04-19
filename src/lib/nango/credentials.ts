@@ -138,6 +138,10 @@ export function mapNangoConnectionToClawLinkCredentials(
     if (botId) {
       result.botId = botId;
     }
+
+    if (accessToken) {
+      result.integrationToken = accessToken;
+    }
   } else if (integrationSlug === "apollo") {
     const workspaceName = pickString(
       raw.organization_name,
