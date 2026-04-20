@@ -362,11 +362,17 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   "google-sheets": {
     setupMode: "oauth",
-    dashboardStatus: "coming-soon",
-    runtimeStatus: "planned",
-    setupGuide: "Google Sheets uses Google OAuth. The connect flow will land alongside the broader Google setup.",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect Google Sheets through the hosted Google OAuth flow to create spreadsheets, inspect sheet tabs, read ranges, append rows, and update cells without manual credential setup.",
     credentialFields: [],
-    tools: [],
+    tools: [
+      { name: "create_spreadsheet", description: "Create a new Google Sheets spreadsheet" },
+      { name: "get_spreadsheet", description: "Get Google Sheets spreadsheet metadata and sheet list" },
+      { name: "read_sheet", description: "Read values from a Google Sheets range" },
+      { name: "append_rows", description: "Append rows to a Google Sheets worksheet range" },
+      { name: "update_range", description: "Write values into a Google Sheets range" },
+    ],
   },
   "google-calendar": {
     setupMode: "oauth",

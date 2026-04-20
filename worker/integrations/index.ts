@@ -16,6 +16,7 @@ import "./google-analytics";
 import "./google-search-console";
 import "./google-drive";
 import "./google-docs";
+import "./google-sheets";
 import "./motion";
 import "./twilio";
 // import "./stripe";
