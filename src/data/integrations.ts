@@ -376,11 +376,19 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   "google-calendar": {
     setupMode: "oauth",
-    dashboardStatus: "coming-soon",
-    runtimeStatus: "planned",
-    setupGuide: "Google Calendar uses Google OAuth. The dashboard flow is planned but not implemented.",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect Google Calendar through the hosted Google OAuth flow to list calendars, inspect events, and create, update, or delete calendar events without manual credential setup.",
     credentialFields: [],
-    tools: [],
+    tools: [
+      { name: "list_calendars", description: "List Google Calendars available to the connected account" },
+      { name: "get_calendar", description: "Get Google Calendar metadata by calendar id" },
+      { name: "list_events", description: "List events from a Google Calendar within an optional time window" },
+      { name: "get_event", description: "Get a Google Calendar event by event id" },
+      { name: "create_event", description: "Create a Google Calendar event" },
+      { name: "update_event", description: "Update fields on an existing Google Calendar event" },
+      { name: "delete_event", description: "Delete a Google Calendar event" },
+    ],
   },
   "google-drive": {
     setupMode: "oauth",
