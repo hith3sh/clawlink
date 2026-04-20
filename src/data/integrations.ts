@@ -446,11 +446,17 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   "google-docs": {
     setupMode: "oauth",
-    dashboardStatus: "coming-soon",
-    runtimeStatus: "planned",
-    setupGuide: "Google Docs uses Google OAuth. The dashboard flow is planned but not implemented.",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect Google Docs through the hosted Google OAuth flow to create documents, read document text, replace placeholders, and append content without manual credential setup.",
     credentialFields: [],
-    tools: [],
+    tools: [
+      { name: "create_document", description: "Create a new Google Docs document" },
+      { name: "get_document", description: "Get Google Docs document metadata and structure" },
+      { name: "read_document", description: "Read a Google Docs document as plain text" },
+      { name: "replace_text", description: "Replace matching text everywhere in a Google Docs document" },
+      { name: "append_text", description: "Append plain text to the end of a Google Docs document" },
+    ],
   },
   "google-slides": {
     setupMode: "oauth",
