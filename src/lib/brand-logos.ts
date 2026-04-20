@@ -1,4 +1,4 @@
-// Slugs that have a colored brand SVG stored at /public/icons/{slug}.svg.
+// Slugs that have a colored brand logo stored at /public/icons/{slug}.{ext}.
 // Anything not in this set falls back to the monochromatic Simple Icons
 // rendering defined in integration-icons.ts.
 const BRAND_LOGO_SLUGS = new Set<string>([
@@ -27,12 +27,16 @@ const BRAND_LOGO_SLUGS = new Set<string>([
   "stripe",
   "paypal",
   "google-analytics",
+  "google-search-console",
   "aws-s3",
   "supabase",
   "firebase",
   "shopify",
   "openai",
   "replicate",
+  "outlook",
+  "motion",
+  "postiz",
 ]);
 
 // Brands whose logo is monochrome and therefore needs a theme-specific variant
@@ -47,6 +51,15 @@ const THEMED_BRAND_SLUGS = new Set<string>([
   "replicate",
 ]);
 
+// Brands that use a raster format (png/jpg) instead of SVG.
+const RASTER_SLUGS: Record<string, string> = {
+  "google-search-console": ".png",
+  "google-analytics": ".png",
+  outlook: ".png",
+  motion: ".jpg",
+  postiz: ".png",
+};
+
 export type BrandLogoTheme = "light" | "dark";
 
 export function hasBrandLogo(slug: string): boolean {
@@ -59,6 +72,9 @@ export function getBrandLogoSrc(
 ): string {
   if (THEMED_BRAND_SLUGS.has(slug)) {
     return `/icons/${slug}-${theme}.svg`;
+  }
+  if (slug in RASTER_SLUGS) {
+    return `/icons/${slug}${RASTER_SLUGS[slug]}`;
   }
   return `/icons/${slug}.svg`;
 }
