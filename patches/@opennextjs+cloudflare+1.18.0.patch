@@ -1,0 +1,12 @@
+diff --git a/node_modules/@opennextjs/cloudflare/dist/cli/build/bundle-server.js b/node_modules/@opennextjs/cloudflare/dist/cli/build/bundle-server.js
+index e57f6b8..bf4eedf 100644
+--- a/node_modules/@opennextjs/cloudflare/dist/cli/build/bundle-server.js
++++ b/node_modules/@opennextjs/cloudflare/dist/cli/build/bundle-server.js
+@@ -71,6 +71,7 @@ export async function bundleServer(buildOpts, projectOpts) {
+         minifySyntax: projectOpts.minify && !debug,
+         legalComments: "none",
+         metafile: true,
++        logOverride: { "duplicate-object-key": "silent" },
+         // Next traces files using the default conditions from `nft` (`node`, `require`, `import` and `default`)
+         //
+         // Because we use the `node` platform for this build, the "module" condition is used when no conditions are defined.
