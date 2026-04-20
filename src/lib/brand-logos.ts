@@ -54,8 +54,6 @@ const THEMED_BRAND_SLUGS = new Set<string>([
 // Brands that use a raster format (png/jpg) instead of SVG.
 const RASTER_SLUGS: Record<string, string> = {
   "google-search-console": ".png",
-  "google-analytics": ".png",
-  outlook: ".png",
   motion: ".jpg",
   postiz: ".png",
 };
