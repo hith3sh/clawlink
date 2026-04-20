@@ -166,8 +166,8 @@ const baseIntegrations: BaseIntegration[] = [
 const integrationMetadata: Record<string, IntegrationMetadata> = {
   gmail: {
     setupMode: "oauth",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide:
       "Connect Gmail through the hosted Nango flow to read recent messages, create drafts, and send email from your Google account.",
     credentialFields: [],
@@ -392,8 +392,8 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   "google-drive": {
     setupMode: "oauth",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect Google Drive through the hosted Google OAuth flow so ClawLink can search Drive, inspect files, create folders, upload files, and manage file metadata without manual credential setup.",
     credentialFields: [],
     tools: [
