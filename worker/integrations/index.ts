@@ -15,6 +15,7 @@ import "./postiz";
 import "./google-analytics";
 import "./google-search-console";
 import "./motion";
+import "./twilio";
 // import "./stripe";
 // etc.
 
