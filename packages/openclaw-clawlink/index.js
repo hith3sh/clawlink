@@ -524,7 +524,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_list_tools",
-      description: "List all available tools for the user's connected external apps and services. Call this first whenever the user wants to interact with any external app — the tool list is dynamic and reflects what is currently connected.",
+      description: "List all available tools for the user's connected external apps and services. Call this first whenever the user wants to interact with any external app. The tool list is dynamic and is the source of truth for what the connected integrations can do right now.",
       parameters: Type.Object({}),
       async execute() {
         const payload = await callClawLink(api, "/api/tools");
@@ -534,7 +534,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_describe_tool",
-      description: "Get the input schema, safety guidance, examples, and follow-up hints for a ClawLink tool before calling it.",
+      description: "Get the input schema, safety guidance, examples, and follow-up hints for a ClawLink tool before calling it. Use this to verify how a specific live tool should be used instead of inferring provider behavior from memory.",
       parameters: Type.Object({
         tool: Type.String({
           description: "ClawLink tool name, for example notion_search or slack_send_message.",
@@ -555,7 +555,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_call_tool",
-      description: "Execute an action on a connected external app or service through ClawLink. Use clawlink_list_tools to discover available tools first, then clawlink_describe_tool for usage guidance.",
+      description: "Execute an action on a connected external app or service through ClawLink. Use clawlink_list_tools to discover the live tool catalog first, then clawlink_describe_tool for usage guidance. Do not claim a capability is missing until the live tool list has been checked.",
       parameters: Type.Object({
         tool: Type.String({
           description: "ClawLink tool name, for example notion_search or github_list_issues.",

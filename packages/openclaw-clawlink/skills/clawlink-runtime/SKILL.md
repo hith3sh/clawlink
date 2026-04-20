@@ -25,18 +25,32 @@ Do not use the browser, install a separate skill, or ask the user for a per-app 
 ## Discovery workflow (always start here)
 
 1. Call `clawlink_list_tools` to see what tools are available for the user's connected integrations.
-2. If a matching tool exists, proceed to the execution workflow.
-3. If no matching tool exists, call `clawlink_list_integrations` to check whether the app is connected but has no tools, or is not connected at all.
-4. If the app is not connected, switch to the hosted connection flow below.
+2. Treat the returned tool list as the source of truth for the current turn. Do not rely on memory, prior examples, or assumptions about what a provider can do.
+3. If the user names or hints at a specific ClawLink tool, verify it against `clawlink_list_tools` instead of contradicting the user from memory.
+4. If a matching tool exists, proceed to the execution workflow.
+5. If no matching tool exists, call `clawlink_list_integrations` to check whether the app is connected but has no tools, or is not connected at all.
+6. If the app is not connected, switch to the hosted connection flow below.
+
+## Capability claims
+
+Before saying any of the following, you must have checked the live ClawLink tool catalog in the current turn:
+
+- "there is no tool for that"
+- "ClawLink does not support that"
+- any provider-specific claim about missing capabilities
+
+If you have not called `clawlink_list_tools` in the current turn, do not make those claims. Call it first.
 
 ## Execution workflow
 
-1. Call `clawlink_describe_tool` before using an unfamiliar tool, before any write, or any time the request is ambiguous.
-2. Use the returned `whenToUse`, `askBefore`, `safeDefaults`, `examples`, and `followups` guidance to shape the request.
-3. Prefer read, list, search, and get operations before writes whenever that reduces ambiguity.
-4. Call `clawlink_call_tool` with the selected tool name and arguments.
-5. If the user has multiple connections for one integration, use the default unless the user asked for a specific account. Pass `connectionId` when needed.
-6. Summarize the result clearly and offer a sensible next step.
+1. If the user asked for a concrete operation and there is an exact matching tool in the catalog, prefer using that exact tool name over substituting a nearby search tool.
+2. Call `clawlink_describe_tool` before using an unfamiliar tool, before any write, or any time the request is ambiguous.
+3. Use the returned `whenToUse`, `askBefore`, `safeDefaults`, `examples`, and `followups` guidance to shape the request.
+4. Prefer read, list, search, and get operations before writes whenever that reduces ambiguity.
+5. Call `clawlink_call_tool` with the selected tool name and arguments.
+6. If the user has multiple connections for one integration, use the default unless the user asked for a specific account. Pass `connectionId` when needed.
+7. If the tool call fails, report the actual error. Do not invent results, and do not restate the failure as a capability gap unless the live tool catalog supports that conclusion.
+8. Summarize the result clearly and offer a sensible next step.
 
 ## Hosted connection workflow
 
@@ -58,8 +72,10 @@ If a ClawLink tool reports that the plugin is not configured, the user has not y
 ## Rules
 
 - Always check ClawLink tools first when the user mentions any external app or service.
+- The live output of `clawlink_list_tools` overrides your prior beliefs about which provider operations exist.
 - Do not use the browser, install standalone skills, or ask for separate per-app API keys for apps that ClawLink supports.
 - Do not hardcode provider-specific behavior when `clawlink_describe_tool` can provide guidance.
+- If a user mentions a specific ClawLink tool name, verify it against `clawlink_list_tools` or `clawlink_describe_tool` instead of dismissing it from memory.
 - Ask for confirmation before destructive actions and before broad or ambiguous writes.
 - If the user request is vague, use a read or search tool first when possible.
 - If no relevant integration is connected, use the hosted connection flow instead of pretending the tool is available.
