@@ -159,6 +159,7 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "OpenAI", slug: "openai", description: "Generate text, images, and embeddings", category: "AI & ML", icon: "SiOpenai", color: "#412991" },
   { name: "ElevenLabs", slug: "elevenlabs", description: "Generate speech and voice cloning", category: "AI & ML", icon: "SiElevenlabs", color: "#000000" },
   { name: "Google Analytics", slug: "google-analytics", description: "Connect Google Analytics properties through hosted Google OAuth", category: "Data & Analytics", icon: "SiGoogleanalytics", color: "#E8710A" },
+  { name: "Google Search Console", slug: "google-search-console", description: "Inspect indexing, sitemaps, and search performance through hosted Google OAuth", category: "Data & Analytics", icon: "TbPlugConnected", color: "#34A853" },
   { name: "PostHog", slug: "posthog", description: "Track user behavior and feature flags", category: "Data & Analytics", icon: "SiPosthog", color: "#000000" },
 ];
 
@@ -388,6 +389,24 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
       { name: "update_property", description: "Update an existing GA4 property" },
       { name: "validate_events", description: "Validate Measurement Protocol events before sending them to production" },
       { name: "send_events", description: "Send Measurement Protocol events to Google Analytics" },
+    ],
+  },
+  "google-search-console": {
+    setupMode: "oauth",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect Google Search Console through the hosted Google OAuth flow to inspect properties, sitemaps, indexing status, and search performance without manual credential setup.",
+    credentialFields: [],
+    tools: [
+      { name: "add_site", description: "Add a Search Console site property" },
+      { name: "delete_site", description: "Delete a Search Console site property" },
+      { name: "get_site", description: "Get a specific Search Console site property" },
+      { name: "list_sites", description: "List Search Console site properties for the connected account" },
+      { name: "get_sitemap", description: "Get metadata for a Search Console sitemap" },
+      { name: "inspect_url", description: "Inspect a URL for Search Console indexing issues and status" },
+      { name: "list_sitemaps", description: "List sitemaps for a Search Console property" },
+      { name: "search_analytics_query", description: "Query Search Console search analytics data" },
+      { name: "submit_sitemap", description: "Submit a sitemap to Search Console" },
     ],
   },
   "google-docs": {
