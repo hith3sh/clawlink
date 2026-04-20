@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <rect width="48" height="48" rx="10" fill="#0078D4"/>
+  <rect x="12" y="14" width="24" height="18" rx="2" fill="white" opacity="0.95"/>
+  <path d="M12 16 L24 26 L36 16" stroke="#0078D4" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="28" y="24" width="12" height="12" rx="2" fill="#0364B8"/>
+  <text x="34" y="33" text-anchor="middle" fill="white" font-size="9" font-weight="700" font-family="system-ui, sans-serif">O</text>
+</svg>

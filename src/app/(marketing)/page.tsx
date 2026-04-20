@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import CopyPromptButton from "@/components/CopyPromptButton";
+import FlowDiagram from "@/components/FlowDiagram";
 import {
   CLAWLINK_API_SETTINGS_URL,
   CLAWLINK_GITHUB_URL,
@@ -18,45 +19,23 @@ export default function Home() {
     <main className="flex-1 bg-white">
       {/* Hero */}
       <section className="relative mx-auto max-w-[1200px] px-6 pt-6 pb-20">
-        {/* Left sticker: Notion widget with handwritten label */}
-        <div className="pointer-events-none absolute left-2 top-6 hidden w-[183px] lg:block">
-          <div className="relative">
-            <Image
-              src="/brand/bento/widget-notion.png"
-              alt=""
-              width={183}
-              height={183}
-              className="drop-shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
-            />
-            <p
-              className="absolute inset-x-0 bottom-4 text-center text-xl leading-tight text-gray-900"
-              style={{ fontFamily: "var(--font-caveat), 'Comic Sans MS', cursive" }}
-            >
-              check my
-              <br />
-              notion pages
-            </p>
-          </div>
+        {/* Left sticker: Notion label */}
+        <div className="pointer-events-none absolute -left-16 top-24 hidden lg:block">
+          <Image
+            src="/brand/bento/widget-notion-label.png"
+            alt="check my notion pages"
+            width={240}
+            height={94}
+          />
         </div>
-        {/* Right sticker: Docs widget with handwritten label */}
-        <div className="pointer-events-none absolute right-2 top-6 hidden w-[183px] lg:block">
-          <div className="relative">
-            <Image
-              src="/brand/bento/widget-docs.png"
-              alt=""
-              width={183}
-              height={183}
-              className="drop-shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
-            />
-            <p
-              className="absolute inset-x-0 bottom-4 text-center text-xl leading-tight text-gray-900"
-              style={{ fontFamily: "var(--font-caveat), 'Comic Sans MS', cursive" }}
-            >
-              connect to
-              <br />
-              google docs
-            </p>
-          </div>
+        {/* Right sticker: Docs label */}
+        <div className="pointer-events-none absolute -right-16 top-24 hidden lg:block">
+          <Image
+            src="/brand/bento/widget-docs-label.png"
+            alt="connect to google docs"
+            width={240}
+            height={94}
+          />
         </div>
 
         {/* Main heading */}
@@ -193,14 +172,7 @@ export default function Home() {
           claw-link helps openclaw to connect to 3rd party tools with a single click
         </h2>
         <div className="rounded-[28px] border border-gray-200 bg-white p-4 sm:p-8">
-          <Image
-            src="/brand/bento/diagram.png"
-            alt="ClawLink connects OpenClaw to third-party tools"
-            width={1160}
-            height={977}
-            className="mx-auto w-full max-w-[900px]"
-            priority
-          />
+          <FlowDiagram />
         </div>
       </section>
 
