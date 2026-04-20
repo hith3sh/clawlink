@@ -54,6 +54,41 @@ function optionalStringArray(value: unknown, fieldName: string): string[] | unde
 class MotionHandler extends BaseIntegration {
   getTools(integrationSlug: string): IntegrationTool[] {
     return [
+      defineTool(integrationSlug, "get_me", {
+        description: "List Motion users for a workspace or team so you can identify the current account and available assignees",
+        inputSchema: {
+          type: "object",
+          properties: {
+            workspaceId: {
+              type: "string",
+              description: "Optional Motion workspace id",
+            },
+            teamId: {
+              type: "string",
+              description: "Optional Motion team id",
+            },
+            cursor: {
+              type: "string",
+              description: "Pagination cursor from a previous response",
+            },
+          },
+        },
+        accessLevel: "read",
+        tags: ["motion", "users", "assignees"],
+        whenToUse: [
+          "User wants to know which Motion account members are available.",
+          "You need a user id before assigning a task.",
+        ],
+        examples: [
+          {
+            user: "show motion users in workspace ws_123",
+            args: { workspaceId: "ws_123" },
+          },
+        ],
+        followups: [
+          "Offer to use one of the returned user ids for task assignment.",
+        ],
+      }),
       defineTool(integrationSlug, "list_workspaces", {
         description: "List Motion workspaces available to the connected account",
         inputSchema: {
@@ -207,6 +242,209 @@ class MotionHandler extends BaseIntegration {
           "Offer to summarize the task or create a related task.",
         ],
       }),
+      defineTool(integrationSlug, "update_task", {
+        description: "Update a Motion task",
+        inputSchema: {
+          type: "object",
+          properties: {
+            taskId: {
+              type: "string",
+              description: "Motion task id",
+            },
+            workspaceId: {
+              type: "string",
+              description: "Motion workspace id",
+            },
+            name: {
+              type: "string",
+              description: "Optional updated task title",
+            },
+            description: {
+              type: "string",
+              description: "Optional updated markdown description",
+            },
+            projectId: {
+              type: "string",
+              description: "Optional Motion project id",
+            },
+            dueDate: {
+              type: "string",
+              description: "Optional ISO 8601 due date or datetime",
+            },
+            duration: {
+              type: "string",
+              description: 'Optional duration in minutes as a string or values like "NONE" or "REMINDER"',
+            },
+            priority: {
+              type: "string",
+              enum: ["ASAP", "HIGH", "MEDIUM", "LOW"],
+              description: "Optional Motion task priority",
+            },
+            status: {
+              type: "string",
+              description: "Optional Motion status name or id depending on workspace config",
+            },
+            assigneeId: {
+              type: "string",
+              description: "Optional Motion assignee user id",
+            },
+            labels: {
+              type: "array",
+              items: { type: "string" },
+              description: "Optional list of label names",
+            },
+            startOn: {
+              type: "string",
+              description: "Optional YYYY-MM-DD date when the task should start",
+            },
+            deadlineType: {
+              type: "string",
+              enum: ["HARD", "SOFT", "NONE"],
+              description: "Optional Motion deadline type",
+            },
+            autoScheduled: {
+              type: ["object", "null"] as unknown as object,
+              description: "Optional Motion autoScheduled object, or null to disable auto scheduling",
+            },
+          },
+          required: ["taskId", "workspaceId"],
+        },
+        accessLevel: "write",
+        tags: ["motion", "tasks", "update"],
+        whenToUse: [
+          "User explicitly asks to update a Motion task.",
+          "User wants to rename, reschedule, reassign, or reprioritize a task.",
+        ],
+        askBefore: [
+          "Ask which task to update if there is any ambiguity.",
+        ],
+        examples: [
+          {
+            user: "move that task to tomorrow and assign it to me",
+            args: {
+              taskId: "task_123",
+              workspaceId: "ws_123",
+              dueDate: "2026-04-21T17:00:00Z",
+              assigneeId: "user_123",
+            },
+          },
+        ],
+      }),
+      defineTool(integrationSlug, "move_task", {
+        description: "Move a Motion task to another project or status",
+        inputSchema: {
+          type: "object",
+          properties: {
+            taskId: {
+              type: "string",
+              description: "Motion task id",
+            },
+            workspaceId: {
+              type: "string",
+              description: "Motion workspace id",
+            },
+            projectId: {
+              type: "string",
+              description: "Destination Motion project id",
+            },
+            status: {
+              type: "string",
+              description: "Destination Motion status name or id",
+            },
+          },
+          required: ["taskId", "workspaceId"],
+        },
+        accessLevel: "write",
+        tags: ["motion", "tasks", "move"],
+        whenToUse: [
+          "User explicitly asks to move a task to another project or workflow status.",
+        ],
+        askBefore: [
+          "Ask for the destination project or status if neither is provided.",
+        ],
+      }),
+      defineTool(integrationSlug, "delete_task", {
+        description: "Delete a Motion task by id",
+        inputSchema: {
+          type: "object",
+          properties: {
+            taskId: {
+              type: "string",
+              description: "Motion task id",
+            },
+          },
+          required: ["taskId"],
+        },
+        accessLevel: "write",
+        tags: ["motion", "tasks", "delete"],
+        whenToUse: [
+          "User explicitly asks to delete a Motion task.",
+        ],
+        askBefore: [
+          "Confirm before deleting a task unless the user was already explicit.",
+        ],
+      }),
+      defineTool(integrationSlug, "get_project", {
+        description: "Get a single Motion project by id",
+        inputSchema: {
+          type: "object",
+          properties: {
+            projectId: {
+              type: "string",
+              description: "Motion project id",
+            },
+          },
+          required: ["projectId"],
+        },
+        accessLevel: "read",
+        tags: ["motion", "project", "lookup"],
+      }),
+      defineTool(integrationSlug, "create_project", {
+        description: "Create a Motion project",
+        inputSchema: {
+          type: "object",
+          properties: {
+            workspaceId: {
+              type: "string",
+              description: "Motion workspace id",
+            },
+            name: {
+              type: "string",
+              description: "Project name",
+            },
+            description: {
+              type: "string",
+              description: "Optional HTML or rich text description",
+            },
+            dueDate: {
+              type: "string",
+              description: "Optional ISO 8601 due date or datetime",
+            },
+            priority: {
+              type: "string",
+              enum: ["ASAP", "HIGH", "MEDIUM", "LOW"],
+              description: "Optional Motion project priority",
+            },
+            labels: {
+              type: "array",
+              items: { type: "string" },
+              description: "Optional list of label names",
+            },
+            projectDefinitionId: {
+              type: "string",
+              description: "Optional Motion project definition/template id",
+            },
+            stages: {
+              type: "array",
+              items: { type: "object" },
+              description: "Optional raw Motion stages array; required if projectDefinitionId is provided",
+            },
+          },
+          required: ["workspaceId", "name"],
+        },
+        accessLevel: "write",
+        tags: ["motion", "projects", "create"],
+      }),
       defineTool(integrationSlug, "create_task", {
         description: "Create a Motion task",
         inputSchema: {
@@ -316,6 +554,8 @@ class MotionHandler extends BaseIntegration {
     credentials: Record<string, string>,
   ): Promise<unknown> {
     switch (action) {
+      case "get_me":
+        return this.getMe(args, credentials);
       case "list_workspaces":
         return this.listWorkspaces(args, credentials);
       case "list_projects":
@@ -324,6 +564,16 @@ class MotionHandler extends BaseIntegration {
         return this.listTasks(args, credentials);
       case "get_task":
         return this.getTask(args, credentials);
+      case "update_task":
+        return this.updateTask(args, credentials);
+      case "move_task":
+        return this.moveTask(args, credentials);
+      case "delete_task":
+        return this.deleteTask(args, credentials);
+      case "get_project":
+        return this.getProject(args, credentials);
+      case "create_project":
+        return this.createProject(args, credentials);
       case "create_task":
         return this.createTask(args, credentials);
       default:
@@ -338,6 +588,29 @@ class MotionHandler extends BaseIntegration {
     } catch {
       return false;
     }
+  }
+
+  private async getMe(
+    args: Record<string, unknown>,
+    credentials: Record<string, string>,
+  ): Promise<unknown> {
+    const query = this.buildQueryString({
+      workspaceId: safeTrim(args.workspaceId),
+      teamId: safeTrim(args.teamId),
+      cursor: safeTrim(args.cursor),
+    });
+
+    const response = await this.apiRequest(
+      `${MOTION_BASE_URL}/users${query ? `?${query}` : ""}`,
+      { method: "GET" },
+      credentials,
+    );
+
+    if (!response.ok) {
+      throw await this.createApiError("Failed to list Motion users", response);
+    }
+
+    return response.json();
   }
 
   private async listWorkspaces(
@@ -460,6 +733,180 @@ class MotionHandler extends BaseIntegration {
     return response.json();
   }
 
+  private async updateTask(
+    args: Record<string, unknown>,
+    credentials: Record<string, string>,
+  ): Promise<unknown> {
+    const taskId = safeTrim(args.taskId);
+    const workspaceId = safeTrim(args.workspaceId);
+
+    if (!taskId) {
+      throw new Error("taskId is required");
+    }
+
+    if (!workspaceId) {
+      throw new Error("workspaceId is required");
+    }
+
+    const payload = this.buildTaskPayload(args, { workspaceId, requireName: false });
+
+    if (Object.keys(payload).length <= 1) {
+      throw new Error("At least one task field must be provided to update");
+    }
+
+    const response = await this.apiRequest(
+      `${MOTION_BASE_URL}/tasks/${encodeURIComponent(taskId)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      },
+      credentials,
+    );
+
+    if (!response.ok) {
+      throw await this.createApiError("Failed to update Motion task", response);
+    }
+
+    return response.json();
+  }
+
+  private async moveTask(
+    args: Record<string, unknown>,
+    credentials: Record<string, string>,
+  ): Promise<unknown> {
+    const taskId = safeTrim(args.taskId);
+    const workspaceId = safeTrim(args.workspaceId);
+    const projectId = safeTrim(args.projectId);
+    const status = safeTrim(args.status);
+
+    if (!taskId) {
+      throw new Error("taskId is required");
+    }
+
+    if (!workspaceId) {
+      throw new Error("workspaceId is required");
+    }
+
+    if (!projectId && !status) {
+      throw new Error("Provide projectId or status to move the task");
+    }
+
+    const payload: Record<string, unknown> = { workspaceId };
+    if (projectId) payload.projectId = projectId;
+    if (status) payload.status = status;
+
+    const response = await this.apiRequest(
+      `${MOTION_BASE_URL}/tasks/${encodeURIComponent(taskId)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      },
+      credentials,
+    );
+
+    if (!response.ok) {
+      throw await this.createApiError("Failed to move Motion task", response);
+    }
+
+    return response.json();
+  }
+
+  private async deleteTask(
+    args: Record<string, unknown>,
+    credentials: Record<string, string>,
+  ): Promise<unknown> {
+    const taskId = safeTrim(args.taskId);
+
+    if (!taskId) {
+      throw new Error("taskId is required");
+    }
+
+    const response = await this.apiRequest(
+      `${MOTION_BASE_URL}/tasks/${encodeURIComponent(taskId)}`,
+      { method: "DELETE" },
+      credentials,
+    );
+
+    if (!response.ok) {
+      throw await this.createApiError("Failed to delete Motion task", response);
+    }
+
+    return {
+      success: true,
+      deleted: true,
+      taskId,
+      status: response.status,
+    };
+  }
+
+  private async getProject(
+    args: Record<string, unknown>,
+    credentials: Record<string, string>,
+  ): Promise<unknown> {
+    const projectId = safeTrim(args.projectId);
+
+    if (!projectId) {
+      throw new Error("projectId is required");
+    }
+
+    const response = await this.apiRequest(
+      `${MOTION_BASE_URL}/projects/${encodeURIComponent(projectId)}`,
+      { method: "GET" },
+      credentials,
+    );
+
+    if (!response.ok) {
+      throw await this.createApiError("Failed to fetch Motion project", response);
+    }
+
+    return response.json();
+  }
+
+  private async createProject(
+    args: Record<string, unknown>,
+    credentials: Record<string, string>,
+  ): Promise<unknown> {
+    const workspaceId = safeTrim(args.workspaceId);
+    const name = safeTrim(args.name);
+
+    if (!workspaceId) {
+      throw new Error("workspaceId is required");
+    }
+
+    if (!name) {
+      throw new Error("name is required");
+    }
+
+    const payload: Record<string, unknown> = { workspaceId, name };
+    const description = safeTrim(args.description);
+    const dueDate = safeTrim(args.dueDate);
+    const priority = safeTrim(args.priority);
+    const projectDefinitionId = safeTrim(args.projectDefinitionId);
+    const labels = optionalStringArray(args.labels, "labels");
+
+    if (description) payload.description = description;
+    if (dueDate) payload.dueDate = dueDate;
+    if (priority) payload.priority = priority;
+    if (labels) payload.labels = labels;
+    if (projectDefinitionId) payload.projectDefinitionId = projectDefinitionId;
+    if (Array.isArray(args.stages)) payload.stages = args.stages;
+
+    const response = await this.apiRequest(
+      `${MOTION_BASE_URL}/projects`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+      credentials,
+    );
+
+    if (!response.ok) {
+      throw await this.createApiError("Failed to create Motion project", response);
+    }
+
+    return response.json();
+  }
+
   private async createTask(
     args: Record<string, unknown>,
     credentials: Record<string, string>,
@@ -475,10 +922,37 @@ class MotionHandler extends BaseIntegration {
       throw new Error("name is required");
     }
 
+    const payload = this.buildTaskPayload(args, { workspaceId, requireName: true });
+
+    const response = await this.apiRequest(
+      `${MOTION_BASE_URL}/tasks`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+      credentials,
+    );
+
+    if (!response.ok) {
+      throw await this.createApiError("Failed to create Motion task", response);
+    }
+
+    return response.json();
+  }
+
+  private buildTaskPayload(
+    args: Record<string, unknown>,
+    options: { workspaceId: string; requireName: boolean },
+  ): Record<string, unknown> {
     const payload: Record<string, unknown> = {
-      workspaceId,
-      name,
+      workspaceId: options.workspaceId,
     };
+
+    const name = safeTrim(args.name);
+    if (options.requireName && !name) {
+      throw new Error("name is required");
+    }
+    if (name) payload.name = name;
 
     const description = safeTrim(args.description);
     const projectId = safeTrim(args.projectId);
@@ -501,24 +975,13 @@ class MotionHandler extends BaseIntegration {
     if (labels) payload.labels = labels;
     if (startOn) payload.startOn = startOn;
     if (deadlineType) payload.deadlineType = deadlineType;
-    if (args.autoScheduled && typeof args.autoScheduled === "object" && !Array.isArray(args.autoScheduled)) {
+    if (args.autoScheduled === null) {
+      payload.autoScheduled = null;
+    } else if (args.autoScheduled && typeof args.autoScheduled === "object" && !Array.isArray(args.autoScheduled)) {
       payload.autoScheduled = args.autoScheduled;
     }
 
-    const response = await this.apiRequest(
-      `${MOTION_BASE_URL}/tasks`,
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-      },
-      credentials,
-    );
-
-    if (!response.ok) {
-      throw await this.createApiError("Failed to create Motion task", response);
-    }
-
-    return response.json();
+    return payload;
   }
 
   private async createApiError(prefix: string, response: Response): Promise<IntegrationRequestError> {

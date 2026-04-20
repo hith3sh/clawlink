@@ -439,11 +439,17 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
       ),
     ],
     tools: [
+      { name: "get_me", description: "List Motion users for a workspace or team" },
       { name: "list_workspaces", description: "List Motion workspaces available to the connected account" },
-      { name: "list_projects", description: "List Motion projects for a workspace" },
       { name: "list_tasks", description: "List Motion tasks with optional filters" },
       { name: "get_task", description: "Get a single Motion task by id" },
       { name: "create_task", description: "Create a Motion task" },
+      { name: "update_task", description: "Update a Motion task" },
+      { name: "delete_task", description: "Delete a Motion task by id" },
+      { name: "move_task", description: "Move a Motion task to another project or status" },
+      { name: "list_projects", description: "List Motion projects for a workspace" },
+      { name: "get_project", description: "Get a single Motion project by id" },
+      { name: "create_project", description: "Create a Motion project" },
     ],
   },
   trello: {
