@@ -108,6 +108,19 @@ export abstract class BaseIntegration implements IntegrationHandler {
   abstract getTools(integrationSlug: string): IntegrationTool[];
   abstract execute(action: string, args: Record<string, unknown>, credentials: Record<string, string>): Promise<unknown>;
 
+  private buildRequestHeaders(
+    baseHeaders: RequestInit["headers"],
+    integrationHeaders: Record<string, string>,
+  ): Headers {
+    const headers = new Headers(baseHeaders);
+
+    for (const [key, value] of Object.entries(integrationHeaders)) {
+      headers.set(key, value);
+    }
+
+    return headers;
+  }
+
   /**
    * Make an API request with retry logic
    */
@@ -123,10 +136,10 @@ export abstract class BaseIntegration implements IntegrationHandler {
       try {
         const response = await fetch(url, {
           ...options,
-          headers: {
-            ...options.headers,
-            ...this.getHeaders(credentials),
-          },
+          headers: this.buildRequestHeaders(
+            options.headers,
+            this.getHeaders(credentials),
+          ),
         });
 
         // Don't retry on client errors (4xx)
