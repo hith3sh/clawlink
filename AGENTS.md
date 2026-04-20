@@ -147,6 +147,7 @@ Rules for agents:
 - When changing the OpenClaw plugin package in `packages/openclaw-clawlink`, keep these versions in sync:
   - `packages/openclaw-clawlink/package.json`
   - `packages/openclaw-clawlink/openclaw.plugin.json`
+  - `public/skill.md` frontmatter `version:` field
 - The publish tag format is:
   - `openclaw-plugin-v<version>`
   - example: `openclaw-plugin-v0.1.2`

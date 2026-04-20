@@ -42,6 +42,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: "https://claw-link.dev",
+    types: {
+      "text/markdown": "/skill.md",
+    },
   },
 };
 

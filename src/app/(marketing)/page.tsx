@@ -1,16 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import CopyPromptButton from "@/components/CopyPromptButton";
+import AudienceTabs from "@/components/AudienceTabs";
 import FlowDiagram from "@/components/FlowDiagram";
-import {
-  CLAWLINK_API_SETTINGS_URL,
-  CLAWLINK_GITHUB_URL,
-  CLAWLINK_NPM_URL,
-  CLAWLINK_OPENCLAW_DOCS_URL,
-  CLAWLINK_VERIFY_URL,
-  OPENCLAW_PLUGIN_INSTALL_COMMAND,
-  OPENCLAW_PLUGIN_PACKAGE,
-} from "@/lib/openclaw-plugin";
 
 const AVATARS = Array.from({ length: 9 }, (_, i) => `/brand/avatars/avatar-${i + 1}.png`);
 
@@ -58,111 +49,20 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Copy-and-paste annotation + setup card */}
-        <div className="relative mt-16">
-          {/* Desktop annotation */}
-          <div className="pointer-events-none absolute -left-2 -top-14 hidden w-[280px] md:block lg:-left-6">
-            <p
-              className="text-2xl leading-tight text-gray-900"
-              style={{ fontFamily: "var(--font-caveat), 'Comic Sans MS', cursive" }}
-            >
-              copy &amp; paste this
-              <br />
-              onto openclaw chat
-            </p>
-            <Image
-              src="/brand/bento/arrow-big.png"
-              alt=""
-              width={209}
-              height={209}
-              className="ml-28 -mt-4 h-28 w-28"
-            />
-          </div>
-          {/* Mobile hint */}
-          <div className="mb-3 flex items-center gap-2 md:hidden">
-            <p
-              className="text-xl leading-tight text-gray-900"
-              style={{ fontFamily: "var(--font-caveat), 'Comic Sans MS', cursive" }}
-            >
-              copy &amp; paste this onto openclaw chat
-            </p>
-            <Image
-              src="/brand/bento/arrow-big.png"
-              alt=""
-              width={64}
-              height={64}
-              className="h-10 w-10 rotate-90"
-            />
-          </div>
+        <p className="mx-auto mt-8 max-w-2xl text-center text-[13px] leading-6 text-gray-500">
+          <span className="font-medium text-gray-700">For AI agents:</span>{" "}
+          read{" "}
+          <a
+            href="/skill.md"
+            className="font-mono text-[#d4764a] underline decoration-[#e8915a]/40 underline-offset-4 hover:decoration-[#e8915a]"
+          >
+            claw-link.dev/skill.md
+          </a>{" "}
+          and follow the instructions to use ClawLink for third-party integrations.
+        </p>
 
-          <div className="mx-auto max-w-3xl rounded-[28px] border border-gray-200 bg-white p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] sm:p-10">
-            <div className="-mt-2 mb-4 flex justify-end">
-              <CopyPromptButton />
-            </div>
-            <div className="space-y-4 text-[15px] leading-[1.9] text-gray-700">
-              <p>
-                ClawLink setup for OpenClaw — third-party plugin, not affiliated with OpenClaw. Verify the package at{" "}
-                <a
-                  href={CLAWLINK_NPM_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-gray-900 underline"
-                >
-                  {OPENCLAW_PLUGIN_PACKAGE}
-                </a>{" "}
-                or{" "}
-                <a
-                  href={CLAWLINK_GITHUB_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-900 underline"
-                >
-                  github.com/hith3sh/clawlink
-                </a>
-                . Releases are published with an npm provenance attestation in the public Sigstore transparency log — see{" "}
-                <a
-                  href={CLAWLINK_VERIFY_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-900 underline"
-                >
-                  claw-link.dev/verify
-                </a>
-                .
-              </p>
-              <p>
-                <span className="font-semibold text-gray-900">Step 1</span> — install the plugin:{" "}
-                <span className="font-mono text-gray-900">{OPENCLAW_PLUGIN_INSTALL_COMMAND}</span>.
-              </p>
-              <p>
-                <span className="font-semibold text-gray-900">Step 2</span> — create an API key at{" "}
-                <a
-                  href={CLAWLINK_API_SETTINGS_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-gray-900 underline"
-                >
-                  claw-link.dev/dashboard/settings?tab=api
-                </a>
-                .
-              </p>
-              <p>
-                <span className="font-semibold text-gray-900">Step 3</span> — paste the{" "}
-                <span className="font-mono text-gray-900">/clawlink login &lt;key&gt;</span> command from the dashboard into your OpenClaw chat as a standalone message. OpenClaw&apos;s gateway routes slash commands directly to the ClawLink plugin handler (fast path bypasses the model), so the AI never sees the key. It&apos;s stored locally in{" "}
-                <span className="font-mono text-gray-900">~/.openclaw/openclaw.json</span> and only sent to{" "}
-                <span className="font-mono text-gray-900">claw-link.dev</span>. Docs:{" "}
-                <a
-                  href={CLAWLINK_OPENCLAW_DOCS_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-900 underline"
-                >
-                  docs.claw-link.dev/openclaw
-                </a>
-                .
-              </p>
-            </div>
-          </div>
+        <div className="mt-8">
+          <AudienceTabs />
         </div>
       </section>
 

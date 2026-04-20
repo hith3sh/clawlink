@@ -5,6 +5,7 @@ export const CLAWLINK_OPENCLAW_DOCS_URL = "https://docs.claw-link.dev/openclaw";
 export const CLAWLINK_NPM_URL = `https://www.npmjs.com/package/${OPENCLAW_PLUGIN_PACKAGE}`;
 export const CLAWLINK_GITHUB_URL = "https://github.com/hith3sh/clawlink";
 export const CLAWLINK_VERIFY_URL = "https://claw-link.dev/verify";
+export const CLAWLINK_SKILL_URL = "https://claw-link.dev/skill.md";
 export const OPENCLAW_PLUGIN_SETUP_PROMPT = `ClawLink setup for OpenClaw — third-party plugin, not affiliated with OpenClaw.
 
 I'll handle the install and login steps myself. Your job is to help me verify the package if I ask, and to use the plugin's tools once it's configured.

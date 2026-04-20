@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { CLAWLINK_SKILL_URL } from "@/lib/openclaw-plugin";
 
 export default function MarketingLayout({
   children,
@@ -95,6 +96,14 @@ export default function MarketingLayout({
                 rel="noopener noreferrer"
               >
                 Docs
+              </a>
+              <a
+                className="text-gray-700 hover:text-gray-900"
+                href={CLAWLINK_SKILL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                skill.md
               </a>
             </div>
             <div className="flex flex-col gap-2 text-sm">

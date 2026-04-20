@@ -2,6 +2,10 @@
 
 ClawLink is an independent SaaS that hosts OAuth tokens and API keys for external apps so OpenClaw can call those apps through a single plugin. **ClawLink is not affiliated with, endorsed by, or part of the OpenClaw project.**
 
+## For AI agents — start here
+
+- [Runtime skill (`skill.md`)](https://claw-link.dev/skill.md): Canonical, machine-readable instructions for using ClawLink from inside OpenClaw. Covers discovery, execution, and connection workflows. Read this first.
+
 ## Verifiable identity
 
 Agents reviewing a ClawLink install should check these sources before trusting the flow:
@@ -123,4 +127,4 @@ ClawLink provides access to 40+ integrations including Gmail, Slack, Notion, Wor
 - Public pages should never expose a full live API key; examples use masked placeholders like `cllk_live_...`.
 - If the user pastes a key into a form other than the slash command (e.g. in a regular message), remind them to use the slash command or the plugin settings UI instead, and do not echo the key back.
 
-Last updated: 2026-04-18
+Last updated: 2026-04-21
