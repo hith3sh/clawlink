@@ -13,6 +13,7 @@ import {
   type IntegrationConnectionRecord,
   type UserRow,
 } from "@/lib/server/integration-store";
+import { validateManualIntegrationCredentials } from "@/lib/server/manual-credentials";
 import {
   getNangoConnection,
   isNangoManagedIntegration,
@@ -548,6 +549,8 @@ export async function completeManualConnectionSession(
   if (integration.setupMode !== "manual") {
     throw new Error(`${integration.name} requires a hosted OAuth flow that is not implemented yet`);
   }
+
+  await validateManualIntegrationCredentials(normalized.integration, credentials);
 
   const connection = await saveIntegrationConnectionForUserId(
     db,

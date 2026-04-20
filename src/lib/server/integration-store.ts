@@ -166,6 +166,7 @@ function deriveConnectionMetadata(
   const botId = safeTrim(credentials.botId);
   const username = safeTrim(credentials.username);
   const accountId = safeTrim(credentials.accountId);
+  const twilioAccountSid = safeTrim(credentials.accountSid);
   const email = safeTrim(credentials.email);
   const expiresAt = safeTrim(credentials.expiresAt) ?? null;
 
@@ -192,6 +193,15 @@ function deriveConnectionMetadata(
       accountLabel: workspaceName ?? displayName ?? email ?? "Apollo workspace",
       connectionLabel: workspaceName ?? displayName ?? email ?? "Apollo account",
       externalAccountId: workspaceId ?? accountId ?? email ?? null,
+      expiresAt,
+    };
+  }
+
+  if (slug === "twilio") {
+    return {
+      accountLabel: twilioAccountSid ?? "Twilio account",
+      connectionLabel: twilioAccountSid ?? "Twilio account",
+      externalAccountId: twilioAccountSid ?? null,
       expiresAt,
     };
   }

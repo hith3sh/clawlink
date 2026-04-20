@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getIntegrationBySlug } from "@/data/integrations";
 import { completeManualConnectionSession, getConnectionSessionByToken } from "@/lib/server/connection-sessions";
+import { ManualCredentialValidationError } from "@/lib/server/manual-credentials";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,13 @@ export async function POST(
       connection: session.connection,
     });
   } catch (error) {
+    if (error instanceof ManualCredentialValidationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 },
+      );
+    }
+
     console.error("Error completing connection session:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to complete connection session" },

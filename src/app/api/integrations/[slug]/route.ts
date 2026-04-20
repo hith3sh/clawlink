@@ -11,6 +11,7 @@ import {
   listIntegrationConnectionsForSlug,
   saveIntegrationConnection,
 } from "@/lib/server/integration-store";
+import { ManualCredentialValidationError, validateManualIntegrationCredentials } from "@/lib/server/manual-credentials";
 
 export const dynamic = "force-dynamic";
 
@@ -120,6 +121,8 @@ export async function POST(
       ]),
     );
 
+    await validateManualIntegrationCredentials(slug, credentials);
+
     const connection = await saveIntegrationConnection(slug, credentials, {
       mode: "upsert_default",
       setAsDefault: true,
@@ -131,6 +134,13 @@ export async function POST(
       connection,
     });
   } catch (error) {
+    if (error instanceof ManualCredentialValidationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 },
+      );
+    }
+
     console.error(`Error saving integration ${slug}:`, error);
 
     return NextResponse.json(
