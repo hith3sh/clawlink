@@ -13,6 +13,7 @@ import "./notion";
 import "./apollo";
 import "./postiz";
 import "./google-analytics";
+import "./motion";
 // import "./stripe";
 // etc.
 

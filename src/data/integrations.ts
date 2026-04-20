@@ -121,6 +121,7 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "Google Slides", slug: "google-slides", description: "Create and share presentations", category: "Productivity", icon: "SiGoogleslides", color: "#FBBC04" },
   { name: "Airtable", slug: "airtable", description: "Manage bases, tables, and records", category: "Productivity", icon: "SiAirtable", color: "#18BFFF" },
   { name: "Todoist", slug: "todoist", description: "Create and manage tasks and projects", category: "Productivity", icon: "SiTodoist", color: "#E44332" },
+  { name: "Motion", slug: "motion", description: "Manage Motion workspaces, projects, and tasks", category: "Productivity", icon: "TbPlugConnected", color: "#111827" },
   { name: "Trello", slug: "trello", description: "Manage boards, lists, and cards", category: "Productivity", icon: "SiTrello", color: "#0079BF" },
   { name: "Asana", slug: "asana", description: "Track tasks, projects, and workflows", category: "Productivity", icon: "SiAsana", color: "#F06A6A" },
   { name: "ClickUp", slug: "clickup", description: "Manage tasks, docs, goals, and sprints", category: "Productivity", icon: "SiClickup", color: "#7B68EE" },
@@ -423,6 +424,27 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     setupGuide: "Create a Todoist API token and store it here.",
     credentialFields: [tokenField("apiToken", "API Token", "Paste your Todoist API token")],
     tools: [],
+  },
+  motion: {
+    setupMode: "manual",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Create a Motion API key from your Motion settings, then paste it here to let ClawLink list workspaces, browse projects, inspect tasks, and create new tasks.",
+    credentialFields: [
+      apiKeyField(
+        "apiKey",
+        "API Key",
+        "Paste your Motion API key",
+        "Motion uses the X-API-Key header for authenticated API requests.",
+      ),
+    ],
+    tools: [
+      { name: "list_workspaces", description: "List Motion workspaces available to the connected account" },
+      { name: "list_projects", description: "List Motion projects for a workspace" },
+      { name: "list_tasks", description: "List Motion tasks with optional filters" },
+      { name: "get_task", description: "Get a single Motion task by id" },
+      { name: "create_task", description: "Create a Motion task" },
+    ],
   },
   trello: {
     setupMode: "manual",
