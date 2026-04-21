@@ -6,7 +6,7 @@ Third-party OpenClaw plugin that lets OpenClaw talk to external SaaS apps throug
 
 ## What it does
 
-ClawLink stores OAuth tokens and API keys for apps like Notion, Gmail, Slack, GitHub, Apollo, and OneDrive on your behalf, then exposes a uniform set of tools so OpenClaw can read from and write to those apps without per-provider setup. You authenticate once in the ClawLink dashboard; OpenClaw calls into ClawLink over HTTPS with a single API key.
+ClawLink stores OAuth tokens and API keys for a growing catalog of business apps on your behalf, then exposes a uniform set of tools so OpenClaw can read from and write to those apps without per-provider setup. Today that includes integrations like Google Docs, Google Sheets, Google Calendar, Google Drive, Twilio, and Google Search Console. You authenticate once in the ClawLink dashboard; OpenClaw calls into ClawLink over HTTPS with a single API key.
 
 ## Install
 
@@ -58,8 +58,8 @@ Tag-based publish via GitHub Actions — see `.github/workflows/publish-openclaw
 3. Create and push a matching tag:
 
 ```bash
-git tag openclaw-plugin-v0.1.2
-git push origin openclaw-plugin-v0.1.2
+git tag openclaw-plugin-v0.1.11
+git push origin openclaw-plugin-v0.1.11
 ```
 
 The workflow verifies that the tag version matches both package files, runs `npm pack --dry-run`, and publishes to npm via Trusted Publishing.
