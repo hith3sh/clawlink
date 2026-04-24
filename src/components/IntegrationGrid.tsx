@@ -44,7 +44,7 @@ export default function IntegrationGrid() {
           return (
             <div
               key={integration.slug}
-              className="group rounded-2xl border border-gray-100 bg-white/80 p-4 sm:p-5 transition-all hover:border-[#ffe4cc]/60 hover:shadow-lg hover:shadow-[#e8915a]/5 hover:-translate-y-0.5"
+              className="group rounded-2xl border border-gray-100 bg-white/80 p-4 sm:p-5 transition-all hover:border-[var(--brand-tint)]/60 hover:shadow-lg hover:shadow-[var(--brand)]/5 hover:-translate-y-0.5"
             >
               <div className="flex items-center gap-3">
                 {hasBrandLogo(integration.slug) ? (

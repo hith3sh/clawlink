@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import {
-  Bell,
   Check,
   Copy,
   CreditCard,
@@ -17,7 +16,7 @@ import {
 } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { BillingSettingsPanel } from "@/components/dashboard/BillingSettingsPanel";
+import { BillingSettingsPanel, type BillingState } from "@/components/dashboard/BillingSettingsPanel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +29,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ApiKeyRecord {
@@ -40,7 +38,7 @@ interface ApiKeyRecord {
   lastUsedAt: string | null;
 }
 
-type SettingsTab = "profile" | "api" | "billing" | "notifications" | "security";
+type SettingsTab = "profile" | "api" | "billing" | "security";
 
 const settingsTabs: Array<{
   value: SettingsTab;
@@ -67,12 +65,6 @@ const settingsTabs: Array<{
     icon: CreditCard,
   },
   {
-    value: "notifications",
-    label: "Notifications",
-    description: "Decide which operational events should interrupt you.",
-    icon: Bell,
-  },
-  {
     value: "security",
     label: "Security",
     description: "Review the basic account protections tied to this workspace.",
@@ -97,7 +89,6 @@ export default function SettingsPage() {
     const tab = searchParams.get("tab");
     if (tab === "api") return "api";
     if (tab === "billing") return "billing";
-    if (tab === "notifications") return "notifications";
     if (tab === "security") return "security";
     return "profile";
   });
@@ -111,6 +102,9 @@ export default function SettingsPage() {
   const [loadingApiKeys, setLoadingApiKeys] = useState(true);
   const [creatingApiKey, setCreatingApiKey] = useState(false);
   const [deletingApiKeyId, setDeletingApiKeyId] = useState<number | null>(null);
+  const [billing, setBilling] = useState<BillingState | null>(null);
+  const [billingLoading, setBillingLoading] = useState(true);
+  const [billingError, setBillingError] = useState<string | null>(null);
   const { user, isLoaded } = useUser();
 
   const userName = user?.fullName || user?.firstName || "";
@@ -162,7 +156,45 @@ export default function SettingsPage() {
       }
     }
 
+    async function loadBilling() {
+      if (!isLoaded) {
+        return;
+      }
+
+      if (!user) {
+        if (active) {
+          setBilling(null);
+          setBillingLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/billing", { cache: "no-store" });
+        const data = (await response.json()) as { billing?: BillingState; error?: string };
+
+        if (!active) {
+          return;
+        }
+
+        if (!response.ok || !data.billing) {
+          throw new Error(data.error ?? "Failed to load billing");
+        }
+
+        setBilling(data.billing);
+      } catch (error) {
+        if (active) {
+          setBillingError(error instanceof Error ? error.message : "Failed to load billing");
+        }
+      } finally {
+        if (active) {
+          setBillingLoading(false);
+        }
+      }
+    }
+
     void loadApiKeys();
+    void loadBilling();
 
     return () => {
       active = false;
@@ -255,34 +287,32 @@ export default function SettingsPage() {
     <Tabs
       value={activeTab}
       onValueChange={(value) => setActiveTab(value as SettingsTab)}
-      className="space-y-6"
+      className="w-full max-w-3xl space-y-6"
     >
-      <div className="overflow-x-auto pb-1">
-        <TabsList className="flex w-max min-w-full flex-nowrap justify-start gap-2 rounded-2xl bg-card/70 p-1 ring-1 ring-border/60">
-          {settingsTabs.map((tab) => {
-            const Icon = tab.icon;
+      <TabsList className="grid w-full grid-cols-4 gap-2 rounded-2xl bg-card/70 p-1 ring-1 ring-border/60">
+        {settingsTabs.map((tab) => {
+          const Icon = tab.icon;
 
-            return (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="min-w-max justify-start rounded-xl border border-transparent px-3 py-2.5 data-active:border-border data-active:bg-background"
-              >
-                <Icon className="h-4 w-4" />
-                {tab.label}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-      </div>
+          return (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="w-full justify-center rounded-xl border border-transparent px-3 py-2.5 data-active:border-border data-active:bg-background"
+            >
+              <Icon className="h-4 w-4" />
+              {tab.label}
+            </TabsTrigger>
+          );
+        })}
+      </TabsList>
 
-      <Card className="min-h-[680px] border-border/70 bg-card/80">
-        <CardHeader className="min-h-28 border-b border-border/60">
+      <Card className="flex w-full h-[680px] flex-col overflow-hidden border-border/70 bg-card/80">
+        <CardHeader className="shrink-0 min-h-28 border-b border-border/60">
           <CardTitle>{activeTabMeta.label}</CardTitle>
           <CardDescription>{activeTabMeta.description}</CardDescription>
         </CardHeader>
-        <CardContent className="pt-6">
-          <TabsContent value="profile" className="space-y-6">
+        <CardContent className="flex-1 overflow-y-auto pt-6">
+          <TabsContent value="profile" className="w-full space-y-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={userImage} alt={userName} />
@@ -316,7 +346,7 @@ export default function SettingsPage() {
               </div>
           </TabsContent>
 
-          <TabsContent value="api" className="space-y-6">
+          <TabsContent value="api" className="w-full space-y-6">
               {apiKeyError ? (
                 <Alert variant="destructive">
                   <AlertDescription>{apiKeyError}</AlertDescription>
@@ -452,33 +482,18 @@ export default function SettingsPage() {
               </div>
           </TabsContent>
 
-          <TabsContent value="billing" className="space-y-6">
+          <TabsContent value="billing" className="w-full space-y-6">
             <BillingSettingsPanel
               isLoaded={isLoaded}
               hasUser={Boolean(user)}
               checkoutId={checkoutId}
+              initialBilling={billing}
+              initialLoading={billingLoading}
+              initialError={billingError}
             />
           </TabsContent>
 
-          <TabsContent value="notifications" className="space-y-3">
-              {[
-                { label: "Request failures", desc: "Get notified when an API call fails.", default: true },
-                { label: "Rate limit warnings", desc: "Alert when a workspace approaches its limit.", default: true },
-                { label: "Integration disconnections", desc: "Notify when a connection stops working.", default: true },
-                { label: "Usage alerts", desc: "Send a warning when usage passes 80%.", default: false },
-                { label: "Product updates", desc: "News about new features and integrations.", default: false },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center justify-between gap-4 py-2">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{item.label}</p>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </div>
-                    <Switch defaultChecked={item.default} />
-                  </div>
-                ))}
-          </TabsContent>
-
-          <TabsContent value="security" className="space-y-3">
+          <TabsContent value="security" className="w-full space-y-3">
               {[
                 { label: "Password", desc: "Last changed 30 days ago", action: "Change" },
                 { label: "Two-factor authentication", desc: "Not enabled", action: "Enable" },

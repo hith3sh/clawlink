@@ -24,7 +24,7 @@ export default function MarketingLayout({
         <nav>
           <Link
             href="/sign-in"
-            className="inline-flex items-center rounded-full bg-[#e8915a] px-8 py-3 text-base font-medium text-white shadow-sm transition hover:bg-[#d4764a]"
+            className="inline-flex items-center rounded-full bg-[var(--brand)] px-8 py-3 text-base font-medium text-white shadow-sm transition hover:bg-[var(--brand-hover)]"
           >
             Login
           </Link>

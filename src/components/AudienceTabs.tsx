@@ -66,7 +66,7 @@ function TabButton({
       aria-pressed={active}
       className={
         active
-          ? "inline-flex items-center gap-2 rounded-full bg-[#e8915a] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_6px_16px_rgba(232,145,90,0.3)] transition"
+          ? "inline-flex items-center gap-2 rounded-full bg-[var(--brand)] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_6px_16px_rgb(var(--brand-rgb)_/_0.3)] transition"
           : "inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-6 py-2.5 text-sm font-medium text-gray-600 transition hover:border-gray-300 hover:text-gray-900"
       }
     >
@@ -182,7 +182,7 @@ function AgentPanel() {
               href={CLAWLINK_SKILL_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-mono text-[#d4764a] underline decoration-[#e8915a]/40 underline-offset-4 hover:decoration-[#e8915a]"
+              className="font-mono text-[var(--brand-hover)] underline decoration-[var(--brand)]/40 underline-offset-4 hover:decoration-[var(--brand)]"
             >
               {CLAWLINK_SKILL_URL}
             </a>{" "}
@@ -207,7 +207,7 @@ function AgentPanel() {
 function Step({ num, children }: { num: number; children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-3">
-      <span className="shrink-0 text-base font-bold text-[#e8915a]">{num}.</span>
+      <span className="shrink-0 text-base font-bold text-[var(--brand)]">{num}.</span>
       <span>{children}</span>
     </li>
   );
@@ -231,7 +231,7 @@ function CopyButton({ text }: { text: string }) {
       type="button"
       onClick={copy}
       aria-label="Copy prompt to clipboard"
-      className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm transition hover:border-[#e8915a]/40 hover:text-[#d4764a]"
+      className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm transition hover:border-[var(--brand)]/40 hover:text-[var(--brand-hover)]"
     >
       {copied ? (
         <>

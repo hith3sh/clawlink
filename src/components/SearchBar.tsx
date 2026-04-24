@@ -29,7 +29,7 @@ export default function SearchBar({ value, onChange, resultCount }: SearchBarPro
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search integrations... (Gmail, Slack, Stripe, etc.)"
-        className="w-full rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm py-4.5 pl-12 pr-14 text-lg text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#ffe4cc]/50 focus:bg-white focus:ring-2 focus:ring-[#e8915a]/10 transition-all"
+        className="w-full rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm py-4.5 pl-12 pr-14 text-lg text-gray-900 placeholder:text-gray-400 outline-none focus:border-[var(--brand-tint)]/50 focus:bg-white focus:ring-2 focus:ring-[var(--brand)]/10 transition-all"
         autoFocus
       />
       {value && (

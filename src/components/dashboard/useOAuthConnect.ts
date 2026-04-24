@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Integration } from "@/data/integrations";
+import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
 
 interface StartResponse {
   error?: string;
@@ -99,8 +100,10 @@ export function useOAuthConnect(integration: Integration, onConnected?: () => vo
     try {
       const origin = window.location.origin;
       const safeName = integration.name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      const initial = integration.name.trim().charAt(0).toUpperCase() || "?";
       const accent = integration.color || "#111827";
+      const appLogoHtml = hasBrandLogo(integration.slug)
+        ? `<img src="${origin}${getBrandLogoSrc(integration.slug)}" alt="${safeName}" />`
+        : `<span class="cl-initial">${integration.name.trim().charAt(0).toUpperCase() || "?"}</span>`;
       popup.document.write(`<!doctype html>
 <html lang="en">
 <head>
@@ -130,7 +133,7 @@ export function useOAuthConnect(integration: Integration, onConnected?: () => vo
     <div class="cl-tiles">
       <div class="cl-tile"><img src="${origin}/images/logo/clawlink.svg" alt="ClawLink" /></div>
       <div class="cl-connector"><span></span><span></span><span></span></div>
-      <div class="cl-tile"><span class="cl-initial">${initial}</span></div>
+      <div class="cl-tile">${appLogoHtml}</div>
     </div>
     <div class="cl-title">ClawLink wants to connect<br/>to your ${safeName}</div>
     <div class="cl-sub">Taking you to ${safeName}.<br/>Please authenticate to continue.</div>

@@ -85,6 +85,17 @@ body {
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Marketing brand palette — change these to re-skin the public site */
+  --brand: #E01C24;
+  --brand-hover: #d4764a;
+  --brand-hover-alt: #dc804a;
+  --brand-tint: #ffe4cc;
+  --brand-bg: #fff4ec;
+  --brand-border: #efc7ab;
+  --brand-dark: #a85d2e;
+  --brand-darkest: #8d4c24;
+  --brand-rgb: 232 145 90;
 }
 
 .dark {
@@ -136,11 +147,11 @@ body {
 
 /* Public marketing site text selection */
 .public-site ::selection {
-  background-color: #e8915a;
+  background-color: var(--brand);
   color: #ffffff;
 }
 .public-site ::-moz-selection {
-  background-color: #e8915a;
+  background-color: var(--brand);
   color: #ffffff;
 }
 

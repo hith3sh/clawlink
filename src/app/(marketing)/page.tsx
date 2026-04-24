@@ -54,7 +54,7 @@ export default function Home() {
           read{" "}
           <a
             href="/skill.md"
-            className="font-mono text-[#d4764a] underline decoration-[#e8915a]/40 underline-offset-4 hover:decoration-[#e8915a]"
+            className="font-mono text-[var(--brand-hover)] underline decoration-[var(--brand)]/40 underline-offset-4 hover:decoration-[var(--brand)]"
           >
             claw-link.dev/skill.md
           </a>{" "}
@@ -143,7 +143,7 @@ export default function Home() {
           className="pointer-events-none absolute inset-x-0 top-24 -z-10 mx-auto h-[420px] max-w-[720px]"
           style={{
             background:
-              "radial-gradient(60% 60% at 75% 40%, rgba(232,145,90,0.18) 0%, rgba(232,145,90,0) 70%)",
+              "radial-gradient(60% 60% at 75% 40%, rgb(var(--brand-rgb) / 0.18) 0%, rgb(var(--brand-rgb) / 0) 70%)",
           }}
         />
         <div className="mb-14 flex flex-col items-center text-center">
@@ -274,16 +274,14 @@ function PricingCard({
   ctaHref: string;
   highlighted?: boolean;
 }) {
-  const brandOrange = "#e8915a";
-
   const containerClass = highlighted
-    ? "relative flex w-full flex-col rounded-[28px] bg-white p-8 ring-1 ring-[#e8915a]/40 shadow-[0_24px_60px_-20px_rgba(232,145,90,0.35),0_6px_20px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_34px_70px_-20px_rgba(232,145,90,0.4),0_8px_24px_rgba(15,23,42,0.05)] sm:p-10"
+    ? "relative flex w-full flex-col rounded-[28px] bg-white p-8 ring-1 ring-[var(--brand)]/40 shadow-[0_24px_60px_-20px_rgb(var(--brand-rgb)_/_0.35),0_6px_20px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_34px_70px_-20px_rgb(var(--brand-rgb)_/_0.4),0_8px_24px_rgba(15,23,42,0.05)] sm:p-10"
     : "relative flex w-full flex-col rounded-[28px] bg-white p-8 ring-1 ring-gray-200/80 shadow-[0_2px_4px_rgba(15,23,42,0.02),0_12px_28px_-10px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_14px_rgba(15,23,42,0.04),0_22px_44px_-14px_rgba(15,23,42,0.1)] sm:p-10";
 
   return (
     <div className={containerClass}>
       {highlighted ? (
-        <div className="absolute -top-3 left-8 inline-flex items-center gap-1.5 rounded-full bg-[#e8915a] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white shadow-[0_6px_16px_rgba(232,145,90,0.35)]">
+        <div className="absolute -top-3 left-8 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white shadow-[0_6px_16px_rgb(var(--brand-rgb)_/_0.35)]">
           <span className="h-1.5 w-1.5 rounded-full bg-white" />
           {eyebrow}
         </div>
@@ -317,8 +315,8 @@ function PricingCard({
               aria-hidden="true"
               className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
               style={{
-                backgroundColor: highlighted ? `${brandOrange}1f` : "#f3f4f6",
-                color: highlighted ? brandOrange : "#111827",
+                backgroundColor: highlighted ? "rgb(var(--brand-rgb) / 0.12)" : "#f3f4f6",
+                color: highlighted ? "var(--brand)" : "#111827",
               }}
             >
               <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -341,7 +339,7 @@ function PricingCard({
           href={ctaHref}
           className={
             highlighted
-              ? "inline-flex w-full items-center justify-center rounded-2xl bg-[#e8915a] px-6 py-3.5 text-[15px] font-semibold text-white shadow-[0_10px_24px_-6px_rgba(232,145,90,0.5)] transition hover:bg-[#dc804a]"
+              ? "inline-flex w-full items-center justify-center rounded-2xl bg-[var(--brand)] px-6 py-3.5 text-[15px] font-semibold text-white shadow-[0_10px_24px_-6px_rgb(var(--brand-rgb)_/_0.5)] transition hover:bg-[var(--brand-hover-alt)]"
               : "inline-flex w-full items-center justify-center rounded-2xl bg-gray-900 px-6 py-3.5 text-[15px] font-semibold text-white transition hover:bg-gray-800"
           }
         >

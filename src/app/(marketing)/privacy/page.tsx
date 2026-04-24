@@ -27,9 +27,9 @@ function Section({
 export default function PrivacyPage() {
   return (
     <main className="flex-1 bg-white">
-      <section className="border-b border-gray-100 bg-gradient-to-b from-[#fff4ec] via-white to-white px-6 py-16">
+      <section className="border-b border-gray-100 bg-gradient-to-b from-[var(--brand-bg)] via-white to-white px-6 py-16">
         <div className="mx-auto max-w-4xl">
-          <div className="inline-flex rounded-full border border-[#efc7ab] bg-white/80 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-[#a85d2e]">
+          <div className="inline-flex rounded-full border border-[var(--brand-border)] bg-white/80 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-[var(--brand-dark)]">
             Legal
           </div>
           <h1 className="mt-6 text-4xl font-semibold tracking-tight text-gray-950 sm:text-5xl">
@@ -110,7 +110,7 @@ export default function PrivacyPage() {
           <Section title="Contact">
             <p>
               Questions about this policy or requests related to privacy and deletion can be sent to{" "}
-              <a className="font-medium text-[#a85d2e] hover:text-[#8d4c24]" href="mailto:hello@claw-link.dev">
+              <a className="font-medium text-[var(--brand-dark)] hover:text-[var(--brand-darkest)]" href="mailto:hello@claw-link.dev">
                 hello@claw-link.dev
               </a>
               .
@@ -118,7 +118,7 @@ export default function PrivacyPage() {
           </Section>
 
           <div className="border-t border-gray-100 pt-8 text-sm text-gray-500">
-            <Link className="font-medium text-gray-900 hover:text-[#a85d2e]" href="/">
+            <Link className="font-medium text-gray-900 hover:text-[var(--brand-dark)]" href="/">
               Back to ClawLink
             </Link>
           </div>

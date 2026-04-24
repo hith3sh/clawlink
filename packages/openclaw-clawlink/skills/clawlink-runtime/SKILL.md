@@ -25,6 +25,7 @@ Do not use the browser, install a separate skill, or ask the user for a per-app 
 ## Discovery workflow (always start here)
 
 1. Call `clawlink_list_tools` to see what tools are available for the user's connected integrations.
+
 2. Treat the returned tool list as the source of truth for the current turn. Do not rely on memory, prior examples, or assumptions about what a provider can do.
 3. If the user names or hints at a specific ClawLink tool, verify it against `clawlink_list_tools` instead of contradicting the user from memory.
 4. If a matching tool exists, proceed to the execution workflow.

@@ -97,7 +97,7 @@ export default function TermsPage() {
           <Section title="Contact">
             <p>
               Questions about these terms can be sent to{" "}
-              <a className="font-medium text-gray-900 hover:text-[#a85d2e]" href="mailto:hello@claw-link.dev">
+              <a className="font-medium text-gray-900 hover:text-[var(--brand-dark)]" href="mailto:hello@claw-link.dev">
                 hello@claw-link.dev
               </a>
               .
@@ -105,7 +105,7 @@ export default function TermsPage() {
           </Section>
 
           <div className="border-t border-gray-100 pt-8 text-sm text-gray-500">
-            <Link className="font-medium text-gray-900 hover:text-[#a85d2e]" href="/">
+            <Link className="font-medium text-gray-900 hover:text-[var(--brand-dark)]" href="/">
               Back to ClawLink
             </Link>
           </div>

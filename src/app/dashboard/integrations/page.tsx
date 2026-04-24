@@ -156,7 +156,6 @@ export default function IntegrationsPage() {
   const [connections, setConnections] = useState<ConnectionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [appFilter, setAppFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [addSearch, setAddSearch] = useState("");
@@ -226,18 +225,11 @@ export default function IntegrationsPage() {
       .filter((row): row is ConnectionRow => row !== null);
   }, [connections]);
 
-  const appOptions = useMemo(() => {
-    return [...new Set(connectionRows.map((row) => row.integration.slug))];
-  }, [connectionRows]);
-
   const filteredConnections = useMemo(() => {
     return connectionRows.filter((row) => {
-      const matchesApp = appFilter === "all" || row.integration.slug === appFilter;
-      const matchesStatus = statusFilter === "all" || row.status === statusFilter;
-
-      return matchesApp && matchesStatus;
+      return statusFilter === "all" || row.status === statusFilter;
     });
-  }, [appFilter, connectionRows, statusFilter]);
+  }, [connectionRows, statusFilter]);
 
   const connectionCountsBySlug = useMemo(() => {
     const counts = new Map<string, number>();
@@ -325,28 +317,6 @@ export default function IntegrationsPage() {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Select value={appFilter} onValueChange={(value) => setAppFilter(value ?? "all")}>
-            <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="App" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All apps</SelectItem>
-              {appOptions.map((slug) => {
-                const integration = integrations.find((item) => item.slug === slug);
-
-                if (!integration) {
-                  return null;
-                }
-
-                return (
-                  <SelectItem key={slug} value={slug}>
-                    {integration.name}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-
           <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value ?? "all")}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Status" />
@@ -623,7 +593,11 @@ export default function IntegrationsPage() {
                       </div>
                     </div>
 
-                    {integration.setupMode === "oauth" ? (
+                    {integration.dashboardStatus === "coming-soon" ? (
+                      <span className="shrink-0 rounded-full border border-black/10 bg-black/[0.03] px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                        Coming soon
+                      </span>
+                    ) : integration.setupMode === "oauth" ? (
                       <OAuthConnectButton
                         integration={integration}
                         onConnected={() => {
