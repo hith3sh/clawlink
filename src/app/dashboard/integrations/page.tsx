@@ -59,6 +59,10 @@ function formatConnectionTimestamp(value: string): string {
 }
 
 function getMethodLabel(integration: Integration): string {
+  if (integration.setupMode === "pipedream") {
+    return "Hosted Connect";
+  }
+
   if (integration.setupMode === "oauth") {
     return "OAuth 2";
   }
@@ -216,7 +220,7 @@ export default function IntegrationsPage() {
           accountLabel:
             connection.accountLabel ??
             connection.connectionLabel ??
-            (integration.setupMode === "oauth" ? "Connected account" : "Manual credentials"),
+            (integration.setupMode === "manual" ? "Manual credentials" : "Connected account"),
           methodLabel: getMethodLabel(integration),
           status: getConnectionStatus(connection.authState, connection.expiresAt),
           connectionCode: `conn_${connection.id.toString().padStart(6, "0")}`,
@@ -597,7 +601,7 @@ export default function IntegrationsPage() {
                       <span className="shrink-0 rounded-full border border-black/10 bg-black/[0.03] px-3 py-1.5 text-xs font-medium text-muted-foreground">
                         Coming soon
                       </span>
-                    ) : integration.setupMode === "oauth" ? (
+                    ) : integration.setupMode !== "manual" ? (
                       <OAuthConnectButton
                         integration={integration}
                         onConnected={() => {

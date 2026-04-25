@@ -48,10 +48,11 @@ If you have not called `clawlink_list_tools` in the current turn, do not make th
 2. Call `clawlink_describe_tool` before using an unfamiliar tool, before any write, or any time the request is ambiguous.
 3. Use the returned `whenToUse`, `askBefore`, `safeDefaults`, `examples`, and `followups` guidance to shape the request.
 4. Prefer read, list, search, and get operations before writes whenever that reduces ambiguity.
-5. Call `clawlink_call_tool` with the selected tool name and arguments.
-6. If the user has multiple connections for one integration, use the default unless the user asked for a specific account. Pass `connectionId` when needed.
-7. If the tool call fails, report the actual error. Do not invent results, and do not restate the failure as a capability gap unless the live tool catalog supports that conclusion.
-8. Summarize the result clearly and offer a sensible next step.
+5. For writes or anything marked as requiring confirmation, call `clawlink_preview_tool` first.
+6. Call `clawlink_call_tool` with the selected tool name and arguments. Pass confirmation only after previewing or after the user clearly confirms the action.
+7. If the user has multiple connections for one integration, use the default unless the user asked for a specific account. Pass `connectionId` when needed.
+8. If the tool call fails, report the actual error. Do not invent results, and do not restate the failure as a capability gap unless the live tool catalog supports that conclusion.
+9. Summarize the result clearly and offer a sensible next step.
 
 ## Hosted connection workflow
 

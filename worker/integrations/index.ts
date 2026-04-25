@@ -20,10 +20,20 @@ import "./google-sheets";
 import "./google-calendar";
 import "./motion";
 import "./twilio";
+import "./linkedin";
+import "./facebook";
+import "./mailchimp";
 // import "./stripe";
 // etc.
 
-export { defineTool, getIntegrationHandler, getAllHandlers, registerHandler } from "./base";
+export {
+  classifyIntegrationError,
+  defineTool,
+  getIntegrationHandler,
+  getAllHandlers,
+  isAuthenticationFailure,
+  registerHandler,
+} from "./base";
 export type {
   IntegrationHandler,
   IntegrationTool,

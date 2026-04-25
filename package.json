@@ -20,6 +20,7 @@
     "@clerk/nextjs": "^7.0.8",
     "@nangohq/frontend": "^0.69.48",
     "@opennextjs/cloudflare": "^1.18.0",
+    "@pipedream/sdk": "^2.4.7",
     "@polar-sh/nextjs": "^0.9.5",
     "@useclawlink/openclaw-plugin": "^0.1.10",
     "class-variance-authority": "^0.7.1",

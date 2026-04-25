@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
 
 import { resolveRequestActor } from "@/lib/server/request-auth";
-import { executeToolForUser, ToolInputValidationError } from "@/lib/server/tooling";
+import { executeToolForUser } from "@/lib/server/tooling";
 
 export const dynamic = "force-dynamic";
 
 interface ExecuteToolRequestBody {
   arguments?: Record<string, unknown>;
   connectionId?: number | string;
+  confirmed?: boolean;
 }
 
-function normalizeArgs(payload: unknown): { args: Record<string, unknown>; connectionId?: number } {
+function normalizeArgs(payload: unknown): {
+  args: Record<string, unknown>;
+  connectionId?: number;
+  confirmed?: boolean;
+} {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     return { args: {} };
   }
@@ -29,15 +34,53 @@ function normalizeArgs(payload: unknown): { args: Record<string, unknown>; conne
     return {
       args: body.arguments,
       connectionId,
+      confirmed: body.confirmed === true,
     };
   }
 
   const args = { ...body };
   delete args.connectionId;
+  delete args.confirmed;
   return {
     args,
     connectionId,
+    confirmed: body.confirmed === true,
   };
+}
+
+function getStatusCode(payload: Awaited<ReturnType<typeof executeToolForUser>>): number {
+  if (payload.ok) {
+    return 200;
+  }
+
+  switch (payload.error?.code) {
+    case "tool_not_found":
+      return 404;
+    case "ambiguous_connection":
+      return 409;
+    case "confirmation_required":
+      return 412;
+    case "needs_connection":
+      return 409;
+    default:
+      break;
+  }
+
+  switch (payload.error?.type) {
+    case "validation":
+      return 400;
+    case "reauth_required":
+    case "auth":
+      return 401;
+    case "missing_scopes":
+      return 403;
+    case "rate_limit":
+      return 429;
+    default:
+      break;
+  }
+
+  return 500;
 }
 
 export async function POST(
@@ -53,30 +96,21 @@ export async function POST(
 
     const { name } = await context.params;
     const payload = await request.json().catch(() => ({}));
-    const { args, connectionId } = normalizeArgs(payload);
+    const { args, connectionId, confirmed } = normalizeArgs(payload);
     const execution = await executeToolForUser(
-      actor.user.id,
-      decodeURIComponent(name),
-      args,
-      connectionId,
+      {
+        userId: actor.user.id,
+        toolName: decodeURIComponent(name),
+        args,
+        connectionId,
+        confirmed,
+      },
     );
 
-    return NextResponse.json(execution);
+    return NextResponse.json(execution, {
+      status: getStatusCode(execution),
+    });
   } catch (error) {
-    if (error instanceof ToolInputValidationError) {
-      return NextResponse.json(
-        {
-          error: "Invalid tool arguments",
-          details: error.details,
-        },
-        { status: 400 },
-      );
-    }
-
-    if (error instanceof Error && error.message === "Tool not found") {
-      return NextResponse.json({ error: "Tool not found" }, { status: 404 });
-    }
-
     console.error("Error executing tool:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to execute tool" },

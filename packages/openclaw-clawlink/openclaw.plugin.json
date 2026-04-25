@@ -24,6 +24,7 @@
       "clawlink_list_integrations",
       "clawlink_list_tools",
       "clawlink_describe_tool",
+      "clawlink_preview_tool",
       "clawlink_call_tool"
     ]
   },

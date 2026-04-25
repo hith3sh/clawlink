@@ -21,6 +21,13 @@ export interface UserIntegration {
   isDefault: boolean;
   authState: "active" | "needs_reauth";
   authError: string | null;
+  lastUsedAt: string | null;
+  lastSuccessAt: string | null;
+  lastErrorAt: string | null;
+  lastErrorCode: string | null;
+  lastErrorMessage: string | null;
+  scopeSnapshot: string[] | null;
+  capabilities: string[] | null;
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -86,13 +93,22 @@ export interface MCPTool {
   name: string;
   description: string;
   inputSchema: object;
+  outputSchema?: object;
   accessLevel: "read" | "write" | "destructive";
+  mode: "read" | "write" | "destructive";
+  risk: "safe" | "confirm" | "high_impact";
   tags: string[];
   whenToUse: string[];
   askBefore: string[];
   safeDefaults: Record<string, unknown>;
   examples: Array<{ user: string; args: Record<string, unknown> }>;
   followups: string[];
+  requiresScopes: string[];
+  idempotent: boolean;
+  supportsDryRun: boolean;
+  supportsBatch: boolean;
+  maxBatchSize?: number;
+  recommendedTimeoutMs?: number;
 }
 
 export interface MCPToolsListResponse {

@@ -259,6 +259,9 @@ function buildToolListText(payload) {
         name: tool?.name ?? null,
         description: tool?.description ?? null,
         accessLevel: tool?.accessLevel ?? null,
+        risk: tool?.risk ?? null,
+        requiresConfirmation: Boolean(tool?.requiresConfirmation),
+        previewAvailable: Boolean(tool?.previewAvailable),
         tags: Array.isArray(tool?.tags) ? tool.tags : [],
         defaultConnectionId: tool?.defaultConnectionId ?? null,
         connectionCount: tool?.connectionCount ?? 0,
@@ -282,6 +285,8 @@ function buildToolExecutionText(toolName, payload) {
     tool: payload?.tool?.name ?? toolName,
     integration: payload?.tool?.integration ?? null,
     connectionId: payload?.connectionId ?? null,
+    requiresConfirmation: Boolean(payload?.requiresConfirmation),
+    policyReason: payload?.policyReason ?? null,
     args: payload?.args ?? null,
     result: payload?.result ?? payload,
   };
@@ -554,11 +559,11 @@ const clawlinkPlugin = {
     });
 
     api.registerTool({
-      name: "clawlink_call_tool",
-      description: "Execute an action on a connected external app or service through ClawLink. Use clawlink_list_tools to discover the live tool catalog first, then clawlink_describe_tool for usage guidance. Do not claim a capability is missing until the live tool list has been checked.",
+      name: "clawlink_preview_tool",
+      description: "Preview a ClawLink tool call before executing it. Use this for writes or anything that may require explicit confirmation.",
       parameters: Type.Object({
         tool: Type.String({
-          description: "ClawLink tool name, for example notion_search or github_list_issues.",
+          description: "ClawLink tool name, for example notion_create_page or slack_send_message.",
           minLength: 1,
         }),
         arguments: Type.Optional(Type.Record(Type.String(), Type.Unknown(), {
@@ -579,6 +584,51 @@ const clawlinkPlugin = {
 
         const payload = await callClawLink(
           api,
+          `/api/tools/${encodeURIComponent(tool)}/preview`,
+          {
+            method: "POST",
+            body: {
+              arguments: args,
+              ...(Number.isInteger(params.connectionId)
+                ? { connectionId: params.connectionId }
+                : {}),
+            },
+          },
+        );
+
+        return textResult(buildToolExecutionText(tool, payload), payload);
+      },
+    });
+
+    api.registerTool({
+      name: "clawlink_call_tool",
+      description: "Execute an action on a connected external app or service through ClawLink. Use clawlink_list_tools to discover the live tool catalog first, then clawlink_describe_tool for usage guidance. Do not claim a capability is missing until the live tool list has been checked.",
+      parameters: Type.Object({
+        tool: Type.String({
+          description: "ClawLink tool name, for example notion_search or github_list_issues.",
+          minLength: 1,
+        }),
+        arguments: Type.Optional(Type.Record(Type.String(), Type.Unknown(), {
+          description: "Arguments for the selected tool.",
+        })),
+        connectionId: Type.Optional(Type.Integer({
+          description: "Optional ClawLink connection id when the user has multiple connections for one integration.",
+          minimum: 1,
+        })),
+        confirmed: Type.Optional(Type.Boolean({
+          description: "Set true after previewing or when the user explicitly confirms a write/destructive action.",
+        })),
+      }),
+      async execute(_id, params) {
+        const tool = isNonEmptyString(params.tool) ? params.tool.trim() : "";
+        const args = isPlainObject(params.arguments) ? params.arguments : {};
+
+        if (!tool) {
+          throw new Error("tool is required");
+        }
+
+        const payload = await callClawLink(
+          api,
           `/api/tools/${encodeURIComponent(tool)}/execute`,
           {
             method: "POST",
@@ -587,6 +637,7 @@ const clawlinkPlugin = {
               ...(Number.isInteger(params.connectionId)
                 ? { connectionId: params.connectionId }
                 : {}),
+              ...(params.confirmed === true ? { confirmed: true } : {}),
             },
           },
         );

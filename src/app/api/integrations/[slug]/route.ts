@@ -12,6 +12,7 @@ import {
   saveIntegrationConnection,
 } from "@/lib/server/integration-store";
 import { ManualCredentialValidationError, validateManualIntegrationCredentials } from "@/lib/server/manual-credentials";
+import { listToolDescriptionsForIntegration } from "@/lib/server/tooling";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,9 @@ export async function GET(
     const activeSession = user
       ? await getLatestActiveConnectionSessionForUser(user, slug)
       : null;
+    const tools = user
+      ? await listToolDescriptionsForIntegration(user.id, slug)
+      : [];
 
     return NextResponse.json({
       integration: slug,
@@ -61,6 +65,7 @@ export async function GET(
       connections,
       connectionCount: connections.length,
       activeSession,
+      tools,
     });
   } catch (error) {
     console.error(`Error fetching integration ${slug}:`, error);

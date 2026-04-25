@@ -11,10 +11,13 @@ import {
   Key,
   Loader2,
   RefreshCcw,
+  ShieldAlert,
+  ShieldCheck,
   Trash2,
 } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,6 +53,16 @@ interface SessionRecord {
   updatedAt: string | null;
 }
 
+interface ToolRecord {
+  name: string;
+  description: string;
+  mode: "read" | "write" | "destructive";
+  risk: "safe" | "confirm" | "high_impact";
+  requiresConfirmation: boolean;
+  policyReason?: string;
+  previewAvailable: boolean;
+}
+
 interface Props {
   integration: Integration;
 }
@@ -70,6 +83,7 @@ export default function IntegrationDetails({ integration }: Props) {
   const [connectionCount, setConnectionCount] = useState(0);
   const [activeSession, setActiveSession] = useState<SessionRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tools, setTools] = useState<ToolRecord[]>([]);
   const [disconnecting, setDisconnecting] = useState(false);
   const [startingSession, setStartingSession] = useState(false);
   const [copyingLink, setCopyingLink] = useState(false);
@@ -102,6 +116,7 @@ export default function IntegrationDetails({ integration }: Props) {
           connections?: ConnectionRecord[];
           connectionCount?: number;
           activeSession?: SessionRecord | null;
+          tools?: ToolRecord[];
         };
 
         if (!active) {
@@ -116,6 +131,7 @@ export default function IntegrationDetails({ integration }: Props) {
         setConnection(data.connection ?? null);
         setConnectionCount(data.connectionCount ?? data.connections?.length ?? (data.connection ? 1 : 0));
         setActiveSession(data.activeSession ?? null);
+        setTools(data.tools ?? []);
       } catch (requestError) {
         if (active) {
           setError(requestError instanceof Error ? requestError.message : "Failed to load integration");
@@ -481,12 +497,56 @@ export default function IntegrationDetails({ integration }: Props) {
             <h3 className="text-sm font-medium text-foreground">Available tools</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               {integration.runtimeStatus === "live"
-                ? "These tools are active in the worker."
+                ? "These tools are active in the runtime. Writes now require explicit confirmation before execution."
                 : "These tools are planned for a future release."}
             </p>
           </div>
 
-          {integration.tools.length > 0 ? (
+          {tools.length > 0 ? (
+            <div className="space-y-2">
+              {tools.map((tool) => (
+                <div key={tool.name} className="rounded-lg border border-border p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-mono text-sm text-foreground">
+                      {tool.name}
+                    </p>
+                    <Badge variant="outline">{tool.mode}</Badge>
+                    <Badge variant={tool.risk === "high_impact" ? "destructive" : tool.risk === "confirm" ? "secondary" : "outline"}>
+                      {tool.risk === "high_impact" ? "high impact" : tool.risk}
+                    </Badge>
+                    {tool.requiresConfirmation ? (
+                      <Badge variant="secondary">confirmation required</Badge>
+                    ) : null}
+                    {tool.previewAvailable ? (
+                      <Badge variant="outline">preview available</Badge>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{tool.description}</p>
+                  {tool.requiresConfirmation ? (
+                    <div className="mt-3 flex gap-2 rounded-lg border border-amber-500/20 bg-amber-500/8 p-3 text-sm text-amber-900 dark:text-amber-100">
+                      <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-300" />
+                      <div className="space-y-1">
+                        <p className="font-medium">Explicit confirmation required</p>
+                        <p className="text-amber-800/80 dark:text-amber-100/80">
+                          {tool.policyReason ?? "This tool writes data to an external service, so ClawLink will block direct execution until it is confirmed."}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-3 flex gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/8 p-3 text-sm text-emerald-900 dark:text-emerald-100">
+                      <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-300" />
+                      <div>
+                        <p className="font-medium">Runs without confirmation</p>
+                        <p className="text-emerald-800/80 dark:text-emerald-100/80">
+                          This tool is read-only or low-risk enough to execute directly.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : integration.tools.length > 0 ? (
             <div className="space-y-2">
               {integration.tools.map((tool) => (
                 <div key={tool.name} className="rounded-lg border border-border p-3">

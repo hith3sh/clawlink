@@ -4,7 +4,14 @@
  * All integration handlers implement this interface
  */
 
-export type ToolAccessLevel = "read" | "write" | "destructive";
+import {
+  inferToolRisk,
+  type NormalizedToolError,
+  type ToolMode,
+  type ToolRisk,
+} from "../../src/lib/runtime/tool-runtime";
+
+export type ToolAccessLevel = ToolMode;
 
 export interface IntegrationToolExample {
   user: string;
@@ -16,25 +23,42 @@ export interface IntegrationTool {
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
+  outputSchema?: Record<string, unknown>;
   accessLevel: ToolAccessLevel;
+  mode: ToolMode;
+  risk: ToolRisk;
   tags: string[];
   whenToUse: string[];
   askBefore: string[];
   safeDefaults: Record<string, unknown>;
   examples: IntegrationToolExample[];
   followups: string[];
+  requiresScopes: string[];
+  idempotent: boolean;
+  supportsDryRun: boolean;
+  supportsBatch: boolean;
+  maxBatchSize?: number;
+  recommendedTimeoutMs?: number;
 }
 
 export interface DefineIntegrationToolOptions {
   description: string;
   inputSchema: Record<string, unknown>;
+  outputSchema?: Record<string, unknown>;
   accessLevel: ToolAccessLevel;
+  risk?: ToolRisk;
   tags?: string[];
   whenToUse?: string[];
   askBefore?: string[];
   safeDefaults?: Record<string, unknown>;
   examples?: IntegrationToolExample[];
   followups?: string[];
+  requiresScopes?: string[];
+  idempotent?: boolean;
+  supportsDryRun?: boolean;
+  supportsBatch?: boolean;
+  maxBatchSize?: number;
+  recommendedTimeoutMs?: number;
 }
 
 export function defineTool(
@@ -47,13 +71,22 @@ export function defineTool(
     name: `${integration}_${action}`,
     description: options.description,
     inputSchema: options.inputSchema,
+    outputSchema: options.outputSchema,
     accessLevel: options.accessLevel,
+    mode: options.accessLevel,
+    risk: options.risk ?? inferToolRisk(options.accessLevel),
     tags: options.tags ?? [],
     whenToUse: options.whenToUse ?? [],
     askBefore: options.askBefore ?? [],
     safeDefaults: options.safeDefaults ?? {},
     examples: options.examples ?? [],
     followups: options.followups ?? [],
+    requiresScopes: options.requiresScopes ?? [],
+    idempotent: options.idempotent ?? options.accessLevel === "read",
+    supportsDryRun: options.supportsDryRun ?? false,
+    supportsBatch: options.supportsBatch ?? false,
+    maxBatchSize: options.maxBatchSize,
+    recommendedTimeoutMs: options.recommendedTimeoutMs,
   };
 }
 
@@ -66,12 +99,33 @@ export interface IntegrationHandler {
   /**
    * Execute an action
    */
-  execute(action: string, args: Record<string, unknown>, credentials: Record<string, string>): Promise<unknown>;
+  execute(
+    action: string,
+    args: Record<string, unknown>,
+    credentials: Record<string, string>,
+    context?: {
+      requestId: string;
+      dryRun?: boolean;
+      timeoutMs?: number;
+      connectionId?: number;
+      userId?: string;
+      env?: Record<string, unknown>;
+    },
+  ): Promise<unknown>;
 
   /**
    * Validate credentials for this integration
    */
   validateCredentials?(credentials: Record<string, string>): Promise<boolean>;
+
+  checkHealth?(
+    credentials: Record<string, string>,
+  ): Promise<{
+    ok: boolean;
+    scopes?: string[];
+    account?: { id?: string; label?: string };
+    expiresAt?: string | null;
+  }>;
 
 }
 
@@ -101,12 +155,135 @@ export function isAuthenticationFailure(error: unknown): boolean {
   );
 }
 
+function isMissingScopeFailure(error: unknown): boolean {
+  if (error instanceof IntegrationRequestError) {
+    return error.status === 403 && /\bscope|permission|forbidden|insufficient/i.test(error.message);
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return /\binsufficient[_\s-]?scope|missing[_\s-]?scope|permission denied|forbidden\b/i.test(
+    error.message,
+  );
+}
+
+function isRateLimitFailure(error: unknown): boolean {
+  if (error instanceof IntegrationRequestError) {
+    return error.status === 429;
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return /\b429\b|rate limit|too many requests/i.test(error.message);
+}
+
+function isNetworkFailure(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return /\b(fetch failed|network|timed out|timeout|socket hang up|econnreset|etimedout|enotfound)\b/i.test(
+    error.message,
+  );
+}
+
+export function classifyIntegrationError(error: unknown): NormalizedToolError {
+  if (error instanceof IntegrationRequestError) {
+    if (error.status === 401) {
+      return {
+        type: "reauth_required",
+        code: error.code,
+        message: error.message,
+        retryable: false,
+      };
+    }
+
+    if (error.status === 429) {
+      return {
+        type: "rate_limit",
+        code: error.code,
+        message: error.message,
+        retryable: true,
+      };
+    }
+
+    if (error.status === 403 && isMissingScopeFailure(error)) {
+      return {
+        type: "missing_scopes",
+        code: error.code,
+        message: error.message,
+        retryable: false,
+      };
+    }
+
+    return {
+      type: "provider",
+      code: error.code,
+      message: error.message,
+      retryable: error.status >= 500,
+    };
+  }
+
+  if (isAuthenticationFailure(error)) {
+    return {
+      type: "reauth_required",
+      message: error instanceof Error ? error.message : "Authentication failed",
+      retryable: false,
+    };
+  }
+
+  if (isMissingScopeFailure(error)) {
+    return {
+      type: "missing_scopes",
+      message: error instanceof Error ? error.message : "Missing required scopes",
+      retryable: false,
+    };
+  }
+
+  if (isRateLimitFailure(error)) {
+    return {
+      type: "rate_limit",
+      message: error instanceof Error ? error.message : "Provider rate limit reached",
+      retryable: true,
+    };
+  }
+
+  if (isNetworkFailure(error)) {
+    return {
+      type: "network",
+      message: error instanceof Error ? error.message : "Network request failed",
+      retryable: true,
+    };
+  }
+
+  return {
+    type: "unknown",
+    message: error instanceof Error ? error.message : "Unknown tool execution error",
+    retryable: false,
+  };
+}
+
 /**
  * Base class with common functionality
  */
 export abstract class BaseIntegration implements IntegrationHandler {
   abstract getTools(integrationSlug: string): IntegrationTool[];
-  abstract execute(action: string, args: Record<string, unknown>, credentials: Record<string, string>): Promise<unknown>;
+  abstract execute(
+    action: string,
+    args: Record<string, unknown>,
+    credentials: Record<string, string>,
+    context?: {
+      requestId: string;
+      dryRun?: boolean;
+      timeoutMs?: number;
+      connectionId?: number;
+      userId?: string;
+    },
+  ): Promise<unknown>;
 
   private buildRequestHeaders(
     baseHeaders: RequestInit["headers"],

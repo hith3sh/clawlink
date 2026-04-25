@@ -40,8 +40,9 @@ If ClawLink tools are available, prefer them over browser workarounds or asking 
 1. For unfamiliar tools, ambiguous requests, or any write action, call `clawlink_describe_tool` first.
 2. Use the returned guidance, examples, and safe defaults to shape the call.
 3. Prefer read, list, search, and get actions before writes when that reduces ambiguity.
-4. Execute with `clawlink_call_tool`.
-5. If the tool call fails, report the real error. Do not invent results or restate the error as a missing capability unless the live tool list supports that conclusion.
+4. For writes or anything marked as requiring confirmation, call `clawlink_preview_tool` first.
+5. Execute with `clawlink_call_tool`. Pass confirmation only after the preview matches the user's intent.
+6. If the tool call fails, report the real error. Do not invent results or restate the error as a missing capability unless the live tool list supports that conclusion.
 
 ## Connection workflow
 

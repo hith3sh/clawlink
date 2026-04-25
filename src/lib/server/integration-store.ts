@@ -4,6 +4,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { ConnectionAuthState } from "@/lib/connection-status";
 import { deleteNangoConnection } from "@/lib/server/nango";
+import { deletePipedreamAccount } from "@/lib/server/pipedream";
 
 export interface D1Statement {
   bind(...values: unknown[]): {
@@ -17,7 +18,7 @@ export interface D1LikeDatabase {
   prepare(query: string): D1Statement;
 }
 
-export type IntegrationAuthProvider = "clawlink" | "nango";
+export type IntegrationAuthProvider = "clawlink" | "nango" | "pipedream";
 
 export interface UserRow {
   id: string;
@@ -38,7 +39,15 @@ interface StoredIntegrationRow {
   auth_provider: string;
   nango_connection_id: string | null;
   nango_provider_config_key: string | null;
+  pipedream_account_id: string | null;
   expires_at: string | null;
+  last_used_at: string | null;
+  last_success_at: string | null;
+  last_error_at: string | null;
+  last_error_code: string | null;
+  last_error_message: string | null;
+  scope_snapshot_json: string | null;
+  capabilities_json: string | null;
   created_at: string;
   updated_at?: string | null;
 }
@@ -52,10 +61,18 @@ export interface IntegrationConnectionRecord {
   isDefault: boolean;
   authState: ConnectionAuthState;
   authError: string | null;
-  authBackend: "local" | "nango";
+  authBackend: "local" | "nango" | "pipedream";
   nangoConnectionId: string | null;
   nangoProviderConfigKey: string | null;
+  pipedreamAccountId: string | null;
   expiresAt: string | null;
+  lastUsedAt: string | null;
+  lastSuccessAt: string | null;
+  lastErrorAt: string | null;
+  lastErrorCode: string | null;
+  lastErrorMessage: string | null;
+  scopeSnapshot: string[] | null;
+  capabilities: string[] | null;
   createdAt: string;
   updatedAt: string | null;
 }
@@ -88,6 +105,17 @@ export interface SaveNangoIntegrationConnectionOptions {
   expiresAt?: string | null;
 }
 
+export interface SavePipedreamIntegrationConnectionOptions {
+  mode?: ConnectionSaveMode;
+  connectionId?: number;
+  setAsDefault?: boolean;
+  pipedreamAccountId: string;
+  connectionLabel?: string | null;
+  accountLabel?: string | null;
+  externalAccountId?: string | null;
+  expiresAt?: string | null;
+}
+
 interface DerivedConnectionMetadata {
   accountLabel: string | null;
   connectionLabel: string | null;
@@ -95,8 +123,16 @@ interface DerivedConnectionMetadata {
   expiresAt: string | null;
 }
 
-function authProviderToBackend(authProvider: string | null | undefined): "local" | "nango" {
-  return authProvider === "nango" ? "nango" : "local";
+function authProviderToBackend(authProvider: string | null | undefined): "local" | "nango" | "pipedream" {
+  if (authProvider === "nango") {
+    return "nango";
+  }
+
+  if (authProvider === "pipedream") {
+    return "pipedream";
+  }
+
+  return "local";
 }
 
 function getOptionalRequestContext():
@@ -234,6 +270,28 @@ function deriveConnectionMetadata(
   };
 }
 
+function parseStringArray(value: string | null | undefined): string[] | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+
+    const normalized = parsed
+      .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+      .filter((entry) => entry.length > 0);
+
+    return normalized.length > 0 ? normalized : null;
+  } catch {
+    return null;
+  }
+}
+
 function mapConnection(row: StoredIntegrationRow): IntegrationConnectionRecord {
   return {
     id: row.id,
@@ -247,7 +305,15 @@ function mapConnection(row: StoredIntegrationRow): IntegrationConnectionRecord {
     authBackend: authProviderToBackend(row.auth_provider),
     nangoConnectionId: row.nango_connection_id ?? null,
     nangoProviderConfigKey: row.nango_provider_config_key ?? null,
+    pipedreamAccountId: row.pipedream_account_id ?? null,
     expiresAt: row.expires_at,
+    lastUsedAt: row.last_used_at ?? null,
+    lastSuccessAt: row.last_success_at ?? null,
+    lastErrorAt: row.last_error_at ?? null,
+    lastErrorCode: row.last_error_code ?? null,
+    lastErrorMessage: row.last_error_message ?? null,
+    scopeSnapshot: parseStringArray(row.scope_snapshot_json),
+    capabilities: parseStringArray(row.capabilities_json),
     createdAt: row.created_at,
     updatedAt: row.updated_at ?? null,
   };
@@ -287,6 +353,15 @@ async function encryptNangoPlaceholderCredentials(params: {
     managedBy: "nango",
     providerConfigKey: params.providerConfigKey,
     nangoConnectionId: params.connectionId,
+  });
+}
+
+async function encryptPipedreamPlaceholderCredentials(params: {
+  pipedreamAccountId: string;
+}): Promise<string> {
+  return encryptCredentials({
+    managedBy: "pipedream",
+    pipedreamAccountId: params.pipedreamAccountId,
   });
 }
 
@@ -407,7 +482,10 @@ export async function getIntegrationConnectionByIdForUserId(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
                credentials_encrypted, is_default, auth_state, auth_error, auth_provider,
-               nango_connection_id, nango_provider_config_key, expires_at, created_at, updated_at
+               nango_connection_id, nango_provider_config_key, pipedream_account_id, expires_at,
+               last_used_at, last_success_at, last_error_at, last_error_code, last_error_message,
+               scope_snapshot_json, capabilities_json,
+               created_at, updated_at
         FROM user_integrations
         WHERE user_id = ? AND id = ?
       `,
@@ -475,6 +553,27 @@ async function findConnectionIdByNangoConnectionId(
       `,
     )
     .bind(userId, slug, nangoConnectionId)
+    .first<{ id: number }>();
+
+  return row?.id ?? null;
+}
+
+async function findConnectionIdByPipedreamAccountId(
+  db: D1LikeDatabase,
+  userId: string,
+  slug: string,
+  pipedreamAccountId: string,
+): Promise<number | null> {
+  const row = await db
+    .prepare(
+      `
+        SELECT id
+        FROM user_integrations
+        WHERE user_id = ? AND integration = ? AND pipedream_account_id = ?
+        LIMIT 1
+      `,
+    )
+    .bind(userId, slug, pipedreamAccountId)
     .first<{ id: number }>();
 
   return row?.id ?? null;
@@ -569,7 +668,10 @@ export async function listIntegrationConnectionsForUserId(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
                credentials_encrypted, is_default, auth_state, auth_error, auth_provider,
-               nango_connection_id, nango_provider_config_key, expires_at, created_at, updated_at
+               nango_connection_id, nango_provider_config_key, pipedream_account_id, expires_at,
+               last_used_at, last_success_at, last_error_at, last_error_code, last_error_message,
+               scope_snapshot_json, capabilities_json,
+               created_at, updated_at
         FROM user_integrations
         WHERE user_id = ?
         ORDER BY is_default DESC, created_at DESC, id DESC
@@ -596,7 +698,10 @@ export async function listIntegrationConnectionsForSlug(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
                credentials_encrypted, is_default, auth_state, auth_error, auth_provider,
-               nango_connection_id, nango_provider_config_key, expires_at, created_at, updated_at
+               nango_connection_id, nango_provider_config_key, pipedream_account_id, expires_at,
+               last_used_at, last_success_at, last_error_at, last_error_code, last_error_message,
+               scope_snapshot_json, capabilities_json,
+               created_at, updated_at
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
         ORDER BY is_default DESC, created_at DESC, id DESC
@@ -629,7 +734,10 @@ export async function getIntegrationConnectionForUserId(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
                credentials_encrypted, is_default, auth_state, auth_error, auth_provider,
-               nango_connection_id, nango_provider_config_key, expires_at, created_at, updated_at
+               nango_connection_id, nango_provider_config_key, pipedream_account_id, expires_at,
+               last_used_at, last_success_at, last_error_at, last_error_code, last_error_message,
+               scope_snapshot_json, capabilities_json,
+               created_at, updated_at
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
         ORDER BY is_default DESC, updated_at DESC, created_at DESC, id DESC
@@ -728,6 +836,7 @@ export async function saveIntegrationConnectionForUserId(
               auth_provider = ?,
               nango_connection_id = ?,
               nango_provider_config_key = ?,
+              pipedream_account_id = NULL,
               expires_at = ?,
               updated_at = datetime('now')
           WHERE id = ? AND user_id = ?
@@ -764,11 +873,12 @@ export async function saveIntegrationConnectionForUserId(
             auth_provider,
             nango_connection_id,
             nango_provider_config_key,
+            pipedream_account_id,
             expires_at,
             created_at,
             updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, ?, ?, ?, ?, datetime('now'), datetime('now'))
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, ?, ?, ?, NULL, ?, datetime('now'), datetime('now'))
         `,
       )
       .bind(
@@ -873,6 +983,7 @@ export async function saveNangoIntegrationConnectionForUserId(
               auth_provider = 'nango',
               nango_connection_id = ?,
               nango_provider_config_key = ?,
+              pipedream_account_id = NULL,
               expires_at = ?,
               updated_at = datetime('now')
           WHERE id = ? AND user_id = ?
@@ -908,11 +1019,12 @@ export async function saveNangoIntegrationConnectionForUserId(
             auth_provider,
             nango_connection_id,
             nango_provider_config_key,
+            pipedream_account_id,
             expires_at,
             created_at,
             updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, 'nango', ?, ?, ?, datetime('now'), datetime('now'))
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, 'nango', ?, ?, NULL, ?, datetime('now'), datetime('now'))
         `,
       )
       .bind(
@@ -944,6 +1056,145 @@ export async function saveNangoIntegrationConnectionForUserId(
 
   if (!saved) {
     throw new Error("Nango connection was saved but could not be reloaded");
+  }
+
+  return saved;
+}
+
+export async function savePipedreamIntegrationConnectionForUserId(
+  db: D1LikeDatabase,
+  userId: string,
+  slug: string,
+  options: SavePipedreamIntegrationConnectionOptions,
+): Promise<IntegrationConnectionRecord> {
+  const placeholderCredentials = await encryptPipedreamPlaceholderCredentials({
+    pipedreamAccountId: options.pipedreamAccountId,
+  });
+  let targetConnectionId = options.connectionId;
+
+  if (!targetConnectionId) {
+    targetConnectionId =
+      (await findConnectionIdByPipedreamAccountId(
+        db,
+        userId,
+        slug,
+        options.pipedreamAccountId,
+      )) ?? undefined;
+  }
+
+  if (
+    !targetConnectionId &&
+    options.mode === "create_or_match_account" &&
+    options.externalAccountId
+  ) {
+    targetConnectionId =
+      (await findConnectionIdByExternalAccountId(
+        db,
+        userId,
+        slug,
+        options.externalAccountId,
+      )) ?? undefined;
+  }
+
+  if (!targetConnectionId && options.mode === "upsert_default") {
+    targetConnectionId =
+      (await getIntegrationConnectionForUserId(db, userId, slug))?.id;
+  }
+
+  const shouldBeDefault = options.setAsDefault ?? true;
+  const needsDefault =
+    shouldBeDefault || !(await hasDefaultConnection(db, userId, slug));
+
+  if (needsDefault) {
+    await clearDefaultConnectionFlags(db, userId, slug);
+  }
+
+  if (targetConnectionId) {
+    await db
+      .prepare(
+        `
+          UPDATE user_integrations
+          SET credentials_encrypted = ?,
+              connection_label = ?,
+              account_label = ?,
+              external_account_id = ?,
+              is_default = ?,
+              auth_state = 'active',
+              auth_error = NULL,
+              auth_provider = 'pipedream',
+              nango_connection_id = NULL,
+              nango_provider_config_key = NULL,
+              pipedream_account_id = ?,
+              expires_at = ?,
+              updated_at = datetime('now')
+          WHERE id = ? AND user_id = ?
+        `,
+      )
+      .bind(
+        placeholderCredentials,
+        options.connectionLabel ?? null,
+        options.accountLabel ?? null,
+        options.externalAccountId ?? null,
+        needsDefault ? 1 : 0,
+        options.pipedreamAccountId,
+        options.expiresAt ?? null,
+        targetConnectionId,
+        userId,
+      )
+      .run();
+  } else {
+    await db
+      .prepare(
+        `
+          INSERT INTO user_integrations (
+            user_id,
+            integration,
+            connection_label,
+            account_label,
+            external_account_id,
+            credentials_encrypted,
+            is_default,
+            auth_state,
+            auth_error,
+            auth_provider,
+            nango_connection_id,
+            nango_provider_config_key,
+            pipedream_account_id,
+            expires_at,
+            created_at,
+            updated_at
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, 'pipedream', NULL, NULL, ?, ?, datetime('now'), datetime('now'))
+        `,
+      )
+      .bind(
+        userId,
+        slug,
+        options.connectionLabel ?? null,
+        options.accountLabel ?? null,
+        options.externalAccountId ?? null,
+        placeholderCredentials,
+        needsDefault ? 1 : 0,
+        options.pipedreamAccountId,
+        options.expiresAt ?? null,
+      )
+      .run();
+
+    targetConnectionId =
+      (await findConnectionIdByPipedreamAccountId(
+        db,
+        userId,
+        slug,
+        options.pipedreamAccountId,
+      )) ?? undefined;
+  }
+
+  const saved = targetConnectionId
+    ? await getIntegrationConnectionByIdForUserId(db, userId, targetConnectionId)
+    : await getIntegrationConnectionForUserId(db, userId, slug);
+
+  if (!saved) {
+    throw new Error("Pipedream connection was saved but could not be reloaded");
   }
 
   return saved;
@@ -1028,6 +1279,17 @@ export async function deleteIntegrationConnectionForUserId(
     }
   }
 
+  if (
+    connection.authBackend === "pipedream" &&
+    connection.pipedreamAccountId
+  ) {
+    try {
+      await deletePipedreamAccount(connection.pipedreamAccountId);
+    } catch (error) {
+      console.error("Failed to delete Pipedream connection:", error);
+    }
+  }
+
   await db
     .prepare("DELETE FROM user_integrations WHERE id = ? AND user_id = ?")
     .bind(connectionId, userId)
@@ -1054,5 +1316,24 @@ export async function markIntegrationConnectionNeedsReauthByNangoConnectionId(
       `,
     )
     .bind(authError, nangoConnectionId)
+    .run();
+}
+
+export async function markIntegrationConnectionNeedsReauthByPipedreamAccountId(
+  db: D1LikeDatabase,
+  pipedreamAccountId: string,
+  authError: string,
+): Promise<void> {
+  await db
+    .prepare(
+      `
+        UPDATE user_integrations
+        SET auth_state = 'needs_reauth',
+            auth_error = ?,
+            updated_at = datetime('now')
+        WHERE pipedream_account_id = ?
+      `,
+    )
+    .bind(authError, pipedreamAccountId)
     .run();
 }

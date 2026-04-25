@@ -6,6 +6,9 @@ compatibility_flags = ["nodejs_compat"]
 [observability]
 enabled = true
 
+[triggers]
+crons = ["*/5 * * * *"]
+
 # D1 Database
 [[d1_databases]]
 binding = "DB"
@@ -20,5 +23,8 @@ id = "82482703a83c4bc28af059eb092bd9a2"
 # Environment variables
 [vars]
 ENV = "production"
+CLAWLINK_APP_URL = "https://claw-link.dev"
 NANGO_BASE_URL = "https://nango.claw-link.dev"
-NANGO_PROVIDER_CONFIG_KEYS = "{\"apollo\":\"apollo\",\"gmail\":\"gmail\",\"google-analytics\":\"google-analytics\",\"notion\":\"notion\",\"outlook\":\"outlook\",\"postiz\":\"postiz\"}"
+NANGO_PROVIDER_CONFIG_KEYS = "{\"apollo\":\"apollo\",\"facebook\":\"facebook\",\"gmail\":\"gmail\",\"google-analytics\":\"google-analytics\",\"linkedin\":\"linkedin\",\"mailchimp\":\"mailchimp\",\"notion\":\"notion\",\"outlook\":\"outlook\",\"postiz\":\"postiz\"}"
+PIPEDREAM_ENVIRONMENT = "production"
+PIPEDREAM_PROJECT_ID = "proj_gYspDxN"

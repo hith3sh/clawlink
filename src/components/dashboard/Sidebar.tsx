@@ -8,6 +8,7 @@ import {
   Home,
   Link2,
   Activity,
+  Workflow,
   Settings,
   ExternalLink,
   LogOut,
@@ -29,6 +30,7 @@ import {
 const platformNav = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/dashboard/integrations", label: "Connections", icon: Link2 },
+  { href: "/dashboard/automations", label: "Automations", icon: Workflow },
   { href: "/dashboard/logs", label: "Usage", icon: Activity },
 ];
 
@@ -78,7 +80,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     render={<Link href={item.href} />}
-                    isActive={pathname === item.href}
+                    isActive={pathname === item.href || pathname.startsWith(`${item.href}/`)}
                     className="h-9 rounded-lg px-3 text-sm"
                   >
                     <item.icon className="h-4 w-4" />

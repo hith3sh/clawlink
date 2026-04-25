@@ -123,12 +123,13 @@ export default function VerifyPage() {
           <section className="space-y-3">
             <h2 className="text-2xl font-semibold tracking-tight text-gray-900">What the plugin does</h2>
             <p>
-              The plugin exposes six tools to OpenClaw:{" "}
+              The plugin exposes seven tools to OpenClaw:{" "}
               <span className="font-mono text-gray-900">clawlink_start_connection</span>,{" "}
               <span className="font-mono text-gray-900">clawlink_get_connection_status</span>,{" "}
               <span className="font-mono text-gray-900">clawlink_list_integrations</span>,{" "}
               <span className="font-mono text-gray-900">clawlink_list_tools</span>,{" "}
-              <span className="font-mono text-gray-900">clawlink_describe_tool</span>, and{" "}
+              <span className="font-mono text-gray-900">clawlink_describe_tool</span>,{" "}
+              <span className="font-mono text-gray-900">clawlink_preview_tool</span>, and{" "}
               <span className="font-mono text-gray-900">clawlink_call_tool</span>.
             </p>
             <p>

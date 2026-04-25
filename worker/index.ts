@@ -13,24 +13,34 @@ import "./integrations";
 import { integrations } from "../src/data/integrations";
 import { verifyAuth } from "./auth";
 import {
-  loadCredentialsForIntegration,
+  loadConnectionCredentialsForIntegration,
   markConnectionNeedsReauthForIntegration,
+  recordConnectionExecutionFailure,
+  recordConnectionExecutionSuccess,
   refreshCredentialsForIntegration,
   resolveInternalUserId,
+  updateConnectionExecutionMetadata,
 } from "./credentials";
-import { logRequest } from "./logger";
+import { logRequest, logToolExecution } from "./logger";
 import { getIntegrationHandler, type IntegrationTool } from "./integrations";
-import { isAuthenticationFailure } from "./integrations/base";
+import { classifyIntegrationError, isAuthenticationFailure } from "./integrations/base";
 
 export interface Env {
   DB: D1Database;
   CREDENTIALS: KVNamespace;
+  CLAWLINK_APP_URL?: string;
   CREDENTIAL_ENCRYPTION_KEY?: string;
   CLERK_PUBLISHABLE_KEY?: string;
   CLERK_JWT_KEY?: string;
   NANGO_BASE_URL?: string;
   NANGO_SECRET_KEY?: string;
   NANGO_PROVIDER_CONFIG_KEYS?: string;
+  PIPEDREAM_BASE_URL?: string;
+  PIPEDREAM_CLIENT_ID?: string;
+  PIPEDREAM_CLIENT_SECRET?: string;
+  PIPEDREAM_PROJECT_ID?: string;
+  PIPEDREAM_ENVIRONMENT?: string;
+  TRIGGER_CRON_SECRET?: string;
   [key: string]: unknown;
 }
 
@@ -54,6 +64,48 @@ interface MCPResponse {
     message: string;
     data?: unknown;
   };
+}
+
+function safeJsonStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return JSON.stringify({ error: "unserializable_payload" });
+  }
+}
+
+function getClawLinkAppUrl(env: Env): string {
+  const configured =
+    typeof env.CLAWLINK_APP_URL === "string" && env.CLAWLINK_APP_URL.trim().length > 0
+      ? env.CLAWLINK_APP_URL.trim()
+      : "https://claw-link.dev";
+
+  return configured.replace(/\/+$/, "");
+}
+
+async function runScheduledTriggerWork(env: Env): Promise<void> {
+  const secret =
+    typeof env.TRIGGER_CRON_SECRET === "string" ? env.TRIGGER_CRON_SECRET.trim() : "";
+
+  if (!secret) {
+    console.warn("Skipping scheduled trigger run because TRIGGER_CRON_SECRET is not configured.");
+    return;
+  }
+
+  const response = await fetch(`${getClawLinkAppUrl(env)}/api/triggers/run-due`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${secret}`,
+      "User-Agent": "clawlink-trigger-scheduler",
+    },
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `Trigger scheduler failed with ${response.status}: ${body.slice(0, 500)}`,
+    );
+  }
 }
 
 /**
@@ -96,15 +148,6 @@ async function handleToolCall(
   }
   const hasInlineCredentials = Boolean(params?.credentials);
 
-  if (params?.credentials) {
-    // Credentials passed in request (already encrypted per-session)
-    credentials = params.credentials;
-  } else {
-    credentials = await loadCredentialsForIntegration(env, internalUserId, integration, {
-      connectionId,
-    });
-  }
-
   // Get the integration handler
   const handler = getIntegrationHandler(integration);
   if (!handler) {
@@ -112,50 +155,147 @@ async function handleToolCall(
   }
 
   const canRetryAfterAuthFailure = !hasInlineCredentials;
-  let result: unknown;
+  const requestId = crypto.randomUUID();
+  const startedAt = Date.now();
+  let resolvedConnectionId = connectionId ?? null;
 
   try {
-    result = await handler.execute(action, args, credentials);
-  } catch (error) {
-    if (!canRetryAfterAuthFailure || !isAuthenticationFailure(error)) {
-      throw error;
+    if (params?.credentials) {
+      // Credentials passed in request (already encrypted per-session)
+      credentials = params.credentials;
+    } else {
+      const loaded = await loadConnectionCredentialsForIntegration(env, internalUserId, integration, {
+        connectionId,
+      });
+      credentials = loaded.credentials;
+      resolvedConnectionId = loaded.connectionId;
     }
+    let currentCredentials = credentials;
 
-    const refreshed = await refreshCredentialsForIntegration(env, internalUserId, integration, {
-      connectionId,
-    });
+    let result: unknown;
 
     try {
-      result = await handler.execute(action, args, refreshed.credentials);
-    } catch (retryError) {
-      if (isAuthenticationFailure(retryError)) {
-        const detail =
-          retryError instanceof Error
-            ? retryError.message
-            : `Authentication failed after refreshing ${integration} credentials.`;
-        await markConnectionNeedsReauthForIntegration(
-          env,
-          internalUserId,
-          integration,
-          detail,
-          { connectionId: refreshed.connectionId },
-        );
+      result = await handler.execute(action, args, currentCredentials, {
+        requestId,
+        connectionId: resolvedConnectionId ?? undefined,
+        userId: internalUserId,
+        env: env as Record<string, unknown>,
+      });
+    } catch (error) {
+      if (!canRetryAfterAuthFailure || !isAuthenticationFailure(error)) {
+        throw error;
       }
 
-      throw retryError;
+      const refreshed = await refreshCredentialsForIntegration(env, internalUserId, integration, {
+        connectionId: resolvedConnectionId ?? undefined,
+      });
+      resolvedConnectionId = refreshed.connectionId;
+      currentCredentials = refreshed.credentials;
+
+      try {
+        result = await handler.execute(action, args, currentCredentials, {
+          requestId,
+          connectionId: resolvedConnectionId,
+          userId: internalUserId,
+          env: env as Record<string, unknown>,
+        });
+      } catch (retryError) {
+        if (isAuthenticationFailure(retryError)) {
+          const detail =
+            retryError instanceof Error
+              ? retryError.message
+              : `Authentication failed after refreshing ${integration} credentials.`;
+          await markConnectionNeedsReauthForIntegration(
+            env,
+            internalUserId,
+            integration,
+            detail,
+            { connectionId: refreshed.connectionId },
+          );
+        }
+
+        throw retryError;
+      }
     }
+
+    const latencyMs = Date.now() - startedAt;
+
+    if (resolvedConnectionId) {
+      await recordConnectionExecutionSuccess(env, resolvedConnectionId);
+
+      if (typeof handler.checkHealth === "function") {
+        const health = await handler.checkHealth(currentCredentials);
+        await updateConnectionExecutionMetadata(env, resolvedConnectionId, {
+          scopes: health.scopes ?? null,
+        });
+      }
+    }
+
+    await logRequest(env.DB, {
+      userId: internalUserId,
+      integration,
+      action,
+      success: true,
+      latencyMs,
+      requestBody: safeJsonStringify(args),
+      responseBody: safeJsonStringify(result),
+    });
+
+    await logToolExecution(env.DB, {
+      id: requestId,
+      userId: internalUserId,
+      integration,
+      toolName: name,
+      connectionId: resolvedConnectionId,
+      executionMode: "direct",
+      status: "success",
+      requestJson: safeJsonStringify({
+        arguments: args,
+        connectionId: resolvedConnectionId,
+        inlineCredentials: hasInlineCredentials,
+      }),
+      responseJson: safeJsonStringify(result),
+      latencyMs,
+    });
+
+    return result;
+  } catch (error) {
+    const latencyMs = Date.now() - startedAt;
+    const classified = classifyIntegrationError(error);
+
+    if (resolvedConnectionId) {
+      await recordConnectionExecutionFailure(env, resolvedConnectionId, classified);
+    }
+
+    await logRequest(env.DB, {
+      userId: internalUserId,
+      integration,
+      action,
+      success: false,
+      latencyMs,
+      errorMessage: classified.message,
+      requestBody: safeJsonStringify(args),
+    });
+
+    await logToolExecution(env.DB, {
+      id: requestId,
+      userId: internalUserId,
+      integration,
+      toolName: name,
+      connectionId: resolvedConnectionId,
+      executionMode: "direct",
+      status: "error",
+      error: classified,
+      requestJson: safeJsonStringify({
+        arguments: args,
+        connectionId: resolvedConnectionId,
+        inlineCredentials: hasInlineCredentials,
+      }),
+      latencyMs,
+    });
+
+    throw error;
   }
-
-  // Log the request
-  await logRequest(env.DB, {
-    userId: internalUserId,
-    integration,
-    action,
-    success: true,
-    latencyMs: 0, // TODO: measure properly
-  });
-
-  return result;
 }
 
 /**
@@ -275,5 +415,12 @@ export default {
         }
       });
     }
+  },
+  async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(
+      runScheduledTriggerWork(env).catch((error) => {
+        console.error("Scheduled trigger run failed:", error);
+      }),
+    );
   },
 } satisfies ExportedHandler<Env>;

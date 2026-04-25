@@ -83,11 +83,20 @@ export async function POST(request: NextRequest) {
     }
 
     const reconnectConnectionId =
-      integration.setupMode === "oauth" &&
-      defaultConnection?.authBackend === "nango" &&
-      defaultConnection.authState === "needs_reauth" &&
-      defaultConnection.nangoConnectionId &&
-      defaultConnection.nangoProviderConfigKey
+      defaultConnection?.authState === "needs_reauth" &&
+      (
+        (
+          integration.setupMode === "oauth" &&
+          defaultConnection.authBackend === "nango" &&
+          defaultConnection.nangoConnectionId &&
+          defaultConnection.nangoProviderConfigKey
+        ) ||
+        (
+          integration.setupMode === "pipedream" &&
+          defaultConnection.authBackend === "pipedream" &&
+          defaultConnection.pipedreamAccountId
+        )
+      )
         ? defaultConnection.id
         : null;
     const session =

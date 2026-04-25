@@ -21,26 +21,53 @@ interface NangoClientConfig {
   providerConfigKey: string | null;
 }
 
+interface PipedreamClientConfig {
+  enabled: boolean;
+  app: string | null;
+  projectEnvironment: "development" | "production";
+}
+
+interface PipedreamConnectStartResponse {
+  error?: string;
+  app?: string;
+  token?: string;
+  connectLinkUrl?: string;
+  expiresAt?: string;
+  externalUserId?: string;
+  projectEnvironment?: "development" | "production";
+}
+
+interface PipedreamConnectCompleteResponse {
+  error?: string;
+  session?: {
+    status?: SessionSummary["status"];
+  };
+}
+
 interface Props {
   integration: Integration;
   session: SessionSummary;
   nango: NangoClientConfig;
+  pipedream: PipedreamClientConfig;
 }
 
 export default function HostedConnectPage({
   integration,
   session,
   nango,
+  pipedream,
 }: Props) {
   const [values, setValues] = useState<Record<string, string>>(
     Object.fromEntries(integration.credentialFields.map((field) => [field.key, ""])),
   );
   const [submitting, setSubmitting] = useState(false);
   const [startingOAuth, setStartingOAuth] = useState(false);
+  const [startingPipedream, setStartingPipedream] = useState(false);
   const [status, setStatus] = useState(session.status);
   const [error, setError] = useState<string | null>(session.errorMessage);
   const [info, setInfo] = useState<string | null>(null);
   const [nangoClosed, setNangoClosed] = useState(false);
+  const [pipedreamClosed, setPipedreamClosed] = useState(false);
   const connectUiRef = useRef<{ close: () => void } | null>(null);
   const autoOpenedRef = useRef(false);
 
@@ -106,6 +133,31 @@ export default function HostedConnectPage({
     }, 400);
     return () => window.clearTimeout(timer);
   }, [status]);
+
+  const fetchPipedreamConnectStart = useCallback(async () => {
+    const response = await fetch(`/api/connect/sessions/${session.token}/pipedream`, {
+      method: "POST",
+    });
+    const data = (await response.json()) as PipedreamConnectStartResponse;
+
+    if (
+      !response.ok ||
+      !data.app ||
+      !data.token ||
+      !data.expiresAt ||
+      !data.externalUserId
+    ) {
+      throw new Error(data.error ?? "Failed to start the hosted Pipedream flow.");
+    }
+
+    return data as Required<
+      Pick<
+        PipedreamConnectStartResponse,
+        "app" | "token" | "expiresAt" | "externalUserId"
+      >
+    > &
+      Pick<PipedreamConnectStartResponse, "connectLinkUrl" | "projectEnvironment">;
+  }, [session.token]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -196,19 +248,124 @@ export default function HostedConnectPage({
     }
   }, [integration.name, session.token]);
 
+  const handleStartPipedream = useCallback(async () => {
+    setStartingPipedream(true);
+    setError(null);
+    setInfo(null);
+    setPipedreamClosed(false);
+
+    try {
+      const initial = await fetchPipedreamConnectStart();
+      const { createFrontendClient } = await import("@pipedream/sdk/browser");
+      const client = createFrontendClient({
+        externalUserId: initial.externalUserId,
+        projectEnvironment: initial.projectEnvironment ?? pipedream.projectEnvironment,
+        tokenCallback: async () => {
+          const refreshed = await fetchPipedreamConnectStart();
+
+          return {
+            token: refreshed.token,
+            connectLinkUrl: refreshed.connectLinkUrl ?? "",
+            expiresAt: new Date(refreshed.expiresAt),
+          };
+        },
+      });
+
+      await client.connectAccount({
+        token: initial.token,
+        app: initial.app,
+        onSuccess: (result) => {
+          void (async () => {
+            try {
+              setError(null);
+              setPipedreamClosed(false);
+              setInfo(`Finishing ${integration.name} in ClawLink...`);
+
+              const response = await fetch(
+                `/api/connect/sessions/${session.token}/pipedream/complete`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ accountId: result.id }),
+                },
+              );
+              const data = (await response.json()) as PipedreamConnectCompleteResponse;
+
+              if (!response.ok) {
+                throw new Error(data.error ?? `Failed to finish connecting ${integration.name}.`);
+              }
+
+              setInfo(null);
+              setStatus(data.session?.status ?? "connected");
+            } catch (completionError) {
+              setInfo(null);
+              setPipedreamClosed(true);
+              setError(
+                completionError instanceof Error
+                  ? completionError.message
+                  : `Failed to finish connecting ${integration.name}.`,
+              );
+            }
+          })();
+        },
+        onError: (connectError) => {
+          setPipedreamClosed(true);
+          setInfo(null);
+          setError(connectError.message || `Failed to connect ${integration.name}.`);
+        },
+        onClose: (result) => {
+          if (!result.successful) {
+            setPipedreamClosed(true);
+            setInfo(null);
+          }
+        },
+      });
+
+      setInfo(`Continue in the ${integration.name} dialog. This page will update automatically.`);
+    } catch (requestError) {
+      setPipedreamClosed(true);
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Failed to start the hosted Pipedream flow.",
+      );
+    } finally {
+      setStartingPipedream(false);
+    }
+  }, [
+    fetchPipedreamConnectStart,
+    integration.name,
+    pipedream.projectEnvironment,
+    session.token,
+  ]);
+
+  const showPipedreamOAuth =
+    integration.setupMode === "pipedream" &&
+    integration.dashboardStatus === "available" &&
+    pipedream.enabled &&
+    Boolean(pipedream.app);
   const showNangoOAuth =
     integration.setupMode === "oauth" &&
     integration.dashboardStatus === "available" &&
+    !showPipedreamOAuth &&
     nango.enabled &&
     Boolean(nango.baseUrl && nango.apiUrl && nango.providerConfigKey);
 
   useEffect(() => {
+    if (showPipedreamOAuth) {
+      if (status !== "awaiting_user_action") return;
+      if (autoOpenedRef.current) return;
+      autoOpenedRef.current = true;
+      void handleStartPipedream();
+      return;
+    }
+
     if (!showNangoOAuth) return;
     if (status !== "awaiting_user_action") return;
     if (autoOpenedRef.current) return;
     autoOpenedRef.current = true;
     void handleStartOAuth();
-  }, [showNangoOAuth, status, handleStartOAuth]);
+  }, [showNangoOAuth, showPipedreamOAuth, status, handleStartOAuth, handleStartPipedream]);
 
   const hideCardForNango =
     showNangoOAuth &&
@@ -216,14 +373,22 @@ export default function HostedConnectPage({
     !nangoClosed &&
     !error;
 
-  if (hideCardForNango) {
+  const hideCardForPipedream =
+    showPipedreamOAuth &&
+    status === "awaiting_user_action" &&
+    !pipedreamClosed &&
+    !error;
+
+  if (hideCardForNango || hideCardForPipedream) {
     return <div className="min-h-screen bg-white" />;
   }
 
   const showUnavailableOAuth =
-    integration.setupMode === "oauth" &&
     integration.dashboardStatus === "available" &&
-    !showNangoOAuth;
+    (
+      (integration.setupMode === "oauth" && !showNangoOAuth) ||
+      (integration.setupMode === "pipedream" && !showPipedreamOAuth)
+    );
 
   return (
     <div className="mx-auto w-full max-w-2xl px-6 py-12">
@@ -272,6 +437,30 @@ export default function HostedConnectPage({
           <div className="rounded-3xl border border-amber-200 bg-amber-50 p-7 text-base leading-7 text-amber-900">
             This link expired. Start a new connection from OpenClaw and try again.
           </div>
+        ) : showPipedreamOAuth ? (
+          <div className="rounded-3xl border border-gray-200 bg-gray-50 p-7">
+            <div className="flex items-center gap-3 text-gray-700">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <p className="text-base leading-7">
+                Opening {integration.name}. If nothing happens, reopen the dialog below.
+              </p>
+            </div>
+            <div className="mt-5">
+              <button
+                type="button"
+                onClick={() => void handleStartPipedream()}
+                disabled={startingPipedream}
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {startingPipedream ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ExternalLink className="h-4 w-4" />
+                )}
+                {pipedreamClosed ? "Reopen dialog" : `Open ${integration.name}`}
+              </button>
+            </div>
+          </div>
         ) : showNangoOAuth ? (
           <div className="rounded-3xl border border-gray-200 bg-gray-50 p-7">
             <div className="flex items-center gap-3 text-gray-700">
@@ -294,12 +483,14 @@ export default function HostedConnectPage({
           </div>
         ) : showUnavailableOAuth ? (
           <div className="rounded-3xl border border-amber-200 bg-amber-50 p-7">
-            <p className="text-lg font-medium text-amber-900">Nango is not configured for {integration.name}.</p>
+            <p className="text-lg font-medium text-amber-900">
+              Hosted OAuth is not configured for {integration.name}.
+            </p>
             <p className="mt-2 text-base leading-7 text-amber-800">
-              This OAuth connection now depends on Nango. Add the provider config in ClawLink, then start a new connection.
+              Add the provider config in ClawLink, then start a new connection.
             </p>
           </div>
-        ) : integration.setupMode === "oauth" || integration.credentialFields.length === 0 ? (
+        ) : integration.setupMode !== "manual" || integration.credentialFields.length === 0 ? (
           <div className="rounded-3xl border border-gray-200 bg-gray-50 p-7">
             <p className="text-lg font-medium text-gray-900">This connection is not ready yet.</p>
             <p className="mt-2 text-base leading-7 text-gray-600">

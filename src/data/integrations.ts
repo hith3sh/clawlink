@@ -1,4 +1,4 @@
-export type IntegrationSetupMode = "manual" | "oauth";
+export type IntegrationSetupMode = "manual" | "oauth" | "pipedream";
 export type IntegrationDashboardStatus = "available" | "coming-soon";
 export type IntegrationRuntimeStatus = "live" | "planned";
 
@@ -99,6 +99,7 @@ const textareaField = (
 
 const baseIntegrations: BaseIntegration[] = [
   { name: "Gmail", slug: "gmail", description: "Send, read, and manage emails", category: "Communication", icon: "SiGmail", color: "#EA4335" },
+  { name: "Slack", slug: "slack", description: "Post messages and browse Slack channels", category: "Communication", icon: "SiSlack", color: "#4A154B" },
   { name: "Discord", slug: "discord", description: "Send messages and manage servers", category: "Communication", icon: "SiDiscord", color: "#5865F2" },
   { name: "Microsoft Teams", slug: "microsoft-teams", description: "Chat, meetings, and team collaboration", category: "Communication", icon: "FaMicrosoft", color: "#6264A7" },
   { name: "Outlook", slug: "outlook", description: "Read mail, manage calendar, and browse contacts", category: "Communication", icon: "PiMicrosoftOutlookLogo", color: "#0078D4" },
@@ -148,7 +149,8 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "Buffer", slug: "buffer", description: "Schedule and publish social media content", category: "Marketing", icon: "SiBuffer", color: "#232323" },
   { name: "Postiz", slug: "postiz", description: "Manage social channels and publish posts", category: "Social Media", icon: "TbPlugConnected", color: "#111827" },
   { name: "YouTube", slug: "youtube", description: "Upload videos and manage channels", category: "Social Media", icon: "SiYoutube", color: "#FF0000" },
-  { name: "LinkedIn", slug: "linkedin", description: "Post updates and manage connections", category: "Social Media", icon: "FaLinkedin", color: "#0A66C2" },
+  { name: "LinkedIn", slug: "linkedin", description: "Post updates, manage pages, and grow your network", category: "Social Media", icon: "FaLinkedin", color: "#0A66C2" },
+  { name: "Facebook", slug: "facebook", description: "Publish posts and manage your Facebook Page", category: "Social Media", icon: "SiFacebook", color: "#1877F2" },
   { name: "Instagram", slug: "instagram", description: "Publish posts and manage media", category: "Social Media", icon: "SiInstagram", color: "#E4405F" },
   { name: "Vimeo", slug: "vimeo", description: "Upload, manage, and share videos", category: "Social Media", icon: "SiVimeo", color: "#1AB7EA" },
   { name: "Shopify", slug: "shopify", description: "Manage products, orders, and customers", category: "E-commerce", icon: "SiShopify", color: "#7AB55C" },
@@ -179,13 +181,11 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   slack: {
-    setupMode: "manual",
-    dashboardStatus: "coming-soon",
+    setupMode: "pipedream",
+    dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Create a Slack app, install it to your workspace, and paste the bot token here.",
-    credentialFields: [
-      tokenField("botToken", "Bot Token", "xoxb-...", "Use the Bot User OAuth token from your Slack app."),
-    ],
+    setupGuide: "Connect Slack through the hosted Pipedream flow to authorize your workspace without creating a custom Slack app.",
+    credentialFields: [],
     tools: [
       { name: "send_message", description: "Post a message to a Slack channel" },
       { name: "list_channels", description: "List channels visible to the bot" },
@@ -702,12 +702,19 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   mailchimp: {
-    setupMode: "manual",
-    dashboardStatus: "coming-soon",
-    runtimeStatus: "planned",
-    setupGuide: "Mailchimp requires an API key from your account settings.",
+    setupMode: "oauth",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect Mailchimp through the hosted Nango flow to manage audiences, members, and campaigns from your Mailchimp account.",
     credentialFields: [],
-    tools: [],
+    tools: [
+      { name: "list_audiences", description: "List Mailchimp audiences (lists)" },
+      { name: "get_audience", description: "Get details for a specific Mailchimp audience" },
+      { name: "list_members", description: "List members in a Mailchimp audience" },
+      { name: "add_member", description: "Add or update a member in a Mailchimp audience" },
+      { name: "list_campaigns", description: "List Mailchimp campaigns" },
+      { name: "create_campaign", description: "Create a new Mailchimp campaign" },
+    ],
   },
   klaviyo: {
     setupMode: "manual",
@@ -750,11 +757,30 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   linkedin: {
     setupMode: "oauth",
-    dashboardStatus: "coming-soon",
-    runtimeStatus: "planned",
-    setupGuide: "LinkedIn posting requires OAuth with user scopes. That dashboard flow is not ready yet.",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect LinkedIn through the hosted Nango flow to post updates, read your profile, and manage content on your LinkedIn account.",
     credentialFields: [],
-    tools: [],
+    tools: [
+      { name: "get_profile", description: "Get the authenticated user's LinkedIn profile" },
+      { name: "create_post", description: "Create a post on LinkedIn" },
+      { name: "list_posts", description: "List recent posts by the authenticated user" },
+      { name: "delete_post", description: "Delete a LinkedIn post by URN" },
+    ],
+  },
+  facebook: {
+    setupMode: "oauth",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect Facebook through the hosted Nango flow to publish posts, read page insights, and manage your Facebook Page content.",
+    credentialFields: [],
+    tools: [
+      { name: "get_page", description: "Get Facebook Page info for the connected account" },
+      { name: "list_posts", description: "List posts from the Facebook Page" },
+      { name: "create_post", description: "Publish a post on the Facebook Page" },
+      { name: "delete_post", description: "Delete a Facebook Page post" },
+      { name: "get_post_insights", description: "Get engagement insights for a Facebook post" },
+    ],
   },
   instagram: {
     setupMode: "oauth",

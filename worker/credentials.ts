@@ -7,6 +7,7 @@ import {
   mapNangoConnectionToClawLinkCredentials,
   type NangoConnectionResponse,
 } from "../src/lib/nango/credentials";
+import type { NormalizedToolError } from "../src/lib/runtime/tool-runtime";
 import { decryptCredential, encryptCredential } from "./crypto";
 
 interface D1RunResult {
@@ -44,6 +45,7 @@ interface StoredIntegrationRow {
   auth_provider: string;
   nango_connection_id: string | null;
   nango_provider_config_key: string | null;
+  pipedream_account_id: string | null;
 }
 
 export interface CredentialBridgeEnv {
@@ -52,11 +54,21 @@ export interface CredentialBridgeEnv {
   CREDENTIAL_ENCRYPTION_KEY?: string;
   NANGO_BASE_URL?: string;
   NANGO_SECRET_KEY?: string;
+  PIPEDREAM_BASE_URL?: string;
+  PIPEDREAM_CLIENT_ID?: string;
+  PIPEDREAM_CLIENT_SECRET?: string;
+  PIPEDREAM_PROJECT_ID?: string;
+  PIPEDREAM_ENVIRONMENT?: string;
   [key: string]: unknown;
 }
 
 interface CredentialLookupOptions {
   connectionId?: number;
+}
+
+export interface LoadedConnectionCredentials {
+  connectionId: number;
+  credentials: Record<string, string>;
 }
 
 function cacheKey(connectionId: number): string {
@@ -181,14 +193,31 @@ async function markConnectionNeedsReauth(
         UPDATE user_integrations
         SET auth_state = 'needs_reauth',
             auth_error = ?,
+            last_used_at = datetime('now'),
+            last_error_at = datetime('now'),
+            last_error_code = 'reauth_required',
+            last_error_message = ?,
             updated_at = datetime('now')
         WHERE id = ?
       `,
     )
-    .bind(authError, connectionId)
+    .bind(authError, authError.slice(0, 1000), connectionId)
     .run();
 
   await clearCachedCredentials(env, connectionId);
+}
+
+function truncateErrorMessage(message: string | null | undefined): string | null {
+  const trimmed = safeTrim(message);
+  return trimmed ? trimmed.slice(0, 1000) : null;
+}
+
+function serializeStringArray(values: string[] | null | undefined): string | null {
+  if (!Array.isArray(values) || values.length === 0) {
+    return null;
+  }
+
+  return JSON.stringify(values.map((value) => value.trim()).filter(Boolean));
 }
 
 export async function resolveInternalUserId(
@@ -227,7 +256,7 @@ async function loadConnectionRecord(
       .prepare(
         `
           SELECT id, credentials_encrypted, auth_state, auth_error,
-                 auth_provider, nango_connection_id, nango_provider_config_key
+                 auth_provider, nango_connection_id, nango_provider_config_key, pipedream_account_id
           FROM user_integrations
           WHERE id = ? AND user_id = ? AND integration = ?
           LIMIT 1
@@ -241,7 +270,7 @@ async function loadConnectionRecord(
     .prepare(
       `
         SELECT id, credentials_encrypted, auth_state, auth_error,
-               auth_provider, nango_connection_id, nango_provider_config_key
+               auth_provider, nango_connection_id, nango_provider_config_key, pipedream_account_id
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
         ORDER BY is_default DESC, updated_at DESC, created_at DESC, id DESC
@@ -254,6 +283,10 @@ async function loadConnectionRecord(
 
 function isNangoBackedConnection(record: StoredIntegrationRow): boolean {
   return Boolean(record.nango_connection_id && record.nango_provider_config_key);
+}
+
+function isPipedreamBackedConnection(record: StoredIntegrationRow): boolean {
+  return record.auth_provider === "pipedream" || Boolean(record.pipedream_account_id);
 }
 
 function buildNeedsReauthMessageFromNango(
@@ -355,6 +388,22 @@ export async function loadCredentialsForIntegration(
   integration: string,
   options: CredentialLookupOptions = {},
 ): Promise<Record<string, string>> {
+  const loaded = await loadConnectionCredentialsForIntegration(
+    env,
+    userId,
+    integration,
+    options,
+  );
+
+  return loaded.credentials;
+}
+
+export async function loadConnectionCredentialsForIntegration(
+  env: CredentialBridgeEnv,
+  userId: string,
+  integration: string,
+  options: CredentialLookupOptions = {},
+): Promise<LoadedConnectionCredentials> {
   const record = await loadConnectionRecord(env, userId, integration, options);
 
   if (!record) {
@@ -374,13 +423,19 @@ export async function loadCredentialsForIntegration(
       await markLegacyOAuthConnectionNeedsReauth(env, record, integration);
     }
 
-    return fetchNangoConnection(env, integration, record);
+    return {
+      connectionId: record.id,
+      credentials: await fetchNangoConnection(env, integration, record),
+    };
   }
 
   const cached = await loadCachedCredentials(env, record.id);
 
   if (cached) {
-    return cached;
+    return {
+      connectionId: record.id,
+      credentials: cached,
+    };
   }
 
   if (!record.credentials_encrypted) {
@@ -393,7 +448,10 @@ export async function loadCredentialsForIntegration(
   );
 
   await cacheCredentials(env, record.id, credentials);
-  return credentials;
+  return {
+    connectionId: record.id,
+    credentials,
+  };
 }
 
 export async function refreshCredentialsForIntegration(
@@ -431,6 +489,23 @@ export async function refreshCredentialsForIntegration(
     };
   }
 
+  if (isPipedreamBackedConnection(record)) {
+    if (!record.credentials_encrypted) {
+      throw new Error(`No credentials found for ${integration}. Please connect it first.`);
+    }
+
+    const credentials = await decryptCredential(
+      record.credentials_encrypted,
+      env.CREDENTIAL_ENCRYPTION_KEY,
+    );
+
+    await cacheCredentials(env, record.id, credentials);
+    return {
+      connectionId: record.id,
+      credentials,
+    };
+  }
+
   throw new Error(`${integration} does not support token refresh.`);
 }
 
@@ -456,4 +531,72 @@ export async function updateConnectionCredentials(
   credentials: Record<string, string>,
 ): Promise<void> {
   await persistCredentials(env, connectionId, credentials);
+}
+
+export async function recordConnectionExecutionSuccess(
+  env: CredentialBridgeEnv,
+  connectionId: number,
+): Promise<void> {
+  await env.DB
+    .prepare(
+      `
+        UPDATE user_integrations
+        SET last_used_at = datetime('now'),
+            last_success_at = datetime('now'),
+            last_error_at = NULL,
+            last_error_code = NULL,
+            last_error_message = NULL,
+            updated_at = datetime('now')
+        WHERE id = ?
+      `,
+    )
+    .bind(connectionId)
+    .run();
+}
+
+export async function recordConnectionExecutionFailure(
+  env: CredentialBridgeEnv,
+  connectionId: number,
+  error: Pick<NormalizedToolError, "code" | "message">,
+): Promise<void> {
+  await env.DB
+    .prepare(
+      `
+        UPDATE user_integrations
+        SET last_used_at = datetime('now'),
+            last_error_at = datetime('now'),
+            last_error_code = ?,
+            last_error_message = ?,
+            updated_at = datetime('now')
+        WHERE id = ?
+      `,
+    )
+    .bind(error.code ?? null, truncateErrorMessage(error.message), connectionId)
+    .run();
+}
+
+export async function updateConnectionExecutionMetadata(
+  env: CredentialBridgeEnv,
+  connectionId: number,
+  metadata: {
+    scopes?: string[] | null;
+    capabilities?: string[] | null;
+  },
+): Promise<void> {
+  await env.DB
+    .prepare(
+      `
+        UPDATE user_integrations
+        SET scope_snapshot_json = COALESCE(?, scope_snapshot_json),
+            capabilities_json = COALESCE(?, capabilities_json),
+            updated_at = datetime('now')
+        WHERE id = ?
+      `,
+    )
+    .bind(
+      serializeStringArray(metadata.scopes),
+      serializeStringArray(metadata.capabilities),
+      connectionId,
+    )
+    .run();
 }
