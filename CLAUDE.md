@@ -126,6 +126,8 @@ Validation workflow for new Pipedream imports:
 1. `npm run import:pipedream-actions -- --app <app> [--integration <slug>]`
 2. `npm run audit:manifests -- --strict`
 3. `npm run validate:pipedream-actions -- --integration <slug> --strict`
+4. `npm run test:openclaw-plugin-contract`
+5. `npm run smoke:openclaw-plugin -- --preset <preset>`
 
 Rules:
 
@@ -133,7 +135,10 @@ Rules:
 - Hidden/internal Pipedream props must be removed via `hiddenProps` and satisfied via `safeDefaults`
 - If a tool needs exposed required business args to run, add `validationArgs` in `config/pipedream-action-overrides.mjs`
 - Use `PIPEDREAM_TEST_ACCOUNTS_JSON` or per-integration env vars such as `PIPEDREAM_TEST_GMAIL_ACCOUNT_ID` to provide test account bindings
-- Do not treat a provider import as done until both the static audit and runtime validation pass
+- The plugin contract test must verify the OpenClaw plugin forwards `clawlink_call_tool` / `clawlink_preview_tool` arguments correctly
+- The live smoke test must invoke the local plugin entrypoint against production ClawLink using a real API key and a safe preset
+- Keep at least one safe read smoke preset per integration; add preview or sandboxed write presets only when low-risk
+- Do not treat a provider import as done until the static audit, runtime validation, plugin contract test, and live smoke test all pass
 
 ## Flows And Triggers
 

@@ -109,6 +109,41 @@ function mergeWithDefaults(
   return result;
 }
 
+function coerceArgsToSchema(
+  value: unknown,
+  schema: ToolSchema | undefined,
+): unknown {
+  if (!schema) {
+    return value;
+  }
+
+  if (schema.type === "array") {
+    if (value === undefined || value === null) {
+      return value;
+    }
+
+    if (!Array.isArray(value)) {
+      const wrapped = [value];
+      return wrapped.map((item) => coerceArgsToSchema(item, schema.items));
+    }
+
+    return value.map((item) => coerceArgsToSchema(item, schema.items));
+  }
+
+  if (schema.type === "object" && isPlainObject(value)) {
+    const properties = schema.properties ?? {};
+    const result: Record<string, unknown> = { ...value };
+    for (const [key, propertySchema] of Object.entries(properties)) {
+      if (result[key] !== undefined) {
+        result[key] = coerceArgsToSchema(result[key], propertySchema);
+      }
+    }
+    return result;
+  }
+
+  return value;
+}
+
 function validateValue(
   value: unknown,
   schema: ToolSchema | undefined,
@@ -373,7 +408,10 @@ export async function executeToolForUser(
     confirmed: request.confirmed,
     executionMode: mode,
   });
-  const mergedArgs = mergeWithDefaults(decision.tool.safeDefaults, request.args);
+  const mergedArgs = coerceArgsToSchema(
+    mergeWithDefaults(decision.tool.safeDefaults, request.args),
+    decision.tool.inputSchema as ToolSchema,
+  ) as Record<string, unknown>;
   const validationErrors = validateToolArguments(decision.tool.inputSchema, mergedArgs);
 
   if (validationErrors.length > 0) {

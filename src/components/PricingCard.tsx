@@ -25,7 +25,7 @@ export function PricingCard({
 }) {
   const ctaClass = `inline-flex w-full items-center justify-center rounded-lg px-5 py-2.5 text-sm font-medium transition ${
     highlighted
-      ? "bg-[var(--brand)] text-white hover:bg-[var(--brand-hover-alt)]"
+      ? "bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
       : "bg-gray-100 text-gray-900 hover:bg-gray-200"
   }`;
 

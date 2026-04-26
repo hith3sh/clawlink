@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 const PLUGIN_ID = "openclaw-plugin";
 const LEGACY_PLUGIN_IDS = ["clawlink"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.10";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.13";
 
 function tokenizeArgs(value) {
   const input = typeof value === "string" ? value.trim() : "";
@@ -298,6 +298,24 @@ function buildToolExecutionText(toolName, payload) {
   ].join("\n");
 }
 
+function collectToolArguments(params, reservedKeys) {
+  if (isPlainObject(params.arguments)) {
+    return params.arguments;
+  }
+
+  const fallback = {};
+
+  for (const [key, value] of Object.entries(params ?? {})) {
+    if (reservedKeys.has(key)) {
+      continue;
+    }
+
+    fallback[key] = value;
+  }
+
+  return fallback;
+}
+
 async function persistPluginConfig(api, mutateConfig) {
   const runtimeConfig = api.runtime?.config;
 
@@ -576,7 +594,10 @@ const clawlinkPlugin = {
       }),
       async execute(_id, params) {
         const tool = isNonEmptyString(params.tool) ? params.tool.trim() : "";
-        const args = isPlainObject(params.arguments) ? params.arguments : {};
+        const args = collectToolArguments(
+          params,
+          new Set(["tool", "arguments", "connectionId"]),
+        );
 
         if (!tool) {
           throw new Error("tool is required");
@@ -621,7 +642,10 @@ const clawlinkPlugin = {
       }),
       async execute(_id, params) {
         const tool = isNonEmptyString(params.tool) ? params.tool.trim() : "";
-        const args = isPlainObject(params.arguments) ? params.arguments : {};
+        const args = collectToolArguments(
+          params,
+          new Set(["tool", "arguments", "connectionId", "confirmed"]),
+        );
 
         if (!tool) {
           throw new Error("tool is required");

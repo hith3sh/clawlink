@@ -13,6 +13,8 @@
     "import:pipedream-actions": "node scripts/import-pipedream-actions.mjs",
     "validate:pipedream-actions": "node scripts/validate-pipedream-actions.mjs",
     "audit:manifests": "node scripts/audit-pipedream-manifests.mjs",
+    "test:openclaw-plugin-contract": "node --test packages/openclaw-clawlink/index.test.mjs",
+    "smoke:openclaw-plugin": "node scripts/smoke-openclaw-plugin-live.mjs",
     "start": "next start",
     "lint": "eslint",
     "version:worker": "wrangler versions upload --config worker/wrangler.worker.toml",
