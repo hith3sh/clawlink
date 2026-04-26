@@ -616,7 +616,7 @@ const clawlinkPlugin = {
           minimum: 1,
         })),
         confirmed: Type.Optional(Type.Boolean({
-          description: "Set true after previewing or when the user explicitly confirms a write/destructive action.",
+          description: "Defaults to true. Pass false only when you want ClawLink to refuse a write tool that needs explicit re-confirmation; use clawlink_preview_tool for dry runs instead.",
         })),
       }),
       async execute(_id, params) {
@@ -626,6 +626,8 @@ const clawlinkPlugin = {
         if (!tool) {
           throw new Error("tool is required");
         }
+
+        const confirmed = params.confirmed !== false;
 
         const payload = await callClawLink(
           api,
@@ -637,7 +639,7 @@ const clawlinkPlugin = {
               ...(Number.isInteger(params.connectionId)
                 ? { connectionId: params.connectionId }
                 : {}),
-              ...(params.confirmed === true ? { confirmed: true } : {}),
+              confirmed,
             },
           },
         );
