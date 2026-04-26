@@ -683,6 +683,62 @@ export async function listIntegrationConnectionsForUserId(
   return (result.results ?? []).map(mapConnection);
 }
 
+export interface IntegrationConnectionSummary {
+  id: number;
+  integration: string;
+  connectionLabel: string | null;
+  accountLabel: string | null;
+  isDefault: boolean;
+  authState: ConnectionAuthState;
+  authError: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export async function listIntegrationConnectionsSummaryForUserId(
+  db: D1LikeDatabase,
+  userId: string,
+): Promise<IntegrationConnectionSummary[]> {
+  const result = await db
+    .prepare(
+      `
+        SELECT id, integration, connection_label, account_label,
+               is_default, auth_state, auth_error,
+               expires_at, created_at, updated_at
+        FROM user_integrations
+        WHERE user_id = ?
+        ORDER BY is_default DESC, created_at DESC, id DESC
+      `,
+    )
+    .bind(userId)
+    .all<{
+      id: number;
+      integration: string;
+      connection_label: string | null;
+      account_label: string | null;
+      is_default: number;
+      auth_state: ConnectionAuthState;
+      auth_error: string | null;
+      expires_at: string | null;
+      created_at: string;
+      updated_at: string | null;
+    }>();
+
+  return (result.results ?? []).map((row) => ({
+    id: row.id,
+    integration: row.integration,
+    connectionLabel: row.connection_label,
+    accountLabel: row.account_label,
+    isDefault: Boolean(row.is_default),
+    authState: row.auth_state,
+    authError: row.auth_error,
+    expiresAt: row.expires_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at ?? null,
+  }));
+}
+
 export async function listIntegrationConnectionsForSlug(
   slug: string,
 ): Promise<IntegrationConnectionRecord[]> {

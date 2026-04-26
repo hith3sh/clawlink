@@ -60,10 +60,10 @@ const templates: Record<FlowTemplateKey, FlowTemplateDefinition> = {
           stepKey: "fetch_unread",
           stepType: "tool_call",
           input: {
-            toolName: "gmail_list_emails",
+            toolName: "gmail_find_email",
             connectionId: readOptionalConnectionId(input, "gmailConnectionId"),
             args: {
-              query:
+              q:
                 typeof input.query === "string" && input.query.trim().length > 0
                   ? input.query.trim()
                   : "is:unread",
@@ -71,19 +71,7 @@ const templates: Record<FlowTemplateKey, FlowTemplateDefinition> = {
                 typeof input.maxResults === "number" && Number.isFinite(input.maxResults)
                   ? Math.max(1, Math.min(20, Math.floor(input.maxResults)))
                   : 5,
-            },
-          },
-        },
-        {
-          stepKey: "fetch_message_details",
-          stepType: "tool_call",
-          input: {
-            toolName: "gmail_get_email",
-            connectionId: readOptionalConnectionId(input, "gmailConnectionId"),
-            iterateOver: "steps.fetch_unread.output.messages",
-            itemName: "message",
-            args: {
-              id: ref("item.id"),
+              withTextPayload: true,
             },
           },
         },
@@ -92,7 +80,7 @@ const templates: Record<FlowTemplateKey, FlowTemplateDefinition> = {
           stepType: "transform",
           input: {
             operation: "summarize_gmail_messages",
-            messagesRef: "steps.fetch_message_details.output.items",
+            messagesRef: "steps.fetch_unread.output.data",
           },
         },
       ];
@@ -110,10 +98,10 @@ const templates: Record<FlowTemplateKey, FlowTemplateDefinition> = {
           stepKey: "fetch_unread",
           stepType: "tool_call",
           input: {
-            toolName: "gmail_list_emails",
+            toolName: "gmail_find_email",
             connectionId: readOptionalConnectionId(input, "gmailConnectionId"),
             args: {
-              query:
+              q:
                 typeof input.query === "string" && input.query.trim().length > 0
                   ? input.query.trim()
                   : "is:unread",
@@ -121,19 +109,7 @@ const templates: Record<FlowTemplateKey, FlowTemplateDefinition> = {
                 typeof input.maxResults === "number" && Number.isFinite(input.maxResults)
                   ? Math.max(1, Math.min(20, Math.floor(input.maxResults)))
                   : 5,
-            },
-          },
-        },
-        {
-          stepKey: "fetch_message_details",
-          stepType: "tool_call",
-          input: {
-            toolName: "gmail_get_email",
-            connectionId: readOptionalConnectionId(input, "gmailConnectionId"),
-            iterateOver: "steps.fetch_unread.output.messages",
-            itemName: "message",
-            args: {
-              id: ref("item.id"),
+              withTextPayload: true,
             },
           },
         },
@@ -142,7 +118,7 @@ const templates: Record<FlowTemplateKey, FlowTemplateDefinition> = {
           stepType: "transform",
           input: {
             operation: "gmail_messages_to_notion_tasks",
-            messagesRef: "steps.fetch_message_details.output.items",
+            messagesRef: "steps.fetch_unread.output.data",
           },
         },
         {

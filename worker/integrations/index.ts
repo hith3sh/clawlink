@@ -5,8 +5,6 @@
  */
 
 // Import and register handlers
-import "./gmail";
-import "./outlook";
 import "./slack";
 import "./github";
 import "./notion";
@@ -20,9 +18,6 @@ import "./google-sheets";
 import "./google-calendar";
 import "./motion";
 import "./twilio";
-import "./linkedin";
-import "./facebook";
-import "./mailchimp";
 // import "./stripe";
 // etc.
 

@@ -662,11 +662,15 @@ async function executeTransformStep(
       const source = typeof input.messagesRef === "string" ? resolveRef(input.messagesRef, scope) : null;
       const items = Array.isArray(source) ? source : [];
       const summaries = items
-        .map((entry) =>
-          typeof entry === "object" && entry !== null
-            ? summarizeGmailMessage((entry as { data?: Record<string, unknown> }).data ?? {})
-            : null,
-        )
+        .map((entry) => {
+          if (typeof entry !== "object" || entry === null) {
+            return null;
+          }
+          // iterateOver wraps each result in {data}; direct tool output is the message object itself.
+          const wrapped = (entry as { data?: Record<string, unknown> }).data;
+          const message = (wrapped ?? entry) as Record<string, unknown>;
+          return summarizeGmailMessage(message);
+        })
         .filter(Boolean);
 
       return {
@@ -681,11 +685,14 @@ async function executeTransformStep(
       const source = typeof input.messagesRef === "string" ? resolveRef(input.messagesRef, scope) : null;
       const items = Array.isArray(source) ? source : [];
       const tasks = items
-        .map((entry) =>
-          typeof entry === "object" && entry !== null
-            ? buildNotionTaskFromGmailMessage((entry as { data?: Record<string, unknown> }).data ?? {})
-            : null,
-        )
+        .map((entry) => {
+          if (typeof entry !== "object" || entry === null) {
+            return null;
+          }
+          const wrapped = (entry as { data?: Record<string, unknown> }).data;
+          const message = (wrapped ?? entry) as Record<string, unknown>;
+          return buildNotionTaskFromGmailMessage(message);
+        })
         .filter(Boolean);
 
       return {

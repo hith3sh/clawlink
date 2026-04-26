@@ -1,21 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { createElement, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { useUser } from "@clerk/nextjs";
-import { Check, Copy, Loader2, Plus, Search, Trash2 } from "lucide-react";
+import { createElement, useDeferredValue, useMemo, useState } from "react";
+import { ChevronDown, Loader2, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 
 import { useOAuthConnect } from "@/components/dashboard/useOAuthConnect";
+import { useDashboardConnections } from "@/components/dashboard/DashboardConnectionsProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -26,92 +19,14 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { integrations, type Integration } from "@/data/integrations";
 import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
-import { getConnectionStatus, type ConnectionStatus } from "@/lib/connection-status";
+import { getConnectionStatus } from "@/lib/connection-status";
 import { getIntegrationIcon } from "@/lib/integration-icons";
-
-interface ConnectionRecord {
-  id: number;
-  integration: string;
-  connectionLabel: string | null;
-  accountLabel: string | null;
-  isDefault: boolean;
-  authState: "active" | "needs_reauth";
-  authError: string | null;
-  expiresAt: string | null;
-  createdAt: string;
-  updatedAt: string | null;
-}
+import type { IntegrationConnectionSummary } from "@/lib/server/integration-store";
 
 interface ConnectionRow {
-  connection: ConnectionRecord;
+  connection: IntegrationConnectionSummary;
   integration: Integration;
-  accountLabel: string;
-  methodLabel: string;
-  status: ConnectionStatus;
-  connectionCode: string;
-}
-
-function formatConnectionTimestamp(value: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
-function getMethodLabel(integration: Integration): string {
-  if (integration.setupMode === "pipedream") {
-    return "Hosted Connect";
-  }
-
-  if (integration.setupMode === "oauth") {
-    return "OAuth 2";
-  }
-
-  if (integration.credentialFields.some((field) => field.label.toLowerCase().includes("api key"))) {
-    return "API Key";
-  }
-
-  if (integration.credentialFields.length > 1) {
-    return "Basic";
-  }
-
-  if (integration.credentialFields.some((field) => field.label.toLowerCase().includes("token"))) {
-    return "Token";
-  }
-
-  return "Manual";
-}
-
-function getStatusBadgeClasses(status: ConnectionStatus): string {
-  if (status === "needs_reauth") {
-    return "border-red-200 bg-red-50 text-red-700";
-  }
-
-  if (status === "expired") {
-    return "border-red-200 bg-red-50 text-red-700";
-  }
-
-  if (status === "expiring") {
-    return "border-amber-200 bg-amber-50 text-amber-700";
-  }
-
-  return "border-emerald-200 bg-emerald-50 text-emerald-700";
-}
-
-function getStatusLabel(status: ConnectionStatus): string {
-  if (status === "needs_reauth") {
-    return "Reconnect";
-  }
-
-  if (status === "expired") {
-    return "Expired";
-  }
-
-  if (status === "expiring") {
-    return "Expiring";
-  }
-
-  return "Active";
+  needsReconnect: boolean;
 }
 
 function OAuthConnectButton({
@@ -156,54 +71,14 @@ function IntegrationMark({ integration }: { integration: Integration }) {
 }
 
 export default function IntegrationsPage() {
-  const { user, isLoaded } = useUser();
-  const [connections, setConnections] = useState<ConnectionRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { connections, connectionsBySlug, loading, refetch } = useDashboardConnections();
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState("all");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [addSearch, setAddSearch] = useState("");
   const [removingConnectionId, setRemovingConnectionId] = useState<number | null>(null);
-  const [copiedConnectionId, setCopiedConnectionId] = useState<number | null>(null);
+  const [expandedConnectionId, setExpandedConnectionId] = useState<number | null>(null);
 
   const deferredAddSearch = useDeferredValue(addSearch);
-
-  const loadConnections = useCallback(async () => {
-    if (!isLoaded) {
-      return;
-    }
-
-    if (!user) {
-      setConnections([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/integrations", { cache: "no-store" });
-      const data = (await response.json()) as {
-        error?: string;
-        integrations?: ConnectionRecord[];
-      };
-
-      if (!response.ok) {
-        throw new Error(data.error ?? "Failed to load connections");
-      }
-
-      setConnections(data.integrations ?? []);
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Failed to load connections");
-    } finally {
-      setLoading(false);
-    }
-  }, [isLoaded, user]);
-
-  useEffect(() => {
-    void loadConnections();
-  }, [loadConnections]);
 
   const connectionRows = useMemo<ConnectionRow[]>(() => {
     return connections
@@ -214,36 +89,26 @@ export default function IntegrationsPage() {
           return null;
         }
 
+        const status = getConnectionStatus(connection.authState, connection.expiresAt);
+
         return {
           connection,
           integration,
-          accountLabel:
-            connection.accountLabel ??
-            connection.connectionLabel ??
-            (integration.setupMode === "manual" ? "Manual credentials" : "Connected account"),
-          methodLabel: getMethodLabel(integration),
-          status: getConnectionStatus(connection.authState, connection.expiresAt),
-          connectionCode: `conn_${connection.id.toString().padStart(6, "0")}`,
+          needsReconnect: status === "needs_reauth" || status === "expired",
         };
       })
       .filter((row): row is ConnectionRow => row !== null);
   }, [connections]);
 
-  const filteredConnections = useMemo(() => {
-    return connectionRows.filter((row) => {
-      return statusFilter === "all" || row.status === statusFilter;
-    });
-  }, [connectionRows, statusFilter]);
-
   const connectionCountsBySlug = useMemo(() => {
     const counts = new Map<string, number>();
 
-    for (const row of connectionRows) {
-      counts.set(row.integration.slug, (counts.get(row.integration.slug) ?? 0) + 1);
+    for (const [slug, conns] of connectionsBySlug) {
+      counts.set(slug, conns.length);
     }
 
     return counts;
-  }, [connectionRows]);
+  }, [connectionsBySlug]);
 
   const availableIntegrations = useMemo(() => {
     const query = deferredAddSearch.trim().toLowerCase();
@@ -288,20 +153,12 @@ export default function IntegrationsPage() {
         throw new Error(data.error ?? "Failed to remove connection");
       }
 
-      setConnections((current) =>
-        current.filter((connection) => connection.id !== row.connection.id),
-      );
+      await refetch();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Failed to remove connection");
     } finally {
       setRemovingConnectionId(null);
     }
-  }
-
-  async function handleCopyConnectionId(row: ConnectionRow) {
-    await navigator.clipboard.writeText(row.connectionCode);
-    setCopiedConnectionId(row.connection.id);
-    window.setTimeout(() => setCopiedConnectionId(null), 1500);
   }
 
   return (
@@ -310,7 +167,7 @@ export default function IntegrationsPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm text-muted-foreground">
-              Review active app connections and remove access when you no longer need it.
+              Manage your connected apps. Reconnect any that need attention or remove the ones you no longer use.
             </p>
           </div>
 
@@ -318,21 +175,6 @@ export default function IntegrationsPage() {
             <Plus className="h-4 w-4" />
             Add connection
           </Button>
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value ?? "all")}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="expiring">Expiring</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
-              <SelectItem value="needs_reauth">Needs reconnect</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {error ? (
@@ -345,18 +187,16 @@ export default function IntegrationsPage() {
           <CardContent className="p-0">
             {loading ? (
               <div className="space-y-3 px-6 py-6">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <Skeleton key={index} className="h-14 w-full rounded-2xl" />
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton key={index} className="h-16 w-full rounded-2xl" />
                 ))}
               </div>
-            ) : filteredConnections.length === 0 ? (
+            ) : connectionRows.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-4 px-6 py-14 text-center">
                 <div className="space-y-1">
-                  <h2 className="text-base font-semibold text-foreground">No connections found</h2>
+                  <h2 className="text-base font-semibold text-foreground">No connections yet</h2>
                   <p className="text-sm text-muted-foreground">
-                    {connectionRows.length === 0
-                      ? "Connect your first app to start using ClawLink from OpenClaw."
-                      : "Try a different filter or add another app connection."}
+                    Connect your first app to start using ClawLink from OpenClaw.
                   </p>
                 </div>
                 <Button onClick={() => setSheetOpen(true)}>
@@ -365,181 +205,110 @@ export default function IntegrationsPage() {
                 </Button>
               </div>
             ) : (
-              <>
-                <div className="hidden md:block">
-                  <table className="min-w-full table-fixed border-collapse">
-                    <thead className="bg-black/[0.03] text-left text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                      <tr>
-                        <th className="px-6 py-4">App</th>
-                        <th className="px-6 py-4">Account</th>
-                        <th className="px-6 py-4">Connection ID</th>
-                        <th className="px-6 py-4">Method</th>
-                        <th className="px-6 py-4">Status</th>
-                        <th className="px-6 py-4">Created</th>
-                        <th className="w-[88px] px-6 py-4 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredConnections.map((row) => (
-                        <tr key={row.connection.id} className="border-t border-black/6">
-                          <td className="px-6 py-4 align-middle">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/[0.03]">
-                                <IntegrationMark integration={row.integration} />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-medium text-foreground">{row.integration.name}</p>
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <p className="truncate text-xs text-muted-foreground">
-                                    {row.integration.category}
-                                  </p>
-                                  {row.connection.isDefault ? (
-                                    <span className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-foreground">
-                                      Default
-                                    </span>
-                                  ) : null}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <p className="text-sm text-foreground">{row.accountLabel}</p>
-                            {row.connection.authState === "needs_reauth" && row.connection.authError ? (
-                              <p className="mt-1 text-xs text-red-600">{row.connection.authError}</p>
-                            ) : null}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-xs text-foreground">{row.connectionCode}</span>
-                              <Button
-                                variant="ghost"
-                                size="icon-xs"
-                                onClick={() => void handleCopyConnectionId(row)}
-                                title="Copy connection ID"
-                              >
-                                {copiedConnectionId === row.connection.id ? (
-                                  <Check className="h-3.5 w-3.5 text-emerald-600" />
-                                ) : (
-                                  <Copy className="h-3.5 w-3.5" />
-                                )}
-                              </Button>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-muted-foreground">{row.methodLabel}</td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${getStatusBadgeClasses(row.status)}`}
-                            >
-                              <span className="h-2 w-2 rounded-full bg-current" />
-                              {getStatusLabel(row.status)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-muted-foreground">
-                            {formatConnectionTimestamp(row.connection.createdAt)}
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              onClick={() => void handleRemoveConnection(row)}
-                              disabled={removingConnectionId === row.connection.id}
-                              title={`Remove ${row.integration.name}`}
-                            >
-                              {removingConnectionId === row.connection.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Trash2 className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              <div className="divide-y divide-black/6">
+                {connectionRows.map((row) => {
+                  const isExpanded = expandedConnectionId === row.connection.id;
 
-                <div className="space-y-3 p-4 md:hidden">
-                  {filteredConnections.map((row) => (
-                    <div
-                      key={row.connection.id}
-                      className="rounded-3xl border border-black/8 bg-white px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
-                    >
-                      <div className="flex items-start justify-between gap-3">
+                  return (
+                    <div key={row.connection.id}>
+                      <button
+                        type="button"
+                        className="flex w-full flex-wrap items-center justify-between gap-3 px-6 py-4 text-left transition-colors hover:bg-black/[0.015] sm:flex-nowrap"
+                        onClick={() =>
+                          setExpandedConnectionId(isExpanded ? null : row.connection.id)
+                        }
+                      >
                         <div className="flex min-w-0 items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/[0.03]">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-black/[0.03]">
                             <IntegrationMark integration={row.integration} />
                           </div>
                           <div className="min-w-0">
                             <p className="font-medium text-foreground">{row.integration.name}</p>
-                            <p className="truncate text-xs text-muted-foreground">{row.accountLabel}</p>
-                            {row.connection.authState === "needs_reauth" && row.connection.authError ? (
-                              <p className="mt-1 text-xs text-red-600">{row.connection.authError}</p>
-                            ) : null}
                             {row.connection.isDefault ? (
-                              <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-foreground">
-                                Default connection
-                              </p>
+                              <p className="text-xs text-muted-foreground">Default</p>
                             ) : null}
                           </div>
                         </div>
-                        <span
-                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${getStatusBadgeClasses(row.status)}`}
-                        >
-                          <span className="h-2 w-2 rounded-full bg-current" />
-                          {getStatusLabel(row.status)}
-                        </span>
-                      </div>
 
-                      <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-                        <div>
-                          <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Connection ID</p>
-                          <div className="mt-1 flex items-center gap-2">
-                            <span className="font-mono text-xs text-foreground">{row.connectionCode}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon-xs"
-                              onClick={() => void handleCopyConnectionId(row)}
-                              title="Copy connection ID"
-                            >
-                              {copiedConnectionId === row.connection.id ? (
-                                <Check className="h-3.5 w-3.5 text-emerald-600" />
-                              ) : (
-                                <Copy className="h-3.5 w-3.5" />
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Method</p>
-                          <p className="mt-1 text-foreground">{row.methodLabel}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Created</p>
-                          <p className="mt-1 text-foreground">
-                            {formatConnectionTimestamp(row.connection.createdAt)}
-                          </p>
-                        </div>
-                      </div>
+                        <div className="flex items-center gap-2">
+                          {row.needsReconnect ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
+                              <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                              Needs reconnect
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                              Connected
+                            </span>
+                          )}
 
-                      <div className="mt-4 flex items-center justify-end">
+                          <ChevronDown
+                            className={`h-4 w-4 text-muted-foreground transition-transform ${
+                              isExpanded ? "rotate-180" : ""
+                            }`}
+                          />
+                        </div>
+                      </button>
+
+                      <div
+                        className={`flex flex-wrap items-center justify-end gap-2 px-6 pb-4 sm:flex-nowrap ${
+                          isExpanded ? "" : "sr-only"
+                        }`}
+                      >
                         <Button
-                          variant="destructive"
+                          variant="outline"
                           size="sm"
-                          onClick={() => void handleRemoveConnection(row)}
+                          className="rounded-full px-4 text-sm font-medium shadow-none"
+                          nativeButton={false}
+                          render={
+                            <Link href={`/dashboard/integrations/${row.integration.slug}`} />
+                          }
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" />
+                          Reconnect
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void handleRemoveConnection(row);
+                          }}
                           disabled={removingConnectionId === row.connection.id}
+                          title={`Remove ${row.integration.name}`}
                         >
                           {removingConnectionId === row.connection.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4 text-muted-foreground" />
                           )}
                           Remove
                         </Button>
                       </div>
+
+                      {isExpanded && row.integration.tools.length > 0 && (
+                        <div className="border-t border-black/6 bg-black/[0.015] px-6 py-4">
+                          <p className="mb-3 text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">
+                            Available actions
+                          </p>
+                          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                            {row.integration.tools.map((tool) => (
+                              <div
+                                key={tool.name}
+                                className="rounded-xl border border-black/6 bg-white px-3 py-2 text-sm text-foreground"
+                              >
+                                {tool.description}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </>
+                  );
+                })}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -606,7 +375,7 @@ export default function IntegrationsPage() {
                         integration={integration}
                         onConnected={() => {
                           setSheetOpen(false);
-                          void loadConnections();
+                          void refetch();
                         }}
                       />
                     ) : (

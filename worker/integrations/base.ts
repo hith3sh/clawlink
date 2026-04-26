@@ -10,6 +10,7 @@ import {
   type ToolMode,
   type ToolRisk,
 } from "../../src/lib/runtime/tool-runtime";
+import type { ToolExecutionSpec } from "../../src/lib/pipedream/manifest-types";
 
 export type ToolAccessLevel = ToolMode;
 
@@ -39,6 +40,7 @@ export interface IntegrationTool {
   supportsBatch: boolean;
   maxBatchSize?: number;
   recommendedTimeoutMs?: number;
+  execution: ToolExecutionSpec;
 }
 
 export interface DefineIntegrationToolOptions {
@@ -87,6 +89,7 @@ export function defineTool(
     supportsBatch: options.supportsBatch ?? false,
     maxBatchSize: options.maxBatchSize,
     recommendedTimeoutMs: options.recommendedTimeoutMs,
+    execution: { kind: "custom" },
   };
 }
 

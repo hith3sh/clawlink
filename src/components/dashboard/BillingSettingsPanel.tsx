@@ -12,7 +12,6 @@ import {
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 
 export interface BillingState {
   planKey: "free" | "pro";
@@ -189,58 +188,6 @@ export function BillingSettingsPanel({ isLoaded, hasUser, checkoutId, initialBil
               </div>
             </div>
 
-            <Separator className="my-6" />
-
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Connected apps</p>
-                <p className="mt-2 text-2xl font-semibold text-foreground">{billing.distinctIntegrationCount}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {billing.subscribed
-                    ? "Paid plan active. Connect as many integrations as you need."
-                    : `${billing.freeIntegrationLimit} app included on Free.`}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Next action</p>
-                <p className="mt-2 text-lg font-semibold text-foreground">
-                  {billing.canAddMoreIntegrations ? "You can keep connecting apps" : "Upgrade required"}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {billing.needsUpgrade
-                    ? "A second integration is blocked until the paid plan is active."
-                    : "No billing gate is currently blocking your next connection."}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Renewal</p>
-                <p className="mt-2 text-lg font-semibold text-foreground">
-                  {formatTimestamp(billing.currentPeriodEnd) ?? "Not scheduled"}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {billing.cancelAtPeriodEnd
-                    ? "This subscription will end after the current billing period."
-                    : "Billing status updates here after Polar webhooks sync."}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-border/70 bg-muted/10 p-5">
-            <div className="mb-4">
-              <h3 className="text-sm font-medium text-foreground">How billing works</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                ClawLink keeps the first integration free. The $5/month plan unlocks additional connected apps and gives you a Polar customer portal for card and subscription management.
-              </p>
-            </div>
-
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <p>Free: connect one app and validate the hosted setup flow before paying.</p>
-              <p>Pro: connect additional apps after Polar marks the subscription active.</p>
-              <p>Portal: use Polar to update payment details, view receipts, or cancel later.</p>
-            </div>
           </div>
         </>
       )}

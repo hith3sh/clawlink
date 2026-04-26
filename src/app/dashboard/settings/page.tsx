@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import {
   Check,
   Copy,
-  CreditCard,
   Key,
   Loader2,
   Save,
@@ -16,7 +15,6 @@ import {
 } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { BillingSettingsPanel, type BillingState } from "@/components/dashboard/BillingSettingsPanel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,7 +36,7 @@ interface ApiKeyRecord {
   lastUsedAt: string | null;
 }
 
-type SettingsTab = "profile" | "api" | "billing" | "security";
+type SettingsTab = "profile" | "api" | "security";
 
 const settingsTabs: Array<{
   value: SettingsTab;
@@ -57,12 +55,6 @@ const settingsTabs: Array<{
     label: "API Keys",
     description: "Create the ClawLink secret OpenClaw uses for hosted connection sessions and worker calls.",
     icon: Key,
-  },
-  {
-    value: "billing",
-    label: "Billing",
-    description: "Usage limits, payment details, and upgrade controls for this workspace.",
-    icon: CreditCard,
   },
   {
     value: "security",
@@ -88,7 +80,6 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
     const tab = searchParams.get("tab");
     if (tab === "api") return "api";
-    if (tab === "billing") return "billing";
     if (tab === "security") return "security";
     return "profile";
   });
@@ -102,15 +93,13 @@ export default function SettingsPage() {
   const [loadingApiKeys, setLoadingApiKeys] = useState(true);
   const [creatingApiKey, setCreatingApiKey] = useState(false);
   const [deletingApiKeyId, setDeletingApiKeyId] = useState<number | null>(null);
-  const [billing, setBilling] = useState<BillingState | null>(null);
-  const [billingLoading, setBillingLoading] = useState(true);
-  const [billingError, setBillingError] = useState<string | null>(null);
+  const [changingAvatar, setChangingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, isLoaded } = useUser();
 
   const userName = user?.fullName || user?.firstName || "";
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || "";
   const userImage = user?.imageUrl;
-  const checkoutId = searchParams.get("checkoutId") ?? searchParams.get("checkout_id");
   const activeTabMeta = settingsTabs.find((tab) => tab.value === activeTab) ?? settingsTabs[0];
 
   useEffect(() => {
@@ -156,45 +145,7 @@ export default function SettingsPage() {
       }
     }
 
-    async function loadBilling() {
-      if (!isLoaded) {
-        return;
-      }
-
-      if (!user) {
-        if (active) {
-          setBilling(null);
-          setBillingLoading(false);
-        }
-        return;
-      }
-
-      try {
-        const response = await fetch("/api/billing", { cache: "no-store" });
-        const data = (await response.json()) as { billing?: BillingState; error?: string };
-
-        if (!active) {
-          return;
-        }
-
-        if (!response.ok || !data.billing) {
-          throw new Error(data.error ?? "Failed to load billing");
-        }
-
-        setBilling(data.billing);
-      } catch (error) {
-        if (active) {
-          setBillingError(error instanceof Error ? error.message : "Failed to load billing");
-        }
-      } finally {
-        if (active) {
-          setBillingLoading(false);
-        }
-      }
-    }
-
     void loadApiKeys();
-    void loadBilling();
 
     return () => {
       active = false;
@@ -283,13 +234,30 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setChangingAvatar(true);
+    try {
+      await user.setProfileImage({ file });
+    } catch (error) {
+      console.error("Failed to update avatar:", error);
+    } finally {
+      setChangingAvatar(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }
+
   return (
     <Tabs
       value={activeTab}
       onValueChange={(value) => setActiveTab(value as SettingsTab)}
       className="w-full max-w-3xl space-y-6"
     >
-      <TabsList className="grid w-full grid-cols-4 gap-2 rounded-2xl bg-card/70 p-1 ring-1 ring-border/60">
+      <TabsList className="grid w-full grid-cols-3 gap-2 rounded-2xl bg-card/70 p-1 ring-1 ring-border/60">
         {settingsTabs.map((tab) => {
           const Icon = tab.icon;
 
@@ -323,7 +291,24 @@ export default function SettingsPage() {
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-foreground">{userName || "ClawLink user"}</p>
                   <p className="text-sm text-muted-foreground">{userEmail}</p>
-                  <Button variant="outline" size="sm">Change avatar</Button>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleAvatarChange}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={changingAvatar}
+                  >
+                    {changingAvatar ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    Change avatar
+                  </Button>
                 </div>
               </div>
 
@@ -482,34 +467,35 @@ export default function SettingsPage() {
               </div>
           </TabsContent>
 
-          <TabsContent value="billing" className="w-full space-y-6">
-            <BillingSettingsPanel
-              isLoaded={isLoaded}
-              hasUser={Boolean(user)}
-              checkoutId={checkoutId}
-              initialBilling={billing}
-              initialLoading={billingLoading}
-              initialError={billingError}
-            />
-          </TabsContent>
-
-          <TabsContent value="security" className="w-full space-y-3">
-              {[
-                { label: "Password", desc: "Last changed 30 days ago", action: "Change" },
-                { label: "Two-factor authentication", desc: "Not enabled", action: "Enable" },
-                { label: "Active sessions", desc: "1 active session", action: "View" },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center justify-between gap-4 py-2">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{item.label}</p>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </div>
-                    <Button variant="outline" size="sm">{item.action}</Button>
-                  </div>
-                ))}
+          <TabsContent value="security" className="w-full">
+            <SecurityTab />
           </TabsContent>
         </CardContent>
       </Card>
     </Tabs>
+  );
+}
+
+function SecurityTab() {
+  const clerk = useClerk();
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4 py-2">
+        <div>
+          <p className="text-sm font-medium text-foreground">Account</p>
+          <p className="text-sm text-muted-foreground">
+            Password, email, and connected accounts
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => clerk.openUserProfile()}
+        >
+          Manage
+        </Button>
+      </div>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getDatabase, listIntegrationConnectionsForUserId } from "@/lib/server/integration-store";
+import { getDatabase, listIntegrationConnectionsForUserId, listIntegrationConnectionsSummaryForUserId } from "@/lib/server/integration-store";
 import { resolveRequestActor } from "@/lib/server/request-auth";
 
 export const dynamic = "force-dynamic";
@@ -21,18 +21,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "DB binding is not configured", integrations: [] }, { status: 500 });
     }
 
-    console.log("[api/integrations] resolved actor", {
-      actorKind: actor.kind,
-      userId: actor.user.id,
-      clerkId: actor.user.clerk_id,
-      email: actor.user.email,
-    });
+    const { searchParams } = new URL(request.url);
+
+    if (searchParams.get("summary") === "true") {
+      const integrations = await listIntegrationConnectionsSummaryForUserId(db, actor.user.id);
+      return NextResponse.json({ integrations });
+    }
 
     const integrations = await listIntegrationConnectionsForUserId(db, actor.user.id);
-    console.log("[api/integrations] returning integrations", {
-      userId: actor.user.id,
-      count: integrations.length,
-    });
     return NextResponse.json({ integrations });
   } catch (error) {
     console.error("[api/integrations] failed", {

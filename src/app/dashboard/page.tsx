@@ -1,19 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import {
   ArrowRight,
   Search,
 } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
 
 import { integrations } from "@/data/integrations";
 import { IntegrationCard } from "@/components/dashboard/IntegrationCard";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -21,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useDashboardConnections } from "@/components/dashboard/DashboardConnectionsProvider";
 
 type SortMode = "popular" | "connected" | "alphabetical";
 
@@ -37,42 +36,9 @@ export default function DashboardPage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortMode>("popular");
   const [showAllApps, setShowAllApps] = useState(false);
-  const [connectedIntegrations, setConnectedIntegrations] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { user, isLoaded } = useUser();
+  const { connectedSlugs, loading } = useDashboardConnections();
 
   const deferredSearch = useDeferredValue(search);
-
-  useEffect(() => {
-    async function fetchConnectedIntegrations() {
-      if (!isLoaded || !user) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await fetch("/api/integrations");
-        const data = (await response.json()) as {
-          integrations?: Array<{ integration: string }>;
-        };
-
-        if (data.integrations) {
-          setConnectedIntegrations(data.integrations.map((item) => item.integration));
-        }
-      } catch (error) {
-        console.error("Failed to fetch integrations:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchConnectedIntegrations();
-  }, [isLoaded, user]);
-
-  const connectedSet = useMemo(
-    () => new Set(connectedIntegrations),
-    [connectedIntegrations],
-  );
 
   const isSearchActive = deferredSearch.trim().length > 0;
 
@@ -94,7 +60,7 @@ export default function DashboardPage() {
     return [...matches].sort((left, right) => {
       if (sort === "connected") {
         const connectionDelta =
-          Number(connectedSet.has(right.slug)) - Number(connectedSet.has(left.slug));
+          Number(connectedSlugs.has(right.slug)) - Number(connectedSlugs.has(left.slug));
 
         if (connectionDelta !== 0) {
           return connectionDelta;
@@ -115,7 +81,7 @@ export default function DashboardPage() {
 
       return left.name.localeCompare(right.name);
     });
-  }, [connectedSet, deferredSearch, sort]);
+  }, [connectedSlugs, deferredSearch, sort]);
 
   const liveDashboardIntegrations = useMemo(
     () =>
@@ -187,26 +153,19 @@ export default function DashboardPage() {
         </Select>
       </div>
 
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="space-y-3">
-                <Skeleton className="h-10 w-10 rounded-lg" />
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : filteredIntegrations.length > 0 ? (
+      {filteredIntegrations.length > 0 ? (
         <div className="space-y-4">
+          {loading && (
+            <div className="text-center text-xs text-muted-foreground animate-pulse">
+              Checking connected accounts...
+            </div>
+          )}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {visibleIntegrations.map((integration) => (
               <IntegrationCard
                 key={integration.slug}
                 integration={integration}
-                isConnected={connectedSet.has(integration.slug)}
+                isConnected={connectedSlugs.has(integration.slug)}
               />
             ))}
           </div>
