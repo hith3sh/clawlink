@@ -1,4 +1,4 @@
-export type IntegrationSetupMode = "manual" | "oauth" | "pipedream";
+export type IntegrationSetupMode = "oauth" | "pipedream" | "coming_soon";
 export type IntegrationDashboardStatus = "available" | "coming-soon";
 export type IntegrationRuntimeStatus = "live" | "planned";
 
@@ -203,7 +203,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   discord: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Create a Discord bot, invite it to your server, and store the bot token here.",
@@ -248,7 +248,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   telegram: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Create a bot with BotFather and paste the Telegram bot token here.",
@@ -258,7 +258,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   "whatsapp-business": {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "WhatsApp Business requires the WhatsApp Business API and a verified phone number.",
@@ -266,10 +266,10 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   twilio: {
-    setupMode: "manual",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
-    setupGuide: "Paste your Twilio Account SID and Auth Token from the Twilio console so ClawLink can inspect numbers, update routing, send SMS, and inspect calls/messages directly through the Twilio REST API.",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
+    setupGuide: "Twilio manual credential setup has been removed. A hosted provider flow is not available yet.",
     credentialFields: [
       textField("accountSid", "Account SID", "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "Your primary Twilio account SID."),
       tokenField("authToken", "Auth Token", "Paste your Twilio auth token", "Use the auth token from your Twilio console. Rotate it if it was shared elsewhere."),
@@ -294,7 +294,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   resend: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Resend requires an API key from your Resend dashboard.",
@@ -302,7 +302,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   sendgrid: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "SendGrid requires an API key from your SendGrid dashboard.",
@@ -310,7 +310,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   front: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Front requires a personal API token from your Front settings.",
@@ -326,7 +326,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   hubspot: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a HubSpot private app token to connect your portal.",
@@ -344,7 +344,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   pipedrive: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Create a personal API token in Pipedrive and store it here.",
@@ -368,19 +368,30 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   notion: {
-    setupMode: "oauth",
+    setupMode: "pipedream",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Connect your Notion workspace through the hosted Nango flow and approve the pages ClawLink can access.",
+    setupGuide: "Connect Notion through the hosted Pipedream flow to search, read, and manage pages, databases, and blocks in your workspace.",
     credentialFields: [],
     tools: [
       { name: "notion_search", description: "Search pages and databases in Notion" },
-      { name: "notion_get_page", description: "Get a page by ID" },
-      { name: "notion_get_blocks", description: "Get the content blocks of a page" },
-      { name: "notion_create_page", description: "Create a new page" },
-      { name: "notion_query_database", description: "Query a database" },
-      { name: "notion_create_database", description: "Create a new database" },
-      { name: "notion_append_blocks", description: "Append blocks to a page" },
+      { name: "notion_retrieve_page", description: "Retrieve a Notion page by ID" },
+      { name: "notion_retrieve_block", description: "Retrieve a Notion block by ID" },
+      { name: "notion_create_page", description: "Create a new Notion page" },
+      { name: "notion_create_page_from_database", description: "Create a page inside a Notion database" },
+      { name: "notion_update_page", description: "Update properties on a Notion page" },
+      { name: "notion_duplicate_page", description: "Duplicate a Notion page" },
+      { name: "notion_query_database", description: "Query a Notion database" },
+      { name: "notion_create_database", description: "Create a new Notion database" },
+      { name: "notion_update_database", description: "Update a Notion database's schema" },
+      { name: "notion_retrieve_database_schema", description: "Retrieve a Notion database schema" },
+      { name: "notion_retrieve_database_content", description: "Retrieve a Notion database's content" },
+      { name: "notion_append_block", description: "Append blocks to a Notion page or block" },
+      { name: "notion_update_block", description: "Update a Notion block" },
+      { name: "notion_delete_block", description: "Delete a Notion block" },
+      { name: "notion_create_comment", description: "Create a comment on a Notion page or discussion" },
+      { name: "notion_list_all_users", description: "List all users in the Notion workspace" },
+      { name: "notion_get_current_user", description: "Get the connected Notion bot user" },
     ],
   },
   "google-sheets": {
@@ -504,7 +515,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   airtable: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a personal access token and the Airtable base you want the worker to operate on.",
@@ -515,7 +526,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   todoist: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Create a Todoist API token and store it here.",
@@ -523,10 +534,10 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   motion: {
-    setupMode: "manual",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
-    setupGuide: "Create a Motion API key from your Motion settings, then paste it here to let ClawLink list workspaces, browse projects, inspect tasks, and create new tasks.",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
+    setupGuide: "Motion manual API key setup has been removed. A hosted provider flow is not available yet.",
     credentialFields: [
       apiKeyField(
         "apiKey",
@@ -550,7 +561,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   trello: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Trello requires an API key and token from your Trello account settings.",
@@ -558,7 +569,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   asana: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Asana requires a personal access token from your As account settings.",
@@ -566,7 +577,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   clickup: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "ClickUp requires a personal API token from your ClickUp settings.",
@@ -574,7 +585,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   monday: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Monday.com requires an API token from your account settings.",
@@ -582,7 +593,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   confluence: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Confluence requires an API token and site URL from your Atlassian account.",
@@ -590,7 +601,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   calendly: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Calendly requires a personal access token from your Calendly account.",
@@ -598,7 +609,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   "cal-com": {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Cal.com requires an API key from your account settings.",
@@ -606,7 +617,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   typeform: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Typeform requires a personal access token from your account settings.",
@@ -614,7 +625,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   coda: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Coda requires an API token from your Coda account settings.",
@@ -622,7 +633,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   github: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "GitHub support is reserved for a future release. The worker path exists internally, but the hosted product flow is not ready yet.",
@@ -630,7 +641,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   gitlab: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a GitLab personal access token.",
@@ -638,7 +649,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   jira: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a Jira API token together with your Atlassian email and site URL.",
@@ -650,7 +661,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   linear: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a Linear personal API key.",
@@ -658,7 +669,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   vercel: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a Vercel access token created from your account settings.",
@@ -666,7 +677,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   sentry: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Sentry requires an auth token from your Sentry account settings.",
@@ -674,7 +685,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   netlify: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Netlify requires a personal access token from your Netlify account.",
@@ -682,7 +693,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   stripe: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use your Stripe secret key for server-side access.",
@@ -690,7 +701,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   paypal: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use a PayPal client ID and secret from your developer dashboard.",
@@ -723,7 +734,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   square: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Square requires an access token from your Square Developer Dashboard.",
@@ -766,7 +777,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   klaviyo: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Klaviyo requires a private API key from your account settings.",
@@ -774,7 +785,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   buffer: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Buffer requires an access token from your Buffer account.",
@@ -861,7 +872,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   shopify: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use the shop domain and Admin API access token from your custom app.",
@@ -872,7 +883,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   woocommerce: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use your WooCommerce store URL plus consumer key and secret.",
@@ -892,7 +903,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   supabase: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use your Supabase project URL and service role key for backend automation.",
@@ -903,7 +914,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   firebase: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Paste the Firebase service account JSON so the worker can authenticate server-side.",
@@ -913,7 +924,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   openai: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Store your OpenAI API key for future model and embeddings calls.",
@@ -921,7 +932,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   elevenlabs: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "Use your ElevenLabs API key.",
@@ -929,7 +940,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   posthog: {
-    setupMode: "manual",
+    setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
     runtimeStatus: "planned",
     setupGuide: "PostHog requires a personal API key from your instance settings.",
@@ -939,7 +950,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
 };
 
 const defaultMetadata: IntegrationMetadata = {
-  setupMode: "manual",
+  setupMode: "coming_soon",
   dashboardStatus: "coming-soon",
   runtimeStatus: "planned",
   setupGuide: "Dashboard setup for this integration is not configured yet.",

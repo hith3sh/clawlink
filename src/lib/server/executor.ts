@@ -18,6 +18,7 @@ import type {
   ToolExecutionMeta,
   ToolExecutionResult,
 } from "@/lib/runtime/tool-runtime";
+import { executePipedreamActionTool } from "@/lib/pipedream/action-executor";
 import {
   classifyIntegrationError,
   getAllHandlers,
@@ -427,15 +428,17 @@ export async function executeToolForUser(
     return payload;
   }
 
-  const handler = getAllHandlers().get(decision.tool.integration);
-
-  if (!handler) {
-    throw new Error(`No handler registered for ${decision.tool.integration}`);
-  }
-
   const action = decision.tool.name.startsWith(`${decision.tool.integration}_`)
     ? decision.tool.name.slice(decision.tool.integration.length + 1)
     : decision.tool.name;
+  const handler =
+    decision.tool.execution.kind === "custom"
+      ? getAllHandlers().get(decision.tool.integration)
+      : null;
+
+  if (decision.tool.execution.kind === "custom" && !handler) {
+    throw new Error(`No handler registered for ${decision.tool.integration}`);
+  }
 
   let resolvedConnectionId = decision.connectionId;
 
@@ -448,11 +451,27 @@ export async function executeToolForUser(
     );
     resolvedConnectionId = loaded.connectionId;
     let currentCredentials = loaded.credentials;
+    let providerRequestId: string | undefined;
 
-    let result: unknown;
+    const runTool = async (
+      credentials: Record<string, string>,
+    ): Promise<unknown> => {
+      if (decision.tool.execution.kind === "pipedream_action") {
+        const execution = await executePipedreamActionTool(
+          decision.tool,
+          mergedArgs,
+          {
+            requestId,
+            externalUserId: request.userId,
+            credentials,
+            env,
+          },
+        );
+        providerRequestId = execution.providerRequestId;
+        return execution.data;
+      }
 
-    try {
-      result = await handler.execute(action, mergedArgs, currentCredentials, {
+      return handler!.execute(action, mergedArgs, credentials, {
         requestId,
         dryRun: false,
         timeoutMs: decision.tool.recommendedTimeoutMs,
@@ -460,6 +479,36 @@ export async function executeToolForUser(
         userId: request.userId,
         env,
       });
+    };
+
+    try {
+      const result = await runTool(currentCredentials);
+
+      await recordConnectionExecutionSuccess(env, resolvedConnectionId);
+
+      if (handler && typeof handler.checkHealth === "function") {
+        const health = await handler.checkHealth(currentCredentials);
+        await updateConnectionExecutionMetadata(env, resolvedConnectionId, {
+          scopes: health.scopes ?? null,
+        });
+      }
+
+      const payload: ToolExecutionPayload = {
+        ok: true,
+        toolName: decision.tool.name,
+        integration: decision.tool.integration,
+        connectionId: resolvedConnectionId,
+        mode,
+        tool: describedTool,
+        args: mergedArgs,
+        requiresConfirmation: policy.requiresConfirmation,
+        policyReason: policy.reason,
+        data: result,
+        result,
+        meta: toMeta(startedAt, requestId, providerRequestId),
+      };
+      await logExecutionResult(db, request, payload);
+      return payload;
     } catch (error) {
       if (!isAuthenticationFailure(error)) {
         throw error;
@@ -475,14 +524,33 @@ export async function executeToolForUser(
       currentCredentials = refreshed.credentials;
 
       try {
-        result = await handler.execute(action, mergedArgs, currentCredentials, {
-          requestId,
-          dryRun: false,
-          timeoutMs: decision.tool.recommendedTimeoutMs,
+        const result = await runTool(currentCredentials);
+
+        await recordConnectionExecutionSuccess(env, resolvedConnectionId);
+
+        if (handler && typeof handler.checkHealth === "function") {
+          const health = await handler.checkHealth(currentCredentials);
+          await updateConnectionExecutionMetadata(env, resolvedConnectionId, {
+            scopes: health.scopes ?? null,
+          });
+        }
+
+        const payload: ToolExecutionPayload = {
+          ok: true,
+          toolName: decision.tool.name,
+          integration: decision.tool.integration,
           connectionId: resolvedConnectionId,
-          userId: request.userId,
-          env,
-        });
+          mode,
+          tool: describedTool,
+          args: mergedArgs,
+          requiresConfirmation: policy.requiresConfirmation,
+          policyReason: policy.reason,
+          data: result,
+          result,
+          meta: toMeta(startedAt, requestId, providerRequestId),
+        };
+        await logExecutionResult(db, request, payload);
+        return payload;
       } catch (retryError) {
         if (isAuthenticationFailure(retryError)) {
           const detail =
@@ -501,32 +569,6 @@ export async function executeToolForUser(
         throw retryError;
       }
     }
-
-    await recordConnectionExecutionSuccess(env, resolvedConnectionId);
-
-    if (typeof handler.checkHealth === "function") {
-      const health = await handler.checkHealth(currentCredentials);
-      await updateConnectionExecutionMetadata(env, resolvedConnectionId, {
-        scopes: health.scopes ?? null,
-      });
-    }
-
-    const payload: ToolExecutionPayload = {
-      ok: true,
-      toolName: decision.tool.name,
-      integration: decision.tool.integration,
-      connectionId: resolvedConnectionId,
-      mode,
-      tool: describedTool,
-      args: mergedArgs,
-      requiresConfirmation: policy.requiresConfirmation,
-      policyReason: policy.reason,
-      data: result,
-      result,
-      meta: toMeta(startedAt, requestId),
-    };
-    await logExecutionResult(db, request, payload);
-    return payload;
   } catch (error) {
     const classified = classifyIntegrationError(error);
 

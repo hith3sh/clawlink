@@ -819,25 +819,6 @@ export async function getIntegrationConnectionById(
   return getIntegrationConnectionByIdForUserId(db, user.id, connectionId);
 }
 
-export async function saveIntegrationConnection(
-  slug: string,
-  credentials: Record<string, string>,
-  options: SaveIntegrationConnectionOptions = {},
-): Promise<IntegrationConnectionRecord> {
-  const db = getDatabase();
-  const user = await getUserForCurrentIdentity();
-
-  if (!db) {
-    throw new Error("DB binding is not configured");
-  }
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
-
-  return saveIntegrationConnectionForUserId(db, user.id, slug, credentials, options);
-}
-
 export async function saveIntegrationConnectionForUserId(
   db: D1LikeDatabase,
   userId: string,

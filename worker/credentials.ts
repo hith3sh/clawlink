@@ -313,6 +313,16 @@ async function markLegacyOAuthConnectionNeedsReauth(
   throw new Error(buildNeedsReauthMessageFromNango(integration, message));
 }
 
+async function markDeprecatedLocalConnectionNeedsReauth(
+  env: CredentialBridgeEnv,
+  record: StoredIntegrationRow,
+  integration: string,
+): Promise<never> {
+  const message = `${getOAuthProviderDisplayName(integration)} must be reconnected through a hosted provider flow. Manual credential connections are no longer supported.`;
+  await markConnectionNeedsReauth(env, record.id, message);
+  throw new Error(buildNeedsReauthMessage(integration, message));
+}
+
 async function fetchNangoConnection(
   env: CredentialBridgeEnv,
   integration: string,
@@ -418,6 +428,32 @@ export async function loadConnectionCredentialsForIntegration(
     );
   }
 
+  if (isPipedreamBackedConnection(record)) {
+    const cached = await loadCachedCredentials(env, record.id);
+
+    if (cached) {
+      return {
+        connectionId: record.id,
+        credentials: cached,
+      };
+    }
+
+    if (!record.credentials_encrypted) {
+      throw new Error(`No credentials found for ${integration}. Please connect it first.`);
+    }
+
+    const credentials = await decryptCredential(
+      record.credentials_encrypted,
+      env.CREDENTIAL_ENCRYPTION_KEY,
+    );
+
+    await cacheCredentials(env, record.id, credentials);
+    return {
+      connectionId: record.id,
+      credentials,
+    };
+  }
+
   if (isOAuthIntegration(integration)) {
     if (!isNangoBackedConnection(record)) {
       await markLegacyOAuthConnectionNeedsReauth(env, record, integration);
@@ -429,29 +465,8 @@ export async function loadConnectionCredentialsForIntegration(
     };
   }
 
-  const cached = await loadCachedCredentials(env, record.id);
-
-  if (cached) {
-    return {
-      connectionId: record.id,
-      credentials: cached,
-    };
-  }
-
-  if (!record.credentials_encrypted) {
-    throw new Error(`No credentials found for ${integration}. Please connect it first.`);
-  }
-
-  const credentials = await decryptCredential(
-    record.credentials_encrypted,
-    env.CREDENTIAL_ENCRYPTION_KEY,
-  );
-
-  await cacheCredentials(env, record.id, credentials);
-  return {
-    connectionId: record.id,
-    credentials,
-  };
+  await markDeprecatedLocalConnectionNeedsReauth(env, record, integration);
+  throw new Error("Unreachable");
 }
 
 export async function refreshCredentialsForIntegration(
@@ -474,21 +489,6 @@ export async function refreshCredentialsForIntegration(
     );
   }
 
-  if (isOAuthIntegration(integration)) {
-    if (!isNangoBackedConnection(record)) {
-      await markLegacyOAuthConnectionNeedsReauth(env, record, integration);
-    }
-
-    const credentials = await fetchNangoConnection(env, integration, record, {
-      forceRefresh: true,
-    });
-
-    return {
-      connectionId: record.id,
-      credentials,
-    };
-  }
-
   if (isPipedreamBackedConnection(record)) {
     if (!record.credentials_encrypted) {
       throw new Error(`No credentials found for ${integration}. Please connect it first.`);
@@ -506,7 +506,23 @@ export async function refreshCredentialsForIntegration(
     };
   }
 
-  throw new Error(`${integration} does not support token refresh.`);
+  if (isOAuthIntegration(integration)) {
+    if (!isNangoBackedConnection(record)) {
+      await markLegacyOAuthConnectionNeedsReauth(env, record, integration);
+    }
+
+    const credentials = await fetchNangoConnection(env, integration, record, {
+      forceRefresh: true,
+    });
+
+    return {
+      connectionId: record.id,
+      credentials,
+    };
+  }
+
+  await markDeprecatedLocalConnectionNeedsReauth(env, record, integration);
+  throw new Error("Unreachable");
 }
 
 export async function markConnectionNeedsReauthForIntegration(

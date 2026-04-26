@@ -1,14 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { createElement, useEffect, useMemo, useState } from "react";
+import { createElement, useEffect, useState } from "react";
 import {
   AlertCircle,
   ArrowLeft,
   CheckCircle2,
-  Copy,
-  ExternalLink,
-  Key,
   Loader2,
   RefreshCcw,
   ShieldAlert,
@@ -18,12 +15,13 @@ import {
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Integration } from "@/data/integrations";
 import { getIntegrationIcon } from "@/lib/integration-icons";
 import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
+import { useOAuthConnect } from "@/components/dashboard/useOAuthConnect";
 
 interface ConnectionRecord {
   id: number;
@@ -34,21 +32,6 @@ interface ConnectionRecord {
   authState: "active" | "needs_reauth";
   authError: string | null;
   expiresAt: string | null;
-  createdAt: string;
-  updatedAt: string | null;
-}
-
-interface SessionRecord {
-  id: string;
-  token: string;
-  displayCode: string;
-  integration: string;
-  connectionId?: number | null;
-  status: "awaiting_user_action" | "connected" | "failed" | "expired";
-  flowType: string;
-  errorMessage: string | null;
-  expiresAt: string;
-  completedAt: string | null;
   createdAt: string;
   updatedAt: string | null;
 }
@@ -81,33 +64,33 @@ function formatTimestamp(value: string | null): string | null {
 export default function IntegrationDetails({ integration }: Props) {
   const [connection, setConnection] = useState<ConnectionRecord | null>(null);
   const [connectionCount, setConnectionCount] = useState(0);
-  const [activeSession, setActiveSession] = useState<SessionRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [tools, setTools] = useState<ToolRecord[]>([]);
   const [disconnecting, setDisconnecting] = useState(false);
-  const [startingSession, setStartingSession] = useState(false);
-  const [copyingLink, setCopyingLink] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [origin, setOrigin] = useState("");
 
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
-
-  const connectUrl = useMemo(() => {
-    if (!activeSession || !origin) {
-      return null;
-    }
-
-    return `${origin}/connect/${integration.slug}?session=${encodeURIComponent(activeSession.token)}`;
-  }, [activeSession, integration.slug, origin]);
   const needsReauth = connection?.authState === "needs_reauth";
+  const hostedConnectEnabled =
+    integration.dashboardStatus === "available" &&
+    (integration.setupMode === "oauth" || integration.setupMode === "pipedream");
+
+  const { start: startReconnect, starting: reconnecting } = useOAuthConnect(
+    integration,
+    () => {
+      setSuccess(`${integration.name} reconnected successfully.`);
+      loadIntegration();
+    },
+  );
 
   useEffect(() => {
+    loadIntegration();
+  }, [integration.slug]);
+
+  function loadIntegration() {
     let active = true;
 
-    async function loadIntegration() {
+    (async () => {
       try {
         const response = await fetch(`/api/integrations/${integration.slug}`, { cache: "no-store" });
         const data = (await response.json()) as {
@@ -115,7 +98,6 @@ export default function IntegrationDetails({ integration }: Props) {
           connection?: ConnectionRecord | null;
           connections?: ConnectionRecord[];
           connectionCount?: number;
-          activeSession?: SessionRecord | null;
           tools?: ToolRecord[];
         };
 
@@ -130,7 +112,6 @@ export default function IntegrationDetails({ integration }: Props) {
 
         setConnection(data.connection ?? null);
         setConnectionCount(data.connectionCount ?? data.connections?.length ?? (data.connection ? 1 : 0));
-        setActiveSession(data.activeSession ?? null);
         setTools(data.tools ?? []);
       } catch (requestError) {
         if (active) {
@@ -141,112 +122,11 @@ export default function IntegrationDetails({ integration }: Props) {
           setLoading(false);
         }
       }
-    }
-
-    loadIntegration();
+    })();
 
     return () => {
       active = false;
     };
-  }, [integration.slug]);
-
-  useEffect(() => {
-    if (!activeSession || activeSession.status !== "awaiting_user_action") {
-      return;
-    }
-
-    const interval = window.setInterval(async () => {
-      const response = await fetch(`/api/connect/sessions/${activeSession.token}`, { cache: "no-store" });
-
-      if (!response.ok) {
-        return;
-      }
-
-      const data = (await response.json()) as {
-        session?: SessionRecord;
-        connection?: ConnectionRecord | null;
-      };
-
-      if (!data.session) {
-        return;
-      }
-
-      setActiveSession(data.session);
-
-      if (data.connection) {
-        setConnection(data.connection);
-      }
-
-      if (data.session.status === "connected") {
-        setSuccess(`${integration.name} is connected and ready in OpenClaw.`);
-        setConnectionCount((current) => Math.max(1, current + 1));
-      }
-
-      if (data.session.status === "expired") {
-        setError("The current connection session expired. Start a new one when you are ready.");
-      }
-    }, 3000);
-
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [activeSession, integration.name]);
-
-  async function handleStartConnection() {
-    setError(null);
-    setSuccess(null);
-    setStartingSession(true);
-
-    try {
-      const response = await fetch("/api/connect/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ integration: integration.slug }),
-      });
-
-      const data = (await response.json()) as {
-        error?: string;
-        sessionId?: string;
-        sessionToken?: string;
-        displayCode?: string;
-        integration?: string;
-        status?: SessionRecord["status"];
-        expiresAt?: string;
-      };
-
-      if (!response.ok) {
-        throw new Error(data.error ?? "Failed to create connection session");
-      }
-
-      setActiveSession({
-        id: data.sessionId ?? crypto.randomUUID(),
-        token: data.sessionToken ?? "",
-        displayCode: data.displayCode ?? "",
-        integration: data.integration ?? integration.slug,
-        status: data.status ?? "awaiting_user_action",
-        flowType: integration.setupMode,
-        errorMessage: null,
-        expiresAt: data.expiresAt ?? new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-        completedAt: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      setSuccess(`Connection session created for ${integration.name}. Open the hosted link on any device.`);
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Failed to create connection session");
-    } finally {
-      setStartingSession(false);
-    }
-  }
-
-  async function handleCopyLink() {
-    if (!connectUrl) {
-      return;
-    }
-
-    await navigator.clipboard.writeText(connectUrl);
-    setCopyingLink(true);
-    window.setTimeout(() => setCopyingLink(false), 1500);
   }
 
   async function handleDisconnect() {
@@ -411,81 +291,23 @@ export default function IntegrationDetails({ integration }: Props) {
         <Card>
           <CardContent className="space-y-4">
             <div>
-              <h3 className="text-sm font-medium text-foreground">Hosted setup</h3>
+              <h3 className="text-sm font-medium text-foreground">Reconnect</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Create a short-lived link for this connection.
+                {needsReauth
+                  ? `${integration.name} needs new credentials. Reconnect to restore access.`
+                  : `Refresh or replace the ${integration.name} connection.`}
               </p>
             </div>
 
-            {integration.dashboardStatus !== "available" ? (
+            {!hostedConnectEnabled ? (
               <p className="text-sm text-muted-foreground">
-                Hosted setup is not implemented yet for {integration.name}.
+                Hosted provider auth is not available yet for {integration.name}.
               </p>
             ) : (
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  <Button onClick={handleStartConnection} disabled={startingSession}>
-                    {startingSession ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
-                    {needsReauth
-                      ? "Create reconnect link"
-                      : activeSession && activeSession.status === "awaiting_user_action"
-                        ? "Refresh session"
-                        : "Create setup link"}
-                  </Button>
-
-                  {connectUrl ? (
-                    <>
-                      <Button variant="outline" onClick={handleCopyLink}>
-                        <Copy className="h-4 w-4" />
-                        {copyingLink ? "Copied" : "Copy link"}
-                      </Button>
-                      <a
-                        href={connectUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={buttonVariants({ variant: "outline" })}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        Open
-                      </a>
-                    </>
-                  ) : null}
-                </div>
-
-                {activeSession ? (
-                  <div className="space-y-3 rounded-lg border border-border p-4">
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Session code</p>
-                        <p className="mt-1 font-mono text-lg font-semibold text-foreground">
-                          {activeSession.displayCode}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Status</p>
-                        <p className="mt-1 text-sm capitalize text-foreground">
-                          {activeSession.status.replaceAll("_", " ")}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Expires</p>
-                        <p className="mt-1 text-sm text-foreground">
-                          {formatTimestamp(activeSession.expiresAt)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {connectUrl ? (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Setup URL</p>
-                        <code className="mt-1 block overflow-x-auto whitespace-nowrap text-xs text-muted-foreground">
-                          {connectUrl}
-                        </code>
-                      </div>
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
+              <Button onClick={() => startReconnect()} disabled={reconnecting}>
+                {reconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
+                Reconnect
+              </Button>
             )}
           </CardContent>
         </Card>

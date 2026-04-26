@@ -9,22 +9,22 @@ export default function MarketingLayout({
 }) {
   return (
     <div className="public-site flex min-h-screen flex-col">
-      <header className="flex items-center justify-between px-8 sm:px-12 py-6">
-        <Link href="/" className="flex items-center gap-3">
+      <header className="flex items-center justify-between px-5 sm:px-8 py-2 pt-4">
+        <Link href="/" className="flex items-center gap-2">
           <Image
             src="/brand/bento/clawlink-square-v2.png"
             alt="ClawLink"
-            width={50}
-            height={50}
+            width={40}
+            height={40}
             priority
-            className="h-10 w-10 sm:h-12 sm:w-12"
+            className="h-7 w-7 sm:h-8 sm:w-8"
           />
-          <span className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">claw-link</span>
+          <span className="text-base font-bold tracking-tight text-gray-900 sm:text-lg">claw-link</span>
         </Link>
         <nav>
           <Link
             href="/sign-in"
-            className="inline-flex items-center rounded-full bg-[var(--brand)] px-8 py-3 text-base font-medium text-white shadow-sm transition hover:bg-[var(--brand-hover)]"
+            className="inline-flex items-center rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[var(--brand-hover)]"
           >
             Login
           </Link>

@@ -40,6 +40,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (integration.setupMode !== "oauth" && integration.setupMode !== "pipedream") {
+      return NextResponse.json(
+        {
+          error: `${integration.name} no longer supports manual credential setup. Reconnect it through a hosted provider flow when available.`,
+        },
+        { status: 409 },
+      );
+    }
+
     const db = getDatabase();
 
     if (!db) {

@@ -348,9 +348,6 @@ export default function SettingsPage() {
                 <div className="space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
                   <div className="space-y-1">
                     <Label>Paste this into your OpenClaw chat</Label>
-                    <p className="text-sm text-muted-foreground">
-                      This raw key is only shown once. Paste the command below into your OpenClaw chat as a standalone message. OpenClaw&apos;s gateway routes slash commands directly to the ClawLink plugin (fast path — the AI model never sees the key). It&apos;s stored locally in OpenClaw&apos;s config and only sent to claw-link.dev.
-                    </p>
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Input
@@ -369,9 +366,6 @@ export default function SettingsPage() {
                       Using a client with a plugin settings screen? Copy just the key
                     </summary>
                     <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground">
-                        If your OpenClaw client exposes a plugin settings screen, paste the raw key into the &quot;ClawLink API key&quot; field instead of running the command.
-                      </p>
                       <div className="flex flex-col gap-2 sm:flex-row">
                         <Input readOnly value={apiKeyValue} className="flex-1 font-mono text-sm" />
                         <Button variant="outline" onClick={copyApiKey}>

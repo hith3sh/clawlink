@@ -65,7 +65,7 @@ There are now three connection modes in the app:
    - browser opens the Pipedream Connect iframe/dialog
    - completion route stores the returned `pipedream_account_id` on the connection row
 
-At the moment, Slack is the Pipedream pilot integration. Nango-backed OAuth integrations still use the existing hosted OAuth path.
+`pipedream` is the strategic default for new providers. The slugs currently using Pipedream Connect are listed in `PIPEDREAM_CONNECT_SLUGS` in both `wrangler.toml` and `worker/wrangler.worker.toml`. Nango-backed OAuth integrations still use the existing hosted OAuth path, but new providers should not be added to Nango unless there is a specific reason.
 
 ## Runtime / Worker Architecture
 
@@ -78,12 +78,48 @@ The worker uses the connection id plus stored auth backend metadata to load cred
   - marks connections `needs_reauth` on auth failures
 
 - `worker/integrations/**`
-  - one handler per integration
-  - Slack currently supports both legacy manual token execution and Pipedream proxy execution
+  - legacy per-provider custom handlers (Slack, Notion, GitHub, Google\*, Apollo, Motion, Postiz, Twilio, ...)
+  - this pattern is being phased out in favor of manifest-backed Pipedream tools
+  - do not add a new custom handler for a provider that can be served by an imported Pipedream manifest
+  - on tool-name collision the custom handler currently wins over the manifest — see the Manifest-Backed Pipedream Tools section for the full state
 
 - `src/lib/server/executor.ts`
   - shared server-side tool execution path
   - uses the same credential bridge logic as the worker runtime
+
+## Manifest-Backed Pipedream Tools
+
+The strategic direction for adding integrations is the manifest-backed Pipedream platform, not custom worker handlers. See `docs/pipedream-provider-import-flow.md` for the per-provider import workflow.
+
+Pieces of the platform:
+
+- importer: `scripts/import-pipedream-actions.mjs`
+- override layer: `config/pipedream-action-overrides.mjs`
+- generated manifests: `src/generated/pipedream-manifests/<provider>.generated.ts`
+- manifest registry: `src/lib/pipedream/manifest-registry.ts`
+- generic executor: `src/lib/pipedream/action-executor.ts`
+
+Current state:
+
+- the importer, manifest registry, and generic executor exist
+- generated manifests for `facebook`, `gmail`, `linkedin`, `mailchimp`, `notion`, `outlook`, `xero` are on disk
+- the manifest path is wired end to end on both surfaces:
+  - server (Next API used by the OpenClaw plugin):
+    - `src/lib/server/tool-registry.ts` merges manifest tools with custom-handler tools and only emits manifest tools when the user has a Pipedream-backed connection
+    - `src/lib/server/router.ts` narrows connection selection to Pipedream-backed rows when `tool.execution.kind === "pipedream_action"`
+    - `src/lib/server/executor.ts` falls through to `executePipedreamActionTool()` instead of requiring a custom handler
+  - worker (`api.claw-link.dev`):
+    - `worker/index.ts` resolves a Pipedream-backed connection then dispatches `pipedream_action` tools to `executePipedreamActionTool()`
+    - `worker/integrations/index.ts` imports from `manifest-registry`; legacy custom handlers continue to run via the existing path
+- collision rule: when a custom handler and a generated manifest expose the same tool name, the custom handler wins. Retire the custom handler if the manifest version is preferred.
+
+Custom worker handler status (as of this writing):
+
+- already replaced by manifests (custom handler removed): `facebook`, `gmail`, `linkedin`, `mailchimp`, `outlook`
+- has both a custom handler and a generated manifest (collision; custom handler currently wins): `notion`, `slack`
+- custom handler only, no manifest yet: `apollo`, `github`, `motion`, `postiz`, `twilio`, all `google-*`
+
+Migration guidance: before deleting a custom handler with a manifest counterpart, validate the manifest tools cover the actions the handler exposed today. Before deleting a custom handler with no manifest yet, run the importer and confirm Pipedream coverage. New providers should be added through the manifest path, not as new custom handlers.
 
 ## Flows And Triggers
 

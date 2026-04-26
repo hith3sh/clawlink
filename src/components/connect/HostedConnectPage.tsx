@@ -57,10 +57,6 @@ export default function HostedConnectPage({
   nango,
   pipedream,
 }: Props) {
-  const [values, setValues] = useState<Record<string, string>>(
-    Object.fromEntries(integration.credentialFields.map((field) => [field.key, ""])),
-  );
-  const [submitting, setSubmitting] = useState(false);
   const [startingOAuth, setStartingOAuth] = useState(false);
   const [startingPipedream, setStartingPipedream] = useState(false);
   const [status, setStatus] = useState(session.status);
@@ -158,36 +154,6 @@ export default function HostedConnectPage({
     > &
       Pick<PipedreamConnectStartResponse, "connectLinkUrl" | "projectEnvironment">;
   }, [session.token]);
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSubmitting(true);
-    setError(null);
-    setInfo(null);
-
-    try {
-      const response = await fetch(`/api/connect/sessions/${session.token}/complete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credentials: values }),
-      });
-
-      const data = (await response.json()) as {
-        error?: string;
-        session?: { status?: SessionSummary["status"] };
-      };
-
-      if (!response.ok) {
-        throw new Error(data.error ?? "Failed to complete connection");
-      }
-
-      setStatus(data.session?.status ?? "connected");
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Failed to complete connection");
-    } finally {
-      setSubmitting(false);
-    }
-  }
 
   const handleStartOAuth = useCallback(async () => {
     setStartingOAuth(true);
@@ -490,60 +456,13 @@ export default function HostedConnectPage({
               Add the provider config in ClawLink, then start a new connection.
             </p>
           </div>
-        ) : integration.setupMode !== "manual" || integration.credentialFields.length === 0 ? (
+        ) : (
           <div className="rounded-3xl border border-gray-200 bg-gray-50 p-7">
             <p className="text-lg font-medium text-gray-900">This connection is not ready yet.</p>
             <p className="mt-2 text-base leading-7 text-gray-600">
-              Start again from OpenClaw after {integration.name} is available.
+              {integration.name} no longer supports manual credential entry. Start again from OpenClaw once a hosted provider flow is available.
             </p>
           </div>
-        ) : (
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            {integration.credentialFields.map((field) => (
-              <label key={field.key} className="block space-y-2">
-                <span className="block text-sm font-medium text-gray-700">{field.label}</span>
-                {field.type === "textarea" ? (
-                  <textarea
-                    rows={6}
-                    value={values[field.key] ?? ""}
-                    onChange={(event) =>
-                      setValues((current) => ({ ...current, [field.key]: event.target.value }))
-                    }
-                    placeholder={field.placeholder}
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-colors focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                  />
-                ) : (
-                  <input
-                    type={field.type}
-                    value={values[field.key] ?? ""}
-                    onChange={(event) =>
-                      setValues((current) => ({ ...current, [field.key]: event.target.value }))
-                    }
-                    placeholder={field.placeholder}
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-colors focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                  />
-                )}
-                {field.description ? (
-                  <span className="block text-xs text-gray-500">{field.description}</span>
-                ) : null}
-              </label>
-            ))}
-
-            <div className="rounded-3xl border border-gray-100 bg-gray-50 p-5 text-sm leading-7 text-gray-600">
-              Save your details once, then go back to OpenClaw.
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-2xl bg-gray-900 px-6 py-4 text-base font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                Save and connect
-              </button>
-            </div>
-          </form>
         )}
       </div>
     </div>

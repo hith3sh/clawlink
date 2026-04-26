@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { createElement, useDeferredValue, useMemo, useState } from "react";
-import { ChevronDown, Loader2, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 
 import { useOAuthConnect } from "@/components/dashboard/useOAuthConnect";
 import { useDashboardConnections } from "@/components/dashboard/DashboardConnectionsProvider";
@@ -32,21 +31,26 @@ interface ConnectionRow {
 function OAuthConnectButton({
   integration,
   onConnected,
+  label = "Connect",
+  icon,
 }: {
   integration: Integration;
   onConnected: () => void;
+  label?: string;
+  icon?: React.ReactNode;
 }) {
   const { start, starting } = useOAuthConnect(integration, onConnected);
 
   return (
     <Button
       variant="outline"
-      className="rounded-full px-4"
+      size="sm"
+      className="rounded-full px-4 text-sm font-medium shadow-none"
       onClick={() => start()}
       disabled={starting}
     >
-      {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-      Connect
+      {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : icon}
+      {label}
     </Button>
   );
 }
@@ -77,6 +81,7 @@ export default function IntegrationsPage() {
   const [addSearch, setAddSearch] = useState("");
   const [removingConnectionId, setRemovingConnectionId] = useState<number | null>(null);
   const [expandedConnectionId, setExpandedConnectionId] = useState<number | null>(null);
+  const [toolsVisibleFor, setToolsVisibleFor] = useState<Set<number>>(new Set());
 
   const deferredAddSearch = useDeferredValue(addSearch);
 
@@ -256,18 +261,12 @@ export default function IntegrationsPage() {
                           isExpanded ? "" : "sr-only"
                         }`}
                       >
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-full px-4 text-sm font-medium shadow-none"
-                          nativeButton={false}
-                          render={
-                            <Link href={`/dashboard/integrations/${row.integration.slug}`} />
-                          }
-                        >
-                          <RefreshCw className="h-3.5 w-3.5" />
-                          Reconnect
-                        </Button>
+                        <OAuthConnectButton
+                          integration={row.integration}
+                          onConnected={() => void refetch()}
+                          label="Reconnect"
+                          icon={<RefreshCw className="h-3.5 w-3.5" />}
+                        />
 
                         <Button
                           variant="ghost"
@@ -289,20 +288,44 @@ export default function IntegrationsPage() {
                       </div>
 
                       {isExpanded && row.integration.tools.length > 0 && (
-                        <div className="border-t border-black/6 bg-black/[0.015] px-6 py-4">
-                          <p className="mb-3 text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">
-                            Available actions
-                          </p>
-                          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                            {row.integration.tools.map((tool) => (
-                              <div
-                                key={tool.name}
-                                className="rounded-xl border border-black/6 bg-white px-3 py-2 text-sm text-foreground"
-                              >
-                                {tool.description}
+                        <div className="border-t border-black/6">
+                          <button
+                            type="button"
+                            className="flex w-full items-center gap-2 px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground transition-colors hover:bg-black/[0.015]"
+                            onClick={() =>
+                              setToolsVisibleFor((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(row.connection.id)) {
+                                  next.delete(row.connection.id);
+                                } else {
+                                  next.add(row.connection.id);
+                                }
+                                return next;
+                              })
+                            }
+                          >
+                            {toolsVisibleFor.has(row.connection.id) ? (
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            )}
+                            Available actions ({row.integration.tools.length})
+                          </button>
+
+                          {toolsVisibleFor.has(row.connection.id) && (
+                            <div className="bg-black/[0.015] px-6 pb-4">
+                              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                {row.integration.tools.map((tool) => (
+                                  <div
+                                    key={tool.name}
+                                    className="rounded-xl border border-black/6 bg-white px-3 py-2 text-sm text-foreground"
+                                  >
+                                    {tool.description}
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -319,7 +342,7 @@ export default function IntegrationsPage() {
           <SheetHeader className="border-b border-black/8 px-6 py-5">
             <SheetTitle>Add connection</SheetTitle>
             <SheetDescription>
-              Choose an app and start a new hosted or manual connection flow.
+              Choose an app and start a new hosted connection flow.
             </SheetDescription>
           </SheetHeader>
 
@@ -370,7 +393,7 @@ export default function IntegrationsPage() {
                       <span className="shrink-0 rounded-full border border-black/10 bg-black/[0.03] px-3 py-1.5 text-xs font-medium text-muted-foreground">
                         Coming soon
                       </span>
-                    ) : integration.setupMode !== "manual" ? (
+                    ) : integration.setupMode === "oauth" || integration.setupMode === "pipedream" ? (
                       <OAuthConnectButton
                         integration={integration}
                         onConnected={() => {
@@ -379,13 +402,9 @@ export default function IntegrationsPage() {
                         }}
                       />
                     ) : (
-                      <Button
-                        variant="outline"
-                        nativeButton={false}
-                        render={<Link href={`/dashboard/integrations/${integration.slug}`} />}
-                      >
-                        Connect
-                      </Button>
+                      <span className="shrink-0 rounded-full border border-black/10 bg-black/[0.03] px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                        Hosted flow pending
+                      </span>
                     )}
                   </div>
                 ))

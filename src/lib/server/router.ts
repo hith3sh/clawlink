@@ -65,6 +65,19 @@ function selectConnection(
   return connections.find((connection) => connection.isDefault) ?? connections[0] ?? null;
 }
 
+function filterConnectionsForTool(
+  tool: IntegrationTool,
+  connections: IntegrationConnectionRecord[],
+): IntegrationConnectionRecord[] {
+  if (tool.execution.kind !== "pipedream_action") {
+    return connections;
+  }
+
+  return connections.filter(
+    (connection) => connection.authBackend === "pipedream" && Boolean(connection.pipedreamAccountId),
+  );
+}
+
 function findMissingScopes(
   tool: IntegrationTool,
   connection: IntegrationConnectionRecord,
@@ -131,20 +144,31 @@ export async function routeToolRequest(request: RouteToolRequest): Promise<Route
     };
   }
 
-  const selected = selectConnection(connections, request.preferredConnectionId);
+  const compatibleConnections = filterConnectionsForTool(tool, connections);
+
+  if (compatibleConnections.length === 0) {
+    return {
+      kind: "needs_connection",
+      integration: tool.integration,
+    };
+  }
+
+  const selected = selectConnection(compatibleConnections, request.preferredConnectionId);
 
   if (!selected) {
     return {
       kind: "ambiguous_connection",
       integration: tool.integration,
-      options: connections.map(mapConnectionSummary),
+      options: compatibleConnections.map(mapConnectionSummary),
       tool,
     };
   }
 
   if (!request.preferredConnectionId) {
-    const activeWithoutDefault = connections.filter((connection) => connection.authState === "active");
-    const hasDefault = connections.some((connection) => connection.isDefault);
+    const activeWithoutDefault = compatibleConnections.filter(
+      (connection) => connection.authState === "active",
+    );
+    const hasDefault = compatibleConnections.some((connection) => connection.isDefault);
 
     if (activeWithoutDefault.length > 1 && !hasDefault) {
       return {

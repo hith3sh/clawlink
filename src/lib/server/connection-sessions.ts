@@ -14,7 +14,6 @@ import {
   type IntegrationConnectionRecord,
   type UserRow,
 } from "@/lib/server/integration-store";
-import { validateManualIntegrationCredentials } from "@/lib/server/manual-credentials";
 import {
   getNangoConnection,
   isNangoManagedIntegration,
@@ -518,75 +517,6 @@ export async function getLatestActiveConnectionSessionForUser(
   const connection = await loadConnectionForSession(db, normalized);
 
   return mapSession(normalized, connection);
-}
-
-export async function completeManualConnectionSession(
-  token: string,
-  credentials: Record<string, string>,
-): Promise<ConnectionSessionRecord> {
-  const db = getDatabase();
-
-  if (!db) {
-    throw new Error("DB binding is not configured");
-  }
-
-  const session = await loadSession(db, token);
-
-  if (!session) {
-    throw new Error("Connection session not found");
-  }
-
-  const integration = getIntegrationBySlug(session.integration);
-
-  if (!integration) {
-    throw new Error("Integration not found");
-  }
-
-  const normalized = await expireIfNeeded(db, session);
-
-  if (normalized.status === "expired") {
-    throw new Error("This connection session has expired");
-  }
-
-  if (integration.setupMode !== "manual") {
-    throw new Error(`${integration.name} requires a hosted OAuth flow that is not implemented yet`);
-  }
-
-  await validateManualIntegrationCredentials(normalized.integration, credentials);
-
-  const connection = await saveIntegrationConnectionForUserId(
-    db,
-    normalized.user_id,
-    normalized.integration,
-    credentials,
-    {
-      mode: "create_or_match_account",
-      setAsDefault: true,
-    },
-  );
-
-  await db
-    .prepare(
-      `
-        UPDATE connection_sessions
-        SET connection_id = ?,
-            status = 'connected',
-            error_message = NULL,
-            completed_at = datetime('now'),
-            updated_at = datetime('now')
-        WHERE id = ?
-      `,
-    )
-    .bind(connection.id, normalized.id)
-    .run();
-
-  const saved = await getConnectionSessionByToken(token);
-
-  if (!saved) {
-    throw new Error("Connection session was completed but could not be reloaded");
-  }
-
-  return saved;
 }
 
 async function completeOAuthConnectionSessionRecord(

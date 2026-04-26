@@ -10,7 +10,7 @@
 // Import integrations to register handlers
 import "./integrations";
 
-import { integrations } from "../src/data/integrations";
+import { executePipedreamActionTool } from "../src/lib/pipedream/action-executor";
 import { verifyAuth } from "./auth";
 import {
   loadConnectionCredentialsForIntegration,
@@ -22,7 +22,12 @@ import {
   updateConnectionExecutionMetadata,
 } from "./credentials";
 import { logRequest, logToolExecution } from "./logger";
-import { getIntegrationHandler, type IntegrationTool } from "./integrations";
+import {
+  getAllRegisteredTools,
+  getIntegrationHandler,
+  getRegisteredToolByName,
+  type IntegrationTool,
+} from "./integrations";
 import { classifyIntegrationError, isAuthenticationFailure } from "./integrations/base";
 
 export interface Env {
@@ -83,6 +88,84 @@ function getClawLinkAppUrl(env: Env): string {
   return configured.replace(/\/+$/, "");
 }
 
+interface WorkerConnectionRow {
+  id: number;
+  is_default: number;
+  auth_state: string;
+  auth_provider: string | null;
+  pipedream_account_id: string | null;
+  updated_at: string | null;
+  created_at: string;
+}
+
+function isPipedreamBackedConnection(row: WorkerConnectionRow): boolean {
+  return row.auth_provider === "pipedream" || Boolean(row.pipedream_account_id);
+}
+
+async function resolvePreferredPipedreamConnectionId(
+  env: Env,
+  userId: string,
+  integration: string,
+  preferredConnectionId?: number,
+): Promise<number | null> {
+  if (preferredConnectionId) {
+    const row = await env.DB
+      .prepare(
+        `
+          SELECT id, is_default, auth_state, auth_provider, pipedream_account_id, updated_at, created_at
+          FROM user_integrations
+          WHERE id = ? AND user_id = ? AND integration = ?
+          LIMIT 1
+        `,
+      )
+      .bind(preferredConnectionId, userId, integration)
+      .first<WorkerConnectionRow>();
+
+    if (!row) {
+      return null;
+    }
+
+    return isPipedreamBackedConnection(row) ? row.id : null;
+  }
+
+  const result = await env.DB
+    .prepare(
+      `
+        SELECT id, is_default, auth_state, auth_provider, pipedream_account_id, updated_at, created_at
+        FROM user_integrations
+        WHERE user_id = ? AND integration = ?
+        ORDER BY is_default DESC, updated_at DESC, created_at DESC, id DESC
+      `,
+    )
+    .bind(userId, integration)
+    .all<WorkerConnectionRow>();
+
+  const rows = result.results ?? [];
+
+  const activeDefault =
+    rows.find((row) => row.is_default && row.auth_state === "active" && isPipedreamBackedConnection(row)) ??
+    null;
+
+  if (activeDefault) {
+    return activeDefault.id;
+  }
+
+  const latestActive =
+    rows.find((row) => row.auth_state === "active" && isPipedreamBackedConnection(row)) ??
+    null;
+
+  if (latestActive) {
+    return latestActive.id;
+  }
+
+  const fallback =
+    rows.find((row) => row.is_default && isPipedreamBackedConnection(row)) ??
+    rows.find((row) => isPipedreamBackedConnection(row)) ??
+    null;
+
+  return fallback?.id ?? null;
+}
+
 async function runScheduledTriggerWork(env: Env): Promise<void> {
   const secret =
     typeof env.TRIGGER_CRON_SECRET === "string" ? env.TRIGGER_CRON_SECRET.trim() : "";
@@ -122,14 +205,22 @@ async function handleToolCall(
     throw new Error("Missing tool name");
   }
 
-  // Parse tool name: "gmail_send_email" -> integration: gmail, action: send_email
-  const [integration, ...actionParts] = name.split("_");
-  const action = actionParts.join("_");
   const internalUserId = await resolveInternalUserId(env.DB, authSubject);
 
   if (!internalUserId) {
     throw new Error("No ClawLink user found for the authenticated account.");
   }
+
+  const tool = getRegisteredToolByName(name);
+
+  if (!tool) {
+    throw new Error(`Unknown tool: ${name}`);
+  }
+
+  const integration = tool.integration;
+  const action = tool.name.startsWith(`${integration}_`)
+    ? tool.name.slice(integration.length + 1)
+    : tool.name;
 
   // Get cached credentials or decrypt from request
   let credentials: Record<string, string>;
@@ -147,10 +238,12 @@ async function handleToolCall(
     delete args.connectionId;
   }
   const hasInlineCredentials = Boolean(params?.credentials);
+  const handler =
+    tool.execution.kind === "custom"
+      ? getIntegrationHandler(integration)
+      : null;
 
-  // Get the integration handler
-  const handler = getIntegrationHandler(integration);
-  if (!handler) {
+  if (tool.execution.kind === "custom" && !handler) {
     throw new Error(`Unknown integration: ${integration}`);
   }
 
@@ -158,29 +251,103 @@ async function handleToolCall(
   const requestId = crypto.randomUUID();
   const startedAt = Date.now();
   let resolvedConnectionId = connectionId ?? null;
+  let providerRequestId: string | undefined;
 
   try {
     if (params?.credentials) {
       // Credentials passed in request (already encrypted per-session)
       credentials = params.credentials;
     } else {
+      if (tool.execution.kind === "pipedream_action") {
+        resolvedConnectionId = await resolvePreferredPipedreamConnectionId(
+          env,
+          internalUserId,
+          integration,
+          connectionId,
+        );
+
+        if (!resolvedConnectionId) {
+          throw new Error(
+            `No Pipedream-backed connection found for ${integration}. Please reconnect it through ClawLink.`,
+          );
+        }
+      }
+
       const loaded = await loadConnectionCredentialsForIntegration(env, internalUserId, integration, {
-        connectionId,
+        connectionId: resolvedConnectionId ?? undefined,
       });
       credentials = loaded.credentials;
       resolvedConnectionId = loaded.connectionId;
     }
     let currentCredentials = credentials;
 
-    let result: unknown;
+    const runTool = async (
+      current: Record<string, string>,
+    ): Promise<unknown> => {
+      if (tool.execution.kind === "pipedream_action") {
+        const execution = await executePipedreamActionTool(tool, args, {
+          requestId,
+          externalUserId: internalUserId,
+          credentials: current,
+          env: env as Record<string, unknown>,
+        });
+        providerRequestId = execution.providerRequestId;
+        return execution.data;
+      }
 
-    try {
-      result = await handler.execute(action, args, currentCredentials, {
+      return handler!.execute(action, args, current, {
         requestId,
         connectionId: resolvedConnectionId ?? undefined,
         userId: internalUserId,
         env: env as Record<string, unknown>,
       });
+    };
+
+    try {
+      const result = await runTool(currentCredentials);
+
+      const latencyMs = Date.now() - startedAt;
+
+      if (resolvedConnectionId) {
+        await recordConnectionExecutionSuccess(env, resolvedConnectionId);
+
+        if (handler && typeof handler.checkHealth === "function") {
+          const health = await handler.checkHealth(currentCredentials);
+          await updateConnectionExecutionMetadata(env, resolvedConnectionId, {
+            scopes: health.scopes ?? null,
+          });
+        }
+      }
+
+      await logRequest(env.DB, {
+        userId: internalUserId,
+        integration,
+        action,
+        success: true,
+        latencyMs,
+        requestBody: safeJsonStringify(args),
+        responseBody: safeJsonStringify(result),
+      });
+
+      await logToolExecution(env.DB, {
+        id: requestId,
+        userId: internalUserId,
+        integration,
+        toolName: name,
+        connectionId: resolvedConnectionId,
+        executionMode: "direct",
+        status: "success",
+        requestJson: safeJsonStringify({
+          arguments: args,
+          connectionId: resolvedConnectionId,
+          inlineCredentials: hasInlineCredentials,
+        }),
+        responseJson: safeJsonStringify(result),
+        latencyMs,
+        providerRequestId,
+      });
+
+      return result;
     } catch (error) {
       if (!canRetryAfterAuthFailure || !isAuthenticationFailure(error)) {
         throw error;
@@ -193,12 +360,50 @@ async function handleToolCall(
       currentCredentials = refreshed.credentials;
 
       try {
-        result = await handler.execute(action, args, currentCredentials, {
-          requestId,
-          connectionId: resolvedConnectionId,
+        const result = await runTool(currentCredentials);
+
+        const latencyMs = Date.now() - startedAt;
+
+        if (resolvedConnectionId) {
+          await recordConnectionExecutionSuccess(env, resolvedConnectionId);
+
+          if (handler && typeof handler.checkHealth === "function") {
+            const health = await handler.checkHealth(currentCredentials);
+            await updateConnectionExecutionMetadata(env, resolvedConnectionId, {
+              scopes: health.scopes ?? null,
+            });
+          }
+        }
+
+        await logRequest(env.DB, {
           userId: internalUserId,
-          env: env as Record<string, unknown>,
+          integration,
+          action,
+          success: true,
+          latencyMs,
+          requestBody: safeJsonStringify(args),
+          responseBody: safeJsonStringify(result),
         });
+
+        await logToolExecution(env.DB, {
+          id: requestId,
+          userId: internalUserId,
+          integration,
+          toolName: name,
+          connectionId: resolvedConnectionId,
+          executionMode: "direct",
+          status: "success",
+          requestJson: safeJsonStringify({
+            arguments: args,
+            connectionId: resolvedConnectionId,
+            inlineCredentials: hasInlineCredentials,
+          }),
+          responseJson: safeJsonStringify(result),
+          latencyMs,
+          providerRequestId,
+        });
+
+        return result;
       } catch (retryError) {
         if (isAuthenticationFailure(retryError)) {
           const detail =
@@ -217,48 +422,6 @@ async function handleToolCall(
         throw retryError;
       }
     }
-
-    const latencyMs = Date.now() - startedAt;
-
-    if (resolvedConnectionId) {
-      await recordConnectionExecutionSuccess(env, resolvedConnectionId);
-
-      if (typeof handler.checkHealth === "function") {
-        const health = await handler.checkHealth(currentCredentials);
-        await updateConnectionExecutionMetadata(env, resolvedConnectionId, {
-          scopes: health.scopes ?? null,
-        });
-      }
-    }
-
-    await logRequest(env.DB, {
-      userId: internalUserId,
-      integration,
-      action,
-      success: true,
-      latencyMs,
-      requestBody: safeJsonStringify(args),
-      responseBody: safeJsonStringify(result),
-    });
-
-    await logToolExecution(env.DB, {
-      id: requestId,
-      userId: internalUserId,
-      integration,
-      toolName: name,
-      connectionId: resolvedConnectionId,
-      executionMode: "direct",
-      status: "success",
-      requestJson: safeJsonStringify({
-        arguments: args,
-        connectionId: resolvedConnectionId,
-        inlineCredentials: hasInlineCredentials,
-      }),
-      responseJson: safeJsonStringify(result),
-      latencyMs,
-    });
-
-    return result;
   } catch (error) {
     const latencyMs = Date.now() - startedAt;
     const classified = classifyIntegrationError(error);
@@ -292,6 +455,7 @@ async function handleToolCall(
         inlineCredentials: hasInlineCredentials,
       }),
       latencyMs,
+      providerRequestId,
     });
 
     throw error;
@@ -302,17 +466,7 @@ async function handleToolCall(
  * Handle MCP list_tools request
  */
 function handleListTools(): IntegrationTool[] {
-  const tools: IntegrationTool[] = [];
-  
-  for (const integration of integrations) {
-    const handler = getIntegrationHandler(integration.slug);
-    if (handler?.getTools) {
-      const integrationTools = handler.getTools(integration.slug);
-      tools.push(...integrationTools);
-    }
-  }
-  
-  return tools;
+  return getAllRegisteredTools();
 }
 
 export default {

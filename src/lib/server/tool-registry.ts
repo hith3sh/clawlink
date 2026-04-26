@@ -7,7 +7,9 @@ import {
   type IntegrationConnectionRecord,
 } from "@/lib/server/integration-store";
 import {
-  getAllHandlers,
+  getAllRegisteredTools,
+  listHandlerToolsForIntegration,
+  listManifestToolsForIntegration,
   type IntegrationTool,
   type IntegrationToolExample,
   type ToolAccessLevel,
@@ -100,6 +102,10 @@ function hasGuidance(tool: IntegrationTool): boolean {
   );
 }
 
+function isPipedreamBackedConnection(connection: IntegrationConnectionRecord): boolean {
+  return connection.authBackend === "pipedream" && Boolean(connection.pipedreamAccountId);
+}
+
 export function buildCatalogItem(
   tool: IntegrationTool,
   connections: IntegrationConnectionRecord[],
@@ -153,19 +159,9 @@ function normalizeSearchText(value: string): string {
 }
 
 function getAllRegisteredToolEntries(): ToolRegistryEntry[] {
-  const entries: ToolRegistryEntry[] = [];
-
-  for (const [integration, handler] of getAllHandlers().entries()) {
-    if (!handler?.getTools) {
-      continue;
-    }
-
-    for (const tool of handler.getTools(integration)) {
-      entries.push({ tool, connections: [] });
-    }
-  }
-
-  return entries.sort((left, right) => left.tool.name.localeCompare(right.tool.name));
+  return getAllRegisteredTools()
+    .map((tool) => ({ tool, connections: [] }))
+    .sort((left, right) => left.tool.name.localeCompare(right.tool.name));
 }
 
 function scoreTool(tool: IntegrationTool, query: string, integration?: string): number {
@@ -228,14 +224,28 @@ export function listAllRegisteredTools(): IntegrationTool[] {
 
 export function listToolDefinitionsForIntegration(
   integration: string,
+  options: { includePipedreamManifestTools?: boolean } = {},
 ): IntegrationTool[] {
-  const handler = getAllHandlers().get(integration);
+  const handlerTools = listHandlerToolsForIntegration(integration);
 
-  if (!handler?.getTools) {
-    return [];
+  if (!options.includePipedreamManifestTools) {
+    return handlerTools;
   }
 
-  return handler.getTools(integration).sort((left, right) => left.name.localeCompare(right.name));
+  const manifestTools = listManifestToolsForIntegration(integration);
+  const tools = new Map<string, IntegrationTool>();
+
+  for (const tool of handlerTools) {
+    tools.set(tool.name, tool);
+  }
+
+  for (const tool of manifestTools) {
+    if (!tools.has(tool.name)) {
+      tools.set(tool.name, tool);
+    }
+  }
+
+  return Array.from(tools.values()).sort((left, right) => left.name.localeCompare(right.name));
 }
 
 export function getToolDefinitionByName(toolName: string): IntegrationTool | null {
@@ -290,14 +300,26 @@ export async function listConnectedToolEntries(userId: string): Promise<ToolRegi
   const entries: ToolRegistryEntry[] = [];
 
   for (const [integration, integrationConnections] of connectionsByIntegration.entries()) {
-    const handler = getAllHandlers().get(integration);
+    const handlerTools = listHandlerToolsForIntegration(integration);
 
-    if (!handler?.getTools) {
+    for (const tool of handlerTools) {
+      entries.push({ tool, connections: integrationConnections });
+    }
+
+    const pipedreamConnections = integrationConnections.filter(isPipedreamBackedConnection);
+
+    if (pipedreamConnections.length === 0) {
       continue;
     }
 
-    for (const tool of handler.getTools(integration)) {
-      entries.push({ tool, connections: integrationConnections });
+    const handlerToolNames = new Set(handlerTools.map((tool) => tool.name));
+
+    for (const tool of listManifestToolsForIntegration(integration)) {
+      if (handlerToolNames.has(tool.name)) {
+        continue;
+      }
+
+      entries.push({ tool, connections: pipedreamConnections });
     }
   }
 
@@ -336,8 +358,16 @@ export async function listToolDescriptionsForIntegration(
   const connections = (await listIntegrationConnectionsForUserId(db, userId)).filter(
     (connection) => connection.integration === integration,
   );
+  const includePipedreamManifestTools = connections.some(isPipedreamBackedConnection);
 
-  return listToolDefinitionsForIntegration(integration).map((tool) =>
-    buildToolDescription(tool, connections),
+  const pipedreamConnections = connections.filter(isPipedreamBackedConnection);
+
+  return listToolDefinitionsForIntegration(integration, {
+    includePipedreamManifestTools,
+  }).map((tool) =>
+    buildToolDescription(
+      tool,
+      tool.execution.kind === "pipedream_action" ? pipedreamConnections : connections,
+    ),
   );
 }

@@ -9,9 +9,7 @@ import {
   getIntegrationConnection,
   getUserForCurrentIdentity,
   listIntegrationConnectionsForSlug,
-  saveIntegrationConnection,
 } from "@/lib/server/integration-store";
-import { ManualCredentialValidationError, validateManualIntegrationCredentials } from "@/lib/server/manual-credentials";
 import { listToolDescriptionsForIntegration } from "@/lib/server/tooling";
 
 export const dynamic = "force-dynamic";
@@ -77,6 +75,7 @@ export async function POST(
   request: NextRequest,
   context: { params: Promise<{ slug: string }> },
 ) {
+  void request;
   const identity = await getAuthenticatedIdentity();
 
   if (!identity) {
@@ -94,67 +93,12 @@ export async function POST(
     return NextResponse.json({ error: "Integration not found" }, { status: 404 });
   }
 
-  if (integration.dashboardStatus !== "available") {
-    return NextResponse.json(
-      { error: `${integration.name} cannot be connected from the dashboard yet` },
-      { status: 409 },
-    );
-  }
-
-  try {
-    const payload = (await request.json()) as { credentials?: Record<string, unknown> };
-    const incomingCredentials = payload.credentials ?? {};
-
-    const missingFields = integration.credentialFields.filter((field) => {
-      const value = incomingCredentials[field.key];
-      return field.required && (typeof value !== "string" || value.trim().length === 0);
-    });
-
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        {
-          error: `Missing required fields: ${missingFields.map((field) => field.label).join(", ")}`,
-        },
-        { status: 400 },
-      );
-    }
-
-    const credentials = Object.fromEntries(
-      integration.credentialFields.map((field) => [
-        field.key,
-        String(incomingCredentials[field.key] ?? "").trim(),
-      ]),
-    );
-
-    await validateManualIntegrationCredentials(slug, credentials);
-
-    const connection = await saveIntegrationConnection(slug, credentials, {
-      mode: "upsert_default",
-      setAsDefault: true,
-    });
-
-    return NextResponse.json({
-      integration: slug,
-      connected: true,
-      connection,
-    });
-  } catch (error) {
-    if (error instanceof ManualCredentialValidationError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 },
-      );
-    }
-
-    console.error(`Error saving integration ${slug}:`, error);
-
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Failed to save integration",
-      },
-      { status: 500 },
-    );
-  }
+  return NextResponse.json(
+    {
+      error: `${integration.name} no longer supports direct manual credential setup. Start a hosted connection when provider-managed auth is available.`,
+    },
+    { status: 410 },
+  );
 }
 
 export async function DELETE(

@@ -54,6 +54,7 @@ import {
   SiVimeo,
   SiWhatsapp,
   SiWoocommerce,
+  SiXero,
   SiYoutube,
 } from "react-icons/si";
 import { FaLinkedin, FaMicrosoft } from "react-icons/fa";
@@ -119,6 +120,7 @@ export const integrationIconMap: Record<string, IconType> = {
   SiOpenai,
   SiElevenlabs,
   SiPosthog,
+  SiXero,
 };
 
 export function getIntegrationIcon(iconKey: string): IconType {
