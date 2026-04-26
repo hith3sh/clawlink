@@ -104,7 +104,7 @@ type PolarPayloadLike =
   | undefined;
 
 const FREE_INTEGRATION_LIMIT = 1;
-const PRO_MONTHLY_PRICE_LABEL = "$5/month";
+const PRO_MONTHLY_PRICE_LABEL = "$14.99/month";
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(["active", "trialing", "past_due"]);
 
 function mapBillingAccount(row: StoredBillingAccountRow): BillingAccountRecord {
@@ -314,7 +314,7 @@ export async function getBillingAccessDecisionForUser(
 
   return {
     allowed: false,
-    reason: "Your free plan includes one connected app. Upgrade to ClawLink Pro for $5/month to add more integrations.",
+    reason: "Your free plan includes one connected app. Upgrade to ClawLink Pro for $14.99/month to add more integrations.",
   };
 }
 

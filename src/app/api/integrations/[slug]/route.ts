@@ -148,6 +148,10 @@ export async function DELETE(
     });
   } catch (error) {
     console.error(`Error deleting integration ${slug}:`, error);
-    return NextResponse.json({ error: "Failed to delete integration" }, { status: 500 });
+    const detail = error instanceof Error ? error.message : String(error);
+    return NextResponse.json(
+      { error: `Failed to delete integration: ${detail}` },
+      { status: 500 },
+    );
   }
 }

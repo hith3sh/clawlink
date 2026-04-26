@@ -818,11 +818,6 @@ export const GmailPipedreamToolManifests = [
           "title": "Search Query",
           "description": "Apply a search filter using Gmail's [standard search operators](https://support.google.com/mail/answer/7190)"
         },
-        "withTextPayload": {
-          "type": "boolean",
-          "title": "Return payload as plaintext",
-          "description": "Convert the payload response into a single text field. **This reduces the size of the payload and makes it easier for LLMs work with.**"
-        },
         "metadataOnly": {
           "type": "boolean",
           "title": "Metadata Only",
@@ -847,9 +842,7 @@ export const GmailPipedreamToolManifests = [
           "description": "Maximum number of messages to return. Defaults to `20`."
         }
       },
-      "required": [
-        "withTextPayload"
-      ]
+      "required": []
     },
     "accessLevel": "read",
     "mode": "read",
@@ -860,7 +853,9 @@ export const GmailPipedreamToolManifests = [
     ],
     "whenToUse": [],
     "askBefore": [],
-    "safeDefaults": {},
+    "safeDefaults": {
+      "withTextPayload": true
+    },
     "examples": [],
     "followups": [],
     "requiresScopes": [],
@@ -912,7 +907,7 @@ export const GmailPipedreamToolManifests = [
           "label": "Return payload as plaintext",
           "description": "Convert the payload response into a single text field. **This reduces the size of the payload and makes it easier for LLMs work with.**",
           "required": true,
-          "hidden": false,
+          "hidden": true,
           "disabled": false,
           "readOnly": false,
           "remoteOptions": false,

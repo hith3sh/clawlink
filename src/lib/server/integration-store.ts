@@ -630,7 +630,7 @@ async function promoteLatestConnectionToDefault(
       .run();
 }
 
-async function clearConnectionSessionReferences(
+async function clearConnectionForeignKeyReferences(
   db: D1LikeDatabase,
   userId: string,
   connectionId: number,
@@ -641,6 +641,17 @@ async function clearConnectionSessionReferences(
         UPDATE connection_sessions
         SET connection_id = NULL,
             updated_at = datetime('now')
+        WHERE user_id = ? AND connection_id = ?
+      `,
+    )
+    .bind(userId, connectionId)
+    .run();
+
+  await db
+    .prepare(
+      `
+        UPDATE tool_executions
+        SET connection_id = NULL
         WHERE user_id = ? AND connection_id = ?
       `,
     )
@@ -1299,7 +1310,7 @@ export async function deleteIntegrationConnectionForUserId(
     return;
   }
 
-  await clearConnectionSessionReferences(db, userId, connectionId);
+  await clearConnectionForeignKeyReferences(db, userId, connectionId);
 
   if (
     connection.authBackend === "nango" &&

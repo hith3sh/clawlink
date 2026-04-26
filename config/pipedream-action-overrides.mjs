@@ -3,6 +3,12 @@
  *
  * Use this to rename tools, hide poor-fit actions, tighten risk metadata,
  * and strip props that should not be exposed directly to OpenClaw.
+ *
+ * Validation notes:
+ * - `hiddenProps` + `safeDefaults` are how we remove Pipedream-only props from
+ *   the LLM contract while still satisfying the upstream component.
+ * - `validationArgs` can be provided per action for runtime manifest audits.
+ *   They must only contain exposed LLM-facing args, never hidden/internal props.
  */
 const overrides = {
   integrations: {
@@ -87,6 +93,14 @@ const overrides = {
         "gmail-remove-label-from-email": {
           mode: "write",
           risk: "confirm",
+        },
+        "gmail-find-email": {
+          // withTextPayload is a Pipedream display flag, not a Gmail concept.
+          // Hide it from the LLM and force-fill it server-side.
+          hiddenProps: ["withTextPayload"],
+          safeDefaults: {
+            withTextPayload: true,
+          },
         },
       },
     },
@@ -283,6 +297,18 @@ const overrides = {
         "mailchimp-update-list": {
           mode: "write",
           risk: "confirm",
+          // emailTypeOption defaults to false in Mailchimp's API; LLMs have
+          // no product context to choose HTML+plaintext vs plaintext-only.
+          hiddenProps: ["emailTypeOption"],
+          safeDefaults: {
+            emailTypeOption: false,
+          },
+        },
+        "mailchimp-create-list": {
+          hiddenProps: ["emailTypeOption"],
+          safeDefaults: {
+            emailTypeOption: false,
+          },
         },
       },
     },

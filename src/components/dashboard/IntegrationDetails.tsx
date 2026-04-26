@@ -6,6 +6,8 @@ import {
   AlertCircle,
   ArrowLeft,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   Loader2,
   RefreshCcw,
   ShieldAlert,
@@ -22,6 +24,7 @@ import type { Integration } from "@/data/integrations";
 import { getIntegrationIcon } from "@/lib/integration-icons";
 import { getBrandLogoSrc, hasBrandLogo } from "@/lib/brand-logos";
 import { useOAuthConnect } from "@/components/dashboard/useOAuthConnect";
+import { useDashboardConnections } from "@/components/dashboard/DashboardConnectionsProvider";
 
 interface ConnectionRecord {
   id: number;
@@ -67,6 +70,7 @@ export default function IntegrationDetails({ integration }: Props) {
   const [loading, setLoading] = useState(true);
   const [tools, setTools] = useState<ToolRecord[]>([]);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [toolsVisible, setToolsVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -75,11 +79,14 @@ export default function IntegrationDetails({ integration }: Props) {
     integration.dashboardStatus === "available" &&
     (integration.setupMode === "oauth" || integration.setupMode === "pipedream");
 
+  const { refetch: refetchDashboard } = useDashboardConnections();
+
   const { start: startReconnect, starting: reconnecting } = useOAuthConnect(
     integration,
     () => {
       setSuccess(`${integration.name} reconnected successfully.`);
       loadIntegration();
+      void refetchDashboard();
     },
   );
 
@@ -145,6 +152,7 @@ export default function IntegrationDetails({ integration }: Props) {
       setConnection(null);
       setConnectionCount(0);
       setSuccess(`${integration.name} has been disconnected.`);
+      void refetchDashboard();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Failed to disconnect integration");
     } finally {
@@ -315,74 +323,87 @@ export default function IntegrationDetails({ integration }: Props) {
 
       <Card>
         <CardContent className="space-y-4">
-          <div>
-            <h3 className="text-sm font-medium text-foreground">Available tools</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {integration.runtimeStatus === "live"
-                ? "These tools are active in the runtime. Writes now require explicit confirmation before execution."
-                : "These tools are planned for a future release."}
-            </p>
-          </div>
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 text-left"
+            onClick={() => setToolsVisible((v) => !v)}
+          >
+            {toolsVisible ? (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            )}
+            <div>
+              <h3 className="text-sm font-medium text-foreground">Available tools</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {integration.runtimeStatus === "live"
+                  ? "These tools are active in the runtime. Writes now require explicit confirmation before execution."
+                  : "These tools are planned for a future release."}
+              </p>
+            </div>
+          </button>
 
-          {tools.length > 0 ? (
-            <div className="space-y-2">
-              {tools.map((tool) => (
-                <div key={tool.name} className="rounded-lg border border-border p-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-mono text-sm text-foreground">
-                      {tool.name}
-                    </p>
-                    <Badge variant="outline">{tool.mode}</Badge>
-                    <Badge variant={tool.risk === "high_impact" ? "destructive" : tool.risk === "confirm" ? "secondary" : "outline"}>
-                      {tool.risk === "high_impact" ? "high impact" : tool.risk}
-                    </Badge>
+          {toolsVisible && (
+            tools.length > 0 ? (
+              <div className="space-y-2">
+                {tools.map((tool) => (
+                  <div key={tool.name} className="rounded-lg border border-border p-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-mono text-sm text-foreground">
+                        {tool.name}
+                      </p>
+                      <Badge variant="outline">{tool.mode}</Badge>
+                      <Badge variant={tool.risk === "high_impact" ? "destructive" : tool.risk === "confirm" ? "secondary" : "outline"}>
+                        {tool.risk === "high_impact" ? "high impact" : tool.risk}
+                      </Badge>
+                      {tool.requiresConfirmation ? (
+                        <Badge variant="secondary">confirmation required</Badge>
+                      ) : null}
+                      {tool.previewAvailable ? (
+                        <Badge variant="outline">preview available</Badge>
+                      ) : null}
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">{tool.description}</p>
                     {tool.requiresConfirmation ? (
-                      <Badge variant="secondary">confirmation required</Badge>
-                    ) : null}
-                    {tool.previewAvailable ? (
-                      <Badge variant="outline">preview available</Badge>
-                    ) : null}
+                      <div className="mt-3 flex gap-2 rounded-lg border border-amber-500/20 bg-amber-500/8 p-3 text-sm text-amber-900 dark:text-amber-100">
+                        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-300" />
+                        <div className="space-y-1">
+                          <p className="font-medium">Explicit confirmation required</p>
+                          <p className="text-amber-800/80 dark:text-amber-100/80">
+                            {tool.policyReason ?? "This tool writes data to an external service, so ClawLink will block direct execution until it is confirmed."}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-3 flex gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/8 p-3 text-sm text-emerald-900 dark:text-emerald-100">
+                        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-300" />
+                        <div>
+                          <p className="font-medium">Runs without confirmation</p>
+                          <p className="text-emerald-800/80 dark:text-emerald-100/80">
+                            This tool is read-only or low-risk enough to execute directly.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{tool.description}</p>
-                  {tool.requiresConfirmation ? (
-                    <div className="mt-3 flex gap-2 rounded-lg border border-amber-500/20 bg-amber-500/8 p-3 text-sm text-amber-900 dark:text-amber-100">
-                      <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-300" />
-                      <div className="space-y-1">
-                        <p className="font-medium">Explicit confirmation required</p>
-                        <p className="text-amber-800/80 dark:text-amber-100/80">
-                          {tool.policyReason ?? "This tool writes data to an external service, so ClawLink will block direct execution until it is confirmed."}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mt-3 flex gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/8 p-3 text-sm text-emerald-900 dark:text-emerald-100">
-                      <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-300" />
-                      <div>
-                        <p className="font-medium">Runs without confirmation</p>
-                        <p className="text-emerald-800/80 dark:text-emerald-100/80">
-                          This tool is read-only or low-risk enough to execute directly.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : integration.tools.length > 0 ? (
-            <div className="space-y-2">
-              {integration.tools.map((tool) => (
-                <div key={tool.name} className="rounded-lg border border-border p-3">
-                  <p className="font-mono text-sm text-foreground">
-                    {integration.slug}_{tool.name}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">{tool.description}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No tools defined for this integration yet.
-            </p>
+                ))}
+              </div>
+            ) : integration.tools.length > 0 ? (
+              <div className="space-y-2">
+                {integration.tools.map((tool) => (
+                  <div key={tool.name} className="rounded-lg border border-border p-3">
+                    <p className="font-mono text-sm text-foreground">
+                      {integration.slug}_{tool.name}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">{tool.description}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No tools defined for this integration yet.
+              </p>
+            )
           )}
         </CardContent>
       </Card>

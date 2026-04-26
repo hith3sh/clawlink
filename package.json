@@ -11,6 +11,8 @@
     "build:worker": "echo 'Worker build is handled by Wrangler during deploy'",
     "deploy:worker": "wrangler --cwd worker deploy --config wrangler.worker.toml --experimental-autoconfig=false",
     "import:pipedream-actions": "node scripts/import-pipedream-actions.mjs",
+    "validate:pipedream-actions": "node scripts/validate-pipedream-actions.mjs",
+    "audit:manifests": "node scripts/audit-pipedream-manifests.mjs",
     "start": "next start",
     "lint": "eslint",
     "version:worker": "wrangler versions upload --config worker/wrangler.worker.toml",

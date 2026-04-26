@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useOAuthConnect } from "@/components/dashboard/useOAuthConnect";
+import { useDashboardConnections } from "@/components/dashboard/DashboardConnectionsProvider";
 
 interface IntegrationCardProps {
   integration: Integration;
@@ -24,7 +25,11 @@ export function IntegrationCard({
   className,
 }: IntegrationCardProps) {
   const [connected, setConnected] = useState(isConnected);
-  const { start, starting } = useOAuthConnect(integration, () => setConnected(true));
+  const { refetch } = useDashboardConnections();
+  const { start, starting } = useOAuthConnect(integration, () => {
+    setConnected(true);
+    void refetch();
+  });
   const hostedConnectEnabled =
     integration.dashboardStatus === "available" &&
     (integration.setupMode === "oauth" || integration.setupMode === "pipedream");
@@ -74,7 +79,7 @@ export function IntegrationCard({
             <Button
               variant="outline"
               size="sm"
-              className="h-9 rounded-full border-black/10 bg-white px-4 text-sm font-medium text-foreground shadow-none hover:bg-black/[0.03]"
+              className="h-9 cursor-pointer rounded-full border-black/10 bg-white px-4 text-sm font-medium text-foreground shadow-none hover:bg-black/[0.03]"
               onClick={(e) => {
                 e.preventDefault();
                 start();

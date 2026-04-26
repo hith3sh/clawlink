@@ -28,7 +28,7 @@ Business context:
 
 - Users get their first integration free.
 - After the first integration, the user should be prompted toward a paid subscription.
-- Current pricing direction is roughly `$5/month` for integrations access.
+- Current pricing direction is roughly `$14.99/month` for integrations access.
 - Monetization and upgrade prompts should be implemented in a way that feels lightweight and understandable.
 
 Roadmap context:
@@ -133,6 +133,29 @@ Troubleshooting guidance:
 - If the connect flow fails, check redirect URIs, provider app registration/config, callback handling, and credential storage first.
 - If connection succeeds but tools fail, check provider permissions/scopes, token handling/refresh, and worker request formatting.
 - Separate “connection flow works” from “tool execution works”; both layers must pass before treating an integration as working.
+
+# Pipedream Integration Validation
+
+For every newly imported Pipedream integration, do not stop at static manifest import. The required validation flow is:
+
+1. Import the provider actions with `npm run import:pipedream-actions -- --app <app> [--integration <slug>]`
+2. Run the static manifest audit with `npm run audit:manifests -- --strict`
+3. Run the runtime validator with `npm run validate:pipedream-actions -- --integration <slug> --strict`
+
+Validation rules:
+
+- The runtime validator must build action args from only the exposed LLM-facing schema plus `safeDefaults`
+- Hidden or Pipedream-internal props must not be passed from validation samples
+- If Pipedream returns a 400 because a hidden/internal prop is still required, treat that as a blocking failure and fix it in `config/pipedream-action-overrides.mjs`
+- Fixes should generally use `hiddenProps` plus `safeDefaults`
+- If a tool still needs exposed required business args to run, add `validationArgs` under that action override so the runtime validator can exercise it without OpenClaw in the loop
+
+Environment for runtime validation:
+
+- Provide a test account binding per integration via `PIPEDREAM_TEST_ACCOUNTS_JSON` or per-integration env vars such as `PIPEDREAM_TEST_GMAIL_ACCOUNT_ID`
+- The runtime validator defaults to read tools only; use `--all` only when write-path validation is intentional and safe
+
+Do not mark a new Pipedream integration as ready until both audits pass.
 
 # OpenClaw Plugin Release Workflow
 

@@ -1741,11 +1741,6 @@ export const MailchimpPipedreamToolManifests = [
           "type": "string",
           "title": "Language",
           "description": "The default language for this lists's forms."
-        },
-        "emailTypeOption": {
-          "type": "boolean",
-          "title": "Email type option",
-          "description": "Whether the list supports [multiple formats for emails](https://mailchimp.com/help/change-audience-name-defaults/).\n        When set to true, subscribers can choose whether they want to receive HTML or plain-text emails. \n        When set to false, subscribers will receive HTML emails, with a plain-text alternative backup."
         }
       },
       "required": [
@@ -1758,8 +1753,7 @@ export const MailchimpPipedreamToolManifests = [
         "campaignDefaultsFromName",
         "campaignDefaultsFromEmail",
         "campaignDefaultsSubject",
-        "campaignDefaultsLanguage",
-        "emailTypeOption"
+        "campaignDefaultsLanguage"
       ]
     },
     "accessLevel": "write",
@@ -1771,7 +1765,9 @@ export const MailchimpPipedreamToolManifests = [
     ],
     "whenToUse": [],
     "askBefore": [],
-    "safeDefaults": {},
+    "safeDefaults": {
+      "emailTypeOption": false
+    },
     "examples": [],
     "followups": [],
     "requiresScopes": [],
@@ -1958,7 +1954,7 @@ export const MailchimpPipedreamToolManifests = [
           "label": "Email type option",
           "description": "Whether the list supports [multiple formats for emails](https://mailchimp.com/help/change-audience-name-defaults/).\n        When set to true, subscribers can choose whether they want to receive HTML or plain-text emails. \n        When set to false, subscribers will receive HTML emails, with a plain-text alternative backup.",
           "required": true,
-          "hidden": false,
+          "hidden": true,
           "disabled": false,
           "readOnly": false,
           "remoteOptions": false,
@@ -5126,11 +5122,6 @@ export const MailchimpPipedreamToolManifests = [
           "type": "string",
           "title": "Language",
           "description": "The default language for this lists's forms."
-        },
-        "emailTypeOption": {
-          "type": "boolean",
-          "title": "Email type option",
-          "description": "Whether the list supports [multiple formats for emails](https://mailchimp.com/help/change-audience-name-defaults/)."
         }
       },
       "required": [
@@ -5145,8 +5136,7 @@ export const MailchimpPipedreamToolManifests = [
         "campaignDefaultsFromName",
         "campaignDefaultsFromEmail",
         "campaignDefaultsSubject",
-        "campaignDefaultsLanguage",
-        "emailTypeOption"
+        "campaignDefaultsLanguage"
       ]
     },
     "accessLevel": "write",
@@ -5158,7 +5148,9 @@ export const MailchimpPipedreamToolManifests = [
     ],
     "whenToUse": [],
     "askBefore": [],
-    "safeDefaults": {},
+    "safeDefaults": {
+      "emailTypeOption": false
+    },
     "examples": [],
     "followups": [],
     "requiresScopes": [],
@@ -5405,7 +5397,7 @@ export const MailchimpPipedreamToolManifests = [
           "label": "Email type option",
           "description": "Whether the list supports [multiple formats for emails](https://mailchimp.com/help/change-audience-name-defaults/).",
           "required": true,
-          "hidden": false,
+          "hidden": true,
           "disabled": false,
           "readOnly": false,
           "remoteOptions": false,

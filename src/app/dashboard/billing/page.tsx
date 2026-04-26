@@ -56,7 +56,7 @@ export default function BillingPage() {
           <PricingCard
             eyebrow="Most popular"
             title="Pro"
-            price="5"
+            price="14.99"
             tagline="All 40+ integrations unlocked"
             features={[
               "Every integration, unlimited",

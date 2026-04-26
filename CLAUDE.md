@@ -121,6 +121,20 @@ Custom worker handler status (as of this writing):
 
 Migration guidance: before deleting a custom handler with a manifest counterpart, validate the manifest tools cover the actions the handler exposed today. Before deleting a custom handler with no manifest yet, run the importer and confirm Pipedream coverage. New providers should be added through the manifest path, not as new custom handlers.
 
+Validation workflow for new Pipedream imports:
+
+1. `npm run import:pipedream-actions -- --app <app> [--integration <slug>]`
+2. `npm run audit:manifests -- --strict`
+3. `npm run validate:pipedream-actions -- --integration <slug> --strict`
+
+Rules:
+
+- The runtime validator must execute Pipedream actions using only the exposed LLM-facing args plus `safeDefaults`
+- Hidden/internal Pipedream props must be removed via `hiddenProps` and satisfied via `safeDefaults`
+- If a tool needs exposed required business args to run, add `validationArgs` in `config/pipedream-action-overrides.mjs`
+- Use `PIPEDREAM_TEST_ACCOUNTS_JSON` or per-integration env vars such as `PIPEDREAM_TEST_GMAIL_ACCOUNT_ID` to provide test account bindings
+- Do not treat a provider import as done until both the static audit and runtime validation pass
+
 ## Flows And Triggers
 
 The repo now includes flow and trigger runtime support in addition to direct tool calls.

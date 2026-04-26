@@ -216,6 +216,13 @@ export function AppSidebar() {
 
       <SidebarFooter className="px-3 pb-3">
         <SidebarMenu>
+          {userEmail ? (
+            <SidebarMenuItem>
+              <div className="px-3 py-2 text-xs text-muted-foreground truncate">
+                {userEmail}
+              </div>
+            </SidebarMenuItem>
+          ) : null}
           <SidebarMenuItem>
             <SignOutButton redirectUrl="/">
               <button
@@ -227,13 +234,6 @@ export function AppSidebar() {
               </button>
             </SignOutButton>
           </SidebarMenuItem>
-          {userEmail ? (
-            <SidebarMenuItem>
-              <div className="px-3 py-2 text-xs text-muted-foreground truncate">
-                {userEmail}
-              </div>
-            </SidebarMenuItem>
-          ) : null}
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
