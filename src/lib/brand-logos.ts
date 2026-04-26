@@ -32,6 +32,7 @@ const BRAND_LOGO_SLUGS = new Set<string>([
   "supabase",
   "firebase",
   "shopify",
+  "hubspot",
   "openai",
   "replicate",
   "outlook",
