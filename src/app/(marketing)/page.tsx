@@ -51,7 +51,17 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="mt-8">
+        <div className="relative mt-8">
+          {/* Copy & paste annotation */}
+          <div className="pointer-events-none absolute -left-4 top-4 hidden w-[260px] lg:block xl:-left-10 xl:w-[290px]">
+            <Image
+              src="/images/copyandpaste.png"
+              alt="copy & paste this onto openclaw chat"
+              width={440}
+              height={330}
+              className="w-full"
+            />
+          </div>
           <AudienceTabs />
         </div>
       </section>
