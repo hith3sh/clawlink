@@ -108,7 +108,10 @@ function classify(prop, propName, requiredList, execProp) {
   }
 
   if (execProp?.withLabel) {
-    reasons.push(`prop is withLabel — Pipedream expects { __lv: { label, value } } wrapper, LLMs will pass a flat value`);
+    const scalarType = prop.type === "string" || prop.type === "number" || prop.type === "boolean";
+    if (!scalarType) {
+      reasons.push(`prop is withLabel on a non-scalar value — verify the runtime shape matches what Pipedream expects`);
+    }
   }
 
   return reasons.length > 0 ? reasons : null;
