@@ -1150,6 +1150,63 @@ const overrides = {
         },
       },
     },
+    onedrive: {
+      excludeActionIds: [],
+      hiddenProps: [],
+      actionOverrides: {
+        "microsoft_onedrive-create-folder": {
+          mode: "write",
+          risk: "confirm",
+          hiddenProps: ["parentFolderId", "sharedFolderReference"],
+        },
+        "microsoft_onedrive-create-link": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "microsoft_onedrive-download-file": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+          hiddenProps: ["syncDir"],
+        },
+        "microsoft_onedrive-find-file-by-name": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "microsoft_onedrive-get-excel-table": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+          hiddenProps: ["alert"],
+        },
+        "microsoft_onedrive-get-file-by-id": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "microsoft_onedrive-list-files-in-folder": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "microsoft_onedrive-list-my-drives": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "microsoft_onedrive-search-files": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "microsoft_onedrive-upload-file": {
+          mode: "write",
+          risk: "confirm",
+          hiddenProps: ["syncDir"],
+        },
+      },
+    },
     hubspot: {
       excludeActionIds: [
         "hubspot-retrieve-migrated-workflow-mappings",

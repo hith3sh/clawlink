@@ -14,6 +14,7 @@ import { HubspotPipedreamToolManifests } from "./hubspot.generated";
 import { LinkedinPipedreamToolManifests } from "./linkedin.generated";
 import { MailchimpPipedreamToolManifests } from "./mailchimp.generated";
 import { NotionPipedreamToolManifests } from "./notion.generated";
+import { OnedrivePipedreamToolManifests } from "./onedrive.generated";
 import { OutlookPipedreamToolManifests } from "./outlook.generated";
 import { PostizPipedreamToolManifests } from "./postiz.generated";
 import { SalesforcePipedreamToolManifests } from "./salesforce.generated";
@@ -36,6 +37,7 @@ export const pipedreamToolManifests: PipedreamActionToolManifest[] = [
   ...LinkedinPipedreamToolManifests,
   ...MailchimpPipedreamToolManifests,
   ...NotionPipedreamToolManifests,
+  ...OnedrivePipedreamToolManifests,
   ...OutlookPipedreamToolManifests,
   ...PostizPipedreamToolManifests,
   ...SalesforcePipedreamToolManifests,
