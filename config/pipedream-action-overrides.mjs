@@ -796,6 +796,84 @@ const overrides = {
         },
       },
     },
+    airtable: {
+      hiddenProps: ["warningAlert", "accountTierAlert"],
+      excludeActionIds: [],
+      actionOverrides: {
+        "airtable_oauth-list-bases": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "airtable_oauth-list-tables": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "airtable_oauth-list-records": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "airtable_oauth-list-records-in-view": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "airtable_oauth-get-record": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "airtable_oauth-create-comment": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "airtable_oauth-update-comment": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "airtable_oauth-create-field": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "airtable_oauth-update-field": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "airtable_oauth-create-table": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "airtable_oauth-update-table": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "airtable_oauth-delete-record": {
+          mode: "destructive",
+          risk: "high_impact",
+        },
+        "airtable_oauth-create-multiple-records": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "airtable_oauth-create-single-record": {
+          enabled: false,
+        },
+        "airtable_oauth-update-record": {
+          enabled: false,
+        },
+        "airtable_oauth-create-or-update-record": {
+          enabled: false,
+        },
+        "airtable_oauth-get-record-or-create": {
+          enabled: false,
+        },
+        "airtable_oauth-search-records": {
+          enabled: false,
+        },
+      },
+    },
     hubspot: {
       excludeActionIds: [
         "hubspot-retrieve-migrated-workflow-mappings",
