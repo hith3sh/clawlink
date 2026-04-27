@@ -63,9 +63,15 @@ const SUSPECT_DESC_KEYWORDS = [
 const KNOWN_REAL_OBJECT_PROPS = new Set([
   "lineItems",
   "properties",
+  "objectProperties",
+  "value",
   "filter",
   "labelFilters",
   "fields",
+]);
+
+const KNOWN_REAL_BOOLEAN_PROPS = new Set([
+  "updateIfExists",
 ]);
 
 function loadManifest(file) {
@@ -99,7 +105,7 @@ function classify(prop, propName, requiredList, execProp) {
     }
   }
 
-  if (prop.type === "boolean") {
+  if (prop.type === "boolean" && !KNOWN_REAL_BOOLEAN_PROPS.has(propName)) {
     reasons.push(`required boolean (almost always has a default; LLMs should not need to set this)`);
   }
 
