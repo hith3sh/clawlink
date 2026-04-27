@@ -1,6 +1,7 @@
 import type { PipedreamActionToolManifest } from "@/lib/pipedream/manifest-types";
 import { AirtablePipedreamToolManifests } from "./airtable.generated";
 import { ApolloPipedreamToolManifests } from "./apollo.generated";
+import { CalendlyPipedreamToolManifests } from "./calendly.generated";
 import { ClickupPipedreamToolManifests } from "./clickup.generated";
 import { FacebookPipedreamToolManifests } from "./facebook.generated";
 import { GmailPipedreamToolManifests } from "./gmail.generated";
@@ -15,12 +16,14 @@ import { MailchimpPipedreamToolManifests } from "./mailchimp.generated";
 import { NotionPipedreamToolManifests } from "./notion.generated";
 import { OutlookPipedreamToolManifests } from "./outlook.generated";
 import { PostizPipedreamToolManifests } from "./postiz.generated";
+import { SalesforcePipedreamToolManifests } from "./salesforce.generated";
 import { XeroPipedreamToolManifests } from "./xero.generated";
 import { YoutubePipedreamToolManifests } from "./youtube.generated";
 
 export const pipedreamToolManifests: PipedreamActionToolManifest[] = [
   ...AirtablePipedreamToolManifests,
   ...ApolloPipedreamToolManifests,
+  ...CalendlyPipedreamToolManifests,
   ...ClickupPipedreamToolManifests,
   ...FacebookPipedreamToolManifests,
   ...GmailPipedreamToolManifests,
@@ -35,6 +38,7 @@ export const pipedreamToolManifests: PipedreamActionToolManifest[] = [
   ...NotionPipedreamToolManifests,
   ...OutlookPipedreamToolManifests,
   ...PostizPipedreamToolManifests,
+  ...SalesforcePipedreamToolManifests,
   ...XeroPipedreamToolManifests,
   ...YoutubePipedreamToolManifests,
 ];

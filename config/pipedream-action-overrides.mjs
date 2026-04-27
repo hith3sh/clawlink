@@ -874,6 +874,282 @@ const overrides = {
         },
       },
     },
+    salesforce: {
+      hiddenProps: ["info", "infoBox", "docsInfo"],
+      excludeActionIds: [],
+      actionOverrides: {
+        "salesforce_rest_api-list-objects": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-describe-object": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-list-object-fields": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-find-records": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-get-record-by-id": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-get-related-records": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-get-case": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-get-current-user": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-get-user": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-get-user-info": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-list-case-comments": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-list-email-messages": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-list-email-templates": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-list-knowledge-articles": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-get-knowledge-articles": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-get-knowledge-data-category-groups": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-search-string": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-text-search": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-soql-query": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-soql-search": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-sosl-search": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-convert-soap-xml-to-json": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "salesforce_rest_api-add-contact-to-campaign": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "salesforce_rest_api-add-lead-to-campaign": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "salesforce_rest_api-create-crm-record": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "salesforce_rest_api-update-crm-record": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "salesforce_rest_api-delete-crm-record": {
+          mode: "destructive",
+          risk: "high_impact",
+        },
+        "salesforce_rest_api-send-email": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "salesforce_rest_api-post-feed-to-chatter": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "salesforce_rest_api-delete-note": {
+          mode: "destructive",
+          risk: "high_impact",
+        },
+        "salesforce_rest_api-delete-opportunity": {
+          mode: "destructive",
+          risk: "high_impact",
+        },
+        "salesforce_rest_api-delete-record": {
+          mode: "destructive",
+          risk: "high_impact",
+        },
+        "salesforce_rest_api-create-account": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-accounts-batch": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-attachment": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-campaign": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-case": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-casecomment": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-contact": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-content-note": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-event": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-lead": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-note": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-opportunities-batch": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-opportunity": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-record": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-task": {
+          enabled: false,
+        },
+        "salesforce_rest_api-create-user": {
+          enabled: false,
+        },
+        "salesforce_rest_api-insert-blob-data": {
+          enabled: false,
+        },
+        "salesforce_rest_api-update-account": {
+          enabled: false,
+        },
+        "salesforce_rest_api-update-accounts-batch": {
+          enabled: false,
+        },
+        "salesforce_rest_api-update-contact": {
+          enabled: false,
+        },
+        "salesforce_rest_api-update-content-note": {
+          enabled: false,
+        },
+        "salesforce_rest_api-update-email-template": {
+          enabled: false,
+        },
+        "salesforce_rest_api-update-note": {
+          enabled: false,
+        },
+        "salesforce_rest_api-update-opportunities-batch": {
+          enabled: false,
+        },
+        "salesforce_rest_api-update-opportunity": {
+          enabled: false,
+        },
+        "salesforce_rest_api-update-record": {
+          enabled: false,
+        },
+        "salesforce_rest_api-upsert-record": {
+          enabled: false,
+        },
+      },
+    },
+    calendly: {
+      excludeActionIds: [],
+      hiddenProps: [],
+      actionOverrides: {
+        "calendly_v2-get-event": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "calendly_v2-list-event-invitees": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "calendly_v2-list-events": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "calendly_v2-list-user-availability-schedules": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "calendly_v2-list-webhook-subscriptions": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "calendly_v2-create-scheduling-link": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "calendly_v2-create-invitee-no-show": {
+          mode: "write",
+          risk: "confirm",
+        },
+      },
+    },
     hubspot: {
       excludeActionIds: [
         "hubspot-retrieve-migrated-workflow-mappings",
