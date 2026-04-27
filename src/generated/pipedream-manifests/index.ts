@@ -15,6 +15,7 @@ import { MailchimpPipedreamToolManifests } from "./mailchimp.generated";
 import { NotionPipedreamToolManifests } from "./notion.generated";
 import { OutlookPipedreamToolManifests } from "./outlook.generated";
 import { PostizPipedreamToolManifests } from "./postiz.generated";
+import { SalesforcePipedreamToolManifests } from "./salesforce.generated";
 import { XeroPipedreamToolManifests } from "./xero.generated";
 import { YoutubePipedreamToolManifests } from "./youtube.generated";
 
@@ -35,6 +36,7 @@ export const pipedreamToolManifests: PipedreamActionToolManifest[] = [
   ...NotionPipedreamToolManifests,
   ...OutlookPipedreamToolManifests,
   ...PostizPipedreamToolManifests,
+  ...SalesforcePipedreamToolManifests,
   ...XeroPipedreamToolManifests,
   ...YoutubePipedreamToolManifests,
 ];
