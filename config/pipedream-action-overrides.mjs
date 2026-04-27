@@ -796,6 +796,259 @@ const overrides = {
         },
       },
     },
+    hubspot: {
+      excludeActionIds: [
+        "hubspot-retrieve-migrated-workflow-mappings",
+      ],
+      actionOverrides: {
+        "hubspot-create-or-update-contact": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-batch-create-or-update-contact": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-batch-update-companies": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-batch-upsert-companies": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-update-blog-post": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-update-blog-post-draft": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-update-company": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-update-contact": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-update-custom-object": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-update-deal": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-update-fields-on-the-form": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-update-landing-page": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-update-lead": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-update-page": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "hubspot-get-associated-emails": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-associated-meetings": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-blog-post-draft": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-channel": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-company": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-contact": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-crm-objects": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-deal": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-file-public-url": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-inbox": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-meeting": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-owner": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-properties": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-subscription-preferences": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-get-user-details": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-associated-engagements": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-association-labels": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-blog-posts": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-campaigns": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-channels": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-crm-associations": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-forms": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-inboxes": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-marketing-emails": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-marketing-events": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-messages": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-owners": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-pages": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-pipelines-and-stages": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-templates": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-list-threads": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-retrieve-quotes": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-retrieve-workflow-details": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-retrieve-workflow-emails": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-retrieve-workflows": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-search-crm": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-search-crm-objects": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "hubspot-search-properties": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+      },
+    },
   },
 };
 

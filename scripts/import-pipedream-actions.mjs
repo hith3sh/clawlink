@@ -343,8 +343,14 @@ function toJsonSchema(prop, propOverride) {
     schema.title = propOverride?.label ?? prop.label;
   }
 
-  if (propOverride?.description ?? prop.description) {
-    schema.description = propOverride?.description ?? prop.description;
+  const rawDesc = propOverride?.description ?? prop.description;
+  const normalizedDesc = typeof rawDesc === "string"
+    ? rawDesc
+    : rawDesc && typeof rawDesc === "object" && typeof rawDesc.text === "string"
+      ? rawDesc.text
+      : undefined;
+  if (normalizedDesc) {
+    schema.description = normalizedDesc;
   }
 
   const enumValues = getEnumOptions(prop);
@@ -382,11 +388,18 @@ function shouldExposeProp(prop, integrationOverride, actionOverride) {
 }
 
 function buildPropManifest(prop, propOverride, forcedHidden = false) {
+  const rawDescription = propOverride?.description ?? prop.description ?? undefined;
+  const normalizedDescription = typeof rawDescription === "string"
+    ? rawDescription
+    : rawDescription && typeof rawDescription === "object" && typeof rawDescription.text === "string"
+      ? rawDescription.text
+      : undefined;
+
   return {
     name: prop.name,
-    type: propOverride?.type ?? prop.type,
+    type: propOverride?.type ?? (prop.type || "string"),
     label: propOverride?.label ?? prop.label ?? undefined,
-    description: propOverride?.description ?? prop.description ?? undefined,
+    description: normalizedDescription,
     required: prop.optional !== true,
     hidden: forcedHidden || (prop.hidden === true && propOverride?.expose !== true),
     disabled: prop.disabled === true,

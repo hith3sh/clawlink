@@ -8,6 +8,7 @@ import { GoogleCalendarPipedreamToolManifests } from "./google-calendar.generate
 import { GoogleDocsPipedreamToolManifests } from "./google-docs.generated";
 import { GoogleDrivePipedreamToolManifests } from "./google-drive.generated";
 import { GoogleSearchConsolePipedreamToolManifests } from "./google-search-console.generated";
+import { HubspotPipedreamToolManifests } from "./hubspot.generated";
 import { LinkedinPipedreamToolManifests } from "./linkedin.generated";
 import { MailchimpPipedreamToolManifests } from "./mailchimp.generated";
 import { NotionPipedreamToolManifests } from "./notion.generated";
@@ -26,6 +27,7 @@ export const pipedreamToolManifests: PipedreamActionToolManifest[] = [
   ...GoogleDocsPipedreamToolManifests,
   ...GoogleDrivePipedreamToolManifests,
   ...GoogleSearchConsolePipedreamToolManifests,
+  ...HubspotPipedreamToolManifests,
   ...LinkedinPipedreamToolManifests,
   ...MailchimpPipedreamToolManifests,
   ...NotionPipedreamToolManifests,
