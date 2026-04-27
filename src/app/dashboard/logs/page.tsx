@@ -18,7 +18,7 @@ const integrationOptions = ["all", "gmail", "outlook", "slack", "github", "strip
 const actionOptions = ["all", "send_email", "send_message", "create_issue", "create_event", "list_events", "list_messages", "create_page", "list_contacts"];
 
 interface LogEntry {
-  id: number;
+  id: string;
   integration: string;
   action: string;
   success: boolean;

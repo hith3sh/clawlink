@@ -16,13 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function FeedbackPage() {
   const { user, isLoaded } = useUser();
@@ -109,134 +103,122 @@ export default function FeedbackPage() {
 
   if (submitted) {
     return (
-      <div className="mx-auto pt-8">
-        <Card className="border-none shadow-none">
-          <CardContent className="flex flex-col items-center pt-12 pb-12 text-center">
-            <CheckCircle2 className="h-12 w-12 text-emerald-500 mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Feedback Sent!</h2>
-            <p className="text-muted-foreground mb-6">
-              Thanks for reaching out. We will look into it and get back to you
-              if needed.
-            </p>
-            <Button onClick={() => router.push("/dashboard")}>
-              Back to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardContent className="flex flex-col items-center py-16 text-center">
+          <CheckCircle2 className="mb-4 h-10 w-10 text-emerald-500" />
+          <h2 className="mb-1 text-base font-semibold">Feedback Sent!</h2>
+          <p className="mb-6 text-sm text-muted-foreground">
+            Thanks for reaching out. We will look into it and get back to you if needed.
+          </p>
+          <Button onClick={() => router.push("/dashboard")}>
+            Back to Dashboard
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="mx-auto pt-4">
-      <Card className="border-none shadow-none">
-        <CardHeader className="px-0 pt-0">
-          <div className="flex items-center gap-2 mb-1">
-            <MessageSquareText className="h-5 w-5 text-muted-foreground" />
-            <CardTitle className="text-lg font-semibold">
-              Send Feedback
-            </CardTitle>
+    <Card>
+      <CardContent className="pt-6">
+        <div>
+          <div className="flex items-center gap-2">
+            <MessageSquareText className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-base font-medium text-foreground">Send Feedback</h2>
           </div>
-          <CardDescription>
-            Found a bug? Have a feature idea? Let us know and we will fix it or
-            build it.
-          </CardDescription>
-        </CardHeader>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Found a bug? Have a feature idea? Let us know and we will fix it or build it.
+          </p>
+        </div>
 
-        <CardContent className="px-0">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email">Your Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="email">Your Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="message">
-                What is the issue or suggestion?
-              </Label>
-              <Textarea
-                id="message"
-                placeholder="Describe what happened, what you expected, and steps to reproduce..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                rows={6}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Screenshot (optional)</Label>
-              {image ? (
-                <div className="relative inline-block">
-                  <img
-                    src={image}
-                    alt="Selected"
-                    className="h-32 w-auto rounded-xl border border-border object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-white shadow-sm hover:bg-destructive/90"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ) : (
+          <div className="space-y-2">
+            <Label>Screenshot (optional)</Label>
+            {image ? (
+              <div className="relative inline-block">
+                <img
+                  src={image}
+                  alt="Selected"
+                  className="h-10 w-auto rounded-lg border border-border object-cover"
+                />
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex h-24 w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-transparent transition-colors hover:bg-accent"
+                  onClick={handleRemoveImage}
+                  className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white shadow-sm hover:bg-destructive/90"
                 >
-                  <ImagePlus className="h-6 w-6 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    Click to upload a screenshot
-                  </span>
+                  <X className="h-3 w-3" />
                 </button>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageSelect}
-              />
-            </div>
-
-            {error ? (
-              <p className="text-sm text-destructive">{error}</p>
-            ) : null}
-
-            <div className="flex items-center gap-3 pt-2">
-              <Button
-                type="submit"
-                disabled={isSubmitting || !message.trim()}
-                className="gap-2"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-                {isSubmitting ? "Sending..." : "Send Feedback"}
-              </Button>
-              <Button
+              </div>
+            ) : (
+              <button
                 type="button"
-                variant="ghost"
-                onClick={() => router.push("/dashboard")}
+                onClick={() => fileInputRef.current?.click()}
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-transparent px-3 text-sm text-muted-foreground transition-colors hover:bg-accent"
               >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+                <ImagePlus className="h-4 w-4" />
+                Click to upload a screenshot
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageSelect}
+            />
+          </div>
+
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="message">What is the issue or suggestion?</Label>
+            <Textarea
+              id="message"
+              placeholder="Describe what happened, what you expected, and steps to reproduce..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={6}
+              required
+            />
+          </div>
+
+          {error ? (
+            <p className="text-sm text-destructive sm:col-span-2">{error}</p>
+          ) : null}
+
+          <div className="flex items-center gap-3 sm:col-span-2">
+            <Button
+              type="submit"
+              disabled={isSubmitting || !message.trim()}
+              className="gap-2"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              {isSubmitting ? "Sending..." : "Send Feedback"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => router.push("/dashboard")}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

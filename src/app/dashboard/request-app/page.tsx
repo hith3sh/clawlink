@@ -7,22 +7,16 @@ import {
   Plus,
   ArrowUp,
   Loader2,
-  Lightbulb,
-  AlertTriangle,
+  AlertCircle,
   CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface AppRequest {
   id: number;
@@ -35,7 +29,6 @@ interface AppRequest {
   userVoted: boolean;
 }
 
-type SortMode = "trending" | "newest";
 
 export default function RequestAppPage() {
   const { user, isLoaded } = useUser();
@@ -52,7 +45,6 @@ export default function RequestAppPage() {
 
   const [requests, setRequests] = useState<AppRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortMode, setSortMode] = useState<SortMode>("trending");
   const [votingId, setVotingId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -141,10 +133,7 @@ export default function RequestAppPage() {
   };
 
   const sortedRequests = [...requests].sort((a, b) => {
-    if (sortMode === "trending") {
-      if (b.votes !== a.votes) return b.votes - a.votes;
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    }
+    if (b.votes !== a.votes) return b.votes - a.votes;
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
@@ -184,64 +173,59 @@ export default function RequestAppPage() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-      {/* Left: Request Form */}
-      <div className="lg:col-span-1">
-        <Card className="border border-border shadow-sm">
-          <CardHeader className="space-y-4 pb-4">
-            <CardTitle className="text-lg font-semibold">
-              Request a New Toolkit
-            </CardTitle>
-            <CardDescription className="space-y-2 text-sm leading-relaxed text-muted-foreground">
-              <p>
-                Check existing apps + pending requests first to avoid
-                duplicates.
+    <div className="space-y-6">
+      {/* Form card — full width like the API key card on home */}
+      <Card>
+        <CardContent className="pt-6">
+          {submitted ? (
+            <div className="flex flex-col items-center py-8 text-center">
+              <CheckCircle2 className="mb-3 h-10 w-10 text-emerald-500" />
+              <h3 className="mb-1 text-base font-semibold">Request Submitted!</h3>
+              <p className="mb-5 text-sm text-muted-foreground">
+                Your toolkit request has been added to the list.
               </p>
-              <p>
-                Make sure to share the link to the API docs or website of the
-                toolkit you want to request below.
-              </p>
-              <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSubmitted(false);
+                  setToolkitName("");
+                  setUseCase("");
+                }}
+              >
+                Submit Another
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-base font-medium text-foreground">
+                    Request a New Toolkit
+                  </h2>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Check existing apps and pending requests first to avoid duplicates. Share the API docs or website link below.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-300">
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 <p className="text-xs">
-                  If you want to report an issue, use the{" "}
+                  To report an issue, use the{" "}
                   <button
                     type="button"
                     onClick={() => router.push("/dashboard/feedback")}
-                    className="underline hover:no-underline"
+                    className="font-medium underline underline-offset-2 hover:no-underline"
                   >
                     Feedback
                   </button>{" "}
                   page instead.
                 </p>
               </div>
-            </CardDescription>
-          </CardHeader>
 
-          <CardContent>
-            {submitted ? (
-              <div className="flex flex-col items-center py-8 text-center">
-                <CheckCircle2 className="mb-3 h-10 w-10 text-emerald-500" />
-                <h3 className="mb-1 text-base font-semibold">
-                  Request Submitted!
-                </h3>
-                <p className="mb-4 text-sm text-muted-foreground">
-                  Your toolkit request has been added to the list.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSubmitted(false);
-                    setToolkitName("");
-                    setUseCase("");
-                  }}
-                >
-                  Submit Another
-                </Button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-5 sm:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="toolkitName">Toolkit Name</Label>
                   <Input
@@ -254,15 +238,12 @@ export default function RequestAppPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="useCase">
-                    Use-case, Tools, and API docs
-                  </Label>
-                  <Textarea
+                  <Label htmlFor="useCase">Use-case, Tools, and API docs</Label>
+                  <Input
                     id="useCase"
-                    placeholder="Describe what you want to do with this toolkit and share any API documentation links..."
+                    placeholder="Describe your use-case and paste any API docs link..."
                     value={useCase}
                     onChange={(e) => setUseCase(e.target.value)}
-                    rows={5}
                     required
                   />
                 </div>
@@ -279,118 +260,86 @@ export default function RequestAppPage() {
                 </div>
 
                 {error ? (
-                  <p className="text-sm text-destructive">{error}</p>
+                  <p className="text-sm text-destructive sm:col-span-3">{error}</p>
                 ) : null}
 
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full gap-2"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Plus className="h-4 w-4" />
-                  )}
-                  {isSubmitting ? "Adding..." : "Add Request"}
-                </Button>
+                <div className="sm:col-span-3">
+                  <Button type="submit" disabled={isSubmitting} className="gap-2">
+                    {isSubmitting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="h-4 w-4" />
+                    )}
+                    {isSubmitting ? "Adding..." : "Add Request"}
+                  </Button>
+                </div>
               </form>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Right: Requests List */}
-      <div className="lg:col-span-2">
-        <div className="mb-4 flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setSortMode("trending")}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              sortMode === "trending"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            <Lightbulb className="h-3.5 w-3.5" />
-            Trending
-          </button>
-          <button
-            type="button"
-            onClick={() => setSortMode("newest")}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              sortMode === "newest"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Newest
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          {loading ? (
-            <div className="flex h-64 items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : sortedRequests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
-              <Lightbulb className="mb-3 h-10 w-10 text-muted-foreground/40" />
-              <h3 className="text-base font-medium">No requests yet</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Be the first to request a new toolkit!
-              </p>
-            </div>
-          ) : (
-            sortedRequests.map((req) => (
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Requests list — full width below */}
+      <div className="space-y-4">
+        {loading ? (
+          <div className="flex h-48 items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : sortedRequests.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center">
+            <Sparkles className="mb-3 h-8 w-8 text-muted-foreground/40" />
+            <p className="text-sm font-medium">No requests yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Be the first to request a new toolkit!
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {sortedRequests.map((req) => (
               <div
                 key={req.id}
-                className="group flex items-start gap-4 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-accent/40"
+                className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/30"
               >
-                {/* Upvote */}
                 <button
                   type="button"
                   onClick={() => handleUpvote(req.id)}
                   disabled={votingId === req.id}
-                  className={`flex shrink-0 flex-col items-center gap-0.5 rounded-xl border px-2.5 py-2 transition-colors ${
+                  className={`flex shrink-0 flex-col items-center gap-0.5 rounded-lg border px-2.5 py-2 text-sm font-semibold transition-colors ${
                     req.userVoted
                       ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-transparent text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                      : "border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground"
                   }`}
                 >
-                  <ArrowUp className="h-4 w-4" />
-                  <span className="text-sm font-semibold">{req.votes}</span>
+                  {votingId === req.id ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <ArrowUp className="h-3.5 w-3.5" />
+                  )}
+                  <span>{req.votes}</span>
                 </button>
 
-                {/* Content */}
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-base font-semibold text-foreground">
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <h3 className="text-sm font-semibold text-foreground">
                     {req.toolkit_name}
                   </h3>
                   <p className="mt-1 text-sm leading-relaxed text-muted-foreground line-clamp-3">
                     {req.use_case}
                   </p>
-                  <div className="mt-3 flex items-center gap-2">
+                  <div className="mt-2.5 flex items-center gap-2">
                     <div
-                      className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white ${getAvatarColor(
-                        req.user_id
-                      )}`}
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white ${getAvatarColor(req.user_id)}`}
                     >
                       {getInitials(req.email)}
                     </div>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="truncate text-xs text-muted-foreground">
                       {req.email}
-                    </span>
-                    <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                      Toolkit Requests
                     </span>
                   </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
