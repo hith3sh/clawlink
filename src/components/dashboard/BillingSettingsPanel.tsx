@@ -165,7 +165,7 @@ export function BillingSettingsPanel({ isLoaded, hasUser, checkoutId, initialBil
                 <p className="text-sm text-muted-foreground">
                   {billing.planKey === "pro"
                     ? `${billing.productName ?? "ClawLink Pro"} is active for ${billing.priceLabel}.`
-                    : `Your first connected app is free. Upgrade to ClawLink Pro for $14.99/month when you want more.`}
+                    : `Your first connected app is free. Upgrade to ClawLink Pro for $7.99/month when you want more.`}
                 </p>
               </div>
 
@@ -182,7 +182,7 @@ export function BillingSettingsPanel({ isLoaded, hasUser, checkoutId, initialBil
                     aria-disabled={!billing.checkoutConfigured}
                   >
                     <ArrowUpRight className="h-5 w-5" />
-                    Upgrade to Pro — $14.99/mo
+                    Upgrade to Pro — $7.99/mo
                   </a>
                 )}
               </div>

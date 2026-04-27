@@ -4,7 +4,7 @@ export const NotionPipedreamToolManifests = [
   {
     "integration": "notion",
     "name": "notion_append_block",
-    "description": "Append new and/or existing blocks to the specified parent. [See the documentation](https://developers.notion.com/reference/patch-block-children)",
+    "description": "Append one or more markdown snippets as new blocks under the specified parent page or block. Each markdown entry becomes one or more Notion blocks. [See the documentation](https://developers.notion.com/reference/patch-block-children)",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -13,18 +13,18 @@ export const NotionPipedreamToolManifests = [
           "title": "Parent Block ID",
           "description": "Select a parent block/page or provide its ID"
         },
-        "blockTypes": {
+        "markdownContents": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "Block Type(s)",
-          "description": "Select which type(s) of block you'd like to append"
+          "title": "Markdown Blocks",
+          "description": "One or more markdown strings to append as new Notion blocks. Each entry is converted from Markdown into block content."
         }
       },
       "required": [
         "pageId",
-        "blockTypes"
+        "markdownContents"
       ]
     },
     "accessLevel": "write",
@@ -36,7 +36,11 @@ export const NotionPipedreamToolManifests = [
     ],
     "whenToUse": [],
     "askBefore": [],
-    "safeDefaults": {},
+    "safeDefaults": {
+      "blockTypes": [
+        "markdownContents"
+      ]
+    },
     "examples": [],
     "followups": [],
     "requiresScopes": [],
@@ -90,7 +94,7 @@ export const NotionPipedreamToolManifests = [
           "label": "Block Type(s)",
           "description": "Select which type(s) of block you'd like to append",
           "required": true,
-          "hidden": false,
+          "hidden": true,
           "disabled": false,
           "readOnly": false,
           "remoteOptions": false,
@@ -131,10 +135,10 @@ export const NotionPipedreamToolManifests = [
         {
           "name": "markdownContents",
           "type": "string[]",
-          "label": "Markdown Contents",
-          "description": "Each entry is the content of a new block to append, using Markdown syntax. [See the documentation](https://www.notion.com/help/writing-and-editing-basics#markdown-and-shortcuts) for more information",
+          "label": "Markdown Blocks",
+          "description": "One or more markdown strings to append as new Notion blocks. Each entry is converted from Markdown into block content.",
           "required": true,
-          "hidden": true,
+          "hidden": false,
           "disabled": false,
           "readOnly": false,
           "remoteOptions": false,

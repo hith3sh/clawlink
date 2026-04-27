@@ -14,6 +14,8 @@ import {
   Settings,
   ExternalLink,
   LogOut,
+  MessageSquareText,
+  PlusCircle,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -41,11 +43,13 @@ const platformNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/dashboard/integrations", label: "Connections", icon: Link2 },
   { href: "/dashboard/logs", label: "Usage", icon: Activity },
+  { href: "/dashboard/request-app", label: "Request App", icon: PlusCircle },
 ];
 
 const resourceNav: NavItem[] = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
+  { href: "/dashboard/feedback", label: "Feedback", icon: MessageSquareText },
   { href: "https://docs.claw-link.dev", label: "Documentation", icon: ExternalLink, external: true },
 ];
 

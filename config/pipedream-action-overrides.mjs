@@ -7,6 +7,8 @@
  * Validation notes:
  * - `hiddenProps` + `safeDefaults` are how we remove Pipedream-only props from
  *   the LLM contract while still satisfying the upstream component.
+ * - `propOverrides.<name>.expose = true` can force-expose a prop that
+ *   Pipedream marks hidden when it is actually the real LLM-facing payload.
  * - `validationArgs` can be provided per action for runtime manifest audits.
  *   They must only contain exposed LLM-facing args, never hidden/internal props.
  */
@@ -14,6 +16,22 @@ const overrides = {
   integrations: {
     notion: {
       actionOverrides: {
+        "notion-append-block": {
+          description:
+            "Append one or more markdown snippets as new blocks under the specified parent page or block. Each markdown entry becomes one or more Notion blocks.",
+          hiddenProps: ["blockTypes", "blockIds", "imageUrls"],
+          safeDefaults: {
+            blockTypes: ["markdownContents"],
+          },
+          propOverrides: {
+            markdownContents: {
+              expose: true,
+              label: "Markdown Blocks",
+              description:
+                "One or more markdown strings to append as new Notion blocks. Each entry is converted from Markdown into block content.",
+            },
+          },
+        },
         "notion-query-database": {
           mode: "read",
           risk: "safe",
@@ -352,6 +370,177 @@ const overrides = {
         },
       },
     },
+    "google-drive": {
+      excludeActionIds: [
+        "google_drive-create-file-from-text",
+        "google_drive-create-folder",
+        "google_drive-delete-shared-drive",
+        "google_drive-download-file",
+        "google_drive-update-comment",
+        "google_drive-update-file",
+        "google_drive-update-shared-drive",
+        "google_drive-upload-file",
+      ],
+      actionOverrides: {
+        "google_drive-create-file-from-template": {
+          mode: "write",
+          risk: "confirm",
+          hiddenProps: ["replaceValues"],
+          safeDefaults: {
+            replaceValues: "{}",
+          },
+        },
+        "google_drive-get-file-by-id": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "google_drive-move-file": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "google_drive-resolve-comment": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "google_drive-delete-file": {
+          mode: "destructive",
+          risk: "high_impact",
+        },
+        "google_drive-move-file-to-trash": {
+          mode: "destructive",
+          risk: "high_impact",
+        },
+        "google_drive-remove-file-sharing-permission": {
+          mode: "destructive",
+          risk: "high_impact",
+        },
+      },
+    },
+    youtube: {
+      excludeActionIds: [
+        "youtube_data_api-add-playlist-items",
+        "youtube_data_api-list-playlist-videos",
+        "youtube_data_api-search-videos",
+        "youtube_data_api-channel-statistics",
+      ],
+      actionOverrides: {
+        "youtube_data_api-upload-video": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "youtube_data_api-update-video-details": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "youtube_data_api-update-channel": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "youtube_data_api-update-playlist": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "youtube_data_api-create-playlist": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "youtube_data_api-create-comment-thread": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "youtube_data_api-reply-to-comment": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "youtube_data_api-upload-thumbnail": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "youtube_data_api-upload-channel-banner": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "youtube_data_api-delete-playlist": {
+          mode: "destructive",
+          risk: "high_impact",
+        },
+        "youtube_data_api-delete-playlist-items": {
+          mode: "destructive",
+          risk: "high_impact",
+        },
+      },
+    },
+    "google-analytics": {
+      actionOverrides: {
+        "google_analytics-run-report-in-ga4": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "google_analytics-create-ga4-property": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "google_analytics-create-key-event": {
+          mode: "write",
+          risk: "confirm",
+        },
+      },
+    },
+    "google-search-console": {
+      actionOverrides: {
+        "google_search_console-retrieve-site-performance-data": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "google_search_console-submit-url-for-indexing": {
+          mode: "write",
+          risk: "confirm",
+        },
+      },
+    },
+    "google-calendar": {
+      actionOverrides: {
+        "google_calendar-add-attendees-to-event": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "google_calendar-update-event": {
+          enabled: false,
+        },
+        "google_calendar-update-event-instance": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "google_calendar-update-following-instances": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "google_calendar-delete-event": {
+          mode: "destructive",
+          risk: "high_impact",
+        },
+      },
+    },
+    "google-docs": {
+      excludeActionIds: [
+        "google_docs-find-document",
+        "google_docs-create-document-from-template",
+        "google_docs-create-document",
+      ],
+      actionOverrides: {
+        "google_docs-replace-text": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "google_docs-replace-image": {
+          mode: "write",
+          risk: "confirm",
+        },
+      },
+    },
     xero: {
       actionOverrides: {
         "xero_accounting_api-download-invoice": {
@@ -416,6 +605,194 @@ const overrides = {
           toolName: "xero_create_sales_invoice",
           mode: "write",
           risk: "confirm",
+        },
+      },
+    },
+    clickup: {
+      excludeActionIds: [
+        "clickup-create-task-from-template",
+      ],
+      actionOverrides: {
+        "clickup-create-chat-view-comment": {
+          enabled: false,
+        },
+        "clickup-create-view-comment": {
+          enabled: false,
+        },
+        "clickup-create-threaded-comment": {
+          enabled: false,
+        },
+        "clickup-update-checklist": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "clickup-update-checklist-item": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "clickup-update-comment": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "clickup-update-folder": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "clickup-update-list": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "clickup-update-space": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "clickup-update-task": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "clickup-update-task-custom-field": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "clickup-stop-time-entry": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "clickup-remove-task-custom-field": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "clickup-create-task": {
+          mode: "write",
+          risk: "confirm",
+          hiddenProps: ["markdownDescription"],
+        },
+        "clickup-create-folder": {
+          mode: "write",
+          risk: "confirm",
+          hiddenProps: ["hidden"],
+          safeDefaults: {
+            hidden: false,
+          },
+        },
+        "clickup-create-space": {
+          mode: "write",
+          risk: "confirm",
+          hiddenProps: ["_private"],
+          safeDefaults: {
+            _private: false,
+          },
+        },
+        "clickup-update-folder": {
+          mode: "write",
+          risk: "confirm",
+          hiddenProps: ["hidden"],
+          safeDefaults: {
+            hidden: false,
+          },
+        },
+        "clickup-update-space": {
+          mode: "write",
+          risk: "confirm",
+          hiddenProps: ["_private"],
+          safeDefaults: {
+            _private: false,
+          },
+        },
+        "clickup-get-custom-fields": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-folder": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-folder-views": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-folders": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-list": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-list-comments": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-list-views": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-lists": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-space": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-space-views": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-spaces": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-task": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-task-comments": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-task-templates": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-tasks": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-team-views": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-view": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-view-comments": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "clickup-get-view-tasks": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
         },
       },
     },

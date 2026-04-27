@@ -339,12 +339,12 @@ function toJsonSchema(prop, propOverride) {
       break;
   }
 
-  if (prop.label) {
-    schema.title = prop.label;
+  if (propOverride?.label ?? prop.label) {
+    schema.title = propOverride?.label ?? prop.label;
   }
 
-  if (prop.description) {
-    schema.description = prop.description;
+  if (propOverride?.description ?? prop.description) {
+    schema.description = propOverride?.description ?? prop.description;
   }
 
   const enumValues = getEnumOptions(prop);
@@ -360,26 +360,35 @@ function shouldExposeProp(prop, integrationOverride, actionOverride) {
     return false;
   }
 
-  if (prop.hidden || prop.disabled || prop.readOnly) {
-    return false;
-  }
-
+  const propOverride = actionOverride?.propOverrides?.[prop.name];
   const hiddenProps = new Set([
     ...(integrationOverride?.hiddenProps ?? []),
     ...(actionOverride?.hiddenProps ?? []),
   ]);
 
-  return !hiddenProps.has(prop.name);
+  if (hiddenProps.has(prop.name)) {
+    return false;
+  }
+
+  if (prop.disabled || prop.readOnly) {
+    return false;
+  }
+
+  if (prop.hidden && propOverride?.expose !== true) {
+    return false;
+  }
+
+  return true;
 }
 
 function buildPropManifest(prop, propOverride, forcedHidden = false) {
   return {
     name: prop.name,
     type: propOverride?.type ?? prop.type,
-    label: prop.label ?? undefined,
-    description: prop.description ?? undefined,
+    label: propOverride?.label ?? prop.label ?? undefined,
+    description: propOverride?.description ?? prop.description ?? undefined,
     required: prop.optional !== true,
-    hidden: prop.hidden === true || forcedHidden,
+    hidden: forcedHidden || (prop.hidden === true && propOverride?.expose !== true),
     disabled: prop.disabled === true,
     readOnly: prop.readOnly === true,
     remoteOptions: prop.remoteOptions === true,

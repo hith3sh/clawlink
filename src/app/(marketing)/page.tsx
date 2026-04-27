@@ -165,7 +165,7 @@ export default function Home() {
           <PricingCard
             eyebrow="Most popular"
             title="Pro"
-            price="14.99"
+            price="7.99"
             tagline="All 40+ integrations unlocked"
             features={[
               "Every integration, unlimited",

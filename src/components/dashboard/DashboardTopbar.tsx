@@ -14,6 +14,8 @@ const TITLES: Array<{ match: (p: string) => boolean; title: string }> = [
   { match: (p) => p.startsWith("/dashboard/integrations/"), title: "Connection Setup" },
   { match: (p) => p === "/dashboard/logs", title: "Usage" },
   { match: (p) => p === "/dashboard/settings", title: "Settings" },
+  { match: (p) => p === "/dashboard/feedback", title: "Feedback" },
+  { match: (p) => p === "/dashboard/request-app", title: "Request App" },
 ];
 
 export function DashboardTopbar() {
@@ -35,7 +37,7 @@ export function DashboardTopbar() {
 
           <div className="hidden items-center gap-1 sm:flex">
           <Link
-            href="mailto:hello@claw-link.dev"
+            href="/dashboard/feedback"
             className={buttonVariants({ variant: "ghost", size: "sm" })}
           >
             <MessageSquareText className="h-4 w-4" />

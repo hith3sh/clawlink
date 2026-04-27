@@ -28,7 +28,7 @@ Business context:
 
 - Users get their first integration free.
 - After the first integration, the user should be prompted toward a paid subscription.
-- Current pricing direction is roughly `$14.99/month` for integrations access.
+- Current pricing direction is roughly `$7.99/month` for integrations access.
 - Monetization and upgrade prompts should be implemented in a way that feels lightweight and understandable.
 
 Roadmap context:
