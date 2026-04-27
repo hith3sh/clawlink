@@ -1111,6 +1111,45 @@ const overrides = {
         },
       },
     },
+    calendly: {
+      excludeActionIds: [],
+      hiddenProps: [],
+      actionOverrides: {
+        "calendly_v2-get-event": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "calendly_v2-list-event-invitees": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "calendly_v2-list-events": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "calendly_v2-list-user-availability-schedules": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "calendly_v2-list-webhook-subscriptions": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "calendly_v2-create-scheduling-link": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "calendly_v2-create-invitee-no-show": {
+          mode: "write",
+          risk: "confirm",
+        },
+      },
+    },
     hubspot: {
       excludeActionIds: [
         "hubspot-retrieve-migrated-workflow-mappings",
