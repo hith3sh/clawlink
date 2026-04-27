@@ -1,4 +1,5 @@
 import type { PipedreamActionToolManifest } from "@/lib/pipedream/manifest-types";
+import { AirtablePipedreamToolManifests } from "./airtable.generated";
 import { ApolloPipedreamToolManifests } from "./apollo.generated";
 import { ClickupPipedreamToolManifests } from "./clickup.generated";
 import { FacebookPipedreamToolManifests } from "./facebook.generated";
@@ -18,6 +19,7 @@ import { XeroPipedreamToolManifests } from "./xero.generated";
 import { YoutubePipedreamToolManifests } from "./youtube.generated";
 
 export const pipedreamToolManifests: PipedreamActionToolManifest[] = [
+  ...AirtablePipedreamToolManifests,
   ...ApolloPipedreamToolManifests,
   ...ClickupPipedreamToolManifests,
   ...FacebookPipedreamToolManifests,
