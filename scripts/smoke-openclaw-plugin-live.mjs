@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import clawlinkPlugin from "../packages/openclaw-clawlink/index.js";
@@ -33,9 +33,33 @@ function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+function loadDotEnvLocalKey() {
+  const envPath = path.resolve(process.cwd(), ".env.local");
+
+  if (!existsSync(envPath)) {
+    return null;
+  }
+
+  const raw = readFileSync(envPath, "utf8");
+
+  for (const line of raw.split(/\r?\n/u)) {
+    if (line.startsWith("CLAWLINK_API_KEY=")) {
+      const value = line.slice("CLAWLINK_API_KEY=".length).trim();
+      return isNonEmptyString(value) ? value : null;
+    }
+  }
+
+  return null;
+}
+
 function loadApiKey() {
   if (isNonEmptyString(process.env.CLAWLINK_API_KEY)) {
     return process.env.CLAWLINK_API_KEY.trim();
+  }
+
+  const envLocalKey = loadDotEnvLocalKey();
+  if (isNonEmptyString(envLocalKey)) {
+    return envLocalKey.trim();
   }
 
   const configPath = path.join(os.homedir(), ".openclaw", "openclaw.json");
@@ -46,7 +70,7 @@ function loadApiKey() {
     parsed?.plugins?.entries?.["openclaw-plugin"]?.config?.apiKey;
 
   if (!isNonEmptyString(key)) {
-    throw new Error("No ClawLink API key found in ~/.openclaw/openclaw.json.");
+    throw new Error("No ClawLink API key found in .env.local, CLAWLINK_API_KEY, or ~/.openclaw/openclaw.json.");
   }
 
   return key.trim();

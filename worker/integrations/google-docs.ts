@@ -1,10 +1,10 @@
 import {
-  BaseIntegration,
   defineTool,
   type IntegrationTool,
   IntegrationRequestError,
   registerHandler,
 } from "./base";
+import { GoogleBaseIntegration, type GoogleExecutionContext } from "./google-base";
 
 const GOOGLE_DOCS_BASE_URL = "https://docs.googleapis.com/v1/documents";
 const GOOGLE_DRIVE_BASE_URL = "https://www.googleapis.com/drive/v3";
@@ -31,18 +31,6 @@ function safeTrim(value: unknown): string | null {
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
-}
-
-function getAccessToken(credentials: Record<string, string>): string {
-  const token = safeTrim(
-    credentials.accessToken ?? credentials.access_token ?? credentials.token,
-  );
-
-  if (!token) {
-    throw new Error("Google Docs credentials are missing an access token.");
-  }
-
-  return token;
 }
 
 function requiredString(value: unknown, fieldName: string): string {
@@ -185,7 +173,7 @@ function summarizeDocument(document: UnknownRecord): UnknownRecord {
   };
 }
 
-class GoogleDocsHandler extends BaseIntegration {
+class GoogleDocsHandler extends GoogleBaseIntegration {
   getTools(integrationSlug: string): IntegrationTool[] {
     return [
       defineTool(integrationSlug, "create_document", {
@@ -257,37 +245,35 @@ class GoogleDocsHandler extends BaseIntegration {
     ];
   }
 
-  protected getHeaders(credentials: Record<string, string>): Record<string, string> {
-    return {
-      Authorization: `Bearer ${getAccessToken(credentials)}`,
-      "Content-Type": "application/json",
-    };
-  }
-
   async execute(
     action: string,
     args: Record<string, unknown>,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<unknown> {
     switch (action) {
       case "create_document":
-        return this.createDocument(args, credentials);
+        return this.createDocument(args, credentials, context);
       case "get_document":
-        return this.getDocument(args, credentials);
+        return this.getDocument(args, credentials, context);
       case "read_document":
-        return this.readDocument(args, credentials);
+        return this.readDocument(args, credentials, context);
       case "replace_text":
-        return this.replaceText(args, credentials);
+        return this.replaceText(args, credentials, context);
       case "append_text":
-        return this.appendText(args, credentials);
+        return this.appendText(args, credentials, context);
       default:
         throw new Error(`Unknown action: ${action}`);
     }
   }
 
   async validateCredentials(credentials: Record<string, string>): Promise<boolean> {
+    if (this.getPipedreamAccountId(credentials)) {
+      return true;
+    }
+
     try {
-      const response = await this.apiRequest(
+      const response = await this.googleApiRequest(
         `${GOOGLE_DRIVE_BASE_URL}/files?pageSize=1&q=${encodeURIComponent(`mimeType='${GOOGLE_DOCS_MIME_TYPE}'`)}&fields=files(id)&supportsAllDrives=true&includeItemsFromAllDrives=true`,
         { method: "GET" },
         credentials,
@@ -302,18 +288,20 @@ class GoogleDocsHandler extends BaseIntegration {
   private async createDocument(
     args: Record<string, unknown>,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<unknown> {
     const title = requiredString(args.title, "title");
     const content = optionalString(args.content);
     const parentFolderId = optionalString(args.parentFolderId);
 
-    const createResponse = await this.apiRequest(
+    const createResponse = await this.googleApiRequest(
       GOOGLE_DOCS_BASE_URL,
       {
         method: "POST",
         body: JSON.stringify({ title }),
       },
       credentials,
+      context,
     );
 
     if (!createResponse.ok) {
@@ -337,26 +325,29 @@ class GoogleDocsHandler extends BaseIntegration {
           ],
         },
         credentials,
+        context,
       );
     }
 
     if (parentFolderId) {
-      await this.moveFileToFolder(documentId, parentFolderId, credentials);
+      await this.moveFileToFolder(documentId, parentFolderId, credentials, context);
     }
 
-    const fresh = await this.getDocument({ documentId }, credentials) as UnknownRecord;
+    const fresh = await this.getDocument({ documentId }, credentials, context) as UnknownRecord;
     return summarizeDocument(fresh);
   }
 
   private async getDocument(
     args: Record<string, unknown>,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<unknown> {
     const documentId = requiredString(args.documentId, "documentId");
-    const response = await this.apiRequest(
+    const response = await this.googleApiRequest(
       `${GOOGLE_DOCS_BASE_URL}/${encodeURIComponent(documentId)}`,
       { method: "GET" },
       credentials,
+      context,
     );
 
     if (!response.ok) {
@@ -369,14 +360,16 @@ class GoogleDocsHandler extends BaseIntegration {
   private async readDocument(
     args: Record<string, unknown>,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<unknown> {
-    const document = await this.getDocument(args, credentials) as UnknownRecord;
+    const document = await this.getDocument(args, credentials, context) as UnknownRecord;
     return summarizeDocument(document);
   }
 
   private async replaceText(
     args: Record<string, unknown>,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<unknown> {
     const documentId = requiredString(args.documentId, "documentId");
     const searchText = requiredString(args.searchText, "searchText");
@@ -398,6 +391,7 @@ class GoogleDocsHandler extends BaseIntegration {
         ],
       },
       credentials,
+      context,
     );
 
     const body = optionalObject(result, "batchUpdateResponse");
@@ -419,10 +413,11 @@ class GoogleDocsHandler extends BaseIntegration {
   private async appendText(
     args: Record<string, unknown>,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<unknown> {
     const documentId = requiredString(args.documentId, "documentId");
     const text = requiredString(args.text, "text");
-    const document = await this.getDocument({ documentId }, credentials) as UnknownRecord;
+    const document = await this.getDocument({ documentId }, credentials, context) as UnknownRecord;
     const existingText = documentBodyToPlainText(document);
     const endIndex = Math.max(1, getDocumentEndIndex(document) - 1);
     const prependNewline = args.prependNewline === true && existingText.length > 0;
@@ -441,6 +436,7 @@ class GoogleDocsHandler extends BaseIntegration {
         ],
       },
       credentials,
+      context,
     );
 
     return {
@@ -456,14 +452,16 @@ class GoogleDocsHandler extends BaseIntegration {
     documentId: string,
     payload: UnknownRecord,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<unknown> {
-    const response = await this.apiRequest(
+    const response = await this.googleApiRequest(
       `${GOOGLE_DOCS_BASE_URL}/${encodeURIComponent(documentId)}:batchUpdate`,
       {
         method: "POST",
         body: JSON.stringify(payload),
       },
       credentials,
+      context,
     );
 
     if (!response.ok) {
@@ -477,11 +475,13 @@ class GoogleDocsHandler extends BaseIntegration {
     fileId: string,
     folderId: string,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<void> {
-    const metadataResponse = await this.apiRequest(
+    const metadataResponse = await this.googleApiRequest(
       `${GOOGLE_DRIVE_BASE_URL}/files/${encodeURIComponent(fileId)}?fields=parents&supportsAllDrives=true`,
       { method: "GET" },
       credentials,
+      context,
     );
 
     if (!metadataResponse.ok) {
@@ -503,13 +503,14 @@ class GoogleDocsHandler extends BaseIntegration {
       query.set("removeParents", parents.join(","));
     }
 
-    const moveResponse = await this.apiRequest(
+    const moveResponse = await this.googleApiRequest(
       `${GOOGLE_DRIVE_BASE_URL}/files/${encodeURIComponent(fileId)}?${query.toString()}`,
       {
         method: "PATCH",
         body: JSON.stringify({}),
       },
       credentials,
+      context,
     );
 
     if (!moveResponse.ok) {
