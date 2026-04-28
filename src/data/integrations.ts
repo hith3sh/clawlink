@@ -955,12 +955,16 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   klaviyo: {
-    setupMode: "coming_soon",
-    dashboardStatus: "coming-soon",
-    runtimeStatus: "planned",
-    setupGuide: "Klaviyo requires a private API key from your account settings.",
+    setupMode: "pipedream",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect Klaviyo through the hosted Pipedream flow so ClawLink can inspect lists, create new lists, and add profiles to lists without manual credential setup.",
     credentialFields: [],
-    tools: [],
+    tools: [
+      { name: "klaviyo_get_lists", description: "List Klaviyo lists in the connected account" },
+      { name: "klaviyo_create_new_list", description: "Create a new Klaviyo list" },
+      { name: "klaviyo_add_member_to_list", description: "Add one or more Klaviyo profiles to a list" },
+    ],
   },
   buffer: {
     setupMode: "coming_soon",

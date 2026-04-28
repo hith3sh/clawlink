@@ -11,6 +11,7 @@ import { GoogleDocsPipedreamToolManifests } from "./google-docs.generated";
 import { GoogleDrivePipedreamToolManifests } from "./google-drive.generated";
 import { GoogleSearchConsolePipedreamToolManifests } from "./google-search-console.generated";
 import { HubspotPipedreamToolManifests } from "./hubspot.generated";
+import { KlaviyoPipedreamToolManifests } from "./klaviyo.generated";
 import { LinkedinPipedreamToolManifests } from "./linkedin.generated";
 import { MailchimpPipedreamToolManifests } from "./mailchimp.generated";
 import { NotionPipedreamToolManifests } from "./notion.generated";
@@ -34,6 +35,7 @@ export const pipedreamToolManifests: PipedreamActionToolManifest[] = [
   ...GoogleDrivePipedreamToolManifests,
   ...GoogleSearchConsolePipedreamToolManifests,
   ...HubspotPipedreamToolManifests,
+  ...KlaviyoPipedreamToolManifests,
   ...LinkedinPipedreamToolManifests,
   ...MailchimpPipedreamToolManifests,
   ...NotionPipedreamToolManifests,

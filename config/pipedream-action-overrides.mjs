@@ -330,6 +330,28 @@ const overrides = {
         },
       },
     },
+    klaviyo: {
+      excludeActionIds: [],
+      hiddenProps: [],
+      actionOverrides: {
+        "klaviyo-get-lists": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+          safeDefaults: {
+            sortDirection: "descending",
+          },
+        },
+        "klaviyo-create-new-list": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "klaviyo-add-member-to-list": {
+          mode: "write",
+          risk: "confirm",
+        },
+      },
+    },
     facebook: {
       excludeActionIds: [
         "facebook_pages-create-post",
