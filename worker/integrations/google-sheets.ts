@@ -1,10 +1,10 @@
 import {
-  BaseIntegration,
   defineTool,
   type IntegrationTool,
   IntegrationRequestError,
   registerHandler,
 } from "./base";
+import { GoogleBaseIntegration, type GoogleExecutionContext } from "./google-base";
 
 const GOOGLE_SHEETS_BASE_URL = "https://sheets.googleapis.com/v4/spreadsheets";
 
@@ -141,7 +141,7 @@ function summarizeSpreadsheet(spreadsheet: UnknownRecord): UnknownRecord {
   };
 }
 
-class GoogleSheetsHandler extends BaseIntegration {
+class GoogleSheetsHandler extends GoogleBaseIntegration {
   getTools(integrationSlug: string): IntegrationTool[] {
     return [
       defineTool(integrationSlug, "create_spreadsheet", {
@@ -278,26 +278,31 @@ class GoogleSheetsHandler extends BaseIntegration {
     action: string,
     args: Record<string, unknown>,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<unknown> {
     switch (action) {
       case "create_spreadsheet":
-        return this.createSpreadsheet(args, credentials);
+        return this.createSpreadsheet(args, credentials, context);
       case "get_spreadsheet":
-        return this.getSpreadsheet(args, credentials);
+        return this.getSpreadsheet(args, credentials, context);
       case "read_sheet":
-        return this.readSheet(args, credentials);
+        return this.readSheet(args, credentials, context);
       case "append_rows":
-        return this.appendRows(args, credentials);
+        return this.appendRows(args, credentials, context);
       case "update_range":
-        return this.updateRange(args, credentials);
+        return this.updateRange(args, credentials, context);
       default:
         throw new Error(`Unknown action: ${action}`);
     }
   }
 
   async validateCredentials(credentials: Record<string, string>): Promise<boolean> {
+    if (this.getPipedreamAccountId(credentials)) {
+      return true;
+    }
+
     try {
-      const response = await this.apiRequest(
+      const response = await this.googleApiRequest(
         `${GOOGLE_SHEETS_BASE_URL}?fields=spreadsheetId`,
         { method: "POST", body: JSON.stringify({ properties: { title: "ClawLink Sheets Auth Check" } }) },
         credentials,
@@ -312,6 +317,7 @@ class GoogleSheetsHandler extends BaseIntegration {
   private async createSpreadsheet(
     args: Record<string, unknown>,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<unknown> {
     const title = requiredString(args.title, "title");
     const sheetTitle = optionalString(args.sheetTitle);
@@ -333,13 +339,14 @@ class GoogleSheetsHandler extends BaseIntegration {
       ];
     }
 
-    const response = await this.apiRequest(
+    const response = await this.googleApiRequest(
       GOOGLE_SHEETS_BASE_URL,
       {
         method: "POST",
         body: JSON.stringify(createBody),
       },
       credentials,
+      context,
     );
 
     if (!response.ok) {
@@ -363,6 +370,7 @@ class GoogleSheetsHandler extends BaseIntegration {
           valueInputOption: "RAW",
         },
         credentials,
+        context,
       );
     }
 
@@ -372,12 +380,14 @@ class GoogleSheetsHandler extends BaseIntegration {
   private async getSpreadsheet(
     args: Record<string, unknown>,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<unknown> {
     const spreadsheetId = requiredString(args.spreadsheetId, "spreadsheetId");
-    const response = await this.apiRequest(
+    const response = await this.googleApiRequest(
       `${GOOGLE_SHEETS_BASE_URL}/${encodeURIComponent(spreadsheetId)}?includeGridData=false`,
       { method: "GET" },
       credentials,
+      context,
     );
 
     if (!response.ok) {
@@ -390,6 +400,7 @@ class GoogleSheetsHandler extends BaseIntegration {
   private async readSheet(
     args: Record<string, unknown>,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<unknown> {
     const spreadsheetId = requiredString(args.spreadsheetId, "spreadsheetId");
     const range = requiredString(args.range, "range");
@@ -401,10 +412,11 @@ class GoogleSheetsHandler extends BaseIntegration {
       valueRenderOption,
     });
 
-    const response = await this.apiRequest(
+    const response = await this.googleApiRequest(
       `${GOOGLE_SHEETS_BASE_URL}/${encodeURIComponent(spreadsheetId)}/values/${encodeURIComponent(range)}?${query.toString()}`,
       { method: "GET" },
       credentials,
+      context,
     );
 
     if (!response.ok) {
@@ -426,6 +438,7 @@ class GoogleSheetsHandler extends BaseIntegration {
   private async appendRows(
     args: Record<string, unknown>,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<unknown> {
     const spreadsheetId = requiredString(args.spreadsheetId, "spreadsheetId");
     const range = requiredString(args.range, "range");
@@ -439,7 +452,7 @@ class GoogleSheetsHandler extends BaseIntegration {
       includeValuesInResponse: "true",
     });
 
-    const response = await this.apiRequest(
+    const response = await this.googleApiRequest(
       `${GOOGLE_SHEETS_BASE_URL}/${encodeURIComponent(spreadsheetId)}/values/${encodeURIComponent(range)}:append?${query.toString()}`,
       {
         method: "POST",
@@ -449,6 +462,7 @@ class GoogleSheetsHandler extends BaseIntegration {
         }),
       },
       credentials,
+      context,
     );
 
     if (!response.ok) {
@@ -471,6 +485,7 @@ class GoogleSheetsHandler extends BaseIntegration {
   private async updateRange(
     args: Record<string, unknown>,
     credentials: Record<string, string>,
+    context?: GoogleExecutionContext,
   ): Promise<unknown> {
     const spreadsheetId = requiredString(args.spreadsheetId, "spreadsheetId");
     const range = requiredString(args.range, "range");
@@ -482,7 +497,7 @@ class GoogleSheetsHandler extends BaseIntegration {
       includeValuesInResponse: "true",
     });
 
-    const response = await this.apiRequest(
+    const response = await this.googleApiRequest(
       `${GOOGLE_SHEETS_BASE_URL}/${encodeURIComponent(spreadsheetId)}/values/${encodeURIComponent(range)}?${query.toString()}`,
       {
         method: "PUT",
@@ -493,6 +508,7 @@ class GoogleSheetsHandler extends BaseIntegration {
         }),
       },
       credentials,
+      context,
     );
 
     if (!response.ok) {

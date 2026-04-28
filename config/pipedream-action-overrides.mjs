@@ -442,11 +442,23 @@ const overrides = {
     youtube: {
       excludeActionIds: [
         "youtube_data_api-add-playlist-items",
-        "youtube_data_api-list-playlist-videos",
-        "youtube_data_api-search-videos",
-        "youtube_data_api-channel-statistics",
       ],
       actionOverrides: {
+        "youtube_data_api-list-videos": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "youtube_data_api-list-playlists": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "youtube_data_api-list-activities": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
         "youtube_data_api-upload-video": {
           mode: "write",
           risk: "confirm",

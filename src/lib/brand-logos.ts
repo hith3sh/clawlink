@@ -39,6 +39,7 @@ const BRAND_LOGO_SLUGS = new Set<string>([
   "motion",
   "postiz",
   "klaviyo",
+  "instantly",
 ]);
 
 // Brands whose logo is monochrome and therefore needs a theme-specific variant
@@ -58,6 +59,7 @@ const RASTER_SLUGS: Record<string, string> = {
   "google-search-console": ".png",
   motion: ".jpg",
   postiz: ".png",
+  instantly: ".png",
 };
 
 export type BrandLogoTheme = "light" | "dark";

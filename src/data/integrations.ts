@@ -165,7 +165,7 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "Google Analytics", slug: "google-analytics", description: "Connect Google Analytics properties through hosted Google OAuth", category: "Data & Analytics", icon: "SiGoogleanalytics", color: "#E8710A" },
   { name: "Google Search Console", slug: "google-search-console", description: "Inspect indexing, sitemaps, and search performance through hosted Google OAuth", category: "Data & Analytics", icon: "TbPlugConnected", color: "#34A853" },
   { name: "PostHog", slug: "posthog", description: "Track user behavior and feature flags", category: "Data & Analytics", icon: "SiPosthog", color: "#000000" },
-  { name: "Google Ads", slug: "google-ads", description: "Manage campaigns, run reports, and generate keyword ideas", category: "Marketing", icon: "SiGoogle", color: "#4285F4" },
+  { name: "Google Ads", slug: "google-ads", description: "Manage campaigns, run reports, and generate keyword ideas", category: "Marketing", icon: "SiGoogleads", color: "#4285F4" },
 ];
 
 const integrationMetadata: Record<string, IntegrationMetadata> = {

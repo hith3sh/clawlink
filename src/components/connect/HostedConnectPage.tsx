@@ -58,7 +58,6 @@ export default function HostedConnectPage({
   pipedream,
 }: Props) {
   const [startingOAuth, setStartingOAuth] = useState(false);
-  const [startingPipedream, setStartingPipedream] = useState(false);
   const [status, setStatus] = useState(session.status);
   const [error, setError] = useState<string | null>(session.errorMessage);
   const [info, setInfo] = useState<string | null>(null);
@@ -215,7 +214,6 @@ export default function HostedConnectPage({
   }, [integration.name, session.token]);
 
   const handleStartPipedream = useCallback(async () => {
-    setStartingPipedream(true);
     setError(null);
     setInfo(null);
     setPipedreamClosed(false);
@@ -295,8 +293,6 @@ export default function HostedConnectPage({
           ? requestError.message
           : "Failed to start the hosted Pipedream flow.",
       );
-    } finally {
-      setStartingPipedream(false);
     }
   }, [
     fetchPipedreamConnectStart,
@@ -405,27 +401,9 @@ export default function HostedConnectPage({
           </div>
         ) : showPipedreamOAuth ? (
           <div className="rounded-3xl border border-gray-200 bg-gray-50 p-7">
-            <div className="flex items-center gap-3 text-gray-700">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              <p className="text-base leading-7">
-                Opening {integration.name}. If nothing happens, reopen the dialog below.
-              </p>
-            </div>
-            <div className="mt-5">
-              <button
-                type="button"
-                onClick={() => void handleStartPipedream()}
-                disabled={startingPipedream}
-                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {startingPipedream ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <ExternalLink className="h-4 w-4" />
-                )}
-                {pipedreamClosed ? "Reopen dialog" : `Open ${integration.name}`}
-              </button>
-            </div>
+            <p className="text-base leading-7 text-gray-700">
+              You can close this tab and retry the connection from your dashboard.
+            </p>
           </div>
         ) : showNangoOAuth ? (
           <div className="rounded-3xl border border-gray-200 bg-gray-50 p-7">

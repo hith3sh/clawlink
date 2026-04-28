@@ -1,14 +1,134 @@
 import type { PipedreamActionToolManifest } from "@/lib/pipedream/manifest-types";
 
-export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
-{
+export const YoutubePipedreamToolManifests = [
+  {
     "integration": "youtube",
-    "name": "youtube_create_comment_thread",
-    "description": "create-comment-thread via Pipedream",
+    "name": "youtube_channel_statistics",
+    "description": "Returns statistics from my YouTube Channel or by id. [See the documentation](https://developers.google.com/youtube/v3/docs/channels/list) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "useCase": {
+          "type": "string",
+          "title": "Use Case",
+          "description": "Select your use case to render the next properties.",
+          "enum": [
+            "id",
+            "mine",
+            "managedByMe"
+          ]
+        }
+      },
+      "required": [
+        "useCase"
+      ]
+    },
+    "accessLevel": "read",
+    "mode": "read",
+    "risk": "safe",
+    "tags": [
+      "youtube",
+      "pipedream"
+    ],
+    "whenToUse": [],
+    "askBefore": [],
+    "safeDefaults": {},
+    "examples": [],
+    "followups": [],
+    "requiresScopes": [],
+    "idempotent": true,
+    "supportsDryRun": false,
+    "supportsBatch": false,
+    "execution": {
+      "kind": "pipedream_action",
+      "app": "youtube_data_api",
+      "componentId": "youtube_data_api-channel-statistics",
+      "version": "0.0.5",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "useCase"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "useCase",
+          "type": "string",
+          "label": "Use Case",
+          "description": "Select your use case to render the next properties.",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": true,
+          "withLabel": false,
+          "appAuth": false,
+          "options": [
+            {
+              "label": "By Channel ID",
+              "value": "id"
+            },
+            {
+              "label": "My Channels",
+              "value": "mine"
+            },
+            {
+              "label": "Managed by Me (exclusively for YouTube content partners)",
+              "value": "managedByMe"
+            }
+          ]
+        }
+      ]
+    },
+    "source": {
+      "app": "youtube_data_api",
+      "componentKey": "youtube_data_api-channel-statistics",
+      "componentName": "Channel Statistics"
+    }
+  },
+  {
+    "integration": "youtube",
+    "name": "youtube_create_comment_thread",
+    "description": "Creates a new top-level comment in a video. [See the documentation](https://developers.google.com/youtube/v3/docs/commentThreads/insert) for more information",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "channelId": {
+          "type": "string",
+          "title": "Channel ID",
+          "description": "Select the channel to update. E.g. `UChkRx83xLq2nk55D8CRODVz`"
+        },
+        "videoId": {
+          "type": "string",
+          "title": "Video ID",
+          "description": "Select the video to add comment to. E.g. `wslno0wDSFQ`. Leave blank to post comment to channel."
+        },
+        "text": {
+          "type": "string",
+          "title": "Text",
+          "description": "The text of the comment"
+        }
+      },
+      "required": [
+        "channelId",
+        "videoId",
+        "text"
+      ]
     },
     "accessLevel": "write",
     "mode": "write",
@@ -30,24 +150,117 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-create-comment-thread",
-      "authPropNames": [],
-      "dynamicPropNames": [],
-      "props": []
+      "version": "0.0.3",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "channelId",
+        "videoId"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "channelId",
+          "type": "string",
+          "label": "Channel ID",
+          "description": "Select the channel to update. E.g. `UChkRx83xLq2nk55D8CRODVz`",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "videoId",
+          "type": "string",
+          "label": "Video ID",
+          "description": "Select the video to add comment to. E.g. `wslno0wDSFQ`. Leave blank to post comment to channel.",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "label": "Text",
+          "description": "The text of the comment",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-create-comment-thread",
-      "componentName": "create-comment-thread"
+      "componentName": "Create Comment Thread"
     }
   },
   {
     "integration": "youtube",
     "name": "youtube_create_playlist",
-    "description": "create-playlist via Pipedream",
+    "description": "Creates a playlist. [See the documentation](https://developers.google.com/youtube/v3/docs/playlists/insert) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "title": {
+          "type": "string",
+          "title": "Title",
+          "description": "The playlist's title"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "The playlist's description"
+        },
+        "privacyStatus": {
+          "type": "string",
+          "title": "Privacy Status",
+          "description": "The playlist's privacy status"
+        },
+        "onBehalfOfContentOwner": {
+          "type": "string",
+          "title": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner."
+        },
+        "onBehalfOfContentOwnerChannel": {
+          "type": "string",
+          "title": "On Behalf Of Content Owner Channel",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners.\n\nThe `onBehalfOfContentOwnerChannel` parameter specifies the YouTube channel ID of the channel to which a video is being added. This parameter is required when a request specifies a value for the `onBehalfOfContentOwner` parameter, and it can only be used in conjunction with that parameter. In addition, the request must be authorized using a CMS account that is linked to the content owner that the `onBehalfOfContentOwner` parameter specifies. Finally, the channel that the `onBehalfOfContentOwnerChannel` parameter value specifies must be linked to the content owner that the `onBehalfOfContentOwner` parameter specifies."
+        }
+      },
+      "required": [
+        "title"
+      ]
     },
     "accessLevel": "write",
     "mode": "write",
@@ -69,24 +282,130 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-create-playlist",
-      "authPropNames": [],
+      "version": "0.0.4",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
       "dynamicPropNames": [],
-      "props": []
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "label": "Title",
+          "description": "The playlist's title",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "label": "Description",
+          "description": "The playlist's description",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "privacyStatus",
+          "type": "string",
+          "label": "Privacy Status",
+          "description": "The playlist's privacy status",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false,
+          "options": []
+        },
+        {
+          "name": "onBehalfOfContentOwner",
+          "type": "string",
+          "label": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "onBehalfOfContentOwnerChannel",
+          "type": "string",
+          "label": "On Behalf Of Content Owner Channel",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners.\n\nThe `onBehalfOfContentOwnerChannel` parameter specifies the YouTube channel ID of the channel to which a video is being added. This parameter is required when a request specifies a value for the `onBehalfOfContentOwner` parameter, and it can only be used in conjunction with that parameter. In addition, the request must be authorized using a CMS account that is linked to the content owner that the `onBehalfOfContentOwner` parameter specifies. Finally, the channel that the `onBehalfOfContentOwnerChannel` parameter value specifies must be linked to the content owner that the `onBehalfOfContentOwner` parameter specifies.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-create-playlist",
-      "componentName": "create-playlist"
+      "componentName": "Create Playlist"
     }
   },
   {
     "integration": "youtube",
     "name": "youtube_delete_playlist",
-    "description": "delete-playlist via Pipedream",
+    "description": "Deletes a playlist. [See the documentation](https://developers.google.com/youtube/v3/docs/playlists/delete) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "playlistId": {
+          "type": "string",
+          "title": "Playlist ID",
+          "description": "Add items to the selected playlist. E.g. `PLJswo-CV0rmlwxKysf33cUnyBp8JztH0k`"
+        },
+        "onBehalfOfContentOwner": {
+          "type": "string",
+          "title": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner."
+        }
+      },
+      "required": [
+        "playlistId"
+      ]
     },
     "accessLevel": "destructive",
     "mode": "destructive",
@@ -108,24 +427,95 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-delete-playlist",
-      "authPropNames": [],
-      "dynamicPropNames": [],
-      "props": []
+      "version": "0.0.3",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "playlistId"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "playlistId",
+          "type": "string",
+          "label": "Playlist ID",
+          "description": "Add items to the selected playlist. E.g. `PLJswo-CV0rmlwxKysf33cUnyBp8JztH0k`",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "onBehalfOfContentOwner",
+          "type": "string",
+          "label": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-delete-playlist",
-      "componentName": "delete-playlist"
+      "componentName": "Delete Playlist"
     }
   },
   {
     "integration": "youtube",
     "name": "youtube_delete_playlist_items",
-    "description": "delete-playlist-items via Pipedream",
+    "description": "Deletes a playlist item. [See the documentation](https://developers.google.com/youtube/v3/docs/playlistItems/delete) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "playlistId": {
+          "type": "string",
+          "title": "Playlist ID",
+          "description": "Add items to the selected playlist. E.g. `PLJswo-CV0rmlwxKysf33cUnyBp8JztH0k`"
+        },
+        "videoIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Video IDs",
+          "description": "Array of identifiers of the videos to be removed from the playlist. E.g. `o_U1CQn68VM`"
+        },
+        "onBehalfOfContentOwner": {
+          "type": "string",
+          "title": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner."
+        }
+      },
+      "required": [
+        "playlistId",
+        "videoIds"
+      ]
     },
     "accessLevel": "destructive",
     "mode": "destructive",
@@ -147,28 +537,105 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-delete-playlist-items",
-      "authPropNames": [],
-      "dynamicPropNames": [],
-      "props": []
+      "version": "0.0.3",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "playlistId",
+        "videoIds"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "playlistId",
+          "type": "string",
+          "label": "Playlist ID",
+          "description": "Add items to the selected playlist. E.g. `PLJswo-CV0rmlwxKysf33cUnyBp8JztH0k`",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "videoIds",
+          "type": "string[]",
+          "label": "Video IDs",
+          "description": "Array of identifiers of the videos to be removed from the playlist. E.g. `o_U1CQn68VM`",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "onBehalfOfContentOwner",
+          "type": "string",
+          "label": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-delete-playlist-items",
-      "componentName": "delete-playlist-items"
+      "componentName": "Delete Playlist Items"
     }
   },
   {
     "integration": "youtube",
     "name": "youtube_list_activities",
-    "description": "list-activities via Pipedream",
+    "description": "Returns a list of channel activity events that match the request criteria. [See the documentation](https://developers.google.com/youtube/v3/docs/activities/list) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "useCase": {
+          "type": "string",
+          "title": "Use Case",
+          "description": "Select your use case to render the next properties.",
+          "enum": [
+            "channelId",
+            "mine"
+          ]
+        }
+      },
+      "required": [
+        "useCase"
+      ]
     },
-    "accessLevel": "write",
-    "mode": "write",
-    "risk": "confirm",
+    "accessLevel": "read",
+    "mode": "read",
+    "risk": "safe",
     "tags": [
       "youtube",
       "pipedream"
@@ -179,35 +646,92 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
     "examples": [],
     "followups": [],
     "requiresScopes": [],
-    "idempotent": false,
+    "idempotent": true,
     "supportsDryRun": false,
     "supportsBatch": false,
     "execution": {
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-list-activities",
-      "authPropNames": [],
-      "dynamicPropNames": [],
-      "props": []
+      "version": "0.0.5",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "useCase"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "useCase",
+          "type": "string",
+          "label": "Use Case",
+          "description": "Select your use case to render the next properties.",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": true,
+          "withLabel": false,
+          "appAuth": false,
+          "options": [
+            {
+              "label": "By Channel ID",
+              "value": "channelId"
+            },
+            {
+              "label": "My Activities",
+              "value": "mine"
+            }
+          ]
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-list-activities",
-      "componentName": "list-activities"
+      "componentName": "List Activities"
     }
   },
   {
     "integration": "youtube",
-    "name": "youtube_list_playlists",
-    "description": "list-playlists via Pipedream",
+    "name": "youtube_list_playlist_videos",
+    "description": "List videos in a playlist. [See the documentation](https://developers.google.com/youtube/v3/docs/playlistItems/list) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "playlistId": {
+          "type": "string",
+          "title": "Playlist ID",
+          "description": "Select a **Playlist** or provide a custom *Playlist ID*. E.g. `PLJswo-CV0rmlwxKysf33cUnyBp8JztH0k`"
+        },
+        "maxResults": {
+          "type": "number",
+          "title": "Maximum Results",
+          "description": "The maximum number of items that should be returned in the result set. Acceptable values are 0 to 50, inclusive. Default is 20"
+        }
+      },
+      "required": [
+        "playlistId"
+      ]
     },
-    "accessLevel": "write",
-    "mode": "write",
-    "risk": "confirm",
+    "accessLevel": "read",
+    "mode": "read",
+    "risk": "safe",
     "tags": [
       "youtube",
       "pipedream"
@@ -218,35 +742,197 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
     "examples": [],
     "followups": [],
     "requiresScopes": [],
-    "idempotent": false,
+    "idempotent": true,
+    "supportsDryRun": false,
+    "supportsBatch": false,
+    "execution": {
+      "kind": "pipedream_action",
+      "app": "youtube_data_api",
+      "componentId": "youtube_data_api-list-playlist-videos",
+      "version": "0.0.3",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "playlistId"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "playlistId",
+          "type": "string",
+          "label": "Playlist ID",
+          "description": "Select a **Playlist** or provide a custom *Playlist ID*. E.g. `PLJswo-CV0rmlwxKysf33cUnyBp8JztH0k`",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "maxResults",
+          "type": "integer",
+          "label": "Maximum Results",
+          "description": "The maximum number of items that should be returned in the result set. Acceptable values are 0 to 50, inclusive. Default is 20",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        }
+      ]
+    },
+    "source": {
+      "app": "youtube_data_api",
+      "componentKey": "youtube_data_api-list-playlist-videos",
+      "componentName": "List Playlist Videos"
+    }
+  },
+  {
+    "integration": "youtube",
+    "name": "youtube_list_playlists",
+    "description": "Returns a collection of playlists that match the API request parameters. [See the documentation](https://developers.google.com/youtube/v3/docs/playlists/list) for more information",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "useCase": {
+          "type": "string",
+          "title": "Use Case",
+          "description": "Select your use case to render the next properties.",
+          "enum": [
+            "id",
+            "channelId",
+            "mine"
+          ]
+        }
+      },
+      "required": [
+        "useCase"
+      ]
+    },
+    "accessLevel": "read",
+    "mode": "read",
+    "risk": "safe",
+    "tags": [
+      "youtube",
+      "pipedream"
+    ],
+    "whenToUse": [],
+    "askBefore": [],
+    "safeDefaults": {},
+    "examples": [],
+    "followups": [],
+    "requiresScopes": [],
+    "idempotent": true,
     "supportsDryRun": false,
     "supportsBatch": false,
     "execution": {
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-list-playlists",
-      "authPropNames": [],
-      "dynamicPropNames": [],
-      "props": []
+      "version": "0.0.5",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "useCase"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "useCase",
+          "type": "string",
+          "label": "Use Case",
+          "description": "Select your use case to render the next properties.",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": true,
+          "withLabel": false,
+          "appAuth": false,
+          "options": [
+            {
+              "label": "By Playlist ID",
+              "value": "id"
+            },
+            {
+              "label": "All Playlists for a Channel",
+              "value": "channelId"
+            },
+            {
+              "label": "My Playlists",
+              "value": "mine"
+            }
+          ]
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-list-playlists",
-      "componentName": "list-playlists"
+      "componentName": "List Playlists"
     }
   },
   {
     "integration": "youtube",
     "name": "youtube_list_videos",
-    "description": "list-videos via Pipedream",
+    "description": "Returns a list of videos that match the API request parameters. [See the documentation](https://developers.google.com/youtube/v3/docs/videos/list) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "useCase": {
+          "type": "string",
+          "title": "Use Case",
+          "description": "Select your use case to render the next properties.",
+          "enum": [
+            "id",
+            "chart",
+            "myRating"
+          ]
+        }
+      },
+      "required": [
+        "useCase"
+      ]
     },
-    "accessLevel": "write",
-    "mode": "write",
-    "risk": "confirm",
+    "accessLevel": "read",
+    "mode": "read",
+    "risk": "safe",
     "tags": [
       "youtube",
       "pipedream"
@@ -257,31 +943,99 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
     "examples": [],
     "followups": [],
     "requiresScopes": [],
-    "idempotent": false,
+    "idempotent": true,
     "supportsDryRun": false,
     "supportsBatch": false,
     "execution": {
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-list-videos",
-      "authPropNames": [],
-      "dynamicPropNames": [],
-      "props": []
+      "version": "0.0.5",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "useCase"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "useCase",
+          "type": "string",
+          "label": "Use Case",
+          "description": "Select your use case to render the next properties.",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": true,
+          "withLabel": false,
+          "appAuth": false,
+          "options": [
+            {
+              "label": "By Video ID",
+              "value": "id"
+            },
+            {
+              "label": "Most Popular Videos",
+              "value": "chart"
+            },
+            {
+              "label": "My Liked Videos",
+              "value": "myRating"
+            }
+          ]
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-list-videos",
-      "componentName": "list-videos"
+      "componentName": "List Videos"
     }
   },
   {
     "integration": "youtube",
     "name": "youtube_reply_to_comment",
-    "description": "reply-to-comment via Pipedream",
+    "description": "Creates a reply to an existing comment. [See the documentation](https://developers.google.com/youtube/v3/docs/comments/insert) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "channelId": {
+          "type": "string",
+          "title": "Channel ID",
+          "description": "Select the channel to update. E.g. `UChkRx83xLq2nk55D8CRODVz`"
+        },
+        "commentThread": {
+          "type": "string",
+          "title": "Comment Thread",
+          "description": "The top-level comment that you are replying to"
+        },
+        "text": {
+          "type": "string",
+          "title": "Text",
+          "description": "The text of the comment"
+        }
+      },
+      "required": [
+        "channelId",
+        "commentThread",
+        "text"
+      ]
     },
     "accessLevel": "write",
     "mode": "write",
@@ -303,24 +1057,483 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-reply-to-comment",
-      "authPropNames": [],
-      "dynamicPropNames": [],
-      "props": []
+      "version": "0.0.3",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "channelId",
+        "commentThread"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "channelId",
+          "type": "string",
+          "label": "Channel ID",
+          "description": "Select the channel to update. E.g. `UChkRx83xLq2nk55D8CRODVz`",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "commentThread",
+          "type": "string",
+          "label": "Comment Thread",
+          "description": "The top-level comment that you are replying to",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "label": "Text",
+          "description": "The text of the comment",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-reply-to-comment",
-      "componentName": "reply-to-comment"
+      "componentName": "Reply To Comment"
+    }
+  },
+  {
+    "integration": "youtube",
+    "name": "youtube_search_videos",
+    "description": "Returns a list of videos that match the search parameters. [See the documentation](https://developers.google.com/youtube/v3/docs/search/list) for more information",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "q": {
+          "type": "string",
+          "title": "Search Query",
+          "description": "Search for new videos that match these keywords."
+        },
+        "channelId": {
+          "type": "string",
+          "title": "Channel ID",
+          "description": "The channelId parameter specifies a unique YouTube channel ID. E.g. `UChkRx83xLq2nk55D8CRODVz`"
+        },
+        "videoDuration": {
+          "type": "string",
+          "title": "Video Duration",
+          "description": "Filter the results based on video duration",
+          "enum": [
+            "any",
+            "long",
+            "medium",
+            "short"
+          ]
+        },
+        "videoDefinition": {
+          "type": "string",
+          "title": "Video Definition",
+          "description": "Filter the results to only include either high definition (HD) or standard definition (SD) videos"
+        },
+        "videoCaption": {
+          "type": "string",
+          "title": "Video Caption",
+          "description": "Indicates whether the API should filter video search results based on whether they have captions",
+          "enum": [
+            "any",
+            "closedCaption",
+            "none"
+          ]
+        },
+        "videoLicense": {
+          "type": "string",
+          "title": "Video License",
+          "description": "Filter the results to only include videos with a particular license",
+          "enum": [
+            "any",
+            "creativeCommon",
+            "youtube"
+          ]
+        },
+        "regionCode": {
+          "type": "string",
+          "title": "Region Code",
+          "description": "The regionCode parameter instructs the API to return results for the specified country. The parameter value is an ISO 3166-1 alpha-2 country code. For example: US, GB, BR"
+        },
+        "videoCategoryId": {
+          "type": "string",
+          "title": "Video Category Id",
+          "description": "Select the video's category"
+        },
+        "location": {
+          "type": "string",
+          "title": "Location",
+          "description": "The location parameter, in conjunction with the locationRadius parameter, defines a circular geographic area and also restricts a search to videos that specify, in their metadata, a geographic location that falls within that area. The parameter value is a string that specifies latitude/longitude coordinates e.g. `37.42307,-122.08427`."
+        },
+        "locationRadius": {
+          "type": "string",
+          "title": "Location Radius",
+          "description": "The parameter value must be a floating point number followed by a measurement unit. Valid measurement units are m, km, ft, and mi. For example, valid parameter values include `1500m`, `5km`, `10000ft`, and `0.75mi`. The API does not support locationRadius parameter values larger than 1000 kilometers."
+        },
+        "sortOrder": {
+          "type": "string",
+          "title": "Sort Order",
+          "description": "The method that will be used to order resources in the API response. The default value is `relevance`"
+        },
+        "maxResults": {
+          "type": "number",
+          "title": "Maximum Results",
+          "description": "The maximum number of items that should be returned in the result set. Acceptable values are 0 to 50, inclusive. Default is 20"
+        }
+      },
+      "required": []
+    },
+    "accessLevel": "read",
+    "mode": "read",
+    "risk": "safe",
+    "tags": [
+      "youtube",
+      "pipedream"
+    ],
+    "whenToUse": [],
+    "askBefore": [],
+    "safeDefaults": {},
+    "examples": [],
+    "followups": [],
+    "requiresScopes": [],
+    "idempotent": true,
+    "supportsDryRun": false,
+    "supportsBatch": false,
+    "execution": {
+      "kind": "pipedream_action",
+      "app": "youtube_data_api",
+      "componentId": "youtube_data_api-search-videos",
+      "version": "0.0.2",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "videoCategoryId"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "q",
+          "type": "string",
+          "label": "Search Query",
+          "description": "Search for new videos that match these keywords.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "channelId",
+          "type": "string",
+          "label": "Channel ID",
+          "description": "The channelId parameter specifies a unique YouTube channel ID. E.g. `UChkRx83xLq2nk55D8CRODVz`",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "videoDuration",
+          "type": "string",
+          "label": "Video Duration",
+          "description": "Filter the results based on video duration",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false,
+          "options": [
+            {
+              "label": "Do not filter video search results based on their duration. This is the default value.",
+              "value": "any"
+            },
+            {
+              "label": "Only include videos longer than 20 minutes",
+              "value": "long"
+            },
+            {
+              "label": "Only include videos that are between four and 20 minutes long (inclusive)",
+              "value": "medium"
+            },
+            {
+              "label": "Only include videos that are less than four minutes long",
+              "value": "short"
+            }
+          ]
+        },
+        {
+          "name": "videoDefinition",
+          "type": "string",
+          "label": "Video Definition",
+          "description": "Filter the results to only include either high definition (HD) or standard definition (SD) videos",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false,
+          "options": []
+        },
+        {
+          "name": "videoCaption",
+          "type": "string",
+          "label": "Video Caption",
+          "description": "Indicates whether the API should filter video search results based on whether they have captions",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false,
+          "options": [
+            {
+              "label": "Do not filter results based on caption availability",
+              "value": "any"
+            },
+            {
+              "label": "Only include videos that have captions",
+              "value": "closedCaption"
+            },
+            {
+              "label": "Only include videos that do not have captions",
+              "value": "none"
+            }
+          ]
+        },
+        {
+          "name": "videoLicense",
+          "type": "string",
+          "label": "Video License",
+          "description": "Filter the results to only include videos with a particular license",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false,
+          "options": [
+            {
+              "label": "Return all videos",
+              "value": "any"
+            },
+            {
+              "label": "Only return videos that have a Creative Commons license. Users can reuse videos with this license in other videos that they create.",
+              "value": "creativeCommon"
+            },
+            {
+              "label": "Only return videos that have the standard YouTube license",
+              "value": "youtube"
+            }
+          ]
+        },
+        {
+          "name": "regionCode",
+          "type": "string",
+          "label": "Region Code",
+          "description": "The regionCode parameter instructs the API to return results for the specified country. The parameter value is an ISO 3166-1 alpha-2 country code. For example: US, GB, BR",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "videoCategoryId",
+          "type": "string",
+          "label": "Video Category Id",
+          "description": "Select the video's category",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "location",
+          "type": "string",
+          "label": "Location",
+          "description": "The location parameter, in conjunction with the locationRadius parameter, defines a circular geographic area and also restricts a search to videos that specify, in their metadata, a geographic location that falls within that area. The parameter value is a string that specifies latitude/longitude coordinates e.g. `37.42307,-122.08427`.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "locationRadius",
+          "type": "string",
+          "label": "Location Radius",
+          "description": "The parameter value must be a floating point number followed by a measurement unit. Valid measurement units are m, km, ft, and mi. For example, valid parameter values include `1500m`, `5km`, `10000ft`, and `0.75mi`. The API does not support locationRadius parameter values larger than 1000 kilometers.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "sortOrder",
+          "type": "string",
+          "label": "Sort Order",
+          "description": "The method that will be used to order resources in the API response. The default value is `relevance`",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false,
+          "options": []
+        },
+        {
+          "name": "maxResults",
+          "type": "integer",
+          "label": "Maximum Results",
+          "description": "The maximum number of items that should be returned in the result set. Acceptable values are 0 to 50, inclusive. Default is 20",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        }
+      ]
+    },
+    "source": {
+      "app": "youtube_data_api",
+      "componentKey": "youtube_data_api-search-videos",
+      "componentName": "Search Videos"
     }
   },
   {
     "integration": "youtube",
     "name": "youtube_update_channel",
-    "description": "update-channel via Pipedream",
+    "description": "Updates a channel's metadata. [See the documentation](https://developers.google.com/youtube/v3/docs/channels/update) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "channelId": {
+          "type": "string",
+          "title": "Channel ID",
+          "description": "Select the channel to update. E.g. `UChkRx83xLq2nk55D8CRODVz`"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "The channel's description"
+        },
+        "defaultLanguage": {
+          "type": "string",
+          "title": "Language",
+          "description": "The language of the text in the channel resource"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Keywords",
+          "description": "Keywords associated with your channel"
+        },
+        "onBehalfOfContentOwner": {
+          "type": "string",
+          "title": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner."
+        }
+      },
+      "required": [
+        "channelId"
+      ]
     },
     "accessLevel": "write",
     "mode": "write",
@@ -342,24 +1555,132 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-update-channel",
-      "authPropNames": [],
-      "dynamicPropNames": [],
-      "props": []
+      "version": "0.0.3",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "channelId",
+        "defaultLanguage"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "channelId",
+          "type": "string",
+          "label": "Channel ID",
+          "description": "Select the channel to update. E.g. `UChkRx83xLq2nk55D8CRODVz`",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "label": "Description",
+          "description": "The channel's description",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "defaultLanguage",
+          "type": "string",
+          "label": "Language",
+          "description": "The language of the text in the channel resource",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "keywords",
+          "type": "string[]",
+          "label": "Keywords",
+          "description": "Keywords associated with your channel",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "onBehalfOfContentOwner",
+          "type": "string",
+          "label": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-update-channel",
-      "componentName": "update-channel"
+      "componentName": "Update Channel"
     }
   },
   {
     "integration": "youtube",
     "name": "youtube_update_playlist",
-    "description": "update-playlist via Pipedream",
+    "description": "Modifies a playlist. For example, you could change a playlist's title, description, or privacy status. [See the documentation](https://developers.google.com/youtube/v3/docs/playlists/update) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Playlist ID",
+          "description": "The identifier of the playlist to update. E.g. `PLJswo-CV0rmlwxKysf33cUnyBp8JztH0k`"
+        },
+        "onBehalfOfContentOwner": {
+          "type": "string",
+          "title": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner."
+        }
+      },
+      "required": [
+        "id"
+      ]
     },
     "accessLevel": "write",
     "mode": "write",
@@ -381,24 +1702,115 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-update-playlist",
-      "authPropNames": [],
-      "dynamicPropNames": [],
-      "props": []
+      "version": "0.0.5",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "id",
+        "onBehalfOfContentOwner"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "label": "Playlist ID",
+          "description": "The identifier of the playlist to update. E.g. `PLJswo-CV0rmlwxKysf33cUnyBp8JztH0k`",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": true,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "onBehalfOfContentOwner",
+          "type": "string",
+          "label": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": true,
+          "withLabel": false,
+          "appAuth": false
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-update-playlist",
-      "componentName": "update-playlist"
+      "componentName": "Update Playlist"
     }
   },
   {
     "integration": "youtube",
     "name": "youtube_update_video_details",
-    "description": "update-video-details via Pipedream",
+    "description": "Updates a video's metadata. [See the documentation](https://developers.google.com/youtube/v3/docs/videos/update) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "videoId": {
+          "type": "string",
+          "title": "Video ID",
+          "description": "Select the video to update. E.g. `wslno0wDSFQ`"
+        },
+        "title": {
+          "type": "string",
+          "title": "Title",
+          "description": "The video's title"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "The video's description"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "description": "A list of keyword tags associated with the video. Tags may contain spaces."
+        },
+        "regionCode": {
+          "type": "string",
+          "title": "Region Code",
+          "description": "The regionCode parameter instructs the API to return results for the specified country. The parameter value is an ISO 3166-1 alpha-2 country code. For example: US, GB, BR"
+        },
+        "categoryId": {
+          "type": "string",
+          "title": "Video Category Id",
+          "description": "Select the video's category"
+        },
+        "onBehalfOfContentOwner": {
+          "type": "string",
+          "title": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner."
+        }
+      },
+      "required": [
+        "videoId"
+      ]
     },
     "accessLevel": "write",
     "mode": "write",
@@ -420,24 +1832,162 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-update-video-details",
-      "authPropNames": [],
-      "dynamicPropNames": [],
-      "props": []
+      "version": "0.0.3",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "videoId",
+        "categoryId"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "videoId",
+          "type": "string",
+          "label": "Video ID",
+          "description": "Select the video to update. E.g. `wslno0wDSFQ`",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "label": "Title",
+          "description": "The video's title",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "label": "Description",
+          "description": "The video's description",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "tags",
+          "type": "string[]",
+          "label": "Tags",
+          "description": "A list of keyword tags associated with the video. Tags may contain spaces.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "regionCode",
+          "type": "string",
+          "label": "Region Code",
+          "description": "The regionCode parameter instructs the API to return results for the specified country. The parameter value is an ISO 3166-1 alpha-2 country code. For example: US, GB, BR",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "categoryId",
+          "type": "string",
+          "label": "Video Category Id",
+          "description": "Select the video's category",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "onBehalfOfContentOwner",
+          "type": "string",
+          "label": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-update-video-details",
-      "componentName": "update-video-details"
+      "componentName": "Update Video Details"
     }
   },
   {
     "integration": "youtube",
     "name": "youtube_upload_channel_banner",
-    "description": "upload-channel-banner via Pipedream",
+    "description": "Uploads a channel banner image to YouTube. [See the documentation](https://developers.google.com/youtube/v3/docs/channelBanners/insert) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "filePath": {
+          "type": "string",
+          "title": "File Path or URL",
+          "description": "Provide either a file URL or a path to a file in the /tmp directory (for example, /tmp/myFile.pdf)."
+        },
+        "onBehalfOfContentOwner": {
+          "type": "string",
+          "title": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner."
+        }
+      },
+      "required": [
+        "filePath"
+      ]
     },
     "accessLevel": "write",
     "mode": "write",
@@ -459,24 +2009,116 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-upload-channel-banner",
-      "authPropNames": [],
+      "version": "1.0.2",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
       "dynamicPropNames": [],
-      "props": []
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "infoAlert",
+          "type": "alert",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": true,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "filePath",
+          "type": "string",
+          "label": "File Path or URL",
+          "description": "Provide either a file URL or a path to a file in the /tmp directory (for example, /tmp/myFile.pdf).",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "onBehalfOfContentOwner",
+          "type": "string",
+          "label": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "syncDir",
+          "type": "dir",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": true,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-upload-channel-banner",
-      "componentName": "upload-channel-banner"
+      "componentName": "Upload Channel Banner"
     }
   },
   {
     "integration": "youtube",
     "name": "youtube_upload_thumbnail",
-    "description": "upload-thumbnail via Pipedream",
+    "description": "Uploads a custom video thumbnail to YouTube and sets it for a video. Note: Account must be [verified](https://www.youtube.com/verify). [See the documentation](https://developers.google.com/youtube/v3/docs/thumbnails/set) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "videoId": {
+          "type": "string",
+          "title": "Video ID",
+          "description": "Select the video to update. E.g. `wslno0wDSFQ`"
+        },
+        "filePath": {
+          "type": "string",
+          "title": "File Path or URL",
+          "description": "Provide either a file URL or a path to a file in the /tmp directory (for example, /tmp/myFile.pdf)."
+        },
+        "onBehalfOfContentOwner": {
+          "type": "string",
+          "title": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner."
+        }
+      },
+      "required": [
+        "videoId",
+        "filePath"
+      ]
     },
     "accessLevel": "write",
     "mode": "write",
@@ -498,24 +2140,157 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-upload-thumbnail",
-      "authPropNames": [],
-      "dynamicPropNames": [],
-      "props": []
+      "version": "1.0.2",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
+      "dynamicPropNames": [
+        "videoId"
+      ],
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "infoAlert",
+          "type": "alert",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": true,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "videoId",
+          "type": "string",
+          "label": "Video ID",
+          "description": "Select the video to update. E.g. `wslno0wDSFQ`",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": true,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "filePath",
+          "type": "string",
+          "label": "File Path or URL",
+          "description": "Provide either a file URL or a path to a file in the /tmp directory (for example, /tmp/myFile.pdf).",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "onBehalfOfContentOwner",
+          "type": "string",
+          "label": "On Behalf Of Content Owner",
+          "description": "This parameter can only be used in a properly authorized request. Note: This parameter is intended exclusively for YouTube content partners. \n\nThe `onBehalfOfContentOwner` parameter indicates that the request's authorization credentials identify a YouTube CMS user who is acting on behalf of the content owner specified in the parameter value. This parameter is intended for YouTube content partners that own and manage many different YouTube channels. It allows content owners to authenticate once and get access to all their video and channel data, without having to provide authentication credentials for each individual channel. The CMS account that the user authenticates with must be linked to the specified YouTube content owner.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "syncDir",
+          "type": "dir",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": true,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-upload-thumbnail",
-      "componentName": "upload-thumbnail"
+      "componentName": "Upload Thumbnail"
     }
   },
   {
     "integration": "youtube",
     "name": "youtube_upload_video",
-    "description": "upload-video via Pipedream",
+    "description": "Post a video to your channel. [See the documentation](https://developers.google.com/youtube/v3/docs/videos/insert) for more information",
     "inputSchema": {
       "type": "object",
-      "properties": {},
-      "required": []
+      "properties": {
+        "title": {
+          "type": "string",
+          "title": "Title",
+          "description": "The video's title"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "The video's description"
+        },
+        "filePath": {
+          "type": "string",
+          "title": "File Path or URL",
+          "description": "Provide either a file URL or a path to a file in the /tmp directory (for example, /tmp/myFile.pdf)."
+        },
+        "privacyStatus": {
+          "type": "string",
+          "title": "Privacy Status",
+          "description": "The video's privacy status"
+        },
+        "publishAt": {
+          "type": "string",
+          "title": "Publish At",
+          "description": "The date and time when the video is scheduled to publish. If you set this, the **Privacy Status** must be set to `private`. Only available to Youtube Partner accounts."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "description": "A list of keyword tags associated with the video. Tags may contain spaces."
+        },
+        "notifySubscribers": {
+          "type": "boolean",
+          "title": "Notify Subscribers",
+          "description": "Set to `true` if YouTube should send a notification about the new video to users who subscribe to the video's channel."
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "filePath"
+      ]
     },
     "accessLevel": "write",
     "mode": "write",
@@ -537,553 +2312,150 @@ export const YoutubePipedreamToolManifests: PipedreamActionToolManifest[] = [
       "kind": "pipedream_action",
       "app": "youtube_data_api",
       "componentId": "youtube_data_api-upload-video",
-      "authPropNames": [],
+      "version": "1.0.2",
+      "authPropNames": [
+        "youtubeDataApi"
+      ],
       "dynamicPropNames": [],
-      "props": []
+      "props": [
+        {
+          "name": "youtubeDataApi",
+          "type": "app",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": true
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "label": "Title",
+          "description": "The video's title",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "label": "Description",
+          "description": "The video's description",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "filePath",
+          "type": "string",
+          "label": "File Path or URL",
+          "description": "Provide either a file URL or a path to a file in the /tmp directory (for example, /tmp/myFile.pdf).",
+          "required": true,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "privacyStatus",
+          "type": "string",
+          "label": "Privacy Status",
+          "description": "The video's privacy status",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false,
+          "options": []
+        },
+        {
+          "name": "publishAt",
+          "type": "string",
+          "label": "Publish At",
+          "description": "The date and time when the video is scheduled to publish. If you set this, the **Privacy Status** must be set to `private`. Only available to Youtube Partner accounts.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "tags",
+          "type": "string[]",
+          "label": "Tags",
+          "description": "A list of keyword tags associated with the video. Tags may contain spaces.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "notifySubscribers",
+          "type": "boolean",
+          "label": "Notify Subscribers",
+          "description": "Set to `true` if YouTube should send a notification about the new video to users who subscribe to the video's channel.",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": false,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        },
+        {
+          "name": "syncDir",
+          "type": "dir",
+          "required": false,
+          "hidden": false,
+          "disabled": false,
+          "readOnly": true,
+          "remoteOptions": false,
+          "useQuery": false,
+          "reloadProps": false,
+          "withLabel": false,
+          "appAuth": false
+        }
+      ]
     },
     "source": {
       "app": "youtube_data_api",
       "componentKey": "youtube_data_api-upload-video",
-      "componentName": "upload-video"
-    }
-  },
-{
-    "integration": "youtube",
-    "name": "youtube_get_video_metrics",
-    "description": "Retrieve detailed analytics for a specific video. [See the documentation](https://developers.google.com/youtube/analytics/reference/reports/query)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "startDate": {
-          "type": "string",
-          "title": "Start Date",
-          "description": "The start date for fetching YouTube Analytics data. The value should be in `YYYY-MM-DD` format."
-        },
-        "endDate": {
-          "type": "string",
-          "title": "End Date",
-          "description": "The end date for fetching YouTube Analytics data. The value should be in `YYYY-MM-DD` format. The API response contains data up until the last day for which all metrics in the query are available at the time of the query. So, for example, if the request specifies an end date of July 5, 2017, and values for all of the requested metrics are only available through July 3, 2017, that will be the last date for which data is included in the response. (That is true even if data for some of the requested metrics is available for July 4, 2017.)"
-        },
-        "dimensions": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Dimensions",
-          "description": "A list of YouTube Analytics dimensions, such as `video` or `ageGroup`, `gender`. See the documentation for [channel reports](https://developers.google.com/youtube/analytics/channel_reports) or [content owner reports](https://developers.google.com/youtube/analytics/content_owner_reports) for a list of the reports that you can retrieve and the dimensions used for those reports. (The [Dimensions](https://developers.google.com/youtube/reporting#dimensions) document contains definitions for all of the dimensions.)."
-        },
-        "sort": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Sort",
-          "description": "A list of dimensions or metrics that determine the sort order for YouTube Analytics data. By default the sort order is ascending. The `-` prefix causes descending sort order. Eg. `-views`."
-        },
-        "maxResults": {
-          "type": "number",
-          "title": "Max Results",
-          "description": "The maximum number of rows to include in the response."
-        },
-        "idType": {
-          "type": "string",
-          "title": "ID Type",
-          "description": "The type of ID to use for the query. This can be either `My Channel`, `Channel ID`, or `Content Owner`."
-        },
-        "videoId": {
-          "type": "string",
-          "title": "Video ID",
-          "description": "The ID of the video for which you want to retrieve metrics. Eg. `pd1FJh59zxQ`."
-        },
-        "metrics": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Metrics",
-          "description": "Metrics, such as `views` or `likes`, `dislikes`. See the documentation for [channel reports](https://developers.google.com/youtube/analytics/channel_reports) or [content owner reports](https://developers.google.com/youtube/analytics/content_owner_reports) for a list of the reports that you can retrieve and the metrics available in each report. (The [Metrics](https://developers.google.com/youtube/reporting#metrics) document contains definitions for all of the metrics.)."
-        }
-      },
-      "required": [
-        "startDate",
-        "endDate",
-        "idType",
-        "videoId",
-        "metrics"
-      ]
-    },
-    "accessLevel": "read",
-    "mode": "read",
-    "risk": "safe",
-    "tags": [
-      "youtube",
-      "pipedream"
-    ],
-    "whenToUse": [],
-    "askBefore": [],
-    "safeDefaults": {},
-    "examples": [],
-    "followups": [],
-    "requiresScopes": [],
-    "idempotent": true,
-    "supportsDryRun": false,
-    "supportsBatch": false,
-    "execution": {
-      "kind": "pipedream_action",
-      "app": "youtube_analytics_api",
-      "componentId": "youtube_analytics_api-get-video-metrics",
-      "version": "0.0.4",
-      "authPropNames": [
-        "app"
-      ],
-      "dynamicPropNames": [
-        "idType"
-      ],
-      "props": [
-        {
-          "name": "app",
-          "type": "app",
-          "label": "Account",
-          "required": true,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": true
-        },
-        {
-          "name": "startDate",
-          "type": "string",
-          "label": "Start Date",
-          "description": "The start date for fetching YouTube Analytics data. The value should be in `YYYY-MM-DD` format.",
-          "required": true,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "endDate",
-          "type": "string",
-          "label": "End Date",
-          "description": "The end date for fetching YouTube Analytics data. The value should be in `YYYY-MM-DD` format. The API response contains data up until the last day for which all metrics in the query are available at the time of the query. So, for example, if the request specifies an end date of July 5, 2017, and values for all of the requested metrics are only available through July 3, 2017, that will be the last date for which data is included in the response. (That is true even if data for some of the requested metrics is available for July 4, 2017.)",
-          "required": true,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "dimensions",
-          "type": "string[]",
-          "label": "Dimensions",
-          "description": "A list of YouTube Analytics dimensions, such as `video` or `ageGroup`, `gender`. See the documentation for [channel reports](https://developers.google.com/youtube/analytics/channel_reports) or [content owner reports](https://developers.google.com/youtube/analytics/content_owner_reports) for a list of the reports that you can retrieve and the dimensions used for those reports. (The [Dimensions](https://developers.google.com/youtube/reporting#dimensions) document contains definitions for all of the dimensions.).",
-          "required": false,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "sort",
-          "type": "string[]",
-          "label": "Sort",
-          "description": "A list of dimensions or metrics that determine the sort order for YouTube Analytics data. By default the sort order is ascending. The `-` prefix causes descending sort order. Eg. `-views`.",
-          "required": false,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "maxResults",
-          "type": "integer",
-          "label": "Max Results",
-          "description": "The maximum number of rows to include in the response.",
-          "required": false,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "idType",
-          "type": "string",
-          "label": "ID Type",
-          "description": "The type of ID to use for the query. This can be either `My Channel`, `Channel ID`, or `Content Owner`.",
-          "required": true,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": true,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "ids",
-          "type": "string",
-          "label": "Channel ID OR Content Owner Name",
-          "description": "The use of this property depends on the value of the `idType` prop.  If `idType` is set to `MINE`, then this property is unused. If `idType` is set to `channelId`, then this property is used to specify the Channel ID for this action. If `idType` is set to `contentOwner`, then this property is used to specify the Content Owner Name for this action.",
-          "required": false,
-          "hidden": true,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "videoId",
-          "type": "string",
-          "label": "Video ID",
-          "description": "The ID of the video for which you want to retrieve metrics. Eg. `pd1FJh59zxQ`.",
-          "required": true,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "metrics",
-          "type": "string[]",
-          "label": "Metrics",
-          "description": "Metrics, such as `views` or `likes`, `dislikes`. See the documentation for [channel reports](https://developers.google.com/youtube/analytics/channel_reports) or [content owner reports](https://developers.google.com/youtube/analytics/content_owner_reports) for a list of the reports that you can retrieve and the metrics available in each report. (The [Metrics](https://developers.google.com/youtube/reporting#metrics) document contains definitions for all of the metrics.).",
-          "required": true,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        }
-      ]
-    },
-    "source": {
-      "app": "youtube_analytics_api",
-      "componentKey": "youtube_analytics_api-get-video-metrics",
-      "componentName": "Get Video Metrics"
-    }
-  },
-  {
-    "integration": "youtube",
-    "name": "youtube_list_channel_reports",
-    "description": "Fetch summary analytics reports for a specified youtube channel. Optional filters include date range and report type. [See the documentation](https://developers.google.com/youtube/analytics/reference/reports/query)",
-    "inputSchema": {
-      "type": "object",
-      "properties": {},
-      "required": []
-    },
-    "accessLevel": "read",
-    "mode": "read",
-    "risk": "safe",
-    "tags": [
-      "youtube",
-      "pipedream"
-    ],
-    "whenToUse": [],
-    "askBefore": [],
-    "safeDefaults": {},
-    "examples": [],
-    "followups": [],
-    "requiresScopes": [],
-    "idempotent": true,
-    "supportsDryRun": false,
-    "supportsBatch": false,
-    "execution": {
-      "kind": "pipedream_action",
-      "app": "youtube_analytics_api",
-      "componentId": "youtube_analytics_api-list-channel-reports",
-      "version": "0.0.4",
-      "authPropNames": [],
-      "dynamicPropNames": [],
-      "props": []
-    },
-    "source": {
-      "app": "youtube_analytics_api",
-      "componentKey": "youtube_analytics_api-list-channel-reports",
-      "componentName": "List Channel Reports"
-    }
-  },
-  {
-    "integration": "youtube",
-    "name": "youtube_query_custom_analytics",
-    "description": "Execute a custom analytics query using specified metrics, dimensions, filters, and date ranges. Requires query parameters to configure. [See the documentation](https://developers.google.com/youtube/analytics/reference/reports/query).",
-    "inputSchema": {
-      "type": "object",
-      "properties": {
-        "startDate": {
-          "type": "string",
-          "title": "Start Date",
-          "description": "The start date for fetching YouTube Analytics data. The value should be in `YYYY-MM-DD` format."
-        },
-        "endDate": {
-          "type": "string",
-          "title": "End Date",
-          "description": "The end date for fetching YouTube Analytics data. The value should be in `YYYY-MM-DD` format. The API response contains data up until the last day for which all metrics in the query are available at the time of the query. So, for example, if the request specifies an end date of July 5, 2017, and values for all of the requested metrics are only available through July 3, 2017, that will be the last date for which data is included in the response. (That is true even if data for some of the requested metrics is available for July 4, 2017.)"
-        },
-        "dimensions": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Dimensions",
-          "description": "A list of YouTube Analytics dimensions, such as `video` or `ageGroup`, `gender`. See the documentation for [channel reports](https://developers.google.com/youtube/analytics/channel_reports) or [content owner reports](https://developers.google.com/youtube/analytics/content_owner_reports) for a list of the reports that you can retrieve and the dimensions used for those reports. (The [Dimensions](https://developers.google.com/youtube/reporting#dimensions) document contains definitions for all of the dimensions.)."
-        },
-        "sort": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Sort",
-          "description": "A list of dimensions or metrics that determine the sort order for YouTube Analytics data. By default the sort order is ascending. The `-` prefix causes descending sort order. Eg. `-views`."
-        },
-        "maxResults": {
-          "type": "number",
-          "title": "Max Results",
-          "description": "The maximum number of rows to include in the response."
-        },
-        "idType": {
-          "type": "string",
-          "title": "ID Type",
-          "description": "The type of ID to use for the query. This can be either `My Channel`, `Channel ID`, or `Content Owner`."
-        },
-        "metrics": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Metrics",
-          "description": "Metrics, such as `views` or `likes`, `dislikes`. See the documentation for [channel reports](https://developers.google.com/youtube/analytics/channel_reports) or [content owner reports](https://developers.google.com/youtube/analytics/content_owner_reports) for a list of the reports that you can retrieve and the metrics available in each report. (The [Metrics](https://developers.google.com/youtube/reporting#metrics) document contains definitions for all of the metrics.)."
-        },
-        "filters": {
-          "type": "object",
-          "title": "Filters",
-          "description": "A list of filters that should be applied when retrieving YouTube Analytics data. The documentation for [channel reports](https://developers.google.com/youtube/analytics/channel_reports) and [content owner reports](https://developers.google.com/youtube/analytics/content_owner_reports) identifies the dimensions that can be used to filter each report, and the [Dimensions](https://developers.google.com/youtube/analytics/dimsmets/dims) document defines those dimensions.\n\nIf a request uses multiple filters the returned result table will satisfy both filters. For example, a filters parameter value of `{\"video\":\"dMH0bHeiRNg\",\"country\":\"IT\"}` restricts the result set to include data for the given video in Italy.\n\nSpecifying multiple values for a filter\nThe API supports the ability to specify multiple values for the [video](https://developers.google.com/youtube/reporting#supported-reports), [playlist](https://developers.google.com/youtube/reporting#supported-reports), and [channel](https://developers.google.com/youtube/reporting#supported-reports) filters. To do so, specify a separated list of the video, playlist, or channel IDs for which the API response should be filtered. For example, a filters parameter value of `{\"video\":\"pd1FJh59zxQ,Zhawgd0REhA\",\"country\":\"IT\"}` restricts the result set to include data for the given videos in Italy. The parameter value can specify up to 500 IDs. For more details on the filters parameter, see the filters parameter in [Parameters](https://developers.google.com/youtube/analytics/reference/reports/query#Parameters) section."
-        }
-      },
-      "required": [
-        "startDate",
-        "endDate",
-        "idType",
-        "metrics"
-      ]
-    },
-    "accessLevel": "read",
-    "mode": "read",
-    "risk": "safe",
-    "tags": [
-      "youtube",
-      "pipedream"
-    ],
-    "whenToUse": [],
-    "askBefore": [],
-    "safeDefaults": {},
-    "examples": [],
-    "followups": [],
-    "requiresScopes": [],
-    "idempotent": true,
-    "supportsDryRun": false,
-    "supportsBatch": false,
-    "execution": {
-      "kind": "pipedream_action",
-      "app": "youtube_analytics_api",
-      "componentId": "youtube_analytics_api-query-custom-analytics",
-      "version": "0.0.4",
-      "authPropNames": [
-        "app"
-      ],
-      "dynamicPropNames": [
-        "idType"
-      ],
-      "props": [
-        {
-          "name": "app",
-          "type": "app",
-          "label": "Account",
-          "required": true,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": true
-        },
-        {
-          "name": "startDate",
-          "type": "string",
-          "label": "Start Date",
-          "description": "The start date for fetching YouTube Analytics data. The value should be in `YYYY-MM-DD` format.",
-          "required": true,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "endDate",
-          "type": "string",
-          "label": "End Date",
-          "description": "The end date for fetching YouTube Analytics data. The value should be in `YYYY-MM-DD` format. The API response contains data up until the last day for which all metrics in the query are available at the time of the query. So, for example, if the request specifies an end date of July 5, 2017, and values for all of the requested metrics are only available through July 3, 2017, that will be the last date for which data is included in the response. (That is true even if data for some of the requested metrics is available for July 4, 2017.)",
-          "required": true,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "dimensions",
-          "type": "string[]",
-          "label": "Dimensions",
-          "description": "A list of YouTube Analytics dimensions, such as `video` or `ageGroup`, `gender`. See the documentation for [channel reports](https://developers.google.com/youtube/analytics/channel_reports) or [content owner reports](https://developers.google.com/youtube/analytics/content_owner_reports) for a list of the reports that you can retrieve and the dimensions used for those reports. (The [Dimensions](https://developers.google.com/youtube/reporting#dimensions) document contains definitions for all of the dimensions.).",
-          "required": false,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "sort",
-          "type": "string[]",
-          "label": "Sort",
-          "description": "A list of dimensions or metrics that determine the sort order for YouTube Analytics data. By default the sort order is ascending. The `-` prefix causes descending sort order. Eg. `-views`.",
-          "required": false,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "maxResults",
-          "type": "integer",
-          "label": "Max Results",
-          "description": "The maximum number of rows to include in the response.",
-          "required": false,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "idType",
-          "type": "string",
-          "label": "ID Type",
-          "description": "The type of ID to use for the query. This can be either `My Channel`, `Channel ID`, or `Content Owner`.",
-          "required": true,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": true,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "ids",
-          "type": "string",
-          "label": "Channel ID OR Content Owner Name",
-          "description": "The use of this property depends on the value of the `idType` prop.  If `idType` is set to `MINE`, then this property is unused. If `idType` is set to `channelId`, then this property is used to specify the Channel ID for this action. If `idType` is set to `contentOwner`, then this property is used to specify the Content Owner Name for this action.",
-          "required": false,
-          "hidden": true,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "metrics",
-          "type": "string[]",
-          "label": "Metrics",
-          "description": "Metrics, such as `views` or `likes`, `dislikes`. See the documentation for [channel reports](https://developers.google.com/youtube/analytics/channel_reports) or [content owner reports](https://developers.google.com/youtube/analytics/content_owner_reports) for a list of the reports that you can retrieve and the metrics available in each report. (The [Metrics](https://developers.google.com/youtube/reporting#metrics) document contains definitions for all of the metrics.).",
-          "required": true,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        },
-        {
-          "name": "filters",
-          "type": "object",
-          "label": "Filters",
-          "description": "A list of filters that should be applied when retrieving YouTube Analytics data. The documentation for [channel reports](https://developers.google.com/youtube/analytics/channel_reports) and [content owner reports](https://developers.google.com/youtube/analytics/content_owner_reports) identifies the dimensions that can be used to filter each report, and the [Dimensions](https://developers.google.com/youtube/analytics/dimsmets/dims) document defines those dimensions.\n\nIf a request uses multiple filters the returned result table will satisfy both filters. For example, a filters parameter value of `{\"video\":\"dMH0bHeiRNg\",\"country\":\"IT\"}` restricts the result set to include data for the given video in Italy.\n\nSpecifying multiple values for a filter\nThe API supports the ability to specify multiple values for the [video](https://developers.google.com/youtube/reporting#supported-reports), [playlist](https://developers.google.com/youtube/reporting#supported-reports), and [channel](https://developers.google.com/youtube/reporting#supported-reports) filters. To do so, specify a separated list of the video, playlist, or channel IDs for which the API response should be filtered. For example, a filters parameter value of `{\"video\":\"pd1FJh59zxQ,Zhawgd0REhA\",\"country\":\"IT\"}` restricts the result set to include data for the given videos in Italy. The parameter value can specify up to 500 IDs. For more details on the filters parameter, see the filters parameter in [Parameters](https://developers.google.com/youtube/analytics/reference/reports/query#Parameters) section.",
-          "required": false,
-          "hidden": false,
-          "disabled": false,
-          "readOnly": false,
-          "remoteOptions": false,
-          "useQuery": false,
-          "reloadProps": false,
-          "withLabel": false,
-          "appAuth": false
-        }
-      ]
-    },
-    "source": {
-      "app": "youtube_analytics_api",
-      "componentKey": "youtube_analytics_api-query-custom-analytics",
-      "componentName": "Query Custom Analytics"
+      "componentName": "Upload Video"
     }
   }
-];
+] satisfies PipedreamActionToolManifest[];
