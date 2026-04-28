@@ -55,6 +55,20 @@ Then just ask OpenClaw to do things:
 - "Add a row to my Google Sheet"
 - "Create a new GitHub issue"
 
+## ClawLink vs Composio
+
+| | **ClawLink** | **Composio** |
+|---|---|---|
+| **Built for** | OpenClaw users first | Multi-agent frameworks (LangChain, CrewAI, AutoGen, etc.) |
+| **Experience** | Native plugin — install once, use everywhere in OpenClaw | Agent toolkit — wire actions into your agent code |
+| **Auth** | Hosted OAuth — click "Connect Slack," we handle the rest | Bring-your-own OAuth or self-managed connections |
+| **Where credentials live** | Encrypted on our edge — never on your machine | Agent-side or self-hosted infrastructure |
+| **How you use it** | Chat naturally: "send an email to sarah" | Programmatic: define tools and call them in code |
+| **Logs & debugging** | Dashboard with request history, latency, and errors | Developer-facing logging and tracing |
+| **Best for** | Non-technical users who want integrations working in OpenClaw without code | Developers building custom agents across multiple frameworks |
+
+**Bottom line:** If you use OpenClaw and want 40+ integrations to "just work" through chat, ClawLink is purpose-built for that. If you are writing Python agents across multiple frameworks, Composio is the broader toolkit.
+
 ## Supported integrations
 
 | Category | Integrations |

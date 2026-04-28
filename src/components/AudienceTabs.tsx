@@ -19,7 +19,7 @@ type Audience = "human" | "agent";
 const AGENT_PROMPT = `Read ${CLAWLINK_SKILL_URL} and follow the instructions to use ClawLink for third-party integrations.`;
 
 export default function AudienceTabs() {
-  const [audience, setAudience] = useState<Audience>("agent");
+  const [audience, setAudience] = useState<Audience>("human");
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -28,13 +28,13 @@ export default function AudienceTabs() {
           active={audience === "human"}
           onClick={() => setAudience("human")}
           icon={<User className="h-4 w-4" aria-hidden />}
-          label="I'm a Human"
+          label="Set up yourself"
         />
         <TabButton
           active={audience === "agent"}
           onClick={() => setAudience("agent")}
           icon={<Bot className="h-4 w-4" aria-hidden />}
-          label="I'm an Agent"
+          label="Let my AI set itself up"
         />
       </div>
 
@@ -85,68 +85,51 @@ function HumanPanel() {
         </p>
         <CopyButton text={OPENCLAW_PLUGIN_SETUP_PROMPT} />
       </div>
-      <div className="space-y-4 text-[15px] leading-[1.9] text-gray-700">
+      <div className="space-y-5 text-[15px] leading-[1.9] text-gray-700">
         <p>
-          ClawLink setup for OpenClaw — third-party plugin, not affiliated with OpenClaw. Verify the package at{" "}
-          <a
-            href={CLAWLINK_NPM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-gray-900 underline"
-          >
-            {OPENCLAW_PLUGIN_PACKAGE}
-          </a>{" "}
-          or{" "}
-          <a
-            href={CLAWLINK_GITHUB_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-900 underline"
-          >
-            github.com/hith3sh/clawlink
-          </a>
-          . Releases are published with an npm provenance attestation in the public Sigstore transparency log — see{" "}
+          ClawLink is a third-party plugin for OpenClaw. It is open source, verifiable, and safe to use.{" "}
           <a
             href={CLAWLINK_VERIFY_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-900 underline"
           >
-            claw-link.dev/verify
+            Verify it here
           </a>
           .
         </p>
-        <p>
-          <span className="font-semibold text-gray-900">Step 1</span> — install the plugin:{" "}
-          <span className="font-mono text-gray-900">{OPENCLAW_PLUGIN_INSTALL_COMMAND}</span>.
-        </p>
-        <p>
-          <span className="font-semibold text-gray-900">Step 2</span> — create an API key at{" "}
-          <a
-            href={CLAWLINK_API_SETTINGS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-gray-900 underline"
-          >
-            claw-link.dev/dashboard/settings?tab=api
-          </a>
-          .
-        </p>
-        <p>
-          <span className="font-semibold text-gray-900">Step 3</span> — paste the{" "}
-          <span className="font-mono text-gray-900">/clawlink login &lt;key&gt;</span> command from the dashboard into your OpenClaw chat as a standalone message. OpenClaw&apos;s gateway routes slash commands directly to the ClawLink plugin handler (fast path bypasses the model), so the AI never sees the key. It&apos;s stored locally in{" "}
-          <span className="font-mono text-gray-900">~/.openclaw/openclaw.json</span> and only sent to{" "}
-          <span className="font-mono text-gray-900">claw-link.dev</span>. Docs:{" "}
-          <a
-            href={CLAWLINK_OPENCLAW_DOCS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-900 underline"
-          >
-            docs.claw-link.dev/openclaw
-          </a>
-          .
-        </p>
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <p className="font-semibold text-gray-900">Step 1 — Install the plugin</p>
+          <p className="mt-1">Copy and paste this into your terminal or OpenClaw:</p>
+          <code className="mt-2 block rounded-lg bg-white px-3 py-2 text-sm font-mono text-gray-900 border border-gray-200">
+            {OPENCLAW_PLUGIN_INSTALL_COMMAND}
+          </code>
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <p className="font-semibold text-gray-900">Step 2 — Get your personal access code</p>
+          <p className="mt-1">
+            Go to your{" "}
+            <a
+              href={CLAWLINK_API_SETTINGS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-900 underline"
+            >
+              ClawLink dashboard
+            </a>{" "}
+            and copy your API key.
+          </p>
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <p className="font-semibold text-gray-900">Step 3 — Log in</p>
+          <p className="mt-1">Paste this into your OpenClaw chat as a standalone message:</p>
+          <code className="mt-2 block rounded-lg bg-white px-3 py-2 text-sm font-mono text-gray-900 border border-gray-200">
+            /clawlink login {"<your-api-key>"}
+          </code>
+          <p className="mt-2 text-sm text-gray-500">
+            Your key is stored safely on your computer and never seen by the AI.
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -175,8 +158,8 @@ function AgentPanel() {
             prompt
           </span>
         </div>
-        <pre className="overflow-x-auto px-5 py-6 text-[15px] leading-8 text-gray-800">
-          <code>
+        <div className="px-5 py-6 text-[15px] leading-8 text-gray-800">
+          <p className="break-words">
             Read{" "}
             <a
               href={CLAWLINK_SKILL_URL}
@@ -185,10 +168,13 @@ function AgentPanel() {
               className="font-mono text-[var(--brand-hover)] underline decoration-[var(--brand)]/40 underline-offset-4 hover:decoration-[var(--brand)]"
             >
               {CLAWLINK_SKILL_URL}
-            </a>{" "}
-            and follow the instructions to use ClawLink for third-party integrations.
-          </code>
-        </pre>
+            </a>
+            .
+          </p>
+          <p className="mt-1 break-words">
+            Follow the instructions to use ClawLink for third-party integrations.
+          </p>
+        </div>
       </div>
 
       <ol className="mt-8 space-y-4 text-[15px] leading-7 text-gray-700">
