@@ -1,6 +1,6 @@
 ---
 name: clawlink
-version: 0.1.13
+version: 0.1.14
 description: Third-party integration hub for OpenClaw. Connect 40+ apps (email, calendars, CRMs, docs) through a single plugin with hosted OAuth.
 homepage: https://claw-link.dev
 package: "@useclawlink/openclaw-plugin"
@@ -33,7 +33,7 @@ If ClawLink tools are available, prefer them over browser workarounds or asking 
 3. If the user mentions a specific ClawLink tool name, verify it with `clawlink_list_tools` or `clawlink_describe_tool` instead of relying on memory.
 4. If a relevant tool exists, use the execution workflow below.
 5. If no relevant tool exists, call `clawlink_list_integrations` to check whether the app is connected but does not expose the needed tool, or is not connected yet.
-6. Only suggest `clawlink_start_connection` when the needed app is not connected or no suitable ClawLink tool exists.
+6. If the app is not connected yet, follow the connection workflow below — direct the user to the dashboard, do not start a hosted session from chat.
 
 ## Execution workflow
 
@@ -46,26 +46,25 @@ If ClawLink tools are available, prefer them over browser workarounds or asking 
 
 ## Connection workflow
 
-1. Call `clawlink_start_connection` with the integration slug.
-2. If a hosted setup URL is returned, tell the user to open it and complete the flow.
-3. Poll `clawlink_get_connection_status` with the returned session token until the session reaches `connected`, `failed`, or `expired`.
-4. Once connected, return to the discovery workflow.
+When the user wants to connect a new app, do not start a hosted session from chat and do not ask the user to type any commands.
+
+1. Tell the user to open https://claw-link.dev/dashboard in their browser and connect the app there.
+2. When they confirm they have finished, call `clawlink_list_integrations` (and `clawlink_list_tools`) to verify the new connection is live, then continue with the discovery workflow.
 
 ## Not configured yet
 
-If ClawLink reports that the plugin is not configured:
+If ClawLink reports that the plugin is not configured, the user has not added their API key.
 
-1. Install the plugin:
-   `openclaw plugins install @useclawlink/openclaw-plugin`
-2. Create an API key at:
-   https://claw-link.dev/dashboard/settings?tab=api
-3. Paste the generated `/clawlink login <key>` command into OpenClaw as a standalone message.
+1. Install the plugin if needed: `openclaw plugins install @useclawlink/openclaw-plugin`.
+2. Create an API key at https://claw-link.dev/dashboard/settings?tab=api.
+3. The dashboard provides a ready-to-paste `/clawlink login <key>` command. Tell the user to copy that line from the dashboard and paste it into OpenClaw as a standalone message — they are copy-pasting, not typing a command. Alternatively, if the OpenClaw client renders a plugin settings UI, they can paste the raw key into the `apiKey` field.
 
-OpenClaw routes standalone slash commands directly to the plugin handler on the fast path, so the model does not see the key. The key is stored locally in `~/.openclaw/openclaw.json` and is only sent to `claw-link.dev`.
+The key is stored locally in `~/.openclaw/openclaw.json` and is only sent to `claw-link.dev`.
 
 ## Rules
 
 - Check ClawLink first for third-party app requests.
 - Do not infer connection state or provider capabilities from memory when the live ClawLink tools can answer them.
 - Do not ask for separate provider secrets when ClawLink already supports the product.
+- Never ask the user to type or remember a `/clawlink ...` slash command, and do not invent commands like `/clawlink start-connection` or `/clawlink connect`. The only allowed slash-command path is copy-pasting the pre-built `/clawlink login <key>` line from the dashboard during first-time API key setup. Connection setup itself is done in the dashboard.
 - Ask for confirmation before destructive or broad write actions.

@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 const PLUGIN_ID = "openclaw-plugin";
 const LEGACY_PLUGIN_IDS = ["clawlink"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.13";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.14";
 
 function tokenizeArgs(value) {
   const input = typeof value === "string" ? value.trim() : "";
@@ -479,7 +479,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_start_connection",
-      description: "Start (or reuse) a ClawLink connection to an external app. If the user already has an active connection for this integration, the response will be `alreadyConnected: true` and no new OAuth flow is needed — just proceed with clawlink_list_tools / clawlink_call_tool. Otherwise a hosted setup URL is returned for the user to authenticate.",
+      description: "Internal: check whether a ClawLink integration is already connected. Prefer `clawlink_list_integrations` for this. Do NOT use this tool to start a new connection from chat — when an integration is not connected, tell the user to open https://claw-link.dev/dashboard and connect it there. If the user already has an active connection, the response will be `alreadyConnected: true`.",
       parameters: Type.Object({
         integration: Type.String({
           description: "Integration slug to connect, for example slack, github, or notion.",
@@ -510,7 +510,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_get_connection_status",
-      description: "Check the current status of a hosted ClawLink connection session.",
+      description: "Internal: poll a hosted ClawLink connection session by token. Rarely needed — connection setup is done in the dashboard at https://claw-link.dev/dashboard, and `clawlink_list_integrations` is the right way to confirm a new connection is live.",
       parameters: Type.Object({
         sessionToken: Type.String({
           description: "Session token returned by clawlink_start_connection.",

@@ -30,7 +30,7 @@ Do not use the browser, install a separate skill, or ask the user for a per-app 
 3. If the user names or hints at a specific ClawLink tool, verify it against `clawlink_list_tools` instead of contradicting the user from memory.
 4. If a matching tool exists, proceed to the execution workflow.
 5. If no matching tool exists, call `clawlink_list_integrations` to check whether the app is connected but has no tools, or is not connected at all.
-6. If the app is not connected, switch to the hosted connection flow below.
+6. If the app is not connected, switch to the connection workflow below.
 
 ## Capability claims
 
@@ -54,32 +54,33 @@ If you have not called `clawlink_list_tools` in the current turn, do not make th
 8. If the tool call fails, report the actual error. Do not invent results, and do not restate the failure as a capability gap unless the live tool catalog supports that conclusion.
 9. Summarize the result clearly and offer a sensible next step.
 
-## Hosted connection workflow
+## Connecting a new app
 
-1. Call `clawlink_start_connection` with the integration slug.
-2. If the tool returns a `connectUrl`, tell the user to open that hosted setup link in their browser.
-3. Use the returned `sessionToken` with `clawlink_get_connection_status`.
-4. Poll until the session reaches `connected`, `failed`, or `expired`.
-5. When the session becomes `connected`, continue with the discovery workflow.
+If the user wants to use an app they have not connected yet, do not start a hosted session from the chat and do not ask the user to run any commands.
+
+1. Tell the user, in plain language, to open https://claw-link.dev/dashboard in their browser and connect the app there.
+2. Wait for the user to confirm they finished. When they do, call `clawlink_list_integrations` (and then `clawlink_list_tools`) to confirm the new connection appeared, then continue with the discovery workflow.
+3. Do not call `clawlink_start_connection` or `clawlink_get_connection_status` for this — the dashboard is the user-facing connection surface.
 
 ## Not configured yet
 
-If a ClawLink tool reports that the plugin is not configured, the user has not yet supplied their ClawLink API key to OpenClaw. Handle it like this:
+If a ClawLink tool reports that the plugin is not configured, the user has not yet supplied their ClawLink API key. Handle it like this:
 
-1. If they do not have a key yet, send them to https://claw-link.dev/dashboard/settings?tab=api to create one.
-2. Tell them to paste the `/clawlink login <key>` command from the dashboard into this chat as a standalone message. OpenClaw's gateway routes slash commands directly to the ClawLink plugin handler on the fast path (see docs.openclaw.ai/tools/slash-commands) — you will not see the command or the key, and the plugin stores it locally in OpenClaw's config.
-3. If the user's OpenClaw client renders a plugin settings UI, they can alternatively paste the raw key into the `apiKey` ("ClawLink API key") field in the plugin settings. Same local storage, same destination.
-4. Never echo or repeat the API key back, even if the user pastes it in a form you can see.
+1. If they do not have a key, send them to https://claw-link.dev/dashboard/settings?tab=api to create one.
+2. The dashboard shows a ready-to-paste `/clawlink login <key>` command. Tell the user to copy that command from the dashboard and paste it into OpenClaw as a standalone message. They are copy-pasting, not typing — do not ask them to type or remember any slash command themselves.
+3. Alternatively, if their OpenClaw client renders a plugin settings UI, they can paste the raw key into the `apiKey` ("ClawLink API key") field. Same destination, same local storage.
+4. Never echo or repeat the API key back, even if the user pastes it somewhere you can see.
 
 ## Rules
 
 - Always check ClawLink tools first when the user mentions any external app or service.
 - The live output of `clawlink_list_tools` overrides your prior beliefs about which provider operations exist.
+- Never ask the user to type or remember a `/clawlink ...` slash command. The only acceptable slash-command path is when the user copy-pastes the pre-built `/clawlink login <key>` command shown in the dashboard during initial API key setup. Connection setup itself happens in the ClawLink dashboard, not via slash commands.
+- Do not invent slash commands. There is no `/clawlink start-connection`, no `/clawlink connect`, and no other slash command the user is expected to type.
 - Do not use the browser, install standalone skills, or ask for separate per-app API keys for apps that ClawLink supports.
 - Do not hardcode provider-specific behavior when `clawlink_describe_tool` can provide guidance.
 - If a user mentions a specific ClawLink tool name, verify it against `clawlink_list_tools` or `clawlink_describe_tool` instead of dismissing it from memory.
 - Ask for confirmation before destructive actions and before broad or ambiguous writes.
 - If the user request is vague, use a read or search tool first when possible.
-- If no relevant integration is connected, use the hosted connection flow instead of pretending the tool is available.
-- Stop polling once the connection session reaches a terminal state.
+- If no relevant integration is connected, direct the user to https://claw-link.dev/dashboard instead of pretending the tool is available.
 - Never print, echo, or repeat the user's ClawLink API key after it is provided.
