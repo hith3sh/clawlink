@@ -1,6 +1,6 @@
 ---
 name: clawlink
-version: 0.1.14
+version: 0.1.15
 description: Third-party integration hub for OpenClaw. Connect 40+ apps (email, calendars, CRMs, docs) through a single plugin with hosted OAuth.
 homepage: https://claw-link.dev
 package: "@useclawlink/openclaw-plugin"

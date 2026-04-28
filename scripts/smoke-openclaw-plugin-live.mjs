@@ -41,7 +41,9 @@ function loadApiKey() {
   const configPath = path.join(os.homedir(), ".openclaw", "openclaw.json");
   const raw = readFileSync(configPath, "utf8");
   const parsed = JSON.parse(raw);
-  const key = parsed?.plugins?.entries?.["openclaw-plugin"]?.config?.apiKey;
+  const key =
+    parsed?.plugins?.entries?.["clawlink"]?.config?.apiKey ??
+    parsed?.plugins?.entries?.["openclaw-plugin"]?.config?.apiKey;
 
   if (!isNonEmptyString(key)) {
     throw new Error("No ClawLink API key found in ~/.openclaw/openclaw.json.");
@@ -54,7 +56,7 @@ function createFakeApi(apiKey) {
   const tools = new Map();
 
   return {
-    id: "openclaw-plugin",
+    id: "clawlink",
     pluginConfig: {
       apiKey,
     },

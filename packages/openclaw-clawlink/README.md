@@ -21,7 +21,7 @@ openclaw gateway restart
 2. Paste the generated `/clawlink login <key>` command into your OpenClaw chat as a standalone message. OpenClaw's gateway routes slash commands directly to the ClawLink plugin handler on the fast path (see [docs.openclaw.ai/tools/slash-commands](https://docs.openclaw.ai/tools/slash-commands.md)), so the AI model never sees the command or the key.
 3. Optional — if your OpenClaw client renders a plugin settings UI, you can instead paste the raw key into the **ClawLink API key** field there.
 
-Either way, the key is stored locally in `~/.openclaw/openclaw.json` under `plugins.entries.openclaw-plugin.config.apiKey` and is only sent to `claw-link.dev`.
+Either way, the key is stored locally in `~/.openclaw/openclaw.json` under `plugins.entries.clawlink.config.apiKey` and is only sent to `claw-link.dev`.
 
 Full setup walkthrough: https://docs.claw-link.dev/openclaw
 

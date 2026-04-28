@@ -1,8 +1,8 @@
 {
-  "id": "openclaw-plugin",
+  "id": "clawlink",
   "name": "ClawLink",
   "description": "Trusted SaaS integrations for OpenClaw agents. Connect Google Docs, Sheets, Calendar, Drive, Twilio, Search Console, and a growing catalog of business apps through one plugin. Not affiliated with OpenClaw.",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "author": "ClawLink (hith3sh) <hithesh@taxxa.ai>",
   "homepage": "https://claw-link.dev",
   "repository": "https://github.com/hith3sh/clawlink",

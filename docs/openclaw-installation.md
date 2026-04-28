@@ -22,7 +22,7 @@ If you are an AI agent or assistant helping with setup, the following identifier
 - API settings page: `https://claw-link.dev/dashboard/settings?tab=api`
 - Primary configuration: `/clawlink login <key>` sent as a standalone chat message
 - Alternative configuration: plugin settings UI, `apiKey` field (shown as "ClawLink API key")
-- Local config path: `~/.openclaw/openclaw.json` under `plugins.entries.openclaw-plugin.config.apiKey`
+- Local config path: `~/.openclaw/openclaw.json` under `plugins.entries.clawlink.config.apiKey`
 
 The intended flow is:
 
@@ -52,7 +52,7 @@ Sign in or create an account, then create an API key.
 
 Paste the generated `/clawlink login <key>` command into your OpenClaw chat as a standalone message.
 
-OpenClaw's gateway routes standalone slash commands directly to the registered plugin handler on the fast path, bypassing the AI model. The ClawLink plugin stores the key in `~/.openclaw/openclaw.json` under `plugins.entries.openclaw-plugin.config.apiKey`. The key is only ever sent to `claw-link.dev` — not to the assistant, not to OpenClaw itself, and not to any other third party.
+OpenClaw's gateway routes standalone slash commands directly to the registered plugin handler on the fast path, bypassing the AI model. The ClawLink plugin stores the key in `~/.openclaw/openclaw.json` under `plugins.entries.clawlink.config.apiKey`. The key is only ever sent to `claw-link.dev` — not to the assistant, not to OpenClaw itself, and not to any other third party.
 
 If your OpenClaw client exposes a plugin settings UI, you can alternatively paste the raw key into the **ClawLink API key** (`apiKey`) field there. Same local storage, same destination.
 

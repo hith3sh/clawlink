@@ -13,7 +13,7 @@ The plugin package is published as:
 The OpenClaw plugin id is:
 
 ```bash
-openclaw-plugin
+clawlink
 ```
 
 ## Link the local package into OpenClaw
@@ -49,7 +49,7 @@ You can still configure the plugin manually if needed by adding the ClawLink API
 {
   plugins: {
     entries: {
-      "openclaw-plugin": {
+      "clawlink": {
         enabled: true,
         config: {
           apiKey: "cllk_live_..."
