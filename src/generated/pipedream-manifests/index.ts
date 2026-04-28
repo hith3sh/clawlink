@@ -5,12 +5,14 @@ import { CalendlyPipedreamToolManifests } from "./calendly.generated";
 import { ClickupPipedreamToolManifests } from "./clickup.generated";
 import { FacebookPipedreamToolManifests } from "./facebook.generated";
 import { GmailPipedreamToolManifests } from "./gmail.generated";
+import { GoogleAdsPipedreamToolManifests } from "./google-ads.generated";
 import { GoogleAnalyticsPipedreamToolManifests } from "./google-analytics.generated";
 import { GoogleCalendarPipedreamToolManifests } from "./google-calendar.generated";
 import { GoogleDocsPipedreamToolManifests } from "./google-docs.generated";
 import { GoogleDrivePipedreamToolManifests } from "./google-drive.generated";
 import { GoogleSearchConsolePipedreamToolManifests } from "./google-search-console.generated";
 import { HubspotPipedreamToolManifests } from "./hubspot.generated";
+import { InstantlyPipedreamToolManifests } from "./instantly.generated";
 import { KlaviyoPipedreamToolManifests } from "./klaviyo.generated";
 import { LinkedinPipedreamToolManifests } from "./linkedin.generated";
 import { MailchimpPipedreamToolManifests } from "./mailchimp.generated";
@@ -29,12 +31,14 @@ export const pipedreamToolManifests: PipedreamActionToolManifest[] = [
   ...ClickupPipedreamToolManifests,
   ...FacebookPipedreamToolManifests,
   ...GmailPipedreamToolManifests,
+  ...GoogleAdsPipedreamToolManifests,
   ...GoogleAnalyticsPipedreamToolManifests,
   ...GoogleCalendarPipedreamToolManifests,
   ...GoogleDocsPipedreamToolManifests,
   ...GoogleDrivePipedreamToolManifests,
   ...GoogleSearchConsolePipedreamToolManifests,
   ...HubspotPipedreamToolManifests,
+  ...InstantlyPipedreamToolManifests,
   ...KlaviyoPipedreamToolManifests,
   ...LinkedinPipedreamToolManifests,
   ...MailchimpPipedreamToolManifests,

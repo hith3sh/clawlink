@@ -1482,6 +1482,84 @@ const overrides = {
         },
       },
     },
+    "google-ads": {
+      excludeActionIds: [],
+      actionOverrides: {
+        "google_ads-create-report": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+          hiddenProps: ["__kind", "name", "moduleUrl"],
+          safeDefaults: {
+            __kind: "report",
+            name: "report",
+            moduleUrl:
+              "https://.googleapis.com/googleads/v21/GoogleAdsService/Search",
+          },
+        },
+        "google_ads-create-ad-report": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "google_ads-create-ad-group-report": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "google_ads-create-campaign-report": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "google_ads-create-customer-report": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "google_ads-generate-keyword-ideas": {
+          mode: "read",
+          risk: "safe",
+          idempotent: true,
+        },
+        "google_ads-create-customer-list": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "google_ads-add-contact-to-list-by-email": {
+          mode: "write",
+          risk: "confirm",
+          hiddenProps: ["__kind", "name", "moduleUrl"],
+          safeDefaults: {
+            __kind: "customer_match_user_list",
+            name: "customer_match_user_list",
+            moduleUrl:
+              "https://googleads.googleapis.com/v21/customers/{customer_id}/userLists:mutate",
+          },
+        },
+        "google_ads-send-offline-conversion": {
+          mode: "write",
+          risk: "confirm",
+        },
+      },
+    },
+    instantly: {
+      excludeActionIds: [],
+      actionOverrides: {
+        "instantly-add-lead-campaign": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "instantly-add-tags-campaign": {
+          mode: "write",
+          risk: "confirm",
+        },
+        "instantly-update-lead-status": {
+          mode: "write",
+          risk: "confirm",
+        },
+      },
+    },
   },
 };
 

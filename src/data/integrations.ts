@@ -146,6 +146,7 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "Square", slug: "square", description: "Process payments and manage POS", category: "Payments & Finance", icon: "SiSquare", color: "#3E4348" },
   { name: "Mailchimp", slug: "mailchimp", description: "Create email campaigns and manage audiences", category: "Marketing", icon: "SiMailchimp", color: "#FFE01B" },
   { name: "Klaviyo", slug: "klaviyo", description: "Email and SMS marketing automation", category: "Marketing", icon: "SiKlaviyo", color: "#F5C518" },
+  { name: "Instantly", slug: "instantly", description: "Cold email outreach and lead management", category: "Marketing", icon: "FaEnvelope", color: "#6C5CE7" },
   { name: "Buffer", slug: "buffer", description: "Schedule and publish social media content", category: "Marketing", icon: "SiBuffer", color: "#232323" },
   { name: "Postiz", slug: "postiz", description: "Manage social channels and publish posts", category: "Social Media", icon: "TbPlugConnected", color: "#111827" },
   { name: "YouTube", slug: "youtube", description: "Upload videos and manage channels", category: "Social Media", icon: "SiYoutube", color: "#FF0000" },
@@ -164,6 +165,7 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "Google Analytics", slug: "google-analytics", description: "Connect Google Analytics properties through hosted Google OAuth", category: "Data & Analytics", icon: "SiGoogleanalytics", color: "#E8710A" },
   { name: "Google Search Console", slug: "google-search-console", description: "Inspect indexing, sitemaps, and search performance through hosted Google OAuth", category: "Data & Analytics", icon: "TbPlugConnected", color: "#34A853" },
   { name: "PostHog", slug: "posthog", description: "Track user behavior and feature flags", category: "Data & Analytics", icon: "SiPosthog", color: "#000000" },
+  { name: "Google Ads", slug: "google-ads", description: "Manage campaigns, run reports, and generate keyword ideas", category: "Marketing", icon: "SiGoogle", color: "#4285F4" },
 ];
 
 const integrationMetadata: Record<string, IntegrationMetadata> = {
@@ -966,6 +968,18 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
       { name: "klaviyo_add_member_to_list", description: "Add one or more Klaviyo profiles to a list" },
     ],
   },
+  instantly: {
+    setupMode: "pipedream",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect Instantly through the hosted Pipedream flow to manage cold email campaigns, add leads to campaigns, apply tags, and update lead statuses without manual credential setup.",
+    credentialFields: [],
+    tools: [
+      { name: "instantly_add_lead_campaign", description: "Add one or more leads to a campaign" },
+      { name: "instantly_add_tags_campaign", description: "Add tags to one or more campaigns" },
+      { name: "instantly_update_lead_status", description: "Update the interest status of a lead in a campaign" },
+    ],
+  },
   buffer: {
     setupMode: "coming_soon",
     dashboardStatus: "coming-soon",
@@ -1158,6 +1172,25 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     setupGuide: "PostHog requires a personal API key from your instance settings.",
     credentialFields: [],
     tools: [],
+  },
+  "google-ads": {
+    setupMode: "pipedream",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide:
+      "Connect Google Ads through the hosted Pipedream flow to run campaign and ad group reports, generate keyword ideas, manage customer lists, and send offline conversions.",
+    credentialFields: [],
+    tools: [
+      { name: "google_ads_create_report", description: "Create a Google Ads report" },
+      { name: "google_ads_create_ad_report", description: "Create a Google Ads ad report" },
+      { name: "google_ads_create_ad_group_report", description: "Create a Google Ads ad group report" },
+      { name: "google_ads_create_campaign_report", description: "Create a Google Ads campaign report" },
+      { name: "google_ads_create_customer_report", description: "Create a Google Ads customer report" },
+      { name: "google_ads_generate_keyword_ideas", description: "Generate keyword ideas for Google Ads" },
+      { name: "google_ads_create_customer_list", description: "Create a Google Ads customer list" },
+      { name: "google_ads_add_contact_to_list_by_email", description: "Add a contact to a Google Ads customer list by email" },
+      { name: "google_ads_send_offline_conversion", description: "Send an offline conversion to Google Ads" },
+    ],
   },
 };
 

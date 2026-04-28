@@ -38,6 +38,7 @@ const BRAND_LOGO_SLUGS = new Set<string>([
   "outlook",
   "motion",
   "postiz",
+  "klaviyo",
 ]);
 
 // Brands whose logo is monochrome and therefore needs a theme-specific variant

@@ -67,6 +67,17 @@ There are now three connection modes in the app:
 
 `pipedream` is the strategic default for new providers. The slugs currently using Pipedream Connect are listed in `PIPEDREAM_CONNECT_SLUGS` in both `wrangler.toml` and `worker/wrangler.worker.toml`. Nango-backed OAuth integrations still use the existing hosted OAuth path, but new providers should not be added to Nango unless there is a specific reason.
 
+### Pipedream slug → app name mapping
+
+The integration slug we use internally (e.g. `google-calendar`) is not always the same as the Pipedream app name (e.g. `google_calendar`). When they differ, the slug **must** be added to `PIPEDREAM_APP_MAP` in both `wrangler.toml` and `worker/wrangler.worker.toml`, otherwise `getConfiguredAppForSlug()` falls back to the raw slug, Pipedream Connect rejects the token, and the hosted connect page fails with "This session has expired. Please refresh the page to try again."
+
+Rules when adding a new Pipedream provider:
+
+- The Pipedream app name is the `execution.app` field in the generated manifest at `src/generated/pipedream-manifests/<slug>.generated.ts` — copy that value, not the slug.
+- Common mismatches: anything with a hyphen in the slug (Pipedream uses underscores), and providers whose Pipedream app has a suffix like `_oauth`, `_v2`, `_rest_api`, `_data_api`, or a vendor prefix like `microsoft_`.
+- If the slug equals the app name exactly (e.g. `slack`, `notion`, `gmail`), no `PIPEDREAM_APP_MAP` entry is needed.
+- Update both wrangler files in the same change and redeploy both workers (`npm run deploy:web` and `npm run deploy:worker`) — the var is read on both surfaces.
+
 ## Runtime / Worker Architecture
 
 The worker uses the connection id plus stored auth backend metadata to load credentials and execute tools.
