@@ -423,21 +423,32 @@ export async function ensureUser(db: D1LikeDatabase, identity: Identity): Promis
 
   const userId = crypto.randomUUID();
 
+  // INSERT OR IGNORE makes the first-login path safe under concurrent requests:
+  // when the dashboard fires several API calls in parallel for a brand-new
+  // clerk_id, all of them race past the SELECT above and try to INSERT. The
+  // UNIQUE(clerk_id) constraint would normally throw on the losers; OR IGNORE
+  // turns that into a silent no-op, and the re-SELECT below returns the
+  // winner's row to every caller.
   await db
     .prepare(
       `
-        INSERT INTO users (id, clerk_id, email, created_at, updated_at)
+        INSERT OR IGNORE INTO users (id, clerk_id, email, created_at, updated_at)
         VALUES (?, ?, ?, datetime('now'), datetime('now'))
       `,
     )
     .bind(userId, identity.clerkId, identity.email)
     .run();
 
-  return {
-    id: userId,
-    clerk_id: identity.clerkId,
-    email: identity.email,
-  };
+  const user = await db
+    .prepare("SELECT id, clerk_id, email FROM users WHERE clerk_id = ?")
+    .bind(identity.clerkId)
+    .first<UserRow>();
+
+  if (!user) {
+    throw new Error(`ensureUser: failed to resolve user for clerk_id ${identity.clerkId}`);
+  }
+
+  return user;
 }
 
 export async function getUserForCurrentIdentity(): Promise<UserRow | null> {
