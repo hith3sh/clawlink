@@ -12,7 +12,7 @@ export default function MarketingLayout({
       <header className="flex items-center justify-between px-5 sm:px-8 py-2 pt-4">
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/brand/bento/clawlink-square-v2.png"
+            src="/images/logo/link.png"
             alt="ClawLink"
             width={40}
             height={40}
@@ -36,7 +36,7 @@ export default function MarketingLayout({
           <div className="flex flex-col gap-3">
             <Link href="/" className="flex items-center gap-2">
               <Image
-                src="/brand/bento/clawlink-square-v2.png"
+                src="/images/logo/link.png"
                 alt="ClawLink"
                 width={32}
                 height={32}

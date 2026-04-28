@@ -24,8 +24,8 @@ export const metadata: Metadata = {
   description:
     "Install ClawLink in OpenClaw once, then connect apps with one click. Hosted auth, encrypted credentials, and headless-friendly setup links.",
   icons: {
-    icon: "/images/logo/favicon.ico",
-    apple: "/images/logo/clawlink-512.png",
+    icon: "/images/logo/link.png",
+    apple: "/images/logo/link.png",
   },
   openGraph: {
     title: "ClawLink — Plug Anything into OpenClaw",

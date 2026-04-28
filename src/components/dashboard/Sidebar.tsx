@@ -182,7 +182,7 @@ export function AppSidebar() {
               className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition-colors hover:bg-sidebar-accent"
             >
               <Image
-                src="/images/logo/clawlink.svg"
+                src="/images/logo/link.png"
                 alt="ClawLink"
                 width={26}
                 height={26}

@@ -359,7 +359,7 @@ export default function HostedConnectPage({
           <div>
             <div className="mb-1 flex items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/logo/clawlink.svg" alt="ClawLink" className="h-6 w-auto" />
+              <img src="/images/logo/link.png" alt="ClawLink" className="h-6 w-auto" />
               <span className="text-sm font-semibold text-gray-900">ClawLink</span>
             </div>
             <h1 className="mt-2 text-4xl font-bold tracking-tight text-gray-900">

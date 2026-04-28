@@ -197,7 +197,7 @@ export default function FlowDiagram() {
             strokeWidth={1.5}
           />
           <image
-            href="/brand/bento/clawlink-square-v2.png"
+            href="/images/logo/link.png"
             x={CLAWLINK.x - CLAWLINK.size / 2 + 8}
             y={CLAWLINK.y - CLAWLINK.size / 2 + 8}
             width={CLAWLINK.size - 16}

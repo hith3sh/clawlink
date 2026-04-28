@@ -18,7 +18,7 @@ export default function VisualEquation() {
 
       {/* ClawLink */}
       <div className="flex items-center gap-2.5 rounded-2xl border border-[var(--brand-tint)]/60 bg-[var(--brand-tint)]/30 backdrop-blur-sm px-5 py-3.5 shadow-sm">
-        <Image src="/images/logo/clawlink.svg" alt="ClawLink" width={24} height={24} className="h-6 w-auto" />
+        <Image src="/images/logo/link.png" alt="ClawLink" width={24} height={24} className="h-6 w-auto" />
         <span className="font-semibold text-gray-900">ClawLink</span>
       </div>
 
