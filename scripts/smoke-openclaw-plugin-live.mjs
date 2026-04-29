@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import clawlinkPlugin from "../packages/openclaw-clawlink/index.js";
 
 function parseArgs(argv) {
@@ -31,6 +32,10 @@ function parseArgs(argv) {
 
 function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
+}
+
+function asBooleanFlag(value) {
+  return value === true || value === "true";
 }
 
 function loadDotEnvLocalKey() {
@@ -112,63 +117,280 @@ async function runTool(api, name, params) {
   };
 }
 
-function buildPreset(name, cliArgs) {
-  switch (name) {
-    case "gmail-read":
-      return [
-        { tool: "clawlink_list_tools", params: {} },
-        { tool: "clawlink_describe_tool", params: { tool: "gmail_get_current_user" } },
-        { tool: "clawlink_call_tool", params: { tool: "gmail_get_current_user" } },
-        {
-          tool: "clawlink_call_tool",
-          params: {
-            tool: "gmail_find_email",
-            q: cliArgs.query ?? "in:inbox",
-            maxResults: cliArgs.maxResults ? Number(cliArgs.maxResults) : 1,
-          },
-        },
-      ];
-    case "gmail-send-preview": {
-      const to = cliArgs.to;
-      const subject = cliArgs.subject ?? "ClawLink smoke preview";
-      const body = cliArgs.body ?? "Smoke preview only. Do not send.";
+async function loadPreset(slug) {
+  const presetPath = path.resolve(process.cwd(), "scripts", "smoke-presets", `${slug}.mjs`);
 
-      if (!isNonEmptyString(to)) {
-        throw new Error("--to is required for --preset gmail-send-preview");
+  if (!existsSync(presetPath)) {
+    throw new Error(`No smoke preset found for integration \"${slug}\" at ${presetPath}`);
+  }
+
+  const module = await import(pathToFileURL(presetPath).href);
+  const preset = module.default ?? module;
+
+  if (!preset || typeof preset !== "object") {
+    throw new Error(`Preset ${slug} does not export a valid object.`);
+  }
+
+  return preset;
+}
+
+function listAvailablePresetSlugs() {
+  const presetDir = path.resolve(process.cwd(), "scripts", "smoke-presets");
+  if (!existsSync(presetDir)) {
+    return [];
+  }
+
+  return readdirSync(presetDir)
+    .filter((entry) => entry.endsWith(".mjs"))
+    .map((entry) => entry.replace(/\.mjs$/u, ""))
+    .sort();
+}
+
+function normalizeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function parseCsv(value) {
+  if (!isNonEmptyString(value)) {
+    return [];
+  }
+
+  return value
+    .split(/[,\n;]/u)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function buildContext(cliArgs) {
+  return {
+    cliArgs,
+    env: process.env,
+    require(key, description = key) {
+      const direct = cliArgs[key];
+      if (isNonEmptyString(direct)) {
+        return direct.trim();
       }
 
-      return [
-        { tool: "clawlink_describe_tool", params: { tool: "gmail_send_email" } },
-        {
-          tool: "clawlink_preview_tool",
-          params: {
-            tool: "gmail_send_email",
-            to: to.split(/[,\n;]+/u).map((entry) => entry.trim()).filter(Boolean),
-            subject,
-            body,
-          },
-        },
-      ];
-    }
-    default:
-      throw new Error(`Unknown preset "${name}". Use gmail-read or gmail-send-preview.`);
+      const envKey = key
+        .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+        .replace(/-/g, "_")
+        .toUpperCase();
+      const envValue = process.env[envKey];
+      if (isNonEmptyString(envValue)) {
+        return envValue.trim();
+      }
+
+      throw new Error(`Missing required value for ${description}. Pass --${key} or set ${envKey}.`);
+    },
+    optional(key) {
+      const direct = cliArgs[key];
+      if (isNonEmptyString(direct)) {
+        return direct.trim();
+      }
+
+      const envKey = key
+        .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+        .replace(/-/g, "_")
+        .toUpperCase();
+      const envValue = process.env[envKey];
+      return isNonEmptyString(envValue) ? envValue.trim() : undefined;
+    },
+    csv(key) {
+      return parseCsv(cliArgs[key] ?? process.env[key.toUpperCase()]);
+    },
+    number(key, fallback) {
+      const raw = cliArgs[key] ?? process.env[key.toUpperCase()];
+      if (!isNonEmptyString(raw)) {
+        return fallback;
+      }
+      const parsed = Number(raw);
+      if (!Number.isFinite(parsed)) {
+        throw new Error(`Expected numeric value for ${key}, got ${raw}`);
+      }
+      return parsed;
+    },
+  };
+}
+
+function buildBaseSteps(preset) {
+  const readSteps = normalizeArray(preset.read);
+  const firstReadTool = readSteps[0]?.tool;
+
+  const steps = [
+    {
+      label: "list",
+      tool: "clawlink_list_tools",
+      params: {},
+    },
+  ];
+
+  if (isNonEmptyString(firstReadTool)) {
+    steps.push({
+      label: "describe",
+      tool: "clawlink_describe_tool",
+      params: { tool: firstReadTool },
+    });
   }
+
+  return steps;
+}
+
+function materializeParams(rawParams, context) {
+  if (typeof rawParams === "function") {
+    return rawParams(context);
+  }
+
+  return rawParams ?? {};
+}
+
+function materializeStep(step, context, mode) {
+  const params = materializeParams(step.args ?? step.params ?? {}, context);
+
+  return {
+    label: step.label ?? step.tool,
+    tool:
+      mode === "preview"
+        ? "clawlink_preview_tool"
+        : mode === "write"
+          ? "clawlink_call_tool"
+          : "clawlink_call_tool",
+    params: {
+      tool: step.tool,
+      ...(params ?? {}),
+    },
+  };
+}
+
+function buildExecutionPlan(preset, context, options) {
+  const plan = [...buildBaseSteps(preset)];
+
+  for (const step of normalizeArray(preset.read)) {
+    plan.push(materializeStep(step, context, "read"));
+  }
+
+  if (options.preview) {
+    for (const step of normalizeArray(preset.preview)) {
+      plan.push(materializeStep(step, context, "preview"));
+    }
+  }
+
+  if (options.write) {
+    for (const step of normalizeArray(preset.write)) {
+      plan.push(materializeStep(step, context, "write"));
+    }
+  }
+
+  return plan;
+}
+
+function pad(value, width) {
+  return String(value).padEnd(width, " ");
+}
+
+function printSummary(results) {
+  if (results.length === 0) {
+    return;
+  }
+
+  console.log("\nSummary");
+  console.log(pad("Integration", 24) + pad("List", 8) + pad("Describe", 10) + pad("Read", 8) + pad("Preview", 10) + pad("Write", 8));
+
+  for (const result of results) {
+    console.log(
+      pad(result.slug, 24) +
+      pad(result.statuses.list, 8) +
+      pad(result.statuses.describe, 10) +
+      pad(result.statuses.read, 8) +
+      pad(result.statuses.preview, 10) +
+      pad(result.statuses.write, 8),
+    );
+  }
+}
+
+async function runIntegration(api, slug, cliArgs, options) {
+  const preset = await loadPreset(slug);
+  const context = buildContext(cliArgs);
+  const plan = buildExecutionPlan(preset, context, options);
+  const statuses = {
+    list: "-",
+    describe: "-",
+    read: normalizeArray(preset.read).length > 0 ? "pass" : "n/a",
+    preview: options.preview ? (normalizeArray(preset.preview).length > 0 ? "pass" : "n/a") : "-",
+    write: options.write ? (normalizeArray(preset.write).length > 0 ? "pass" : "n/a") : "-",
+  };
+
+  console.log(`\n=== ${slug} ===`);
+
+  for (const step of plan) {
+    console.log(`\n>>> ${step.label}: ${step.tool}`);
+    try {
+      const result = await runTool(api, step.tool, step.params);
+      console.log(result.content);
+
+      if (step.label === "list") {
+        statuses.list = "pass";
+      } else if (step.label === "describe") {
+        statuses.describe = "pass";
+      } else if (step.tool === "clawlink_call_tool") {
+        statuses.read = "pass";
+      } else if (step.tool === "clawlink_preview_tool") {
+        statuses.preview = "pass";
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(message);
+
+      if (step.label === "list") {
+        statuses.list = "FAIL";
+      } else if (step.label === "describe") {
+        statuses.describe = "FAIL";
+      } else if (step.tool === "clawlink_preview_tool") {
+        statuses.preview = "FAIL";
+      } else if (step.tool === "clawlink_call_tool" && step.params?.tool) {
+        if (normalizeArray(preset.read).some((entry) => entry.tool === step.params.tool)) {
+          statuses.read = "FAIL";
+        } else {
+          statuses.write = "FAIL";
+        }
+      }
+
+      return { slug, statuses, ok: false };
+    }
+  }
+
+  return { slug, statuses, ok: true };
 }
 
 async function main() {
   const cliArgs = parseArgs(process.argv.slice(2));
-  const preset = cliArgs.preset ?? "gmail-read";
   const apiKey = loadApiKey();
   const api = createFakeApi(apiKey);
   clawlinkPlugin.register(api);
 
-  const steps = buildPreset(preset, cliArgs);
-  console.log(`Running smoke preset: ${preset}`);
+  const options = {
+    preview: asBooleanFlag(cliArgs.preview),
+    write: asBooleanFlag(cliArgs.write),
+  };
 
-  for (const step of steps) {
-    console.log(`\n>>> ${step.tool}`);
-    const result = await runTool(api, step.tool, step.params);
-    console.log(result.content);
+  const integrations = asBooleanFlag(cliArgs.all)
+    ? listAvailablePresetSlugs()
+    : [cliArgs.integration ?? cliArgs.preset ?? "gmail"];
+
+  if (integrations.length === 0) {
+    throw new Error("No smoke presets found. Add files under scripts/smoke-presets/*.mjs first.");
+  }
+
+  const results = [];
+
+  for (const slug of integrations) {
+    results.push(await runIntegration(api, slug, cliArgs, options));
+  }
+
+  printSummary(results);
+
+  const failed = results.filter((entry) => !entry.ok);
+  if (failed.length > 0) {
+    process.exitCode = 1;
   }
 }
 

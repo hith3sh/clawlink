@@ -395,13 +395,9 @@ const overrides = {
     "google-drive": {
       excludeActionIds: [
         "google_drive-create-file-from-text",
-        "google_drive-create-folder",
         "google_drive-delete-shared-drive",
-        "google_drive-download-file",
         "google_drive-update-comment",
-        "google_drive-update-file",
         "google_drive-update-shared-drive",
-        "google_drive-upload-file",
       ],
       actionOverrides: {
         "google_drive-create-file-from-template": {
@@ -562,7 +558,6 @@ const overrides = {
       excludeActionIds: [
         "google_docs-find-document",
         "google_docs-create-document-from-template",
-        "google_docs-create-document",
       ],
       actionOverrides: {
         "google_docs-replace-text": {

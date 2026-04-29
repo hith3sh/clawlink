@@ -163,7 +163,8 @@ Statuses: `pass`, `fail`, `n/a` (no such tool kind for this integration), `untes
 | calendly | pipedream | yes | untested | untested | untested | untested | — |
 | xero | pipedream | yes | untested | untested | untested | untested | — |
 
-Known broken right now:
+Known migration work right now:
+- **Google imported integrations** — `google-docs`, `google-drive`, `google-calendar`, `google-search-console`, and `google-analytics` are moving from legacy custom handler precedence to the manifest-backed Pipedream path. During this cleanup, manifest coverage and smoke presets need to be treated as the source of truth.
 - **`google-sheets`** — no manifest, custom handler at `worker/integrations/google-sheets.ts:144` extends `BaseIntegration` and reads `credentials.accessToken`. Pipedream-backed connections only have `pipedreamAccountId`, so every tool call throws. Either import the manifest (`npm run import:pipedream-actions -- --app google_sheets --integration google-sheets`) or refactor the handler to extend `GoogleBaseIntegration`.
 
 ## Implementation roadmap
