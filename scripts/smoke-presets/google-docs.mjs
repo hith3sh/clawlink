@@ -4,7 +4,10 @@ export default {
     {
       tool: "google-docs_get_document",
       args: (ctx) => ({
-        docId: ctx.require("docId", "google docs document id"),
+        documentId:
+          ctx.optional("documentId") ??
+          ctx.optional("docId") ??
+          ctx.require("documentId", "google docs document id"),
       }),
     },
   ],
