@@ -1,6 +1,8 @@
 # Nango To Pipedream Execution Workflow
 
-This document is the execution playbook for migrating ClawLink's existing Nango-backed OAuth integrations to Pipedream.
+This document is a historical execution playbook for migrating ClawLink's existing Nango-backed OAuth integrations to Pipedream.
+
+Current policy: new and migrated integrations should use generated Pipedream manifests. The old custom worker handlers referenced below have been removed except for `postiz`.
 
 It is written for another agent to execute incrementally without breaking live users.
 
@@ -64,8 +66,7 @@ Relevant files:
 - [src/components/connect/HostedConnectPage.tsx](/Users/hithesh/clawlink/src/components/connect/HostedConnectPage.tsx:1)
 - [src/lib/server/pipedream.ts](/Users/hithesh/clawlink/src/lib/server/pipedream.ts:1)
 - [worker/lib/pipedream-proxy.ts](/Users/hithesh/clawlink/worker/lib/pipedream-proxy.ts:1)
-- [worker/integrations/slack.ts](/Users/hithesh/clawlink/worker/integrations/slack.ts:1)
-- [worker/integrations/notion.ts](/Users/hithesh/clawlink/worker/integrations/notion.ts:1)
+- `worker/integrations/postiz.ts` for the remaining custom-handler exception
 - [worker/credentials.ts](/Users/hithesh/clawlink/worker/credentials.ts:1)
 
 ## Strategy

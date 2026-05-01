@@ -32,7 +32,11 @@ export function IntegrationCard({
   });
   const hostedConnectEnabled =
     integration.dashboardStatus === "available" &&
-    (integration.setupMode === "oauth" || integration.setupMode === "pipedream");
+    (
+      integration.setupMode === "oauth" ||
+      integration.setupMode === "pipedream" ||
+      integration.setupMode === "composio"
+    );
 
   useEffect(() => {
     setConnected(isConnected);

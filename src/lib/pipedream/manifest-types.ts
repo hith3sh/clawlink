@@ -36,7 +36,17 @@ export interface PipedreamActionExecutionSpec {
   props: PipedreamToolProp[];
 }
 
-export type ToolExecutionSpec = CustomToolExecutionSpec | PipedreamActionExecutionSpec;
+export interface ComposioToolExecutionSpec {
+  kind: "composio_tool";
+  toolkit: string;
+  toolSlug: string;
+  version?: string;
+}
+
+export type ToolExecutionSpec =
+  | CustomToolExecutionSpec
+  | PipedreamActionExecutionSpec
+  | ComposioToolExecutionSpec;
 
 export interface PipedreamToolExample {
   user: string;

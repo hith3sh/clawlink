@@ -44,6 +44,13 @@ interface PipedreamConnectCompleteResponse {
   };
 }
 
+interface ComposioConnectStartResponse {
+  error?: string;
+  redirectUrl?: string;
+  connectedAccountId?: string;
+  expiresAt?: string;
+}
+
 interface Props {
   integration: Integration;
   session: SessionSummary;
@@ -63,8 +70,11 @@ export default function HostedConnectPage({
   const [info, setInfo] = useState<string | null>(null);
   const [nangoClosed, setNangoClosed] = useState(false);
   const [pipedreamClosed, setPipedreamClosed] = useState(false);
+  const [composioClosed, setComposioClosed] = useState(false);
+  const [startingComposio, setStartingComposio] = useState(false);
   const connectUiRef = useRef<{ close: () => void } | null>(null);
   const autoOpenedRef = useRef(false);
+  const notifiedOpenerRef = useRef(false);
 
   useEffect(() => {
     if (status !== "awaiting_user_action") {
@@ -123,11 +133,24 @@ export default function HostedConnectPage({
 
   useEffect(() => {
     if (status !== "connected") return;
+
+    if (!notifiedOpenerRef.current) {
+      notifiedOpenerRef.current = true;
+      window.opener?.postMessage(
+        {
+          type: "clawlink:connection-connected",
+          integration: integration.slug,
+          sessionToken: session.token,
+        },
+        window.location.origin,
+      );
+    }
+
     const timer = window.setTimeout(() => {
       window.close();
     }, 400);
     return () => window.clearTimeout(timer);
-  }, [status]);
+  }, [integration.slug, session.token, status]);
 
   const fetchPipedreamConnectStart = useCallback(async () => {
     const response = await fetch(`/api/connect/sessions/${session.token}/pipedream`, {
@@ -301,6 +324,36 @@ export default function HostedConnectPage({
     session.token,
   ]);
 
+  const handleStartComposio = useCallback(async () => {
+    setStartingComposio(true);
+    setError(null);
+    setInfo(`Opening ${integration.name} setup...`);
+    setComposioClosed(false);
+
+    try {
+      const response = await fetch(`/api/connect/sessions/${session.token}/composio`, {
+        method: "POST",
+      });
+      const data = (await response.json()) as ComposioConnectStartResponse;
+
+      if (!response.ok || !data.redirectUrl) {
+        throw new Error(data.error ?? `Failed to open ${integration.name} setup.`);
+      }
+
+      window.location.assign(data.redirectUrl);
+    } catch (requestError) {
+      setComposioClosed(true);
+      setInfo(null);
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : `Failed to open ${integration.name} setup.`,
+      );
+    } finally {
+      setStartingComposio(false);
+    }
+  }, [integration.name, session.token]);
+
   const showPipedreamOAuth =
     integration.setupMode === "pipedream" &&
     integration.dashboardStatus === "available" &&
@@ -312,6 +365,9 @@ export default function HostedConnectPage({
     !showPipedreamOAuth &&
     nango.enabled &&
     Boolean(nango.baseUrl && nango.apiUrl && nango.providerConfigKey);
+  const showComposioHosted =
+    integration.setupMode === "composio" &&
+    integration.dashboardStatus === "available";
 
   useEffect(() => {
     if (showPipedreamOAuth) {
@@ -322,12 +378,28 @@ export default function HostedConnectPage({
       return;
     }
 
+    if (showComposioHosted) {
+      if (status !== "awaiting_user_action") return;
+      if (autoOpenedRef.current) return;
+      autoOpenedRef.current = true;
+      void handleStartComposio();
+      return;
+    }
+
     if (!showNangoOAuth) return;
     if (status !== "awaiting_user_action") return;
     if (autoOpenedRef.current) return;
     autoOpenedRef.current = true;
     void handleStartOAuth();
-  }, [showNangoOAuth, showPipedreamOAuth, status, handleStartOAuth, handleStartPipedream]);
+  }, [
+    showComposioHosted,
+    showNangoOAuth,
+    showPipedreamOAuth,
+    status,
+    handleStartComposio,
+    handleStartOAuth,
+    handleStartPipedream,
+  ]);
 
   const hideCardForNango =
     showNangoOAuth &&
@@ -341,7 +413,13 @@ export default function HostedConnectPage({
     !pipedreamClosed &&
     !error;
 
-  if (hideCardForNango || hideCardForPipedream) {
+  const hideCardForComposio =
+    showComposioHosted &&
+    status === "awaiting_user_action" &&
+    !composioClosed &&
+    !error;
+
+  if (hideCardForNango || hideCardForPipedream || hideCardForComposio) {
     return <div className="min-h-screen bg-white" />;
   }
 
@@ -349,7 +427,8 @@ export default function HostedConnectPage({
     integration.dashboardStatus === "available" &&
     (
       (integration.setupMode === "oauth" && !showNangoOAuth) ||
-      (integration.setupMode === "pipedream" && !showPipedreamOAuth)
+      (integration.setupMode === "pipedream" && !showPipedreamOAuth) ||
+      (integration.setupMode === "composio" && !showComposioHosted)
     );
 
   return (
@@ -424,6 +503,28 @@ export default function HostedConnectPage({
                 Reopen {integration.name} window
               </button>
             </div>
+          </div>
+        ) : showComposioHosted ? (
+          <div className="rounded-3xl border border-gray-200 bg-gray-50 p-7">
+            <div className="flex items-center gap-3 text-gray-700">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <p className="text-base leading-7">
+                Opening {integration.name} setup. If nothing happens, reopen it below.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleStartComposio()}
+              disabled={startingComposio}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {startingComposio ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ExternalLink className="h-4 w-4" />
+              )}
+              Reopen {integration.name} setup
+            </button>
           </div>
         ) : showUnavailableOAuth ? (
           <div className="rounded-3xl border border-amber-200 bg-amber-50 p-7">

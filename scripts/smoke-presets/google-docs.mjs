@@ -2,22 +2,18 @@ export default {
   slug: "google-docs",
   read: [
     {
-      tool: "google-docs_get_document",
+      tool: "googledocs_search_documents",
       args: (ctx) => ({
-        documentId:
-          ctx.optional("documentId") ??
-          ctx.optional("docId") ??
-          ctx.require("documentId", "google docs document id"),
+        query: ctx.optional("googleDocsQuery") ?? "test",
       }),
+      label: "Search Google Docs documents",
     },
-  ],
-  preview: [
     {
-      tool: "google-docs_create_document",
-      args: (ctx) => ({
-        title: ctx.optional("title") ?? "ClawLink smoke preview",
-      }),
+      tool: "googledocs_get_document_plaintext",
+      args: {},
+      label: "Get document plaintext (requires docId)",
     },
   ],
+  preview: [],
   write: [],
 };

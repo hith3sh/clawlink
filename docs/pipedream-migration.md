@@ -1,6 +1,8 @@
 # Pipedream Migration Guide
 
-This document describes the correct way to add Pipedream Connect to ClawLink.
+This document describes the original rollout plan for adding Pipedream Connect to ClawLink.
+
+Current implementation note: new integrations now use generated Pipedream action manifests. The per-provider worker-handler approach described in older sections below has been removed except for `postiz`; use `docs/adding-an-integration.md` and `docs/pipedream-provider-import-flow.md` for current provider work.
 
 The goal is not to replace Nango in one shot. The safe rollout is:
 
@@ -59,8 +61,7 @@ Do not design the Pipedream path as "fetch OAuth access token from Pipedream, th
 
 ## What Stays The Same
 
-- handler files still live in `worker/integrations/<slug>.ts`
-- tool names, descriptions, schemas, and metadata stay under ClawLink control
+- tool names, descriptions, schemas, and metadata stay under ClawLink control through generated manifests and catalog metadata
 - OpenClaw still sees the same ClawLink tool registry shape
 - `connection_sessions` remains the source of truth for hosted connection progress
 - `user_integrations.id` remains the stable connection ID
@@ -391,7 +392,7 @@ For the pilot:
 4. add the webhook route
 5. add the schema / auth backend storage support
 6. add the proxy helper
-7. add one small handler in `worker/integrations/<slug>.ts`
+7. import one or two safe Pipedream actions into a generated manifest
 8. verify the connect flow ends in `connected`
 9. verify at least one read tool works end to end
 10. only then add one write tool if needed
@@ -402,25 +403,10 @@ Do not migrate an existing Nango-backed live integration as the pilot.
 
 ## Handler Design For Pipedream Integrations
 
-Handler shape can stay familiar:
-
-- same `BaseIntegration`
-- same `defineTool(...)`
-- same `execute(...)` switch
-
-But execution changes:
-
-- use `credentials.pipedreamAccountId`
-- use the proxy helper instead of building `Authorization: Bearer <provider-token>`
-- use provider-specific URLs or relative paths based on the app's proxy requirements
-
-What does not stay the same:
-
-- direct token extraction from `credentials.accessToken`
-- token-refresh assumptions
-- provider-specific OAuth metadata lookups that require a raw provider token
-
-If a current handler depends on a raw OAuth token to discover tenant or datacenter info, expect a partial rewrite.
+This section is historical. Normal Pipedream integrations no longer add a
+provider-specific `BaseIntegration` handler; generated manifests execute
+through `src/lib/pipedream/action-executor.ts`. `postiz` is the only retained
+custom-handler exception.
 
 ---
 

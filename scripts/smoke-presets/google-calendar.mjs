@@ -1,18 +1,21 @@
 export default {
   slug: "google-calendar",
   read: [
-    { tool: "google-calendar_get_current_user" },
-    { tool: "google-calendar_list_calendars" },
+    { tool: "googlecalendar_list_calendars", args: {}, label: "List calendars" },
+    { tool: "googlecalendar_events_list", args: { calendarId: "primary", maxResults: 5 }, label: "List primary calendar events" },
+    { tool: "googlecalendar_find_free_slots", args: {}, label: "Find free slots" },
+    { tool: "googlecalendar_get_current_date_time", args: {}, label: "Get current date/time" },
   ],
   preview: [
     {
-      tool: "google-calendar_create_event",
+      tool: "googlecalendar_create_event",
       args: (ctx) => ({
-        calendarId: ctx.optional("calendarId"),
+        calendarId: ctx.optional("calendarId") ?? "primary",
         summary: ctx.optional("summary") ?? "ClawLink smoke preview",
-        start: ctx.optional("start") ?? "2026-05-01T09:00:00Z",
-        end: ctx.optional("end") ?? "2026-05-01T09:30:00Z",
+        start: { dateTime: ctx.optional("start") ?? "2026-05-01T09:00:00Z" },
+        end: { dateTime: ctx.optional("end") ?? "2026-05-01T09:30:00Z" },
       }),
+      label: "Preview create event",
     },
   ],
   write: [],

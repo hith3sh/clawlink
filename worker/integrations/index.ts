@@ -1,27 +1,27 @@
 /**
- * Integration handlers index
+ * Integration tool registry index
  *
- * Import all integrations here to register them
+ * Import custom handler exceptions here and merge them with generated manifests.
  */
 
-// Import and register handlers
-import "./slack";
-import "./github";
-import "./apollo";
+// Postiz is the only remaining custom handler. New integrations use generated
+// Pipedream manifests instead of per-provider handler modules.
 import "./postiz";
-import "./google-sheets";
-import "./motion";
-import "./twilio";
-// import "./stripe";
-// etc.
 
 import {
   getAllPipedreamManifestTools,
   getPipedreamManifestToolByName,
   listPipedreamManifestToolsForIntegration,
 } from "../../src/lib/pipedream/manifest-registry";
+import {
+  getAllComposioManifestTools,
+  getComposioManifestToolByName,
+  listComposioManifestToolsForIntegration,
+} from "../../src/lib/composio/manifest-registry";
 import { getAllHandlers, getIntegrationHandler } from "./base";
 import type { IntegrationTool } from "./base";
+
+const disabledPipedreamManifestIntegrations = new Set(["instantly", "outlook", "apollo", "postiz", "gmail", "google-search-console", "google-docs", "google-analytics", "onedrive", "google-ads", "hubspot", "google-calendar", "klaviyo"]);
 
 export {
   classifyIntegrationError,
@@ -61,6 +61,10 @@ function mergeTools(
   return sortTools(Array.from(merged.values()));
 }
 
+function filterEnabledPipedreamTools(tools: IntegrationTool[]): IntegrationTool[] {
+  return tools.filter((tool) => !disabledPipedreamManifestIntegrations.has(tool.integration));
+}
+
 export function listHandlerToolsForIntegration(integration: string): IntegrationTool[] {
   const handler = getIntegrationHandler(integration);
 
@@ -72,7 +76,22 @@ export function listHandlerToolsForIntegration(integration: string): Integration
 }
 
 export function listManifestToolsForIntegration(integration: string): IntegrationTool[] {
+  return mergeTools(
+    listPipedreamToolsForIntegration(integration),
+    listComposioManifestToolsForIntegration(integration),
+  );
+}
+
+export function listPipedreamToolsForIntegration(integration: string): IntegrationTool[] {
+  if (disabledPipedreamManifestIntegrations.has(integration)) {
+    return [];
+  }
+
   return sortTools(listPipedreamManifestToolsForIntegration(integration));
+}
+
+export function listComposioToolsForIntegration(integration: string): IntegrationTool[] {
+  return sortTools(listComposioManifestToolsForIntegration(integration));
 }
 
 export function listRegisteredToolsForIntegration(integration: string): IntegrationTool[] {
@@ -93,7 +112,10 @@ export function getAllRegisteredTools(): IntegrationTool[] {
     handlerTools.push(...handler.getTools(integration));
   }
 
-  return mergeTools(handlerTools, getAllPipedreamManifestTools());
+  return mergeTools(
+    mergeTools(handlerTools, filterEnabledPipedreamTools(getAllPipedreamManifestTools())),
+    getAllComposioManifestTools(),
+  );
 }
 
 export function getRegisteredToolByName(toolName: string): IntegrationTool | undefined {
@@ -109,5 +131,11 @@ export function getRegisteredToolByName(toolName: string): IntegrationTool | und
     }
   }
 
-  return getPipedreamManifestToolByName(toolName) ?? undefined;
+  const pipedreamTool = getPipedreamManifestToolByName(toolName);
+
+  if (pipedreamTool && !disabledPipedreamManifestIntegrations.has(pipedreamTool.integration)) {
+    return pipedreamTool;
+  }
+
+  return getComposioManifestToolByName(toolName) ?? undefined;
 }

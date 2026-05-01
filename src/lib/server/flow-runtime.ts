@@ -359,23 +359,6 @@ function buildNotionTaskFromGmailMessage(message: Record<string, unknown>): Reco
   };
 }
 
-function buildSlackMessageFromIssue(issue: Record<string, unknown>, channel: string): Record<string, unknown> {
-  const title = typeof issue.title === "string" ? issue.title : "New GitHub issue";
-  const htmlUrl = typeof issue.html_url === "string" ? issue.html_url : null;
-  const number = typeof issue.number === "number" ? issue.number : null;
-
-  return {
-    channel,
-    text: [
-      number ? `GitHub issue #${number} created:` : "GitHub issue created:",
-      title,
-      htmlUrl ? htmlUrl : "",
-    ]
-      .filter(Boolean)
-      .join(" "),
-  };
-}
-
 function buildExecutionScope(flow: FlowRecord): FlowExecutionScope {
   const context = flow.context as unknown as FlowContextState;
   return {
@@ -701,26 +684,6 @@ async function executeTransformStep(
           count: tasks.length,
           tasks,
         },
-      };
-    }
-    case "github_issue_to_slack_message": {
-      const issue =
-        typeof input.issueRef === "string" ? resolveRef(input.issueRef, scope) : undefined;
-      const channel = typeof input.channel === "string" ? input.channel : "";
-
-      if (!channel) {
-        return {
-          status: "failed",
-          error: { message: "Slack channel is required for github_issue_to_slack_message" },
-        };
-      }
-
-      return {
-        status: "completed",
-        output: buildSlackMessageFromIssue(
-          typeof issue === "object" && issue !== null ? (issue as Record<string, unknown>) : {},
-          channel,
-        ),
       };
     }
     default:

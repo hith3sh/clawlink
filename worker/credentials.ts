@@ -46,6 +46,9 @@ interface StoredIntegrationRow {
   nango_connection_id: string | null;
   nango_provider_config_key: string | null;
   pipedream_account_id: string | null;
+  composio_connected_account_id: string | null;
+  composio_auth_config_id: string | null;
+  composio_toolkit: string | null;
 }
 
 export interface CredentialBridgeEnv {
@@ -59,6 +62,11 @@ export interface CredentialBridgeEnv {
   PIPEDREAM_CLIENT_SECRET?: string;
   PIPEDREAM_PROJECT_ID?: string;
   PIPEDREAM_ENVIRONMENT?: string;
+  COMPOSIO_API_KEY?: string;
+  COMPOSIO_BASE_URL?: string;
+  COMPOSIO_TOOLKIT_MAP?: string;
+  COMPOSIO_AUTH_CONFIG_MAP?: string;
+  COMPOSIO_TOOLKIT_VERSION_MAP?: string;
   [key: string]: unknown;
 }
 
@@ -256,7 +264,8 @@ async function loadConnectionRecord(
       .prepare(
         `
           SELECT id, credentials_encrypted, auth_state, auth_error,
-                 auth_provider, nango_connection_id, nango_provider_config_key, pipedream_account_id
+                 auth_provider, nango_connection_id, nango_provider_config_key, pipedream_account_id,
+                 composio_connected_account_id, composio_auth_config_id, composio_toolkit
           FROM user_integrations
           WHERE id = ? AND user_id = ? AND integration = ?
           LIMIT 1
@@ -270,7 +279,8 @@ async function loadConnectionRecord(
     .prepare(
       `
         SELECT id, credentials_encrypted, auth_state, auth_error,
-               auth_provider, nango_connection_id, nango_provider_config_key, pipedream_account_id
+               auth_provider, nango_connection_id, nango_provider_config_key, pipedream_account_id,
+               composio_connected_account_id, composio_auth_config_id, composio_toolkit
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
         ORDER BY is_default DESC, updated_at DESC, created_at DESC, id DESC
@@ -287,6 +297,10 @@ function isNangoBackedConnection(record: StoredIntegrationRow): boolean {
 
 function isPipedreamBackedConnection(record: StoredIntegrationRow): boolean {
   return record.auth_provider === "pipedream" || Boolean(record.pipedream_account_id);
+}
+
+function isComposioBackedConnection(record: StoredIntegrationRow): boolean {
+  return record.auth_provider === "composio" || Boolean(record.composio_connected_account_id);
 }
 
 function buildNeedsReauthMessageFromNango(
@@ -428,7 +442,7 @@ export async function loadConnectionCredentialsForIntegration(
     );
   }
 
-  if (isPipedreamBackedConnection(record)) {
+  if (isPipedreamBackedConnection(record) || isComposioBackedConnection(record)) {
     const cached = await loadCachedCredentials(env, record.id);
 
     if (cached) {
@@ -489,7 +503,7 @@ export async function refreshCredentialsForIntegration(
     );
   }
 
-  if (isPipedreamBackedConnection(record)) {
+  if (isPipedreamBackedConnection(record) || isComposioBackedConnection(record)) {
     if (!record.credentials_encrypted) {
       throw new Error(`No credentials found for ${integration}. Please connect it first.`);
     }

@@ -2,8 +2,7 @@ import "server-only";
 
 export type FlowTemplateKey =
   | "summarize_unread_gmail"
-  | "gmail_to_notion_task_sync"
-  | "github_issue_to_slack_notify";
+  | "gmail_to_notion_task_sync";
 
 export type FlowStepType = "tool_call" | "transform" | "wait" | "approval";
 
@@ -142,69 +141,6 @@ const templates: Record<FlowTemplateKey, FlowTemplateDefinition> = {
               parent: notionParent,
               title: ref("item.title"),
               content: ref("item.content"),
-            },
-          },
-        },
-      ];
-    },
-  },
-  github_issue_to_slack_notify: {
-    key: "github_issue_to_slack_notify",
-    name: "GitHub issue to Slack notify",
-    description: "Create a GitHub issue, then post a Slack notification after approval.",
-    buildSteps(input) {
-      const owner = requireNonEmptyString(input, "owner", "owner");
-      const repo = requireNonEmptyString(input, "repo", "repo");
-      const title = requireNonEmptyString(input, "title", "title");
-      const slackChannel = requireNonEmptyString(input, "slackChannel", "slackChannel");
-      const body =
-        typeof input.body === "string" && input.body.trim().length > 0
-          ? input.body.trim()
-          : "";
-
-      return [
-        {
-          stepKey: "approve_issue_and_notification",
-          stepType: "approval",
-          input: {
-            message: "Create the GitHub issue and send a Slack notification?",
-            approved: false,
-          },
-        },
-        {
-          stepKey: "create_issue",
-          stepType: "tool_call",
-          input: {
-            toolName: "github_create_issue",
-            connectionId: readOptionalConnectionId(input, "githubConnectionId"),
-            confirmed: true,
-            args: {
-              owner,
-              repo,
-              title,
-              ...(body ? { body } : {}),
-            },
-          },
-        },
-        {
-          stepKey: "build_slack_message",
-          stepType: "transform",
-          input: {
-            operation: "github_issue_to_slack_message",
-            issueRef: "steps.create_issue.output.data",
-            channel: slackChannel,
-          },
-        },
-        {
-          stepKey: "send_slack_message",
-          stepType: "tool_call",
-          input: {
-            toolName: "slack_send_message",
-            connectionId: readOptionalConnectionId(input, "slackConnectionId"),
-            confirmed: true,
-            args: {
-              channel: ref("steps.build_slack_message.output.channel"),
-              text: ref("steps.build_slack_message.output.text"),
             },
           },
         },

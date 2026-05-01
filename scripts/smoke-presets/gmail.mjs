@@ -1,11 +1,12 @@
 export default {
   slug: "gmail",
   read: [
-    { tool: "gmail_get_current_user" },
+    { tool: "gmail_get_profile" },
+    { tool: "gmail_list_labels" },
     {
-      tool: "gmail_find_email",
+      tool: "gmail_fetch_emails",
       args: (ctx) => ({
-        q: ctx.optional("query") ?? "in:inbox",
+        query: ctx.optional("query") ?? "in:inbox",
         maxResults: ctx.number("maxResults", 1),
       }),
     },

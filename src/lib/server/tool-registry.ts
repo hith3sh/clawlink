@@ -8,8 +8,9 @@ import {
 } from "@/lib/server/integration-store";
 import {
   getAllRegisteredTools,
+  listComposioToolsForIntegration,
   listHandlerToolsForIntegration,
-  listManifestToolsForIntegration,
+  listPipedreamToolsForIntegration,
   type IntegrationTool,
   type IntegrationToolExample,
   type ToolAccessLevel,
@@ -104,6 +105,10 @@ function hasGuidance(tool: IntegrationTool): boolean {
 
 function isPipedreamBackedConnection(connection: IntegrationConnectionRecord): boolean {
   return connection.authBackend === "pipedream" && Boolean(connection.pipedreamAccountId);
+}
+
+function isComposioBackedConnection(connection: IntegrationConnectionRecord): boolean {
+  return connection.authBackend === "composio" && Boolean(connection.composioConnectedAccountId);
 }
 
 export function buildCatalogItem(
@@ -224,15 +229,21 @@ export function listAllRegisteredTools(): IntegrationTool[] {
 
 export function listToolDefinitionsForIntegration(
   integration: string,
-  options: { includePipedreamManifestTools?: boolean } = {},
+  options: {
+    includePipedreamManifestTools?: boolean;
+    includeComposioManifestTools?: boolean;
+  } = {},
 ): IntegrationTool[] {
   const handlerTools = listHandlerToolsForIntegration(integration);
 
-  if (!options.includePipedreamManifestTools) {
+  if (!options.includePipedreamManifestTools && !options.includeComposioManifestTools) {
     return handlerTools;
   }
 
-  const manifestTools = listManifestToolsForIntegration(integration);
+  const manifestTools = [
+    ...(options.includePipedreamManifestTools ? listPipedreamToolsForIntegration(integration) : []),
+    ...(options.includeComposioManifestTools ? listComposioToolsForIntegration(integration) : []),
+  ];
   const tools = new Map<string, IntegrationTool>();
 
   for (const tool of handlerTools) {
@@ -306,20 +317,30 @@ export async function listConnectedToolEntries(userId: string): Promise<ToolRegi
       entries.push({ tool, connections: integrationConnections });
     }
 
-    const pipedreamConnections = integrationConnections.filter(isPipedreamBackedConnection);
-
-    if (pipedreamConnections.length === 0) {
-      continue;
-    }
-
     const handlerToolNames = new Set(handlerTools.map((tool) => tool.name));
 
-    for (const tool of listManifestToolsForIntegration(integration)) {
+    const pipedreamConnections = integrationConnections.filter(isPipedreamBackedConnection);
+
+    for (const tool of listPipedreamToolsForIntegration(integration)) {
       if (handlerToolNames.has(tool.name)) {
         continue;
       }
 
-      entries.push({ tool, connections: pipedreamConnections });
+      if (pipedreamConnections.length > 0) {
+        entries.push({ tool, connections: pipedreamConnections });
+      }
+    }
+
+    const composioConnections = integrationConnections.filter(isComposioBackedConnection);
+
+    for (const tool of listComposioToolsForIntegration(integration)) {
+      if (handlerToolNames.has(tool.name)) {
+        continue;
+      }
+
+      if (composioConnections.length > 0) {
+        entries.push({ tool, connections: composioConnections });
+      }
     }
   }
 
@@ -359,15 +380,33 @@ export async function listToolDescriptionsForIntegration(
     (connection) => connection.integration === integration,
   );
   const includePipedreamManifestTools = connections.some(isPipedreamBackedConnection);
-
+  const includeComposioManifestTools = connections.some(isComposioBackedConnection);
   const pipedreamConnections = connections.filter(isPipedreamBackedConnection);
+  const composioConnections = connections.filter(isComposioBackedConnection);
 
-  return listToolDefinitionsForIntegration(integration, {
-    includePipedreamManifestTools,
-  }).map((tool) =>
-    buildToolDescription(
-      tool,
-      tool.execution.kind === "pipedream_action" ? pipedreamConnections : connections,
-    ),
-  );
+  const definitions = [
+    ...listHandlerToolsForIntegration(integration),
+    ...(includePipedreamManifestTools ? listPipedreamToolsForIntegration(integration) : []),
+    ...(includeComposioManifestTools ? listComposioToolsForIntegration(integration) : []),
+  ];
+
+  const uniqueDefinitions = new Map<string, IntegrationTool>();
+  for (const tool of definitions) {
+    if (!uniqueDefinitions.has(tool.name)) {
+      uniqueDefinitions.set(tool.name, tool);
+    }
+  }
+
+  return Array.from(uniqueDefinitions.values())
+    .sort((left, right) => left.name.localeCompare(right.name))
+    .map((tool) =>
+      buildToolDescription(
+        tool,
+        tool.execution.kind === "pipedream_action"
+          ? pipedreamConnections
+          : tool.execution.kind === "composio_tool"
+            ? composioConnections
+            : connections,
+      ),
+    );
 }

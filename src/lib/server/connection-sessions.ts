@@ -7,6 +7,7 @@ import {
   getIntegrationConnectionForUserId,
   randomToken,
   saveNangoIntegrationConnectionForUserId,
+  saveComposioIntegrationConnectionForUserId,
   savePipedreamIntegrationConnectionForUserId,
   saveIntegrationConnectionForUserId,
   type SaveIntegrationConnectionOptions,
@@ -20,6 +21,7 @@ import {
   listNangoConnectionsForSession,
 } from "@/lib/server/nango";
 import type { PipedreamConnectionMetadata } from "@/lib/server/pipedream";
+import type { ComposioConnectedAccountMetadata } from "@/lib/composio/backend-client";
 
 export type ConnectionSessionStatus =
   | "awaiting_user_action"
@@ -665,6 +667,82 @@ export async function completePipedreamConnectionSession(
       accountLabel: params.metadata.accountLabel,
       externalAccountId: params.metadata.externalAccountId,
       expiresAt: params.metadata.expiresAt,
+    },
+  );
+
+  await db
+    .prepare(
+      `
+        UPDATE connection_sessions
+        SET connection_id = ?,
+            status = 'connected',
+            error_message = NULL,
+            completed_at = datetime('now'),
+            updated_at = datetime('now')
+        WHERE id = ?
+      `,
+    )
+    .bind(connection.id, normalized.id)
+    .run();
+
+  const saved = await getConnectionSessionById(normalized.id);
+
+  if (!saved) {
+    throw new Error("Connection session was completed but could not be reloaded");
+  }
+
+  return saved;
+}
+
+export async function completeComposioConnectionSession(
+  token: string,
+  params: {
+    metadata: ComposioConnectedAccountMetadata;
+  },
+): Promise<ConnectionSessionRecord> {
+  const db = getDatabase();
+
+  if (!db) {
+    throw new Error("DB binding is not configured");
+  }
+
+  const session = await loadSession(db, token);
+
+  if (!session) {
+    throw new Error("Connection session not found");
+  }
+
+  const integration = getIntegrationBySlug(session.integration);
+
+  if (!integration) {
+    throw new Error("Integration not found");
+  }
+
+  const normalized = await expireIfNeeded(db, session);
+
+  if (normalized.status === "expired") {
+    throw new Error("This connection session has expired");
+  }
+
+  if (integration.setupMode !== "composio") {
+    throw new Error(`${integration.name} does not use the hosted Composio flow`);
+  }
+
+  const connection = await saveComposioIntegrationConnectionForUserId(
+    db,
+    normalized.user_id,
+    normalized.integration,
+    {
+      mode: normalized.connection_id ? "upsert_default" : "create_or_match_account",
+      connectionId: normalized.connection_id ?? undefined,
+      setAsDefault: true,
+      connectedAccountId: params.metadata.connectedAccountId,
+      authConfigId: params.metadata.authConfigId,
+      toolkit: params.metadata.toolkit,
+      connectionLabel: params.metadata.connectionLabel,
+      accountLabel: params.metadata.accountLabel,
+      externalAccountId: params.metadata.externalAccountId,
+      expiresAt: null,
     },
   );
 

@@ -1196,7 +1196,10 @@ const overrides = {
           mode: "read",
           risk: "safe",
           idempotent: true,
-          hiddenProps: ["syncDir"],
+          hiddenProps: ["syncDir", "newFileName"],
+          safeDefaults: {
+            newFileName: "clawlink-download.bin",
+          },
         },
         "microsoft_onedrive-find-file-by-name": {
           mode: "read",

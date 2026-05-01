@@ -305,20 +305,13 @@ export const OnedrivePipedreamToolManifests = [
           "title": "File Path",
           "description": "The path to the file from the root folder, e.g., `Documents/My Subfolder/File 1.docx`. You can either provide this, or search for an existing file with the `File ID` prop."
         },
-        "newFileName": {
-          "type": "string",
-          "title": "New File Name",
-          "description": "The file name to save the downloaded content as, under the `/tmp` folder. Make sure to include the file extension."
-        },
         "convertToFormat": {
           "type": "string",
           "title": "Convert To Format",
           "description": "The format to convert the file to. See the [Format Options](https://learn.microsoft.com/en-us/graph/api/driveitem-get-content-format?view=graph-rest-1.0&tabs=http#format-options) for supported source formats"
         }
       },
-      "required": [
-        "newFileName"
-      ]
+      "required": []
     },
     "accessLevel": "read",
     "mode": "read",
@@ -329,7 +322,9 @@ export const OnedrivePipedreamToolManifests = [
     ],
     "whenToUse": [],
     "askBefore": [],
-    "safeDefaults": {},
+    "safeDefaults": {
+      "newFileName": "clawlink-download.bin"
+    },
     "examples": [],
     "followups": [],
     "requiresScopes": [],
@@ -396,7 +391,7 @@ export const OnedrivePipedreamToolManifests = [
           "label": "New File Name",
           "description": "The file name to save the downloaded content as, under the `/tmp` folder. Make sure to include the file extension.",
           "required": true,
-          "hidden": false,
+          "hidden": true,
           "disabled": false,
           "readOnly": false,
           "remoteOptions": false,

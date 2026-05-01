@@ -19,6 +19,7 @@ import type {
   ToolExecutionResult,
 } from "@/lib/runtime/tool-runtime";
 import { executePipedreamActionTool } from "@/lib/pipedream/action-executor";
+import { executeComposioTool } from "@/lib/composio/tool-executor";
 import {
   classifyIntegrationError,
   getAllHandlers,
@@ -85,6 +86,11 @@ function getCredentialBridgeEnv(): CredentialBridgeEnv | null {
     PIPEDREAM_CLIENT_SECRET: getEnvBinding<string>("PIPEDREAM_CLIENT_SECRET"),
     PIPEDREAM_PROJECT_ID: getEnvBinding<string>("PIPEDREAM_PROJECT_ID"),
     PIPEDREAM_ENVIRONMENT: getEnvBinding<string>("PIPEDREAM_ENVIRONMENT"),
+    COMPOSIO_API_KEY: getEnvBinding<string>("COMPOSIO_API_KEY"),
+    COMPOSIO_BASE_URL: getEnvBinding<string>("COMPOSIO_BASE_URL"),
+    COMPOSIO_TOOLKIT_MAP: getEnvBinding<string>("COMPOSIO_TOOLKIT_MAP"),
+    COMPOSIO_AUTH_CONFIG_MAP: getEnvBinding<string>("COMPOSIO_AUTH_CONFIG_MAP"),
+    COMPOSIO_TOOLKIT_VERSION_MAP: getEnvBinding<string>("COMPOSIO_TOOLKIT_VERSION_MAP"),
   };
 }
 
@@ -496,6 +502,21 @@ export async function executeToolForUser(
     ): Promise<unknown> => {
       if (decision.tool.execution.kind === "pipedream_action") {
         const execution = await executePipedreamActionTool(
+          decision.tool,
+          mergedArgs,
+          {
+            requestId,
+            externalUserId: request.userId,
+            credentials,
+            env,
+          },
+        );
+        providerRequestId = execution.providerRequestId;
+        return execution.data;
+      }
+
+      if (decision.tool.execution.kind === "composio_tool") {
+        const execution = await executeComposioTool(
           decision.tool,
           mergedArgs,
           {

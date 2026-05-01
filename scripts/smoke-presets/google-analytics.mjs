@@ -1,13 +1,20 @@
 export default {
   slug: "google-analytics",
   read: [
+    { tool: "google_analytics_list_account_summaries" },
     {
-      tool: "google-analytics_run_report_in_ga4",
+      tool: "google_analytics_run_report",
       args: (ctx) => ({
-        property: ctx.require("property", "google analytics property id"),
-        startDate: ctx.optional("startDate") ?? "2026-04-01",
-        endDate: ctx.optional("endDate") ?? "2026-04-28",
+        property: ctx.require("property", "Google Analytics property id"),
+        start_date: ctx.optional("startDate") ?? "2026-04-01",
+        end_date: ctx.optional("endDate") ?? "2026-04-28",
         metrics: ctx.csv("metrics").length > 0 ? ctx.csv("metrics") : ["activeUsers"],
+      }),
+    },
+    {
+      tool: "google_analytics_get_metadata",
+      args: (ctx) => ({
+        name: ctx.require("property", "Google Analytics property id"),
       }),
     },
   ],

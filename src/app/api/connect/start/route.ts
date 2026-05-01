@@ -40,7 +40,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (integration.setupMode !== "oauth" && integration.setupMode !== "pipedream") {
+    if (
+      integration.setupMode !== "oauth" &&
+      integration.setupMode !== "pipedream" &&
+      integration.setupMode !== "composio"
+    ) {
       return NextResponse.json(
         {
           error: `${integration.name} no longer supports manual credential setup. Reconnect it through a hosted provider flow when available.`,
@@ -104,6 +108,11 @@ export async function POST(request: NextRequest) {
           integration.setupMode === "pipedream" &&
           defaultConnection.authBackend === "pipedream" &&
           defaultConnection.pipedreamAccountId
+        ) ||
+        (
+          integration.setupMode === "composio" &&
+          defaultConnection.authBackend === "composio" &&
+          defaultConnection.composioConnectedAccountId
         )
       )
         ? defaultConnection.id

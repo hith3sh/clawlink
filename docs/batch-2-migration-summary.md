@@ -1,5 +1,7 @@
 # Batch 2 Migration Summary: Google Family + Gmail
 
+Historical note: the Google custom worker handlers described below have since been removed. Current Google tool execution should use generated Pipedream manifests.
+
 ## Migrated Slugs
 
 - `google-sheets`

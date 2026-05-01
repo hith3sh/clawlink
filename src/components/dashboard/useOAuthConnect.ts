@@ -38,6 +38,7 @@ export function useOAuthConnect(integration: Integration, onConnected?: () => vo
   const [starting, setStarting] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const onConnectedRef = useRef(onConnected);
+  const connectedNotifiedRef = useRef(false);
 
   useEffect(() => {
     onConnectedRef.current = onConnected;
@@ -49,6 +50,16 @@ export function useOAuthConnect(integration: Integration, onConnected?: () => vo
     }
 
     let cancelled = false;
+
+    const handleConnected = () => {
+      if (cancelled || connectedNotifiedRef.current) {
+        return;
+      }
+
+      connectedNotifiedRef.current = true;
+      setSessionToken(null);
+      onConnectedRef.current?.();
+    };
 
     const interval = window.setInterval(async () => {
       try {
@@ -68,8 +79,7 @@ export function useOAuthConnect(integration: Integration, onConnected?: () => vo
         }
 
         if (status === "connected") {
-          setSessionToken(null);
-          onConnectedRef.current?.();
+          handleConnected();
         } else if (status === "failed" || status === "expired") {
           setSessionToken(null);
         }
@@ -78,11 +88,32 @@ export function useOAuthConnect(integration: Integration, onConnected?: () => vo
       }
     }, 3000);
 
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+
+      if (
+        !event.data ||
+        typeof event.data !== "object" ||
+        event.data.type !== "clawlink:connection-connected" ||
+        event.data.integration !== integration.slug ||
+        event.data.sessionToken !== sessionToken
+      ) {
+        return;
+      }
+
+      handleConnected();
+    };
+
+    window.addEventListener("message", handleMessage);
+
     return () => {
       cancelled = true;
+      window.removeEventListener("message", handleMessage);
       window.clearInterval(interval);
     };
-  }, [sessionToken]);
+  }, [integration.slug, sessionToken]);
 
   const start = useCallback(() => {
     if (starting) {
@@ -117,6 +148,7 @@ export function useOAuthConnect(integration: Integration, onConnected?: () => vo
     }
 
     setStarting(true);
+    connectedNotifiedRef.current = false;
 
     void (async () => {
       try {
@@ -152,7 +184,7 @@ export function useOAuthConnect(integration: Integration, onConnected?: () => vo
         setStarting(false);
       }
     })();
-  }, [integration.name, integration.slug, starting]);
+  }, [integration.slug, starting]);
 
   return { start, starting };
 }

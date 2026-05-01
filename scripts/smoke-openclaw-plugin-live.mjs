@@ -38,36 +38,69 @@ function asBooleanFlag(value) {
   return value === true || value === "true";
 }
 
-function loadDotEnvLocalKey() {
-  const envPath = path.resolve(process.cwd(), ".env.local");
+function parseEnvFile(contents) {
+  const parsed = {};
 
-  if (!existsSync(envPath)) {
-    return null;
-  }
+  for (const rawLine of contents.split(/\r?\n/u)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) {
+      continue;
+    }
 
-  const raw = readFileSync(envPath, "utf8");
+    const separator = line.indexOf("=");
+    if (separator < 0) {
+      continue;
+    }
 
-  for (const line of raw.split(/\r?\n/u)) {
-    if (line.startsWith("CLAWLINK_API_KEY=")) {
-      const value = line.slice("CLAWLINK_API_KEY=".length).trim();
-      return isNonEmptyString(value) ? value : null;
+    const key = line.slice(0, separator).trim();
+    const value = line.slice(separator + 1).trim().replace(/^['"]|['"]$/gu, "");
+    if (key) {
+      parsed[key] = value;
     }
   }
 
-  return null;
+  return parsed;
 }
 
-function loadApiKey() {
-  if (isNonEmptyString(process.env.CLAWLINK_API_KEY)) {
-    return process.env.CLAWLINK_API_KEY.trim();
+function loadEnvFiles() {
+  const merged = {};
+  const candidates = [
+    path.resolve(process.cwd(), ".env.production"),
+    path.resolve(process.cwd(), ".env.local"),
+  ];
+
+  for (const candidate of candidates) {
+    if (!existsSync(candidate)) {
+      continue;
+    }
+
+    Object.assign(merged, parseEnvFile(readFileSync(candidate, "utf8")));
   }
 
-  const envLocalKey = loadDotEnvLocalKey();
-  if (isNonEmptyString(envLocalKey)) {
-    return envLocalKey.trim();
+  return merged;
+}
+
+function readEnvValue(envFiles, key) {
+  const processValue = process.env[key];
+  if (isNonEmptyString(processValue)) {
+    return processValue.trim();
+  }
+
+  const fileValue = envFiles[key];
+  return isNonEmptyString(fileValue) ? fileValue.trim() : undefined;
+}
+
+function loadApiKey(envFiles) {
+  const directKey = readEnvValue(envFiles, "CLAWLINK_API_KEY");
+  if (isNonEmptyString(directKey)) {
+    return directKey.trim();
   }
 
   const configPath = path.join(os.homedir(), ".openclaw", "openclaw.json");
+  if (!existsSync(configPath)) {
+    throw new Error("No ClawLink API key found in .env.local, CLAWLINK_API_KEY, or ~/.openclaw/openclaw.json.");
+  }
+
   const raw = readFileSync(configPath, "utf8");
   const parsed = JSON.parse(raw);
   const key =
@@ -103,8 +136,12 @@ function createFakeApi(apiKey) {
   };
 }
 
+function getTextContent(result) {
+  return result?.content?.find?.((entry) => entry?.type === "text")?.text ?? "";
+}
+
 function summarizeContent(result) {
-  const text = result?.content?.find?.((entry) => entry?.type === "text")?.text ?? "";
+  const text = getTextContent(result);
   return text.length > 600 ? `${text.slice(0, 600)}...` : text;
 }
 
@@ -113,6 +150,7 @@ async function runTool(api, name, params) {
   const result = await tool.execute("smoke", params);
   return {
     content: summarizeContent(result),
+    text: getTextContent(result),
     details: result?.details ?? null,
   };
 }
@@ -124,8 +162,8 @@ async function loadPreset(slug) {
     throw new Error(`No smoke preset found for integration \"${slug}\" at ${presetPath}`);
   }
 
-  const module = await import(pathToFileURL(presetPath).href);
-  const preset = module.default ?? module;
+  const importedPreset = await import(pathToFileURL(presetPath).href);
+  const preset = importedPreset.default ?? importedPreset;
 
   if (!preset || typeof preset !== "object") {
     throw new Error(`Preset ${slug} does not export a valid object.`);
@@ -161,21 +199,28 @@ function parseCsv(value) {
     .filter(Boolean);
 }
 
-function buildContext(cliArgs) {
+function toEnvKey(key) {
+  return key
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .replace(/-/g, "_")
+    .toUpperCase();
+}
+
+function buildContext(cliArgs, envFiles) {
   return {
     cliArgs,
-    env: process.env,
+    env: {
+      ...envFiles,
+      ...process.env,
+    },
     require(key, description = key) {
       const direct = cliArgs[key];
       if (isNonEmptyString(direct)) {
         return direct.trim();
       }
 
-      const envKey = key
-        .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
-        .replace(/-/g, "_")
-        .toUpperCase();
-      const envValue = process.env[envKey];
+      const envKey = toEnvKey(key);
+      const envValue = readEnvValue(envFiles, envKey);
       if (isNonEmptyString(envValue)) {
         return envValue.trim();
       }
@@ -188,18 +233,15 @@ function buildContext(cliArgs) {
         return direct.trim();
       }
 
-      const envKey = key
-        .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
-        .replace(/-/g, "_")
-        .toUpperCase();
-      const envValue = process.env[envKey];
+      const envKey = toEnvKey(key);
+      const envValue = readEnvValue(envFiles, envKey);
       return isNonEmptyString(envValue) ? envValue.trim() : undefined;
     },
     csv(key) {
-      return parseCsv(cliArgs[key] ?? process.env[key.toUpperCase()]);
+      return parseCsv(cliArgs[key] ?? readEnvValue(envFiles, toEnvKey(key)));
     },
     number(key, fallback) {
-      const raw = cliArgs[key] ?? process.env[key.toUpperCase()];
+      const raw = cliArgs[key] ?? readEnvValue(envFiles, toEnvKey(key));
       if (!isNonEmptyString(raw)) {
         return fallback;
       }
@@ -213,8 +255,10 @@ function buildContext(cliArgs) {
 }
 
 function buildBaseSteps(preset) {
-  const readSteps = normalizeArray(preset.read);
-  const firstReadTool = readSteps[0]?.tool;
+  const firstTool =
+    normalizeArray(preset.read)[0]?.tool ??
+    normalizeArray(preset.preview)[0]?.tool ??
+    normalizeArray(preset.write)[0]?.tool;
 
   const steps = [
     {
@@ -224,11 +268,11 @@ function buildBaseSteps(preset) {
     },
   ];
 
-  if (isNonEmptyString(firstReadTool)) {
+  if (isNonEmptyString(firstTool)) {
     steps.push({
       label: "describe",
       tool: "clawlink_describe_tool",
-      params: { tool: firstReadTool },
+      params: { tool: firstTool },
     });
   }
 
@@ -261,28 +305,6 @@ function materializeStep(step, context, mode) {
   };
 }
 
-function buildExecutionPlan(preset, context, options) {
-  const plan = [...buildBaseSteps(preset)];
-
-  for (const step of normalizeArray(preset.read)) {
-    plan.push(materializeStep(step, context, "read"));
-  }
-
-  if (options.preview) {
-    for (const step of normalizeArray(preset.preview)) {
-      plan.push(materializeStep(step, context, "preview"));
-    }
-  }
-
-  if (options.write) {
-    for (const step of normalizeArray(preset.write)) {
-      plan.push(materializeStep(step, context, "write"));
-    }
-  }
-
-  return plan;
-}
-
 function pad(value, width) {
   return String(value).padEnd(width, " ");
 }
@@ -307,10 +329,35 @@ function printSummary(results) {
   }
 }
 
-async function runIntegration(api, slug, cliArgs, options) {
-  const preset = await loadPreset(slug);
-  const context = buildContext(cliArgs);
-  const plan = buildExecutionPlan(preset, context, options);
+function emptyStatuses() {
+  return {
+    list: "-",
+    describe: "-",
+    read: "-",
+    preview: "-",
+    write: "-",
+  };
+}
+
+async function runIntegration(api, slug, cliArgs, envFiles, options) {
+  let preset;
+
+  try {
+    preset = await loadPreset(slug);
+  } catch (error) {
+    console.error(`\n=== ${slug} ===`);
+    console.error(error instanceof Error ? error.message : String(error));
+    return {
+      slug,
+      statuses: {
+        ...emptyStatuses(),
+        read: "FAIL",
+      },
+      ok: false,
+    };
+  }
+
+  const context = buildContext(cliArgs, envFiles);
   const statuses = {
     list: "-",
     describe: "-",
@@ -321,11 +368,29 @@ async function runIntegration(api, slug, cliArgs, options) {
 
   console.log(`\n=== ${slug} ===`);
 
-  for (const step of plan) {
-    console.log(`\n>>> ${step.label}: ${step.tool}`);
+  const baseSteps = buildBaseSteps(preset);
+  const readSteps = normalizeArray(preset.read).map((step) => ({ raw: step, mode: "read" }));
+  const previewSteps = options.preview
+    ? normalizeArray(preset.preview).map((step) => ({ raw: step, mode: "preview" }))
+    : [];
+  const writeSteps = options.write
+    ? normalizeArray(preset.write).map((step) => ({ raw: step, mode: "write" }))
+    : [];
+  const plan = [
+    ...baseSteps.map((step) => ({ step })),
+    ...readSteps,
+    ...previewSteps,
+    ...writeSteps,
+  ];
+
+  for (const entry of plan) {
+    let step;
+
     try {
+      step = entry.step ?? materializeStep(entry.raw, context, entry.mode);
+      console.log(`\n>>> ${step.label}: ${step.tool}`);
       const result = await runTool(api, step.tool, step.params);
-      console.log(result.content);
+      console.log(options.verbose ? result.content : "ok");
 
       if (step.label === "list") {
         statuses.list = "pass";
@@ -339,15 +404,18 @@ async function runIntegration(api, slug, cliArgs, options) {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(message);
+      const failedTool = step?.params?.tool ?? entry.raw?.tool;
 
-      if (step.label === "list") {
+      if (step?.label === "list") {
         statuses.list = "FAIL";
-      } else if (step.label === "describe") {
+      } else if (step?.label === "describe") {
         statuses.describe = "FAIL";
-      } else if (step.tool === "clawlink_preview_tool") {
+      } else if (entry.mode === "preview" || step?.tool === "clawlink_preview_tool") {
         statuses.preview = "FAIL";
-      } else if (step.tool === "clawlink_call_tool" && step.params?.tool) {
-        if (normalizeArray(preset.read).some((entry) => entry.tool === step.params.tool)) {
+      } else if (entry.mode === "write") {
+        statuses.write = "FAIL";
+      } else if (entry.mode === "read" || step?.tool === "clawlink_call_tool") {
+        if (normalizeArray(preset.read).some((presetStep) => presetStep.tool === failedTool)) {
           statuses.read = "FAIL";
         } else {
           statuses.write = "FAIL";
@@ -361,32 +429,102 @@ async function runIntegration(api, slug, cliArgs, options) {
   return { slug, statuses, ok: true };
 }
 
+function parseJsonPayloadFromText(text) {
+  const starts = [text.indexOf("["), text.indexOf("{")].filter((index) => index >= 0);
+  if (starts.length === 0) {
+    return null;
+  }
+
+  const start = Math.min(...starts);
+  try {
+    return JSON.parse(text.slice(start));
+  } catch {
+    return null;
+  }
+}
+
+async function listConnectedPresetSlugs(api) {
+  const result = await runTool(api, "clawlink_list_tools", {});
+  const parsed = parseJsonPayloadFromText(result.text);
+  const tools = Array.isArray(parsed) ? parsed : [];
+  const connected = new Set();
+  const presetSlugs = new Set(listAvailablePresetSlugs());
+  const missing = new Set();
+
+  for (const tool of tools) {
+    if (!isNonEmptyString(tool?.integration)) {
+      continue;
+    }
+
+    if (presetSlugs.has(tool.integration)) {
+      connected.add(tool.integration);
+    } else {
+      missing.add(tool.integration);
+    }
+  }
+
+  return {
+    connected: Array.from(connected).sort(),
+    missing: Array.from(missing).sort(),
+  };
+}
+
 async function main() {
   const cliArgs = parseArgs(process.argv.slice(2));
-  const apiKey = loadApiKey();
+  const envFiles = loadEnvFiles();
+  const apiKey = loadApiKey(envFiles);
   const api = createFakeApi(apiKey);
   clawlinkPlugin.register(api);
 
   const options = {
     preview: asBooleanFlag(cliArgs.preview),
+    verbose: asBooleanFlag(cliArgs.verbose),
     write: asBooleanFlag(cliArgs.write),
   };
 
-  const integrations = asBooleanFlag(cliArgs.all)
-    ? listAvailablePresetSlugs()
-    : [cliArgs.integration ?? cliArgs.preset ?? "gmail"];
+  let integrations;
+  const missingConnectedPresets = [];
+
+  if (asBooleanFlag(cliArgs.connected)) {
+    const connected = await listConnectedPresetSlugs(api);
+    integrations = connected.connected;
+    missingConnectedPresets.push(...connected.missing);
+  } else if (asBooleanFlag(cliArgs.all)) {
+    integrations = listAvailablePresetSlugs();
+  } else {
+    integrations = [cliArgs.integration ?? cliArgs.preset ?? "gmail"];
+  }
 
   if (integrations.length === 0) {
-    throw new Error("No smoke presets found. Add files under scripts/smoke-presets/*.mjs first.");
+    throw new Error(
+      asBooleanFlag(cliArgs.connected)
+        ? "No connected integrations with smoke presets found for this API key."
+        : "No smoke presets found. Add files under scripts/smoke-presets/*.mjs first.",
+    );
   }
 
   const results = [];
 
   for (const slug of integrations) {
-    results.push(await runIntegration(api, slug, cliArgs, options));
+    results.push(await runIntegration(api, slug, cliArgs, envFiles, options));
+  }
+
+  for (const slug of missingConnectedPresets) {
+    results.push({
+      slug,
+      statuses: {
+        ...emptyStatuses(),
+        read: "FAIL",
+      },
+      ok: false,
+    });
   }
 
   printSummary(results);
+
+  if (missingConnectedPresets.length > 0) {
+    console.error(`\nMissing smoke preset(s): ${missingConnectedPresets.join(", ")}`);
+  }
 
   const failed = results.filter((entry) => !entry.ok);
   if (failed.length > 0) {

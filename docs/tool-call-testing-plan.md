@@ -9,7 +9,7 @@ This doc is the playbook. When we add a new integration, we follow this end-to-e
 Five layers, in order. An integration is not done until all five pass.
 
 1. **Connect flow** — `claw-link.dev/connect/<slug>` opens, the user finishes the hosted flow, the connection lands as `auth_state = active`. Already covered by the manual flow in `docs/adding-an-integration.md`.
-2. **Tool listing** — `clawlink_list_tools` returns the integration's tools for that user. If the registry doesn't include them (wrong `auth_backend`, manifest not registered, custom handler missing), nothing else matters.
+2. **Tool listing** — `clawlink_list_tools` returns the integration's tools for that user. If the registry doesn't include them (wrong `auth_backend`, manifest not registered, or the Postiz custom handler missing), nothing else matters.
 3. **Tool describe** — `clawlink_describe_tool` returns the schema. Confirms argument shape is what the model will actually see.
 4. **Read call** — A safe, idempotent read tool actually executes against the provider and returns real data. This is where most regressions show up: missing `pipedreamAccountId` plumbing, wrong slug→app mapping, hidden Pipedream props, scope gaps.
 5. **Write call (preview or sandboxed)** — Either a `clawlink_preview_tool` call that returns the request payload without side effects, or a low-risk write into a test resource (a draft, a test list, a dummy spreadsheet). This catches issues that don't show up on read paths (write-only scopes, validators that reject empty bodies).
@@ -27,19 +27,18 @@ Three scripts already exist, each covers a different layer:
 
 Only the smoke runner exercises the actual call chain OpenClaw uses in production. It's the right tool. The problem is preset coverage — `scripts/smoke-openclaw-plugin-live.mjs` currently hardcodes two Gmail presets and rejects everything else.
 
-## The wrapper already exists — we just need to feed it presets
+## The wrapper exists and now loads presets
 
 `scripts/smoke-openclaw-plugin-live.mjs` already:
-- Loads the API key from `.env.local` / `CLAWLINK_API_KEY` / `~/.openclaw/openclaw.json`.
+- Loads the API key and smoke fixture values from `.env.local` / `.env.production` / `CLAWLINK_API_KEY` / `~/.openclaw/openclaw.json`.
 - Instantiates `clawlinkPlugin` against a fake OpenClaw `api` object.
 - Calls `clawlink_list_tools`, `clawlink_describe_tool`, `clawlink_call_tool`, `clawlink_preview_tool` through the plugin's real code paths.
+- Loads per-integration presets from `scripts/smoke-presets/<slug>.mjs`.
+- Supports `--integration`, `--all`, and `--connected` summary runs.
 
 This is the "OpenClaw simulator." Don't build a new one.
 
-What it's missing:
-- A way to register presets per integration without editing the runner.
-- A `--all` mode that loops every connected integration and runs its safe-read preset.
-- A summary report (pass/fail per integration) so we can run one command before a release.
+Current remaining gap: the test account still needs active connections and fixture IDs for resource-specific reads such as a Google Docs document id or Search Console site URL.
 
 ## Proposed structure
 
@@ -74,7 +73,7 @@ Rules for preset files:
 - **`read` steps must be truly idempotent** — `get_current_user`, `list_*`, `find_*` with `maxResults: 1`. Never anything that touches state.
 - **`preview` steps use `clawlink_preview_tool`**, not `clawlink_call_tool`. This is the contract the OpenClaw plugin already supports for showing the request without executing it.
 - **`write` steps default off**. They run only with `--write` and should target test resources (a folder named `clawlink-smoke`, a list named `ClawLink Test`, etc.). Each step states its cleanup expectation.
-- **Custom-handler integrations and manifest-backed integrations use the same preset format** — the runner just calls the plugin, which routes appropriately.
+- **Manifest-backed integrations and the Postiz custom handler use the same preset format** — the runner just calls the plugin, which routes appropriately.
 
 ### Runner changes
 
@@ -82,6 +81,7 @@ Rules for preset files:
 npm run smoke:openclaw-plugin -- --integration gmail              # safe reads only
 npm run smoke:openclaw-plugin -- --integration gmail --preview    # reads + previews
 npm run smoke:openclaw-plugin -- --integration gmail --write      # everything (dangerous)
+npm run smoke:openclaw-plugin -- --connected                      # safe reads, connected integrations with presets
 npm run smoke:openclaw-plugin -- --all                            # safe reads, every preset on disk
 npm run smoke:openclaw-plugin -- --all --preview                  # safe reads + previews
 ```
@@ -104,8 +104,9 @@ Exit non-zero if any step fails so it can gate a deploy.
 | When | Command |
 |---|---|
 | Adding a new integration (per-integration validation) | `--integration <slug> --preview` |
-| Before any release that changes worker / executor / credentials code | `--all` |
-| Weekly / scheduled regression | `--all --preview` |
+| Before any release that changes worker / executor / credentials code | `--connected` on the connected test account |
+| Fully connected release sweep | `--all` |
+| Weekly / scheduled regression | `--connected --preview` |
 | Manual deep test (rare, gated) | `--integration <slug> --write` |
 
 ## Per-integration testing checklist (new integrations)
@@ -117,10 +118,9 @@ When adding a new integration, do these in order. Don't skip steps.
    - For Pipedream: slug is in `PIPEDREAM_CONNECT_SLUGS` in *both* `wrangler.toml` and `worker/wrangler.worker.toml`.
    - For Pipedream with a hyphen in the slug, or a non-matching app name: slug is in `PIPEDREAM_APP_MAP` in both wrangler files (see CLAUDE.md "Pipedream slug → app name mapping").
    - Open `claw-link.dev/connect/<slug>` and finish the flow as a test user.
-2. **Manifest or handler is wired in.**
+2. **Manifest is wired in.**
    - Pipedream manifest path: `src/generated/pipedream-manifests/<slug>.generated.ts` exists, `index.ts` exports it, `npm run audit:manifests -- --strict` passes, `npm run validate:pipedream-actions -- --integration <slug> --strict` passes.
-   - Custom handler path: `worker/integrations/<slug>.ts` extends the right base (`GoogleBaseIntegration` for Google providers using Pipedream proxy, `BaseIntegration` only if it manages its own auth) and `worker/integrations/index.ts` registers it.
-   - Tool name collision rule: if both a manifest and a handler exist, the handler wins (CLAUDE.md). Either retire the handler or rename the colliding tools.
+   - Do not add a new `worker/integrations/<slug>.ts` handler. `postiz` is the only current custom-handler exception.
 3. **Plugin contract test passes.** `npm run test:openclaw-plugin-contract`.
 4. **Add a smoke preset.** Create `scripts/smoke-presets/<slug>.mjs` with at least one `read` step. Add a `preview` step if the integration has any write tool. The preset must reflect the real tool names the plugin will resolve.
 5. **Smoke read passes.** `npm run smoke:openclaw-plugin -- --integration <slug>` with a real connection on the test account. This is the gate that proves OpenClaw → ClawLink → provider works for this integration.
@@ -136,22 +136,22 @@ Statuses: `pass`, `fail`, `n/a` (no such tool kind for this integration), `untes
 
 | Integration | Auth | Manifest | Connect | List | Read | Preview | Last verified |
 |---|---|---|---|---|---|---|---|
-| gmail | pipedream | yes | pass | pass | pass | pass | 2026-04-28 |
-| google-sheets | pipedream | **no** | pass | pass | **fail** | n/a | 2026-04-28 |
-| slack | pipedream | no (handler supports proxy) | untested | untested | untested | untested | — |
+| gmail | pipedream | yes | pass | pass | pass | pass | 2026-04-29 |
+| google-sheets | pipedream | **no** | n/a | n/a | n/a | n/a | — |
+| slack | pipedream | **no** | n/a | n/a | n/a | n/a | — |
 | google-calendar | pipedream | yes | untested | untested | untested | untested | — |
 | google-drive | pipedream | yes | untested | untested | untested | untested | — |
-| google-docs | pipedream | yes | untested | untested | untested | untested | — |
+| google-docs | pipedream | yes | pass | pass | **fail** (missing `GOOGLE_DOCS_DOCUMENT_ID`) | untested | 2026-04-29 |
 | google-analytics | pipedream | yes | untested | untested | untested | untested | — |
-| google-search-console | pipedream | yes | untested | untested | untested | untested | — |
+| google-search-console | pipedream | yes | pass | pass | **fail** (missing `GOOGLE_SEARCH_CONSOLE_SITE_URL`) | untested | 2026-04-29 |
 | google-ads | pipedream | yes | untested | untested | untested | untested | — |
-| notion | pipedream | yes | untested | untested | untested | untested | — |
-| outlook | pipedream | yes | untested | untested | untested | untested | — |
-| onedrive | pipedream | yes | untested | untested | untested | untested | — |
+| notion | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
+| outlook | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
+| onedrive | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
 | facebook | pipedream | yes | untested | untested | untested | untested | — |
-| linkedin | pipedream | yes | untested | untested | untested | untested | — |
-| youtube | pipedream | yes | untested | untested | untested | untested | — |
-| mailchimp | pipedream | yes | untested | untested | untested | untested | — |
+| linkedin | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
+| youtube | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
+| mailchimp | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
 | klaviyo | pipedream | yes | untested | untested | untested | untested | — |
 | instantly | pipedream | yes | untested | untested | untested | untested | — |
 | postiz | pipedream | yes | untested | untested | untested | untested | — |
@@ -161,22 +161,23 @@ Statuses: `pass`, `fail`, `n/a` (no such tool kind for this integration), `untes
 | airtable | pipedream | yes | untested | untested | untested | untested | — |
 | clickup | pipedream | yes | untested | untested | untested | untested | — |
 | calendly | pipedream | yes | untested | untested | untested | untested | — |
-| xero | pipedream | yes | untested | untested | untested | untested | — |
+| xero | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
 
 Known migration work right now:
-- **Google imported integrations** — `google-docs`, `google-drive`, `google-calendar`, `google-search-console`, and `google-analytics` are moving from legacy custom handler precedence to the manifest-backed Pipedream path. During this cleanup, manifest coverage and smoke presets need to be treated as the source of truth.
-- **`google-sheets`** — no manifest, custom handler at `worker/integrations/google-sheets.ts:144` extends `BaseIntegration` and reads `credentials.accessToken`. Pipedream-backed connections only have `pipedreamAccountId`, so every tool call throws. Either import the manifest (`npm run import:pipedream-actions -- --app google_sheets --integration google-sheets`) or refactor the handler to extend `GoogleBaseIntegration`.
+- **Custom handlers removed except Postiz** — manifest coverage and smoke presets are the source of truth for normal integrations.
+- **`google-sheets` and `slack`** — both have Pipedream connect config but no generated manifest, so they are marked coming soon and currently expose no tools. Import manifests before adding smoke presets or marking tool execution ready.
+- **`apollo`** — now uses the generated manifest path only; validate the manifest-backed tools before marking it ready.
 
 ## Implementation roadmap
 
 This is what someone needs to do to get the runner to the shape this doc describes. Order matters — earlier steps unblock later ones.
 
-1. **Refactor `scripts/smoke-openclaw-plugin-live.mjs` to load presets from `scripts/smoke-presets/*.mjs`.** Keep current Gmail presets as the first migration.
-2. **Add `--integration <slug>` and `--all` modes** with the summary table output and non-zero exit on failure.
-3. **Write smoke presets for the 24 untested integrations.** One file per integration. Reads only — no preview/write until each integration has a real read passing.
+1. **Done:** refactor `scripts/smoke-openclaw-plugin-live.mjs` to load presets from `scripts/smoke-presets/*.mjs`.
+2. **Done:** add `--integration`, `--all`, and `--connected` modes with summary table output and non-zero exit on failure.
+3. **Done:** write smoke presets for current manifest-backed integrations and Postiz.
 4. **Run `--all` against the production worker once** with a fully-connected test account to fill in the coverage table.
-5. **Fix the `google-sheets` regression** (manifest import or handler refactor) and add it to the green list.
-6. **Add preview steps** for integrations whose writes are common (gmail send, slack message, notion page create, sheets append).
+5. **Import `google-sheets` and `slack` manifests** before adding smoke presets or live verification for those integrations.
+6. **Add preview steps** for integrations whose writes are common and safely previewable.
 7. **Wire `--all` (read mode) into a pre-deploy check** — even just a manual command in the deploy runbook is fine to start. Add it to CI later.
 8. **Add this checklist to `CLAUDE.md` / `AGENTS.md`** so future agents follow it without being told.
 

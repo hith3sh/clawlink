@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { createElement, useEffect, useState } from "react";
+import { createElement, useCallback, useEffect, useState } from "react";
 import {
   AlertCircle,
   ArrowLeft,
@@ -77,24 +77,15 @@ export default function IntegrationDetails({ integration }: Props) {
   const needsReauth = connection?.authState === "needs_reauth";
   const hostedConnectEnabled =
     integration.dashboardStatus === "available" &&
-    (integration.setupMode === "oauth" || integration.setupMode === "pipedream");
+    (
+      integration.setupMode === "oauth" ||
+      integration.setupMode === "pipedream" ||
+      integration.setupMode === "composio"
+    );
 
   const { refetch: refetchDashboard } = useDashboardConnections();
 
-  const { start: startReconnect, starting: reconnecting } = useOAuthConnect(
-    integration,
-    () => {
-      setSuccess(`${integration.name} reconnected successfully.`);
-      loadIntegration();
-      void refetchDashboard();
-    },
-  );
-
-  useEffect(() => {
-    loadIntegration();
-  }, [integration.slug]);
-
-  function loadIntegration() {
+  const loadIntegration = useCallback(() => {
     let active = true;
 
     (async () => {
@@ -134,7 +125,18 @@ export default function IntegrationDetails({ integration }: Props) {
     return () => {
       active = false;
     };
-  }
+  }, [integration.slug]);
+
+  useEffect(() => loadIntegration(), [loadIntegration]);
+
+  const { start: startReconnect, starting: reconnecting } = useOAuthConnect(
+    integration,
+    () => {
+      setSuccess(`${integration.name} reconnected successfully.`);
+      loadIntegration();
+      void refetchDashboard();
+    },
+  );
 
   async function handleDisconnect() {
     setError(null);
@@ -393,7 +395,9 @@ export default function IntegrationDetails({ integration }: Props) {
                 {integration.tools.map((tool) => (
                   <div key={tool.name} className="rounded-lg border border-border p-3">
                     <p className="font-mono text-sm text-foreground">
-                      {integration.slug}_{tool.name}
+                      {tool.name.startsWith(`${integration.slug}_`)
+                        ? tool.name
+                        : `${integration.slug}_${tool.name}`}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">{tool.description}</p>
                   </div>

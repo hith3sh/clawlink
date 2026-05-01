@@ -51,7 +51,7 @@ export function DashboardConnectionsProvider({
   }, [fetchConnections]);
 
   const connectedSlugs = useMemo(
-    () => new Set(connections.map((c) => c.integration)),
+    () => new Set(connections.filter((c) => c.authState === "active").map((c) => c.integration)),
     [connections],
   );
 

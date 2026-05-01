@@ -1,140 +1,116 @@
 # Adding a new integration
 
-This is the short how-to for wiring any new third-party integration into ClawLink. It applies to both Nango-managed OAuth providers (most cases) and manual-credential providers (API key / token).
+New ClawLink integrations should use Pipedream Connect plus generated Pipedream action manifests. Do not add a new per-provider worker handler unless the user explicitly asks for a custom exception. The only current custom-handler exception is `postiz`.
 
-For the contract between ClawLink and a Nango provider, see `nango-provider-contracts/postiz.md` — that file is the template for any new provider contract doc you might also want to write.
+For the detailed import mechanics, read `docs/pipedream-provider-import-flow.md` together with this checklist.
 
 ## What you need before you start
 
-- A `slug` you'll use everywhere in the codebase. Lowercase, hyphenated. Example: `linkedin`, `mailchimp`, `google-ads`.
-- For OAuth providers: the Nango provider config key (set up on the Nango side first).
-- For manual providers: the credential fields you need from the user (API key, account id, etc.).
+- A ClawLink `slug` used everywhere in the codebase. Lowercase, hyphenated. Examples: `linkedin`, `google-ads`, `mailchimp`.
+- The Pipedream app name. This often differs from the slug, for example `google-calendar` maps to `google_calendar`.
+- A connected test account or a planned test account binding for runtime validation.
+- At least one safe read action that can be used for smoke testing.
 
-## Step 1 — Register the integration in `src/data/integrations.ts`
+## Step 1 - Register catalog metadata
 
-Two entries, both keyed by `slug`.
+Update `src/data/integrations.ts` in both places:
 
-**Base entry** (top half of the file): name, slug, description, category, icon name (from `react-icons`), brand color.
+- Add or update the base catalog entry with name, slug, description, category, icon, and brand color.
+- Add or update the metadata entry with `setupMode: "pipedream"`, dashboard/runtime status, user-facing setup copy, and honest tool descriptions.
 
-**Metadata entry** (bottom half): `setupMode`, `dashboardStatus`, `runtimeStatus`, `setupGuide`, `credentialFields`, and `tools`.
+Keep `tools[]` aligned with the generated manifest tools you intend to expose. Do not advertise tools that are not imported and validated.
 
-| Field | OAuth via Nango | Manual credentials |
-|---|---|---|
-| `setupMode` | `"oauth"` | `"manual"` |
-| `dashboardStatus` | `"available"` once shippable, else `"coming-soon"` | same |
-| `runtimeStatus` | `"live"` once worker handler exists, else `"planned"` | same |
-| `credentialFields` | `[]` (Nango handles capture) | one entry per field the user must paste |
-| `setupGuide` | One-line user-facing copy explaining the hosted flow | One-line copy explaining where to find the credentials |
-| `tools` | One entry per tool the worker exposes; mirrors the handler | same |
+## Step 2 - Configure Pipedream Connect
 
-Keep `tools[]` honest — it's what the dashboard advertises. Don't list a tool you haven't implemented in the worker.
+Add the slug to `PIPEDREAM_CONNECT_SLUGS` in both deploy targets:
 
-## Step 2 — Map the slug to a Nango provider config key (OAuth only)
+- `wrangler.toml`
+- `worker/wrangler.worker.toml`
 
-Add an entry to the `NANGO_PROVIDER_CONFIG_KEYS` JSON map in **both** wrangler files:
-
-- `wrangler.toml` (frontend Worker)
-- `worker/wrangler.worker.toml` (backend Worker)
+If the Pipedream app name is not exactly the same as the slug, add a mapping to `PIPEDREAM_APP_MAP` in both files:
 
 ```toml
-NANGO_PROVIDER_CONFIG_KEYS = "{...,\"<slug>\":\"<nango-provider-config-key>\"}"
+PIPEDREAM_APP_MAP = "...,<slug>=<pipedream_app_name>"
 ```
 
-Both files must agree. The right-hand value must match the provider config key registered on the Nango side exactly.
+Both workers read these values. A frontend-only or backend-only config change leaves the hosted connect flow half-broken.
 
-If you forget this step, the connect flow will fall through to the manual path (or fail to start the Nango session) and the worker won't be able to load credentials.
+## Step 3 - Import the Pipedream actions
 
-## Step 3 — Write the worker handler
+Use the importer instead of creating `worker/integrations/<slug>.ts`:
 
-Create `worker/integrations/<slug>.ts`. Use `worker/integrations/postiz.ts` as the OAuth template, or `worker/integrations/twilio.ts` as the manual-credentials template.
-
-Pattern:
-
-```ts
-import { BaseIntegration, defineTool, registerHandler, type IntegrationTool } from "./base";
-
-class MySlugHandler extends BaseIntegration {
-  getTools(integrationSlug: string): IntegrationTool[] {
-    return [
-      defineTool(integrationSlug, "list_things", { /* schema, accessLevel, etc. */ }),
-      defineTool(integrationSlug, "create_thing", { /* ... */ }),
-    ];
-  }
-
-  async execute(action, args, credentials, ctx) {
-    switch (action) {
-      case "list_things": return this.listThings(credentials);
-      case "create_thing": return this.createThing(credentials, args);
-      default: throw new Error(`Unknown action: ${action}`);
-    }
-  }
-}
-
-registerHandler("<slug>", new MySlugHandler());
+```bash
+npm run import:pipedream-actions -- --app <pipedream_app_name> --integration <slug> --source github
 ```
 
-The runtime injects `credentials` for you — for Nango providers this is loaded via `worker/credentials.ts` from the user's stored Nango connection; for manual providers it's whatever was captured by `credentialFields`.
+Then inspect `src/generated/pipedream-manifests/<slug>.generated.ts` and add overrides in `config/pipedream-action-overrides.mjs` as needed.
 
-Then add the import to `worker/integrations/index.ts`:
+Common fixes:
 
-```ts
-import "./<slug>";
+- Hide Pipedream-internal props with `hiddenProps`.
+- Supply stable hidden values with `safeDefaults`.
+- Add `validationArgs` when a required business argument is needed to exercise a safe action.
+
+## Step 4 - Validate the integration
+
+Run the required validation sequence:
+
+```bash
+npm run audit:manifests -- --strict
+npm run validate:pipedream-actions -- --integration <slug> --strict
+npm run test:openclaw-plugin-contract
+npm run smoke:openclaw-plugin -- --integration <slug>
 ```
 
-That single import is what registers the handler. Skipping it means the slug works in the dashboard but every tool call returns "no handler".
+Runtime validation needs a Pipedream test account binding through `PIPEDREAM_TEST_ACCOUNTS_JSON` or a per-integration variable such as `PIPEDREAM_TEST_GMAIL_ACCOUNT_ID`.
 
-## Step 4 — (OAuth only, optional) Write a Nango provider contract doc
+## Step 5 - Add a smoke preset
 
-If the provider doesn't exist in the Nango fork yet, write a sibling to `docs/nango-provider-contracts/postiz.md` so whoever implements the Nango side knows:
+Create `scripts/smoke-presets/<slug>.mjs` with at least one safe `read` step. Add `preview` steps for write tools only when the preview path is low-risk and repeatable. Real writes belong behind the smoke runner's explicit write mode.
 
-- the expected provider config key
-- the metadata fields ClawLink will use for connection labels (see `src/lib/server/connection-sessions.ts:236-265` for the lookup order — it's generic across all providers)
-- the API base URL and any verification endpoint
+The preset must use the actual tool names from the manifest-backed registry.
 
-Skip this if the Nango side is already done.
+## Step 6 - Verify hosted connect
 
-## Step 5 — Deploy both Workers
+From the integration page or `claw-link.dev/connect/<slug>`:
 
-A new integration always touches both deploy targets:
+1. Start the hosted Pipedream flow.
+2. Complete provider login and consent.
+3. Confirm the connection session ends in `connected`.
+4. Confirm the row is stored with Pipedream account metadata.
+5. Run the smoke preset with the ClawLink API key for that test account.
 
+## Step 7 - Deploy the right workers
+
+Most new integrations touch both surfaces:
+
+```bash
+npm run deploy:web
+npm run deploy:worker
 ```
-npm run deploy:web      # frontend / Next routes / dashboard
-npm run deploy:worker   # tool execution backend
-```
 
-Frontend-only or backend-only deploys will leave the integration half-broken.
-
-## Step 6 — Verify (two layers)
-
-Per `AGENTS.md` integration MVP testing:
-
-1. **Connection flow.** Start the dashboard connect, complete OAuth (or paste the manual credentials), confirm the connection session ends in `connected` and the row appears in `/dashboard/integrations`.
-2. **Tool execution.** From the OpenClaw worker (or `curl` against `api.claw-link.dev`), call a read-only tool first (`<slug>_list_*`), then a write tool. Read first, write second.
-
-If step 1 fails: check the Nango provider config key mapping (Step 2), the redirect URIs registered with the upstream provider, and the connect callback flow.
-
-If step 1 succeeds but step 2 fails: check scopes/permissions on the Nango side, then the worker handler request shape.
+`clawlink-web` serves hosted connect and dashboard routes. `clawlink` serves tool execution.
 
 ## Per-integration checklist
 
-Copy this when adding a new one:
-
-- [ ] Base entry in `src/data/integrations.ts`
-- [ ] Metadata entry in `src/data/integrations.ts` (setupMode, status, tools, setupGuide)
-- [ ] Slug added to `NANGO_PROVIDER_CONFIG_KEYS` in `wrangler.toml`
-- [ ] Slug added to `NANGO_PROVIDER_CONFIG_KEYS` in `worker/wrangler.worker.toml`
-- [ ] Handler file at `worker/integrations/<slug>.ts`
-- [ ] Import added to `worker/integrations/index.ts`
-- [ ] (OAuth) Nango provider contract doc at `docs/nango-provider-contracts/<slug>.md` if the Nango side is new
-- [ ] `npm run deploy:web`
-- [ ] `npm run deploy:worker`
+- [ ] Catalog entry in `src/data/integrations.ts`
+- [ ] Metadata entry uses `setupMode: "pipedream"`
+- [ ] Slug added to `PIPEDREAM_CONNECT_SLUGS` in both wrangler files
+- [ ] App-name mapping added to `PIPEDREAM_APP_MAP` in both wrangler files when needed
+- [ ] Manifest imported at `src/generated/pipedream-manifests/<slug>.generated.ts`
+- [ ] Overrides added for hidden/internal props and safe validation args
+- [ ] `npm run audit:manifests -- --strict`
+- [ ] `npm run validate:pipedream-actions -- --integration <slug> --strict`
+- [ ] `npm run test:openclaw-plugin-contract`
+- [ ] Smoke preset added under `scripts/smoke-presets/<slug>.mjs`
 - [ ] Hosted connect flow ends in `connected`
-- [ ] At least one read tool succeeds end-to-end
-- [ ] At least one write tool succeeds end-to-end
+- [ ] `npm run smoke:openclaw-plugin -- --integration <slug>`
+- [ ] `npm run smoke:openclaw-plugin -- --integration <slug> --preview` if the integration exposes writes
 
 ## Things to avoid
 
-- Don't add a slug to the dashboard before the worker handler exists — `runtimeStatus` should stay `planned` until the handler is shipped.
-- Don't list tools in `src/data/integrations.ts` that aren't implemented in the worker. The dashboard treats this list as truth.
-- Don't introduce a second OAuth/credential path for a Nango provider — let Nango own the auth lifecycle (see the `postiz.md` "Non-goals" section).
-- Don't update only one wrangler file — the slug must be in both.
+- Do not add a new `worker/integrations/<slug>.ts` handler or a new `registerHandler()` call for normal integrations.
+- Do not use the old Nango/manual setup path for new providers unless the product direction explicitly changes.
+- Do not list tools in the dashboard metadata before the generated manifest exposes them.
+- Do not update only one wrangler file. Pipedream connect config must match on both workers.
+- Do not mark the integration ready until static audit, runtime validation, plugin contract tests, hosted connect, and live smoke all pass.

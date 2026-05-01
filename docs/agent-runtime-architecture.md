@@ -515,7 +515,7 @@ interface PolicyDecision {
 ### Example policy mapping
 - `gmail_fetch_emails` -> auto-run
 - `gmail_send_email` -> confirm unless explicitly asked and recipient/body are clear
-- `github_create_issue` -> usually okay if user directly asked
+- `google-calendar_create_event` -> usually okay if user directly asked and the calendar is explicit
 - `notion_create_page` -> usually okay if destination is explicit
 - `stripe_refund_payment` -> always confirm
 

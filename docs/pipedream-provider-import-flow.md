@@ -240,15 +240,13 @@ At minimum, confirm:
 - the provider tools will be picked up by [src/lib/pipedream/manifest-registry.ts](/Users/hithesh/clawlink/src/lib/pipedream/manifest-registry.ts:1)
 - the generic executor path will handle them through [src/lib/pipedream/action-executor.ts](/Users/hithesh/clawlink/src/lib/pipedream/action-executor.ts:1)
 
-If the provider still has a custom handler with overlapping tool names, the
-custom handler currently wins on collisions. Be explicit about that in the
-handoff summary.
+If the provider is `postiz`, remember that it still has the only retained
+custom handler. All other providers should rely on generated manifests.
 
 ## What The Agent Should Not Do
 
 Do not do these unless explicitly asked:
 
-- remove an old custom integration handler
 - rewrite a provider to a custom handler
 - implement dynamic prop runtime support
 - deploy both workers
@@ -289,7 +287,7 @@ For each provider, the agent should report:
 4. which action modes or risks were corrected
 5. whether the provider was added to `src/data/integrations.ts`
 6. whether `PIPEDREAM_CONNECT_SLUGS` was updated
-7. whether there is an overlapping custom handler still in place
+7. whether the provider is affected by the Postiz custom-handler exception
 8. whether `eslint` and `tsc` passed
 9. any known limitations that remain
 
@@ -313,4 +311,3 @@ Deliver:
 - required integration metadata/config changes
 - a short summary of disabled actions, corrected risk/mode metadata, and remaining limitations
 ```
-

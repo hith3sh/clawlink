@@ -74,6 +74,16 @@ const KNOWN_REAL_BOOLEAN_PROPS = new Set([
   "updateIfExists",
 ]);
 
+const KNOWN_REAL_WITH_LABEL_ARRAY_PROPS = new Set([
+  "profileIds",
+]);
+
+function acceptsRemoteUrl(prop) {
+  const desc = (prop.description ?? "").toLowerCase();
+  const title = (prop.title ?? "").toLowerCase();
+  return desc.includes("url") || title.includes("url");
+}
+
 function loadManifest(file) {
   const src = readFileSync(file, "utf8");
   const open = src.indexOf("[");
@@ -99,6 +109,10 @@ function classify(prop, propName, requiredList, execProp) {
   }
 
   for (const kw of SUSPECT_DESC_KEYWORDS) {
+    if (kw === "/tmp" && acceptsRemoteUrl(prop)) {
+      continue;
+    }
+
     if (desc.includes(kw) || title.includes(kw)) {
       reasons.push(`description/title contains "${kw}"`);
       break;
@@ -115,7 +129,7 @@ function classify(prop, propName, requiredList, execProp) {
 
   if (execProp?.withLabel) {
     const scalarType = prop.type === "string" || prop.type === "number" || prop.type === "boolean";
-    if (!scalarType) {
+    if (!scalarType && !KNOWN_REAL_WITH_LABEL_ARRAY_PROPS.has(propName)) {
       reasons.push(`prop is withLabel on a non-scalar value — verify the runtime shape matches what Pipedream expects`);
     }
   }

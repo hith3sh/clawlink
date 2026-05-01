@@ -10,6 +10,7 @@
     "deploy:web": "env $(grep -v '^#' .env.production | grep '=' | xargs) opennextjs-cloudflare build --config wrangler.toml && wrangler deploy",
     "build:worker": "echo 'Worker build is handled by Wrangler during deploy'",
     "deploy:worker": "wrangler --cwd worker deploy --config wrangler.worker.toml --experimental-autoconfig=false",
+    "import:composio-tools": "node scripts/import-composio-tools.mjs",
     "import:pipedream-actions": "node scripts/import-pipedream-actions.mjs",
     "validate:pipedream-actions": "node scripts/validate-pipedream-actions.mjs",
     "audit:manifests": "node scripts/audit-pipedream-manifests.mjs",

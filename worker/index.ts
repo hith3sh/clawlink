@@ -10,6 +10,7 @@
 // Import integrations to register handlers
 import "./integrations";
 
+import { executeComposioTool } from "../src/lib/composio/tool-executor";
 import { executePipedreamActionTool } from "../src/lib/pipedream/action-executor";
 import { verifyAuth } from "./auth";
 import {
@@ -45,6 +46,11 @@ export interface Env {
   PIPEDREAM_CLIENT_SECRET?: string;
   PIPEDREAM_PROJECT_ID?: string;
   PIPEDREAM_ENVIRONMENT?: string;
+  COMPOSIO_API_KEY?: string;
+  COMPOSIO_BASE_URL?: string;
+  COMPOSIO_TOOLKIT_MAP?: string;
+  COMPOSIO_AUTH_CONFIG_MAP?: string;
+  COMPOSIO_TOOLKIT_VERSION_MAP?: string;
   TRIGGER_CRON_SECRET?: string;
   [key: string]: unknown;
 }
@@ -94,12 +100,17 @@ interface WorkerConnectionRow {
   auth_state: string;
   auth_provider: string | null;
   pipedream_account_id: string | null;
+  composio_connected_account_id: string | null;
   updated_at: string | null;
   created_at: string;
 }
 
 function isPipedreamBackedConnection(row: WorkerConnectionRow): boolean {
   return row.auth_provider === "pipedream" || Boolean(row.pipedream_account_id);
+}
+
+function isComposioBackedConnection(row: WorkerConnectionRow): boolean {
+  return row.auth_provider === "composio" || Boolean(row.composio_connected_account_id);
 }
 
 async function resolvePreferredPipedreamConnectionId(
@@ -112,7 +123,8 @@ async function resolvePreferredPipedreamConnectionId(
     const row = await env.DB
       .prepare(
         `
-          SELECT id, is_default, auth_state, auth_provider, pipedream_account_id, updated_at, created_at
+          SELECT id, is_default, auth_state, auth_provider, pipedream_account_id,
+                 composio_connected_account_id, updated_at, created_at
           FROM user_integrations
           WHERE id = ? AND user_id = ? AND integration = ?
           LIMIT 1
@@ -131,7 +143,8 @@ async function resolvePreferredPipedreamConnectionId(
   const result = await env.DB
     .prepare(
       `
-        SELECT id, is_default, auth_state, auth_provider, pipedream_account_id, updated_at, created_at
+        SELECT id, is_default, auth_state, auth_provider, pipedream_account_id,
+               composio_connected_account_id, updated_at, created_at
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
         ORDER BY is_default DESC, updated_at DESC, created_at DESC, id DESC
@@ -161,6 +174,71 @@ async function resolvePreferredPipedreamConnectionId(
   const fallback =
     rows.find((row) => row.is_default && isPipedreamBackedConnection(row)) ??
     rows.find((row) => isPipedreamBackedConnection(row)) ??
+    null;
+
+  return fallback?.id ?? null;
+}
+
+async function resolvePreferredComposioConnectionId(
+  env: Env,
+  userId: string,
+  integration: string,
+  preferredConnectionId?: number,
+): Promise<number | null> {
+  if (preferredConnectionId) {
+    const row = await env.DB
+      .prepare(
+        `
+          SELECT id, is_default, auth_state, auth_provider, pipedream_account_id,
+                 composio_connected_account_id, updated_at, created_at
+          FROM user_integrations
+          WHERE id = ? AND user_id = ? AND integration = ?
+          LIMIT 1
+        `,
+      )
+      .bind(preferredConnectionId, userId, integration)
+      .first<WorkerConnectionRow>();
+
+    if (!row) {
+      return null;
+    }
+
+    return isComposioBackedConnection(row) ? row.id : null;
+  }
+
+  const result = await env.DB
+    .prepare(
+      `
+        SELECT id, is_default, auth_state, auth_provider, pipedream_account_id,
+               composio_connected_account_id, updated_at, created_at
+        FROM user_integrations
+        WHERE user_id = ? AND integration = ?
+        ORDER BY is_default DESC, updated_at DESC, created_at DESC, id DESC
+      `,
+    )
+    .bind(userId, integration)
+    .all<WorkerConnectionRow>();
+
+  const rows = result.results ?? [];
+  const activeDefault =
+    rows.find((row) => row.is_default && row.auth_state === "active" && isComposioBackedConnection(row)) ??
+    null;
+
+  if (activeDefault) {
+    return activeDefault.id;
+  }
+
+  const latestActive =
+    rows.find((row) => row.auth_state === "active" && isComposioBackedConnection(row)) ??
+    null;
+
+  if (latestActive) {
+    return latestActive.id;
+  }
+
+  const fallback =
+    rows.find((row) => row.is_default && isComposioBackedConnection(row)) ??
+    rows.find((row) => isComposioBackedConnection(row)) ??
     null;
 
   return fallback?.id ?? null;
@@ -271,6 +349,19 @@ async function handleToolCall(
             `No Pipedream-backed connection found for ${integration}. Please reconnect it through ClawLink.`,
           );
         }
+      } else if (tool.execution.kind === "composio_tool") {
+        resolvedConnectionId = await resolvePreferredComposioConnectionId(
+          env,
+          internalUserId,
+          integration,
+          connectionId,
+        );
+
+        if (!resolvedConnectionId) {
+          throw new Error(
+            `No Composio-backed connection found for ${integration}. Please reconnect it through ClawLink.`,
+          );
+        }
       }
 
       const loaded = await loadConnectionCredentialsForIntegration(env, internalUserId, integration, {
@@ -286,6 +377,17 @@ async function handleToolCall(
     ): Promise<unknown> => {
       if (tool.execution.kind === "pipedream_action") {
         const execution = await executePipedreamActionTool(tool, args, {
+          requestId,
+          externalUserId: internalUserId,
+          credentials: current,
+          env: env as Record<string, unknown>,
+        });
+        providerRequestId = execution.providerRequestId;
+        return execution.data;
+      }
+
+      if (tool.execution.kind === "composio_tool") {
+        const execution = await executeComposioTool(tool, args, {
           requestId,
           externalUserId: internalUserId,
           credentials: current,

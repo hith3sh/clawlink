@@ -50,22 +50,30 @@ Do not reintroduce the old one-row-per-provider assumption.
 
 ## Current Auth Backends
 
-There are now three connection modes in the app:
+The catalog setup modes are:
 
-1. `manual`
-   - user enters credentials directly in the hosted page
-
-2. `oauth`
+1. `oauth`
    - current hosted OAuth path backed by Nango
    - session start route creates a hosted session and the hosted page opens the Nango Connect UI
 
-3. `pipedream`
+2. `pipedream`
    - current Pipedream Connect path
    - hosted page requests a session-scoped Pipedream connect token
    - browser opens the Pipedream Connect iframe/dialog
    - completion route stores the returned `pipedream_account_id` on the connection row
 
-`pipedream` is the strategic default for new providers. The slugs currently using Pipedream Connect are listed in `PIPEDREAM_CONNECT_SLUGS` in both `wrangler.toml` and `worker/wrangler.worker.toml`. Nango-backed OAuth integrations still use the existing hosted OAuth path, but new providers should not be added to Nango unless there is a specific reason.
+3. `coming_soon`
+   - visible roadmap integrations without a live setup flow
+
+4. `composio`
+   - current pilot backend for `instantly`
+   - hosted ClawLink page collects the Instantly API key directly, then creates a Composio connected account server-side
+   - stores only the Composio connected account id and related metadata on the ClawLink connection row
+   - tool execution uses generated Composio manifests and `kind: "composio_tool"`
+
+The credential bridge still has some legacy manual-credential support, but new integrations should not use that as their primary setup mode.
+
+`pipedream` remains the strategic default for most new providers. `composio` should be used provider-by-provider only when it materially improves coverage or reliability. The slugs currently using Pipedream Connect are listed in `PIPEDREAM_CONNECT_SLUGS` in both `wrangler.toml` and `worker/wrangler.worker.toml`. Instantly is intentionally removed from that list and uses Composio instead. Nango-backed OAuth integrations still use the existing hosted OAuth path, but new providers should not be added to Nango unless there is a specific reason.
 
 ### Pipedream slug → app name mapping
 
@@ -89,10 +97,9 @@ The worker uses the connection id plus stored auth backend metadata to load cred
   - marks connections `needs_reauth` on auth failures
 
 - `worker/integrations/**`
-  - legacy per-provider custom handlers (Slack, Notion, GitHub, Google\*, Apollo, Motion, Postiz, Twilio, ...)
-  - this pattern is being phased out in favor of manifest-backed Pipedream tools
-  - do not add a new custom handler for a provider that can be served by an imported Pipedream manifest
-  - on tool-name collision the custom handler currently wins over the manifest — see the Manifest-Backed Pipedream Tools section for the full state
+  - contains the shared handler base plus the remaining `postiz` custom handler
+  - all normal provider tool surfaces should come from generated Pipedream manifests
+  - do not add a new custom handler unless the user explicitly approves a provider-specific exception
 
 - `src/lib/server/executor.ts`
   - shared server-side tool execution path
@@ -113,24 +120,23 @@ Pieces of the platform:
 Current state:
 
 - the importer, manifest registry, and generic executor exist
-- generated manifests for `facebook`, `gmail`, `linkedin`, `mailchimp`, `notion`, `outlook`, `xero` are on disk
+- generated manifests for `airtable`, `apollo`, `calendly`, `clickup`, `facebook`, `gmail`, `google-ads`, `google-analytics`, `google-calendar`, `google-docs`, `google-drive`, `google-search-console`, `hubspot`, `instantly`, `klaviyo`, `linkedin`, `mailchimp`, `notion`, `onedrive`, `outlook`, `postiz`, `salesforce`, `xero`, and `youtube` are on disk
 - the manifest path is wired end to end on both surfaces:
   - server (Next API used by the OpenClaw plugin):
-    - `src/lib/server/tool-registry.ts` merges manifest tools with custom-handler tools and only emits manifest tools when the user has a Pipedream-backed connection
+    - `src/lib/server/tool-registry.ts` merges manifest tools with the remaining Postiz custom-handler tools and only emits manifest tools when the user has a Pipedream-backed connection
     - `src/lib/server/router.ts` narrows connection selection to Pipedream-backed rows when `tool.execution.kind === "pipedream_action"`
     - `src/lib/server/executor.ts` falls through to `executePipedreamActionTool()` instead of requiring a custom handler
   - worker (`api.claw-link.dev`):
     - `worker/index.ts` resolves a Pipedream-backed connection then dispatches `pipedream_action` tools to `executePipedreamActionTool()`
-    - `worker/integrations/index.ts` imports from `manifest-registry`; legacy custom handlers continue to run via the existing path
-- collision rule: when a custom handler and a generated manifest expose the same tool name, the custom handler wins. Retire the custom handler if the manifest version is preferred.
+    - `worker/integrations/index.ts` imports from `manifest-registry` plus `postiz`
 
-Custom worker handler status (as of this writing):
+Custom worker handler status:
 
-- already replaced by manifests (custom handler removed): `facebook`, `gmail`, `linkedin`, `mailchimp`, `outlook`
-- has both a custom handler and a generated manifest (collision; custom handler currently wins): `notion`, `slack`
-- custom handler only, no manifest yet: `apollo`, `github`, `motion`, `postiz`, `twilio`, all `google-*`
+- `postiz` is the only retained custom handler exception
+- previous per-provider handlers for Slack, GitHub, Apollo, Motion, Twilio, and Google providers have been removed
+- integrations without generated manifests, such as `slack` and `google-sheets`, do not expose tools until their Pipedream manifests are imported
 
-Migration guidance: before deleting a custom handler with a manifest counterpart, validate the manifest tools cover the actions the handler exposed today. Before deleting a custom handler with no manifest yet, run the importer and confirm Pipedream coverage. New providers should be added through the manifest path, not as new custom handlers.
+Migration guidance: new providers should be added through the manifest path, not as new custom handlers. If a future provider truly needs custom execution, document the exception and keep it isolated like Postiz.
 
 Validation workflow for new Pipedream imports:
 

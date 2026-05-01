@@ -560,7 +560,7 @@ const clawlinkPlugin = {
       description: "Get the input schema, safety guidance, examples, and follow-up hints for a ClawLink tool before calling it. Use this to verify how a specific live tool should be used instead of inferring provider behavior from memory.",
       parameters: Type.Object({
         tool: Type.String({
-          description: "ClawLink tool name, for example notion_search or slack_send_message.",
+          description: "ClawLink tool name, for example notion_search or gmail_find_email.",
           minLength: 1,
         }),
       }),
@@ -581,7 +581,7 @@ const clawlinkPlugin = {
       description: "Preview a ClawLink tool call before executing it. Use this for writes or anything that may require explicit confirmation.",
       parameters: Type.Object({
         tool: Type.String({
-          description: "ClawLink tool name, for example notion_create_page or slack_send_message.",
+          description: "ClawLink tool name, for example notion_create_page or gmail_send_email.",
           minLength: 1,
         }),
         arguments: Type.Optional(Type.Record(Type.String(), Type.Unknown(), {
