@@ -9,12 +9,23 @@ import { googleSearchConsoleComposioTools } from "./google-search-console.genera
 import { hubspotComposioTools } from "./hubspot.generated";
 import { instantlyComposioTools } from "./instantly.generated";
 import { klaviyoComposioTools } from "./klaviyo.generated";
+import { mailchimpComposioTools } from "./mailchimp.generated";
+import { notionComposioTools } from "./notion.generated";
 import { onedriveComposioTools } from "./onedrive.generated";
 import { outlookComposioTools } from "./outlook.generated";
 import { postizComposioTools } from "./postiz.generated";
+import { salesforceComposioTools } from "./salesforce.generated";
+import { twilioComposioTools } from "./twilio.generated";
+import { xeroComposioTools } from "./xero.generated";
+import { airtableComposioTools } from "./airtable.generated";
+import { calendlyComposioTools } from "./calendly.generated";
+import { clickupComposioTools } from "./clickup.generated";
 
 export const composioToolManifests: IntegrationTool[] = [
+  ...airtableComposioTools,
   ...apolloComposioTools,
+  ...calendlyComposioTools,
+  ...clickupComposioTools,
   ...gmailComposioTools,
   ...googleAdsComposioTools,
   ...googleAnalyticsComposioTools,
@@ -24,7 +35,12 @@ export const composioToolManifests: IntegrationTool[] = [
   ...hubspotComposioTools,
   ...instantlyComposioTools,
   ...klaviyoComposioTools,
+  ...mailchimpComposioTools,
+  ...notionComposioTools,
   ...onedriveComposioTools,
   ...outlookComposioTools,
   ...postizComposioTools,
+  ...salesforceComposioTools,
+  ...twilioComposioTools,
+  ...xeroComposioTools,
 ];

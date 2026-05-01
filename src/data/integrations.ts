@@ -262,14 +262,11 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   twilio: {
-    setupMode: "coming_soon",
-    dashboardStatus: "coming-soon",
-    runtimeStatus: "planned",
-    setupGuide: "Twilio manual credential setup has been removed. A hosted provider flow is not available yet.",
-    credentialFields: [
-      textField("accountSid", "Account SID", "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "Your primary Twilio account SID."),
-      tokenField("authToken", "Auth Token", "Paste your Twilio auth token", "Use the auth token from your Twilio console. Rotate it if it was shared elsewhere."),
-    ],
+    setupMode: "composio",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect Twilio through ClawLink's hosted Composio setup to inspect account resources, manage phone number settings, and send or review messaging activity without manual SID/token entry.",
+    credentialFields: [],
     tools: [
       { name: "get_account", description: "Get Twilio account details and status" },
       { name: "list_phone_numbers", description: "List Twilio phone numbers owned by the account" },
@@ -347,10 +344,10 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   salesforce: {
-    setupMode: "pipedream",
+    setupMode: "composio",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Connect Salesforce through the hosted Pipedream flow to search CRM records, inspect objects and fields, run SOQL/SOSL queries, and perform a curated set of write actions without custom OAuth setup.",
+    setupGuide: "Connect Salesforce through ClawLink's hosted Composio setup to search CRM records, inspect objects and fields, run SOQL/SOSL queries, and perform a curated set of write actions without custom OAuth setup.",
     credentialFields: [],
     tools: [
       { name: "salesforce_list_objects", description: "List available Salesforce objects" },
@@ -401,10 +398,10 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   notion: {
-    setupMode: "pipedream",
+    setupMode: "composio",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Connect Notion through the hosted Pipedream flow to search, read, and manage pages, databases, and blocks in your workspace.",
+    setupGuide: "Connect Notion through ClawLink's hosted Composio setup to search, read, and manage pages, databases, and blocks in your workspace.",
     credentialFields: [],
     tools: [
       { name: "notion_search", description: "Search pages and databases in Notion" },
@@ -572,11 +569,11 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   airtable: {
-    setupMode: "pipedream",
+    setupMode: "composio",
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide:
-      "Connect Airtable through the hosted Pipedream flow to browse bases and tables, list records, create records in bulk, manage comments, and update schema objects without pasting tokens manually.",
+      "Connect Airtable through ClawLink's hosted Composio setup to browse bases and tables, inspect records, and unlock managed Airtable actions without pasting tokens manually.",
     credentialFields: [],
     tools: [
       { name: "airtable_list_bases", description: "List Airtable bases available to the connected account" },
@@ -646,11 +643,11 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   clickup: {
-    setupMode: "pipedream",
+    setupMode: "composio",
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide:
-      "Connect ClickUp through the hosted Pipedream flow to manage tasks, lists, folders, spaces, comments, checklists, and time tracking from your ClickUp workspace.",
+      "Connect ClickUp through ClawLink's hosted Composio setup to manage tasks, lists, folders, spaces, comments, checklists, and time tracking from your ClickUp workspace.",
     credentialFields: [],
     tools: [
       { name: "clickup_get_task", description: "Get a ClickUp task by ID" },
@@ -718,10 +715,10 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   calendly: {
-    setupMode: "pipedream",
+    setupMode: "composio",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Connect Calendly through the hosted Pipedream flow to inspect events, invitees, availability schedules, webhook subscriptions, and create single-use scheduling links.",
+    setupGuide: "Connect Calendly through ClawLink's hosted Composio setup to inspect events, invitees, availability schedules, webhook subscriptions, and create single-use scheduling links.",
     credentialFields: [],
     tools: [
       { name: "calendly_get_event", description: "Get a Calendly event by ID or URL" },
@@ -845,10 +842,10 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   xero: {
-    setupMode: "pipedream",
+    setupMode: "composio",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Connect Xero Accounting with Pipedream to access invoices, contacts, payments, and accounting reports from ClawLink.",
+    setupGuide: "Connect Xero Accounting through ClawLink's hosted Composio setup to access invoices, contacts, payments, and accounting reports from ClawLink.",
     credentialFields: [],
     tools: [
       { name: "list_invoices", description: "List invoices in Xero Accounting" },
@@ -867,10 +864,10 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     tools: [],
   },
   mailchimp: {
-    setupMode: "pipedream",
+    setupMode: "composio",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Connect Mailchimp through the hosted Pipedream flow to manage audiences, members, segments, and campaigns from your Mailchimp account.",
+    setupGuide: "Connect Mailchimp through ClawLink's hosted Composio setup to manage audiences, members, segments, and campaigns from your Mailchimp account.",
     credentialFields: [],
     tools: [
       { name: "mailchimp_search_lists", description: "Search Mailchimp audiences (lists)" },
