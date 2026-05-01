@@ -1,5 +1,8 @@
 import type { IntegrationTool } from "../../../worker/integrations/base";
+import { airtableComposioTools } from "./airtable.generated";
 import { apolloComposioTools } from "./apollo.generated";
+import { calendlyComposioTools } from "./calendly.generated";
+import { clickupComposioTools } from "./clickup.generated";
 import { gmailComposioTools } from "./gmail.generated";
 import { googleAdsComposioTools } from "./google-ads.generated";
 import { googleAnalyticsComposioTools } from "./google-analytics.generated";
@@ -17,9 +20,6 @@ import { postizComposioTools } from "./postiz.generated";
 import { salesforceComposioTools } from "./salesforce.generated";
 import { twilioComposioTools } from "./twilio.generated";
 import { xeroComposioTools } from "./xero.generated";
-import { airtableComposioTools } from "./airtable.generated";
-import { calendlyComposioTools } from "./calendly.generated";
-import { clickupComposioTools } from "./clickup.generated";
 
 export const composioToolManifests: IntegrationTool[] = [
   ...airtableComposioTools,
