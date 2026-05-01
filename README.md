@@ -6,7 +6,7 @@
 
 **Install once. Connect with one click.**
 
-ClawLink is an open-source integration platform that gives [OpenClaw](https://github.com/openclaw/openclaw) instant access to 40+ APIs — Gmail, Slack, Stripe, GitHub, Notion, and more.
+ClawLink is an open-source integration platform that gives [OpenClaw](https://github.com/openclaw/openclaw) instant access to 100+ APIs — Gmail, Slack, Stripe, GitHub, Notion, and more.
 
 - **Website:** [claw-link.dev](https://claw-link.dev)
 - **Docs:** [docs.claw-link.dev](https://docs.claw-link.dev)
@@ -34,19 +34,15 @@ ClawLink handles the messy parts so you don't have to:
 
 ## Get started in 30 seconds
 
-1. **Sign up** at [claw-link.dev](https://claw-link.dev) and copy your API key
-2. **Install** the plugin in OpenClaw:
+1. **Install** the plugin in OpenClaw:
    ```bash
    openclaw plugins install @useclawlink/openclaw-plugin
    ```
-3. **Authenticate** by sending this in chat:
-   ```
-   /clawlink login <your-api-key>
-   ```
-4. **Connect** an integration and start using it:
-   ```
-   connect my slack
-   ```
+2. **Pair** ClawLink with this OpenClaw device:
+   - ask OpenClaw to set up ClawLink or start pairing
+   - if the plugin was just installed and the tools are not visible yet, start a fresh chat and ask again
+3. **Approve** the pairing prompt in your browser
+4. **Connect** an integration in the ClawLink dashboard and start using it
 
 Then just ask OpenClaw to do things:
 
@@ -67,7 +63,7 @@ Then just ask OpenClaw to do things:
 | **Logs & debugging** | Dashboard with request history, latency, and errors | Developer-facing logging and tracing |
 | **Best for** | Non-technical users who want integrations working in OpenClaw without code | Developers building custom agents across multiple frameworks |
 
-**Bottom line:** If you use OpenClaw and want 40+ integrations to "just work" through chat, ClawLink is purpose-built for that. If you are writing Python agents across multiple frameworks, Composio is the broader toolkit.
+**Bottom line:** If you use OpenClaw and want 100+ integrations to "just work" through chat, ClawLink is purpose-built for that. If you are writing Python agents across multiple frameworks, Composio is the broader toolkit.
 
 ## Supported integrations
 

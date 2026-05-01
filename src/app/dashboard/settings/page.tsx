@@ -53,7 +53,7 @@ const settingsTabs: Array<{
   {
     value: "api",
     label: "API Keys",
-    description: "Create the ClawLink secret OpenClaw uses for hosted connection sessions and worker calls.",
+    description: "Advanced manual credentials for debugging, plugin settings UIs, or non-pairing setups.",
     icon: Key,
   },
   {
@@ -84,7 +84,6 @@ export default function SettingsPage() {
     return "profile";
   });
   const [copied, setCopied] = useState(false);
-  const [copiedCommand, setCopiedCommand] = useState(false);
   const [apiKeys, setApiKeys] = useState<ApiKeyRecord[]>([]);
   const [apiKeyName, setApiKeyName] = useState("OpenClaw");
   const [apiKeyValue, setApiKeyValue] = useState<string | null>(null);
@@ -162,16 +161,6 @@ export default function SettingsPage() {
     window.setTimeout(() => setCopied(false), 2000);
   }
 
-  function copyLoginCommand() {
-    if (!apiKeyValue) {
-      return;
-    }
-
-    navigator.clipboard.writeText(`/clawlink login ${apiKeyValue}`);
-    setCopiedCommand(true);
-    window.setTimeout(() => setCopiedCommand(false), 2000);
-  }
-
   async function handleCreateApiKey() {
     const name = apiKeyName.trim() || "OpenClaw";
 
@@ -200,9 +189,8 @@ export default function SettingsPage() {
       setApiKeys((current) => [data.key!, ...current.filter((entry) => entry.id !== data.key!.id)]);
       setApiKeyValue(data.rawKey);
       setCopied(false);
-      setCopiedCommand(false);
       setApiKeyName("OpenClaw");
-      setApiKeySuccess(`Created API key "${data.key.name}". Copy the OpenClaw command now because the raw key will not be shown again.`);
+      setApiKeySuccess(`Created API key "${data.key.name}". This is for advanced/manual setups and will not be shown again.`);
     } catch (error) {
       setApiKeyError(error instanceof Error ? error.message : "Failed to create API key");
     } finally {
@@ -347,23 +335,16 @@ export default function SettingsPage() {
               {apiKeyValue ? (
                 <div className="space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
                   <div className="space-y-1">
-                    <Label>Paste this into your OpenClaw chat</Label>
-                  </div>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <Input
-                      readOnly
-                      value={`/clawlink login ${apiKeyValue}`}
-                      className="flex-1 font-mono text-sm"
-                    />
-                    <Button variant="outline" onClick={copyLoginCommand}>
-                      {copiedCommand ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
-                      {copiedCommand ? "Copied" : "Copy command"}
-                    </Button>
+                    <Label>Advanced/manual setup key</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Most users should pair ClawLink in the browser instead of entering a key manually.
+                      Use this only if your OpenClaw client exposes a plugin settings field.
+                    </p>
                   </div>
 
                   <details className="group rounded-lg border border-border/60 bg-background/40 px-3 py-2 text-sm">
                     <summary className="cursor-pointer select-none text-muted-foreground group-open:mb-3 group-open:text-foreground">
-                      Using a client with a plugin settings screen? Copy just the key
+                      Copy the raw key for a plugin settings UI
                     </summary>
                     <div className="space-y-2">
                       <div className="flex flex-col gap-2 sm:flex-row">
@@ -382,7 +363,7 @@ export default function SettingsPage() {
                 <div className="space-y-1">
                   <Label htmlFor="api-key-name">Create a new key</Label>
                   <p className="text-sm text-muted-foreground">
-                    Name the key by where it will be used. `OpenClaw` is a sensible default.
+                    Name the key by where it will be used. Most users do not need this because browser pairing handles OpenClaw setup automatically.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row">
@@ -455,7 +436,7 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-border/70 p-4 text-sm text-muted-foreground">
-                    No API keys yet. Create one and paste the generated <span className="font-mono">/clawlink login ...</span> command into OpenClaw.
+                    No API keys yet. That is fine for normal use — browser pairing is the recommended OpenClaw setup flow.
                   </div>
                 )}
               </div>

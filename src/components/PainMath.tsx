@@ -50,11 +50,11 @@ export default function PainMath() {
           </div>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-[var(--brand-tint)] text-[var(--brand-hover)] flex items-center justify-center text-sm font-bold">2</div>
-            <span className="text-gray-600">Paste `/clawlink login &lt;apiKey&gt;` in OpenClaw</span>
+            <span className="text-gray-600">Pair ClawLink in the browser once</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-[var(--brand-tint)] text-[var(--brand-hover)] flex items-center justify-center text-sm font-bold">3</div>
-            <span className="text-gray-600">Say &ldquo;connect my app&rdquo; and finish auth in one click</span>
+            <span className="text-gray-600">Connect an app in the dashboard and use it in chat</span>
           </div>
           <div className="border-t border-[var(--brand-tint)]/50 pt-4">
             <span className="text-[var(--brand-dark)] font-semibold text-lg">Install once. Connect from any device.</span>

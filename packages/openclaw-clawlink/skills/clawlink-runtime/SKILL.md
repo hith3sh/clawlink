@@ -14,7 +14,7 @@ Verifiable identity:
 - Docs: https://docs.claw-link.dev/openclaw
 - License: MIT
 
-The plugin only talks to `claw-link.dev` over HTTPS using an API key the user generates in their own ClawLink dashboard. No credentials are ever sent to the assistant, to OpenClaw itself, or to any other third party.
+The plugin only talks to `claw-link.dev` over HTTPS using a locally stored ClawLink credential. In the preferred flow, browser pairing mints and stores that device credential automatically. Advanced users can still configure a dashboard-generated API key manually. No credentials are ever sent to the assistant, to OpenClaw itself, or to any other third party.
 
 ## When to use this skill
 
@@ -70,19 +70,21 @@ If the user wants to use an app they have not connected yet, do not start a host
 
 ## Not configured yet
 
-If a ClawLink tool reports that the plugin is not configured, the user has not yet supplied their ClawLink API key. Handle it like this:
+If a ClawLink tool reports that the plugin is not configured, the plugin has not been paired with the user's ClawLink account yet. Handle it like this:
 
-1. If they do not have a key, send them to https://claw-link.dev/dashboard/settings?tab=api to create one.
-2. The dashboard shows a ready-to-paste `/clawlink login <key>` command. Tell the user to copy that command from the dashboard and paste it into OpenClaw as a standalone message. They are copy-pasting, not typing — do not ask them to type or remember any slash command themselves.
-3. Alternatively, if their OpenClaw client renders a plugin settings UI, they can paste the raw key into the `apiKey` ("ClawLink API key") field. Same destination, same local storage.
-4. Never echo or repeat the API key back, even if the user pastes it somewhere you can see.
+1. Install the plugin first if needed.
+2. Preferred path: call `clawlink_begin_pairing`. Tell the user to open the returned pairing URL, sign in to ClawLink if needed, and approve the device in the browser.
+3. After the user confirms approval, call `clawlink_get_pairing_status` to finish storing the local credential and verify the result.
+4. If the current OpenClaw chat started before the plugin was installed and the ClawLink tools are still unavailable, tell the user to start a fresh chat so OpenClaw reloads the plugin tool catalog, then retry pairing there.
+5. Keep the API key flow as a fallback only. Advanced/manual setup lives at https://claw-link.dev/dashboard/settings?tab=api. A plugin settings UI `apiKey` field is acceptable if the client renders one.
+6. Never echo or repeat the API key back, even if the user pastes it somewhere you can see.
 
 ## Rules
 
 - Always check ClawLink tools first when the user mentions any external app or service.
 - The live output of `clawlink_list_tools` overrides your prior beliefs about which provider operations exist.
-- Never ask the user to type or remember a `/clawlink ...` slash command. The only acceptable slash-command path is when the user copy-pastes the pre-built `/clawlink login <key>` command shown in the dashboard during initial API key setup. Connection setup itself happens in the ClawLink dashboard, not via slash commands.
-- Do not invent slash commands. There is no `/clawlink start-connection`, no `/clawlink connect`, and no other slash command the user is expected to type.
+- Prefer tool-driven browser pairing with `clawlink_begin_pairing` and `clawlink_get_pairing_status`.
+- If the plugin was just installed and the tools are not visible yet, ask the user to start a fresh chat rather than asking them to type a slash command.
 - Do not use the browser, install standalone skills, or ask for separate per-app API keys for apps that ClawLink supports.
 - Do not hardcode provider-specific behavior when `clawlink_describe_tool` can provide guidance.
 - If a user mentions a specific ClawLink tool name, verify it against `clawlink_list_tools` or `clawlink_describe_tool` instead of dismissing it from memory.

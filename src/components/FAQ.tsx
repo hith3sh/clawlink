@@ -9,11 +9,11 @@ const faqs = [
   },
   {
     q: "How does it work with OpenClaw?",
-    a: "Install the ClawLink plugin in OpenClaw, create a ClawLink API key once, then say something like \"connect my Notion.\" ClawLink creates a hosted setup link, you approve access in the browser, and OpenClaw polls until the integration is ready.",
+    a: "Install the ClawLink plugin in OpenClaw, ask it to pair ClawLink once, approve the browser prompt, then connect apps in the ClawLink dashboard. After that, OpenClaw can use those connected tools directly.",
   },
   {
     q: "Is my API key safe?",
-    a: "Provider credentials are encrypted before they are stored, and ClawLink API keys are only shown once when created. The hosted setup flow means OpenClaw does not need to own every provider token directly.",
+    a: "Provider credentials are encrypted before they are stored, and the recommended browser pairing flow means most users never have to paste a ClawLink API key into chat at all. If you do create a manual API key, it is only shown once and stored locally on your machine.",
   },
   {
     q: "Does it work with other AI tools?",

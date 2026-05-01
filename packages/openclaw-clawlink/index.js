@@ -3,7 +3,11 @@ import { Type } from "@sinclair/typebox";
 const PLUGIN_ID = "clawlink";
 const LEGACY_PLUGIN_IDS = ["openclaw-plugin"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.17";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.19";
+
+function safeTrim(value) {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : "";
+}
 
 function tokenizeArgs(value) {
   const input = typeof value === "string" ? value.trim() : "";
@@ -63,8 +67,31 @@ function getDynamicPluginConfig(api) {
 function getPluginConfig(api) {
   const rawConfig = getDynamicPluginConfig(api);
   const apiKey = isNonEmptyString(rawConfig.apiKey) ? rawConfig.apiKey.trim() : "";
+  const pendingPairing = isPlainObject(rawConfig.pendingPairing)
+    ? {
+        sessionToken: safeTrim(rawConfig.pendingPairing.sessionToken),
+        verifier: safeTrim(rawConfig.pendingPairing.verifier),
+        pairUrl: safeTrim(rawConfig.pendingPairing.pairUrl),
+        displayCode: safeTrim(rawConfig.pendingPairing.displayCode),
+        deviceLabel: safeTrim(rawConfig.pendingPairing.deviceLabel),
+        expiresAt: safeTrim(rawConfig.pendingPairing.expiresAt),
+      }
+    : null;
 
-  return { apiKey };
+  const normalizedPendingPairing =
+    pendingPairing &&
+    pendingPairing.sessionToken &&
+    pendingPairing.verifier &&
+    pendingPairing.pairUrl &&
+    pendingPairing.displayCode &&
+    pendingPairing.expiresAt
+      ? pendingPairing
+      : null;
+
+  return {
+    apiKey,
+    pendingPairing: normalizedPendingPairing,
+  };
 }
 
 function requireApiKey(api) {
@@ -72,7 +99,7 @@ function requireApiKey(api) {
 
   if (!apiKey) {
     throw new Error(
-      "ClawLink is not configured yet. Ask the user to create an API key at https://claw-link.dev/dashboard/settings?tab=api, then paste the generated `/clawlink login ...` command into OpenClaw.",
+      "ClawLink is not configured yet. Start browser pairing with clawlink_begin_pairing. If the plugin was just installed and this chat cannot see the tools yet, start a fresh chat and retry setup there. Advanced fallback: create an API key at https://claw-link.dev/dashboard/settings?tab=api and use the plugin settings UI if your client exposes one.",
     );
   }
 
@@ -122,6 +149,30 @@ async function callClawLink(api, path, options = {}) {
     const message =
       payload && typeof payload.error === "string"
         ? `${payload.error}${details}${upgradeHint}`
+        : `ClawLink request failed with status ${response.status}`;
+    throw new Error(message);
+  }
+
+  return payload;
+}
+
+async function callClawLinkPublic(path, options = {}) {
+  const response = await fetch(`${DEFAULT_BASE_URL}${path}`, {
+    method: options.method ?? "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": USER_AGENT,
+      ...(options.headers ?? {}),
+    },
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+
+  const payload = await parseJsonSafely(response);
+
+  if (!response.ok) {
+    const message =
+      payload && typeof payload.error === "string"
+        ? payload.error
         : `ClawLink request failed with status ${response.status}`;
     throw new Error(message);
   }
@@ -298,6 +349,47 @@ function buildToolExecutionText(toolName, payload) {
   ].join("\n");
 }
 
+function buildPairingStartText(payload) {
+  const summary = {
+    sessionToken: payload?.sessionToken ?? null,
+    displayCode: payload?.displayCode ?? null,
+    deviceLabel: payload?.deviceLabel ?? null,
+    pairUrl: payload?.pairUrl ?? null,
+    expiresAt: payload?.expiresAt ?? null,
+    pollIntervalMs: payload?.pollIntervalMs ?? null,
+  };
+
+  return [
+    "ClawLink browser pairing started.",
+    "",
+    "Open the pairing URL in your browser, sign in to ClawLink if needed, and approve this OpenClaw device.",
+    "",
+    stringifyPayload(summary),
+  ].join("\n");
+}
+
+function buildPairingStatusText(payload) {
+  const session = payload?.session ?? payload;
+  const summary = {
+    status: session?.status ?? null,
+    sessionToken: session?.token ?? null,
+    displayCode: session?.displayCode ?? null,
+    deviceLabel: session?.deviceLabel ?? null,
+    approvedUserHint: session?.approvedUserHint ?? null,
+    expiresAt: session?.expiresAt ?? null,
+    approvedAt: session?.approvedAt ?? null,
+    pairedAt: session?.pairedAt ?? null,
+    pairUrl: payload?.pairUrl ?? null,
+    integrations: Array.isArray(payload?.integrations) ? payload.integrations : undefined,
+  };
+
+  return [
+    "ClawLink pairing status:",
+    "",
+    stringifyPayload(summary),
+  ].join("\n");
+}
+
 function collectToolArguments(params, reservedKeys) {
   if (isPlainObject(params.arguments)) {
     return params.arguments;
@@ -387,10 +479,169 @@ function updatePluginEntryConfig(config, updater) {
   };
 }
 
+async function saveApiKeyToConfig(api, apiKey, options = {}) {
+  const clearPendingPairing = options.clearPendingPairing !== false;
+
+  await persistPluginConfig(api, (config) =>
+    updatePluginEntryConfig(config, (pluginConfig) => {
+      const nextPluginConfig = {
+        ...pluginConfig,
+        apiKey,
+      };
+
+      delete nextPluginConfig.baseUrl;
+
+      if (clearPendingPairing) {
+        delete nextPluginConfig.pendingPairing;
+      }
+
+      return nextPluginConfig;
+    }),
+  );
+}
+
+async function clearPendingPairing(api) {
+  await persistPluginConfig(api, (config) =>
+    updatePluginEntryConfig(config, (pluginConfig) => {
+      const nextPluginConfig = { ...pluginConfig };
+      delete nextPluginConfig.pendingPairing;
+      return nextPluginConfig;
+    }),
+  );
+}
+
+async function savePendingPairing(api, pairing) {
+  await persistPluginConfig(api, (config) =>
+    updatePluginEntryConfig(config, (pluginConfig) => ({
+      ...pluginConfig,
+      pendingPairing: pairing,
+    })),
+  );
+}
+
+function isPendingPairingExpired(pendingPairing) {
+  if (!pendingPairing?.expiresAt) {
+    return true;
+  }
+
+  const expiresAt = Date.parse(pendingPairing.expiresAt);
+
+  return Number.isFinite(expiresAt) ? expiresAt <= Date.now() : true;
+}
+
+async function exchangeAndFinalizePairing(api, pendingPairing) {
+  const exchanged = await callClawLinkPublic(
+    `/api/openclaw/pair/sessions/${encodeURIComponent(pendingPairing.sessionToken)}/exchange`,
+    {
+      method: "POST",
+      body: { verifier: pendingPairing.verifier },
+    },
+  );
+  const apiKey = safeTrim(exchanged?.apiKey);
+
+  if (!apiKey) {
+    throw new Error("ClawLink pairing did not return a local device credential.");
+  }
+
+  await saveApiKeyToConfig(api, apiKey, {
+    clearPendingPairing: false,
+  });
+
+  let finalizedSession = exchanged?.session ?? null;
+
+  try {
+    const finalized = await callClawLinkPublic(
+      `/api/openclaw/pair/sessions/${encodeURIComponent(pendingPairing.sessionToken)}/finalize`,
+      {
+        method: "POST",
+        body: { verifier: pendingPairing.verifier },
+      },
+    );
+    finalizedSession = finalized?.session ?? finalizedSession;
+    await clearPendingPairing(api);
+  } catch {
+    // Keep the pending pairing marker so the plugin can retry finalization later.
+  }
+
+  const integrationsPayload = await callClawLink(api, "/api/integrations").catch(() => ({
+    integrations: [],
+  }));
+
+  return {
+    session: finalizedSession,
+    integrations: Array.isArray(integrationsPayload?.integrations)
+      ? integrationsPayload.integrations
+      : [],
+  };
+}
+
+async function getPairingStatus(api) {
+  const { pendingPairing, apiKey } = getPluginConfig(api);
+
+  if (!pendingPairing) {
+    if (apiKey) {
+      const integrationsPayload = await callClawLink(api, "/api/integrations").catch(() => ({
+        integrations: [],
+      }));
+
+      return {
+        session: {
+          status: "paired",
+          token: null,
+          displayCode: null,
+          deviceLabel: null,
+          approvedUserHint: null,
+          expiresAt: null,
+          approvedAt: null,
+          pairedAt: null,
+        },
+        integrations: Array.isArray(integrationsPayload?.integrations)
+          ? integrationsPayload.integrations
+          : [],
+      };
+    }
+
+    throw new Error("No ClawLink pairing session is in progress.");
+  }
+
+  if (isPendingPairingExpired(pendingPairing)) {
+    await clearPendingPairing(api);
+    throw new Error("The pending ClawLink pairing session expired. Start a new pairing flow.");
+  }
+
+  const payload = await callClawLinkPublic(
+    `/api/openclaw/pair/sessions/${encodeURIComponent(pendingPairing.sessionToken)}`,
+  );
+  const status = safeTrim(payload?.session?.status);
+
+  if (status === "ready_for_device" || status === "awaiting_local_save") {
+    const completed = await exchangeAndFinalizePairing(api, pendingPairing);
+
+    return {
+      session: {
+        ...(completed.session ?? {}),
+      },
+      pairUrl: pendingPairing.pairUrl,
+      integrations: completed.integrations,
+    };
+  }
+
+  if (status === "expired" || status === "failed") {
+    await clearPendingPairing(api);
+  }
+
+  return {
+    ...payload,
+    pairUrl: pendingPairing.pairUrl,
+  };
+}
+
 function buildCommandHelp() {
   return [
     "ClawLink commands:",
     "",
+    "/clawlink pair [deviceLabel]",
+    "/clawlink pair-status",
     "/clawlink status",
     "/clawlink login <apiKey>",
     "/clawlink logout",
@@ -415,15 +666,76 @@ const clawlinkPlugin = {
         }
 
         if (action === "status") {
-          const { apiKey } = getPluginConfig(api);
+          const { apiKey, pendingPairing } = getPluginConfig(api);
 
           return {
             text: [
               "ClawLink status:",
               `- apiKey: ${maskSecret(apiKey)}`,
               `- login: ${apiKey ? "configured" : "missing"}`,
+              `- pairing: ${
+                pendingPairing
+                  ? isPendingPairingExpired(pendingPairing)
+                    ? "expired"
+                    : "pending"
+                  : apiKey
+                    ? "not needed"
+                    : "idle"
+              }`,
+              ...(pendingPairing && !isPendingPairingExpired(pendingPairing)
+                ? [
+                    `- pairUrl: ${pendingPairing.pairUrl}`,
+                    `- displayCode: ${pendingPairing.displayCode}`,
+                    `- expiresAt: ${pendingPairing.expiresAt}`,
+                  ]
+                : []),
             ].join("\n"),
           };
+        }
+
+        if (action === "pair") {
+          const { apiKey, pendingPairing } = getPluginConfig(api);
+
+          if (apiKey) {
+            return {
+              text: "ClawLink is already configured on this OpenClaw install. Use /clawlink logout first if you want to pair a different account.",
+            };
+          }
+
+          if (pendingPairing && !isPendingPairingExpired(pendingPairing)) {
+            return {
+              text: buildPairingStartText({
+                sessionToken: pendingPairing.sessionToken,
+                displayCode: pendingPairing.displayCode,
+                deviceLabel: pendingPairing.deviceLabel || "OpenClaw device",
+                pairUrl: pendingPairing.pairUrl,
+                expiresAt: pendingPairing.expiresAt,
+                pollIntervalMs: 3000,
+              }),
+            };
+          }
+
+          const deviceLabel = tokens.slice(1).join(" ").trim() || "OpenClaw device";
+          const payload = await callClawLinkPublic("/api/openclaw/pair/start", {
+            method: "POST",
+            body: { deviceLabel },
+          });
+
+          await savePendingPairing(api, {
+            sessionToken: payload.sessionToken,
+            verifier: payload.verifier,
+            pairUrl: payload.pairUrl,
+            displayCode: payload.displayCode,
+            deviceLabel: payload.deviceLabel || deviceLabel,
+            expiresAt: payload.expiresAt,
+          });
+
+          return { text: buildPairingStartText(payload) };
+        }
+
+        if (action === "pair-status") {
+          const payload = await getPairingStatus(api);
+          return { text: buildPairingStatusText(payload) };
         }
 
         if (action === "login") {
@@ -435,23 +747,12 @@ const clawlinkPlugin = {
             };
           }
 
-          await persistPluginConfig(api, (config) =>
-            updatePluginEntryConfig(config, (pluginConfig) => {
-              const nextPluginConfig = {
-                ...pluginConfig,
-                apiKey,
-              };
-
-              delete nextPluginConfig.baseUrl;
-
-              return nextPluginConfig;
-            }),
-          );
+          await saveApiKeyToConfig(api, apiKey);
 
           return {
             text: [
               `ClawLink API key saved: ${maskSecret(apiKey)}`,
-              "You can retry your connection request now.",
+              "ClawLink is configured on this OpenClaw install.",
             ]
               .filter(Boolean)
               .join("\n"),
@@ -465,15 +766,88 @@ const clawlinkPlugin = {
 
               delete nextPluginConfig.apiKey;
               delete nextPluginConfig.baseUrl;
+              delete nextPluginConfig.pendingPairing;
 
               return nextPluginConfig;
             }),
           );
 
-          return { text: "ClawLink API key removed from OpenClaw config." };
+          return { text: "ClawLink credentials removed from local OpenClaw config." };
         }
 
         return { text: buildCommandHelp() };
+      },
+    });
+
+    api.registerTool({
+      name: "clawlink_begin_pairing",
+      description: "Start or resume browser pairing for this OpenClaw install. Use this when ClawLink is not configured yet so the user can approve the device in a browser without copy/pasting an API key.",
+      parameters: Type.Object({
+        deviceLabel: Type.Optional(Type.String({
+          description: "Optional friendly label for this OpenClaw device, for example Steve's MacBook.",
+          minLength: 1,
+        })),
+      }),
+      async execute(_id, params) {
+        const { apiKey, pendingPairing } = getPluginConfig(api);
+
+        if (apiKey) {
+          return textResult(
+            "ClawLink is already configured on this OpenClaw install. No pairing is needed unless the user wants to switch accounts.",
+            {
+              configured: true,
+            },
+          );
+        }
+
+        if (pendingPairing && isPendingPairingExpired(pendingPairing)) {
+          await clearPendingPairing(api);
+        }
+
+        const deviceLabel = isNonEmptyString(params.deviceLabel)
+          ? params.deviceLabel.trim()
+          : "OpenClaw device";
+
+        if (pendingPairing && !isPendingPairingExpired(pendingPairing)) {
+          const payload = {
+            sessionToken: pendingPairing.sessionToken,
+            displayCode: pendingPairing.displayCode,
+            deviceLabel: pendingPairing.deviceLabel || deviceLabel,
+            pairUrl: pendingPairing.pairUrl,
+            expiresAt: pendingPairing.expiresAt,
+            pollIntervalMs: 3000,
+          };
+
+          return textResult(buildPairingStartText(payload), payload);
+        }
+
+        const payload = await callClawLinkPublic("/api/openclaw/pair/start", {
+          method: "POST",
+          body: {
+            deviceLabel,
+          },
+        });
+
+        await savePendingPairing(api, {
+          sessionToken: payload.sessionToken,
+          verifier: payload.verifier,
+          pairUrl: payload.pairUrl,
+          displayCode: payload.displayCode,
+          deviceLabel: payload.deviceLabel || deviceLabel,
+          expiresAt: payload.expiresAt,
+        });
+
+        return textResult(buildPairingStartText(payload), payload);
+      },
+    });
+
+    api.registerTool({
+      name: "clawlink_get_pairing_status",
+      description: "Check whether browser pairing has been approved yet. When the browser approval is complete, this tool automatically exchanges the approved session for a locally stored ClawLink credential and finalizes pairing.",
+      parameters: Type.Object({}),
+      async execute() {
+        const payload = await getPairingStatus(api);
+        return textResult(buildPairingStatusText(payload), payload);
       },
     });
 

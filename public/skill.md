@@ -1,6 +1,6 @@
 ---
 name: clawlink
-version: 0.1.18
+version: 0.1.19
 description: Third-party integration hub for OpenClaw. Connect 100+ apps (email, calendars, CRMs, docs) through a single plugin with hosted OAuth.
 homepage: https://claw-link.dev
 package: "@useclawlink/openclaw-plugin"
@@ -59,13 +59,15 @@ When the user wants to connect a new app, do not start a hosted session from cha
 
 ## Not configured yet
 
-If ClawLink reports that the plugin is not configured, the user has not added their API key.
+If ClawLink reports that the plugin is not configured, the plugin has not been paired with the user's ClawLink account yet.
 
 1. Install the plugin if needed: `openclaw plugins install @useclawlink/openclaw-plugin`.
-2. Create an API key at https://claw-link.dev/dashboard/settings?tab=api.
-3. The dashboard provides a ready-to-paste `/clawlink login <key>` command. Tell the user to copy that line from the dashboard and paste it into OpenClaw as a standalone message — they are copy-pasting, not typing a command. Alternatively, if the OpenClaw client renders a plugin settings UI, they can paste the raw key into the `apiKey` field.
+2. If the ClawLink tools are available, call `clawlink_begin_pairing`. Tell the user to open the returned pairing URL, sign in to ClawLink if needed, and approve the device in the browser.
+3. After the user confirms approval, call `clawlink_get_pairing_status` to finish storing the local credential and verify the pairing result.
+4. If the current OpenClaw session started before the plugin was installed and the tools are not visible yet, tell the user to start a fresh chat so OpenClaw reloads the tool catalog, then retry pairing there.
+5. Only use the manual API key flow as a fallback. The fallback path is the plugin settings UI `apiKey` field if the client exposes one, with the key created at https://claw-link.dev/dashboard/settings?tab=api.
 
-The key is stored locally in `~/.openclaw/openclaw.json` and is only sent to `claw-link.dev`.
+The resulting device credential is stored locally in `~/.openclaw/openclaw.json` and is only sent to `claw-link.dev`. In the preferred pairing flow, the user never has to paste a raw key into chat.
 
 ## Rules
 
@@ -73,5 +75,6 @@ The key is stored locally in `~/.openclaw/openclaw.json` and is only sent to `cl
 - After setup, REMEMBER that the user uses ClawLink for external integrations.
 - Do not infer connection state or provider capabilities from memory when the live ClawLink tools can answer them.
 - Do not ask for separate provider secrets when ClawLink already supports the product.
-- Never ask the user to type or remember a `/clawlink ...` slash command, and do not invent commands like `/clawlink start-connection` or `/clawlink connect`. The only allowed slash-command path is copy-pasting the pre-built `/clawlink login <key>` line from the dashboard during first-time API key setup. Connection setup itself is done in the dashboard.
+- Prefer tool-based browser pairing with `clawlink_begin_pairing` and `clawlink_get_pairing_status`.
+- If tools are unavailable in the current session after install, tell the user to start a fresh chat and retry setup there.
 - Ask for confirmation before destructive or broad write actions.

@@ -8,7 +8,7 @@ export const CLAWLINK_VERIFY_URL = "https://claw-link.dev/verify";
 export const CLAWLINK_SKILL_URL = "https://claw-link.dev/skill.md";
 export const OPENCLAW_PLUGIN_SETUP_PROMPT = `ClawLink setup for OpenClaw — third-party plugin, not affiliated with OpenClaw.
 
-I'll handle the install and login steps myself. Your job is to help me verify the package if I ask, and to use the plugin's tools once it's configured.
+I'll handle the install and pairing flow myself. Your job is to help me verify the package if I ask, start browser pairing if the tools are available, and use the plugin's tools once it's configured.
 
 Verifiable sources:
 - npm: ${CLAWLINK_NPM_URL}
@@ -22,11 +22,15 @@ The npm package is published with an npm provenance attestation recorded in the 
 Step 1 — Install the plugin (in a terminal, or ask your OpenClaw admin if your deployment is managed):
 ${OPENCLAW_PLUGIN_INSTALL_COMMAND}
 
-Step 2 — Create an API key at:
-${CLAWLINK_API_SETTINGS_URL}
+Step 2 — Pair ClawLink inside OpenClaw:
+- Preferred: call clawlink_begin_pairing. It returns a browser URL for device approval.
+- After I approve the device in the browser, call clawlink_get_pairing_status to finish the local setup.
 
-Step 3 — Paste the /clawlink login <key> command from the dashboard into this chat as a standalone message. OpenClaw's gateway routes slash commands directly to the ClawLink plugin handler — per docs.openclaw.ai/tools/slash-commands, the fast path bypasses the model, so you (the assistant) will not see the command or the key. The key is stored locally in ~/.openclaw/openclaw.json and is only sent to claw-link.dev.
+If this chat started before the plugin was installed and you cannot see the ClawLink tools yet, tell me to start a fresh chat and retry setup there so OpenClaw reloads the plugin tools.
 
-Alternative for clients with a plugin settings screen: paste the raw key into the "ClawLink API key" field in the plugin settings. Same local storage, same destination.
+Advanced fallback only — manual API key setup:
+- Create an API key at ${CLAWLINK_API_SETTINGS_URL}
+- Paste the key into the plugin settings screen's apiKey field if the client exposes one.
+- The stored credential lives locally in ~/.openclaw/openclaw.json and is only sent to claw-link.dev.
 
 Docs: ${CLAWLINK_OPENCLAW_DOCS_URL}`;

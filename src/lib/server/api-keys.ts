@@ -31,6 +31,45 @@ export interface CreatedApiKey {
   rawKey: string;
 }
 
+async function createApiKeyForExistingUserId(
+  db: D1LikeDatabase,
+  userId: string,
+  name: string,
+): Promise<CreatedApiKey> {
+  const rawKey = `cllk_live_${randomToken(24)}`;
+  const keyHash = await sha256Hex(rawKey);
+
+  await db
+    .prepare(
+      `
+        INSERT INTO api_keys (user_id, key_hash, name, created_at)
+        VALUES (?, ?, ?, datetime('now'))
+      `,
+    )
+    .bind(userId, keyHash, name)
+    .run();
+
+  const created = await db
+    .prepare(
+      `
+        SELECT id, user_id, name, last_used_at, created_at
+        FROM api_keys
+        WHERE key_hash = ?
+      `,
+    )
+    .bind(keyHash)
+    .first<StoredApiKeyRow>();
+
+  if (!created) {
+    throw new Error("API key was created but could not be reloaded");
+  }
+
+  return {
+    key: mapApiKey(created),
+    rawKey,
+  };
+}
+
 function mapApiKey(row: StoredApiKeyRow): ApiKeyRecord {
   return {
     id: row.id,
@@ -83,38 +122,15 @@ export async function createApiKey(name: string): Promise<CreatedApiKey> {
   }
 
   const user = await ensureUser(db, identity);
-  const rawKey = `cllk_live_${randomToken(24)}`;
-  const keyHash = await sha256Hex(rawKey);
+  return createApiKeyForExistingUserId(db, user.id, name);
+}
 
-  await db
-    .prepare(
-      `
-        INSERT INTO api_keys (user_id, key_hash, name, created_at)
-        VALUES (?, ?, ?, datetime('now'))
-      `,
-    )
-    .bind(user.id, keyHash, name)
-    .run();
-
-  const created = await db
-    .prepare(
-      `
-        SELECT id, user_id, name, last_used_at, created_at
-        FROM api_keys
-        WHERE key_hash = ?
-      `,
-    )
-    .bind(keyHash)
-    .first<StoredApiKeyRow>();
-
-  if (!created) {
-    throw new Error("API key was created but could not be reloaded");
-  }
-
-  return {
-    key: mapApiKey(created),
-    rawKey,
-  };
+export async function createApiKeyForUserId(
+  db: D1LikeDatabase,
+  userId: string,
+  name: string,
+): Promise<CreatedApiKey> {
+  return createApiKeyForExistingUserId(db, userId, name);
 }
 
 export async function deleteApiKey(id: number): Promise<void> {
@@ -133,6 +149,13 @@ export async function deleteApiKey(id: number): Promise<void> {
     .prepare("DELETE FROM api_keys WHERE id = ? AND user_id = ?")
     .bind(id, user.id)
     .run();
+}
+
+export async function deleteApiKeyById(
+  db: D1LikeDatabase,
+  id: number,
+): Promise<void> {
+  await db.prepare("DELETE FROM api_keys WHERE id = ?").bind(id).run();
 }
 
 export async function authenticateApiKey(rawKey: string): Promise<UserRow | null> {

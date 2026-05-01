@@ -109,10 +109,10 @@ export default function DashboardPage() {
       <Card>
         <CardContent className="space-y-4">
           <div>
-            <h2 className="text-base font-medium text-foreground">API keys</h2>
+            <h2 className="text-base font-medium text-foreground">OpenClaw setup</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Create a ClawLink API key once, then copy the generated `/clawlink login ...` command into OpenClaw.
-              Keys are only shown once when created.
+              Pair ClawLink once in OpenClaw, then connect apps in the dashboard. Advanced API keys
+              still live in Settings if you need manual setup or debugging.
             </p>
           </div>
 
@@ -120,7 +120,7 @@ export default function DashboardPage() {
             <div className="space-y-1">
               <p className="font-mono text-sm text-foreground">cllk_live_...</p>
               <p className="text-sm text-muted-foreground">
-                Manage keys in Settings. Revoke and recreate a key if you need a fresh value.
+                Manage advanced API keys in Settings. Most users should use browser pairing instead.
               </p>
             </div>
             <Link href="/dashboard/settings?tab=api" className={buttonVariants({ variant: "outline", size: "sm" })}>
