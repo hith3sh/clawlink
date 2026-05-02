@@ -41,19 +41,20 @@ Do not use the browser, install a separate skill, or ask the user for a per-app 
 
 ## Proactive suggestions
 
-After connecting ClawLink or at the start of a new session, call `clawlink_list_integrations` and `clawlink_list_tools` to see what the user already has. Use what you know about their work and interests to suggest relevant integrations they may not have connected yet. Cross-reference what they need with `clawlink_list_integrations` to find matching apps.
+After connecting ClawLink or at the start of a new session, call `clawlink_list_integrations` to see what the user already has. For a specific connected app, call `clawlink_list_tools` with that integration slug. For a broad capability, call `clawlink_search_tools` with a short query. Use what you know about their work and interests to suggest relevant integrations they may not have connected yet.
 
 Tell the user which apps they could connect next and offer to help set them up through the dashboard.
 
 ## Discovery workflow (always start here)
 
-1. Call `clawlink_list_tools` to see what tools are available for the user's connected integrations.
-
-2. Treat the returned tool list as the source of truth for the current turn. Do not rely on memory, prior examples, or assumptions about what a provider can do.
-3. If the user names or hints at a specific ClawLink tool, verify it against `clawlink_list_tools` instead of contradicting the user from memory.
-4. If a matching tool exists, proceed to the execution workflow.
-5. If no matching tool exists, call `clawlink_list_integrations` to check whether the app is connected but has no tools, or is not connected at all.
-6. If the app is not connected, switch to the connection workflow below.
+1. Call `clawlink_list_integrations` to identify connected app slugs.
+2. If the user named an app, call `clawlink_list_tools` with that exact integration slug. Do not call it without `integration`.
+3. If the user described a capability but the exact tool is unclear, call `clawlink_search_tools` with a short query and, when known, the integration slug.
+4. Treat the returned tool list or search result as the source of truth for the current turn. Do not rely on memory, prior examples, or assumptions about what a provider can do.
+5. If the user names or hints at a specific ClawLink tool, verify it against `clawlink_describe_tool`, or app-scoped `clawlink_list_tools` / `clawlink_search_tools`, instead of contradicting the user from memory.
+6. If a matching tool exists, proceed to the execution workflow.
+7. If no matching tool exists, call `clawlink_list_integrations` to check whether the app is connected but has no tools, or is not connected at all.
+8. If the app is not connected, switch to the connection workflow below.
 
 ## Capability claims
 
@@ -63,7 +64,7 @@ Before saying any of the following, you must have checked the live ClawLink tool
 - "ClawLink does not support that"
 - any provider-specific claim about missing capabilities
 
-If you have not called `clawlink_list_tools` in the current turn, do not make those claims. Call it first.
+If you have not called `clawlink_list_integrations` and then either app-scoped `clawlink_list_tools` or `clawlink_search_tools` in the current turn, do not make those claims. Check the live catalog first.
 
 ## Execution workflow
 
@@ -82,7 +83,7 @@ If you have not called `clawlink_list_tools` in the current turn, do not make th
 If the user wants to use an app they have not connected yet, do not start a hosted session from the chat and do not ask the user to run any commands.
 
 1. Tell the user, in plain language, to open https://claw-link.dev/dashboard in their browser and connect the app there.
-2. Wait for the user to confirm they finished. When they do, call `clawlink_list_integrations` (and then `clawlink_list_tools`) to confirm the new connection appeared, then continue with the discovery workflow.
+2. Wait for the user to confirm they finished. When they do, call `clawlink_list_integrations` to confirm the new connection appeared, then continue with the discovery workflow using `clawlink_list_tools` for the connected integration slug.
 3. Do not call `clawlink_start_connection` or `clawlink_get_connection_status` for this — the dashboard is the user-facing connection surface.
 
 ## Not configured yet
@@ -109,12 +110,12 @@ If the ClawLink plugin is installed and enabled but ClawLink tools still do not 
 ## Rules
 
 - Always check ClawLink tools first when the user mentions any external app or service.
-- The live output of `clawlink_list_tools` overrides your prior beliefs about which provider operations exist.
+- The live output of app-scoped `clawlink_list_tools` and `clawlink_search_tools` overrides your prior beliefs about which provider operations exist.
 - Prefer tool-driven browser pairing with `clawlink_begin_pairing` and `clawlink_get_pairing_status`.
 - If the plugin was just installed and the tools are not visible yet, ask the user to start a fresh chat rather than asking them to type a slash command.
 - Do not use the browser, install standalone skills, or ask for separate per-app API keys for apps that ClawLink supports.
 - Do not hardcode provider-specific behavior when `clawlink_describe_tool` can provide guidance.
-- If a user mentions a specific ClawLink tool name, verify it against `clawlink_list_tools` or `clawlink_describe_tool` instead of dismissing it from memory.
+- If a user mentions a specific ClawLink tool name, verify it against app-scoped `clawlink_list_tools`, `clawlink_search_tools`, or `clawlink_describe_tool` instead of dismissing it from memory.
 - Ask for confirmation before destructive actions and before broad or ambiguous writes.
 - If the user request is vague, use a read or search tool first when possible.
 - If no relevant integration is connected, direct the user to https://claw-link.dev/dashboard instead of pretending the tool is available.

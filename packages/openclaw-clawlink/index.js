@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 const PLUGIN_ID = "clawlink-plugin";
 const LEGACY_PLUGIN_IDS = ["clawlink", "openclaw-plugin"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.21";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.22";
 
 function safeTrim(value) {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : "";
@@ -200,7 +200,7 @@ function buildStartConnectionText(payload) {
     };
 
     return [
-      `${payload.integration} is already connected through ClawLink. No new connection needed — use clawlink_list_tools and clawlink_call_tool to act on it.`,
+      `${payload.integration} is already connected through ClawLink. No new connection needed — use clawlink_list_tools with integration "${payload.integration}" and clawlink_call_tool to act on it.`,
       "",
       stringifyPayload(summary),
     ].join("\n");
@@ -301,15 +301,24 @@ function buildIntegrationListText(payload) {
 function buildToolListText(payload) {
   const tools = Array.isArray(payload?.tools) ? payload.tools : [];
   const integration = isNonEmptyString(payload?.integration) ? payload.integration : null;
+  const query = isNonEmptyString(payload?.query) ? payload.query : null;
+  const heading = query
+    ? integration
+      ? `Matching ClawLink tools for ${integration} and "${query}":`
+      : `Matching ClawLink tools for "${query}":`
+    : integration
+      ? `Available ClawLink tools for ${integration}:`
+      : "Available ClawLink tools:";
+  const emptyHeading = query
+    ? integration
+      ? `No matching ClawLink tools found for ${integration} and "${query}".`
+      : `No matching ClawLink tools found for "${query}".`
+    : integration
+      ? `No ClawLink tools are currently available for ${integration}.`
+      : "No ClawLink tools are currently available.";
 
   return [
-    tools.length > 0
-      ? integration
-        ? `Available ClawLink tools for ${integration}:`
-        : "Available ClawLink tools:"
-      : integration
-        ? `No ClawLink tools are currently available for ${integration}.`
-        : "No ClawLink tools are currently available.",
+    tools.length > 0 ? heading : emptyHeading,
     "",
     "Use clawlink_describe_tool with one exact tool name to fetch arguments and examples before calling it.",
     "",
@@ -931,21 +940,67 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_list_tools",
-      description: "List available tools for the user's connected external apps and services. Call this first whenever the user wants to interact with any external app. For large accounts, pass an integration slug such as youtube, gmail, or slack so the response stays focused. The tool list is dynamic and is the source of truth for what the connected integrations can do right now.",
+      description: "List available tools for one connected integration. Always pass the integration slug from clawlink_list_integrations, for example youtube, gmail, slack, notion, or github. Use clawlink_search_tools when the user describes a capability but you are unsure which exact tool name matches.",
       parameters: Type.Object({
-        integration: Type.Optional(Type.String({
-          description: "Optional integration slug to list only that app's tools, for example youtube, gmail, slack, notion, or github.",
+        integration: Type.String({
+          description: "Required integration slug to list only that app's tools, for example youtube, gmail, slack, notion, or github. Call clawlink_list_integrations first if you do not know the slug.",
           minLength: 1,
-        })),
+        }),
       }),
       async execute(_id, params) {
         const integration = isNonEmptyString(params?.integration)
           ? params.integration.trim().toLowerCase()
           : "";
-        const path = integration
-          ? `/api/tools?${new URLSearchParams({ integration }).toString()}`
-          : "/api/tools";
+
+        if (!integration) {
+          throw new Error("integration is required. Call clawlink_list_integrations first, then call clawlink_list_tools with that integration slug.");
+        }
+
+        const path = `/api/tools?${new URLSearchParams({ integration }).toString()}`;
         const payload = await callClawLink(api, path);
+        return textResult(buildToolListText(payload), payload);
+      },
+    });
+
+    api.registerTool({
+      name: "clawlink_search_tools",
+      description: "Search the user's connected ClawLink tools by capability or keyword without dumping the full tool catalog. Use this after clawlink_list_integrations when the user asks for an operation like playlists, send email, create ticket, calendar invite, or upload file. Pass integration when the app is known.",
+      parameters: Type.Object({
+        query: Type.String({
+          description: "Capability or keyword to search for, for example playlist, send email, channel statistics, create event, upload file, or list records.",
+          minLength: 1,
+        }),
+        integration: Type.Optional(Type.String({
+          description: "Optional connected integration slug to narrow results, for example youtube, gmail, slack, notion, or github.",
+          minLength: 1,
+        })),
+        limit: Type.Optional(Type.Integer({
+          description: "Maximum number of matches to return. Defaults to 10 and is capped by ClawLink.",
+          minimum: 1,
+          maximum: 25,
+        })),
+      }),
+      async execute(_id, params) {
+        const query = isNonEmptyString(params?.query) ? params.query.trim() : "";
+
+        if (!query) {
+          throw new Error("query is required");
+        }
+
+        const searchParams = new URLSearchParams({ query });
+        const integration = isNonEmptyString(params?.integration)
+          ? params.integration.trim().toLowerCase()
+          : "";
+
+        if (integration) {
+          searchParams.set("integration", integration);
+        }
+
+        if (Number.isInteger(params?.limit)) {
+          searchParams.set("limit", String(params.limit));
+        }
+
+        const payload = await callClawLink(api, `/api/tools/search?${searchParams.toString()}`);
         return textResult(buildToolListText(payload), payload);
       },
     });
@@ -1018,7 +1073,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_call_tool",
-      description: "Execute an action on a connected external app or service through ClawLink. Use clawlink_list_tools to discover the live tool catalog first, then clawlink_describe_tool for usage guidance. Do not claim a capability is missing until the live tool list has been checked.",
+      description: "Execute an action on a connected external app or service through ClawLink. Use app-scoped clawlink_list_tools or clawlink_search_tools to discover the live tool catalog first, then clawlink_describe_tool for usage guidance. Do not claim a capability is missing until the live tool catalog has been checked.",
       parameters: Type.Object({
         tool: Type.String({
           description: "ClawLink tool name, for example notion_search or github_list_issues.",

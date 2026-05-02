@@ -1,6 +1,6 @@
 ---
 name: clawlink
-version: 0.1.21
+version: 0.1.22
 description: Third-party integration hub for OpenClaw. Connect 100+ apps (email, calendars, CRMs, docs) through a single plugin with hosted OAuth.
 homepage: https://claw-link.dev
 clawhub: clawlink-plugin
@@ -46,18 +46,20 @@ If ClawLink tools are available, prefer them over browser workarounds or asking 
 
 ## Proactive suggestions
 
-After connecting ClawLink, call `clawlink_list_integrations` and `clawlink_list_tools` to see what the user has available. Use what you know about the user's work and interests to suggest relevant integrations they may not have connected yet. Cross-reference what they need with `clawlink_list_integrations` to find matching apps.
+After connecting ClawLink, call `clawlink_list_integrations` to see what the user has available. For a specific connected app, call `clawlink_list_tools` with that integration slug. For a broad capability, call `clawlink_search_tools` with a short query. Use what you know about the user's work and interests to suggest relevant integrations they may not have connected yet.
 
 Once you know what is connected, tell the user which apps they could connect next and offer to help set them up through the dashboard. 
 
 ## Discovery workflow
 
-1. Call `clawlink_list_tools` first.
-2. Treat the live tool list as the source of truth for what is connected and what actions are available right now.
-3. If the user mentions a specific ClawLink tool name, verify it with `clawlink_list_tools` or `clawlink_describe_tool` instead of relying on memory.
-4. If a relevant tool exists, use the execution workflow below.
-5. If no relevant tool exists, call `clawlink_list_integrations` to check whether the app is connected but does not expose the needed tool, or is not connected yet.
-6. If the app is not connected yet, follow the connection workflow below — direct the user to the dashboard, do not start a hosted session from chat.
+1. Call `clawlink_list_integrations` first to identify connected app slugs.
+2. If the user named an app, call `clawlink_list_tools` with that exact integration slug. Do not call it without `integration`.
+3. If the user described a capability but the exact tool is unclear, call `clawlink_search_tools` with a short query and, when known, the integration slug.
+4. Treat the live tool list or search result as the source of truth for what is connected and what actions are available right now.
+5. If the user mentions a specific ClawLink tool name, verify it with `clawlink_describe_tool`, or with app-scoped `clawlink_list_tools` / `clawlink_search_tools`, instead of relying on memory.
+6. If a relevant tool exists, use the execution workflow below.
+7. If no relevant tool exists, use `clawlink_list_integrations` to check whether the app is connected but does not expose the needed tool, or is not connected yet.
+8. If the app is not connected yet, follow the connection workflow below — direct the user to the dashboard, do not start a hosted session from chat.
 
 ## Execution workflow
 
@@ -73,7 +75,7 @@ Once you know what is connected, tell the user which apps they could connect nex
 When the user wants to connect a new app, do not start a hosted session from chat and do not ask the user to type any commands.
 
 1. Tell the user to open https://claw-link.dev/dashboard in their browser and connect the app there.
-2. When they confirm they have finished, call `clawlink_list_integrations` (and `clawlink_list_tools`) to verify the new connection is live, then continue with the discovery workflow.
+2. When they confirm they have finished, call `clawlink_list_integrations` to verify the new connection is live, then continue with the discovery workflow using `clawlink_list_tools` for the connected integration slug.
 
 ## Not configured yet
 

@@ -12,6 +12,7 @@ export {
   buildToolDescription,
   describeToolForUser,
   listToolsForUser,
+  searchToolsForUser,
   type ToolCatalogItem,
   type ToolConnectionSummary,
   type ToolDescription,

@@ -38,14 +38,15 @@ Full setup walkthrough: https://docs.claw-link.dev/openclaw
 
 ## Tools
 
-The plugin registers nine tools. OpenClaw's assistant discovers available integrations dynamically — you don't need to configure individual apps here.
+The plugin registers ten tools. OpenClaw's assistant discovers available integrations dynamically — you don't need to configure individual apps here.
 
 - `clawlink_begin_pairing` — start or resume browser pairing for this OpenClaw install
 - `clawlink_get_pairing_status` — finish pairing after the browser approval is complete
 - `clawlink_start_connection` — start a hosted OAuth/connect session for a new app
 - `clawlink_get_connection_status` — poll an in-progress connect session
 - `clawlink_list_integrations` — list apps already connected
-- `clawlink_list_tools` — list callable tools across connected apps
+- `clawlink_list_tools` — list callable tools for one connected app
+- `clawlink_search_tools` — search connected tools by capability or keyword
 - `clawlink_describe_tool` — fetch schema and usage guidance for one tool
 - `clawlink_preview_tool` — preview a tool call before execution, especially for writes
 - `clawlink_call_tool` — execute a tool against a connected app

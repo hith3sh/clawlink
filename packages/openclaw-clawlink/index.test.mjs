@@ -109,7 +109,7 @@ test("clawlink_call_tool forwards nested arguments unchanged", async () => {
     headers: {
       "X-ClawLink-API-Key": "cllk_test_123",
       "Content-Type": "application/json",
-      "User-Agent": "@useclawlink/openclaw-plugin/0.1.21",
+      "User-Agent": "@useclawlink/openclaw-plugin/0.1.22",
     },
     body: {
       arguments: {
@@ -218,7 +218,18 @@ test("clawlink_preview_tool also accepts top-level tool args", async () => {
   });
 });
 
-test("clawlink_list_tools requests the compact unfiltered tool list by default", async () => {
+test("clawlink_list_tools requires an integration slug", async () => {
+  const api = createFakeApi();
+  clawlinkPlugin.register(api);
+  const tool = api.getTool("clawlink_list_tools");
+
+  await assert.rejects(
+    () => tool.execute("test", {}),
+    /integration is required/,
+  );
+});
+
+test("clawlink_list_tools lists compact tools for one integration", async () => {
   const api = createFakeApi();
   clawlinkPlugin.register(api);
   const tool = api.getTool("clawlink_list_tools");
@@ -247,26 +258,27 @@ test("clawlink_list_tools requests the compact unfiltered tool list by default",
         },
       ],
       count: 1,
-      integration: null,
+      integration: "youtube",
     });
   }, async () => {
-    const result = await tool.execute("test", {});
+    const result = await tool.execute("test", { integration: " YouTube " });
 
-    assert.match(result.content[0].text, /Available ClawLink tools:/);
+    assert.match(result.content[0].text, /Available ClawLink tools for youtube:/);
     assert.match(result.content[0].text, /youtube_list_user_playlists/);
     assert.match(result.content[0].text, /clawlink_describe_tool/);
+    assert.doesNotMatch(result.content[0].text, /inputSchema/);
   });
 
   assert.deepEqual(capturedRequest, {
-    url: "https://claw-link.dev/api/tools",
+    url: "https://claw-link.dev/api/tools?integration=youtube",
     method: "GET",
   });
 });
 
-test("clawlink_list_tools supports integration filtering", async () => {
+test("clawlink_search_tools searches compact tools with integration and limit", async () => {
   const api = createFakeApi();
   clawlinkPlugin.register(api);
-  const tool = api.getTool("clawlink_list_tools");
+  const tool = api.getTool("clawlink_search_tools");
   let capturedRequest = null;
 
   await withFetchMock(async (url, options) => {
@@ -292,20 +304,36 @@ test("clawlink_list_tools supports integration filtering", async () => {
         },
       ],
       count: 1,
+      query: "playlist",
       integration: "youtube",
     });
   }, async () => {
-    const result = await tool.execute("test", { integration: " YouTube " });
+    const result = await tool.execute("test", {
+      query: "playlist",
+      integration: " YouTube ",
+      limit: 7,
+    });
 
-    assert.match(result.content[0].text, /Available ClawLink tools for youtube:/);
+    assert.match(result.content[0].text, /Matching ClawLink tools for youtube and "playlist":/);
     assert.match(result.content[0].text, /youtube_list_user_playlists/);
     assert.doesNotMatch(result.content[0].text, /inputSchema/);
   });
 
   assert.deepEqual(capturedRequest, {
-    url: "https://claw-link.dev/api/tools?integration=youtube",
+    url: "https://claw-link.dev/api/tools/search?query=playlist&integration=youtube&limit=7",
     method: "GET",
   });
+});
+
+test("clawlink_search_tools requires a query", async () => {
+  const api = createFakeApi();
+  clawlinkPlugin.register(api);
+  const tool = api.getTool("clawlink_search_tools");
+
+  await assert.rejects(
+    () => tool.execute("test", { integration: "youtube" }),
+    /query is required/,
+  );
 });
 
 test("clawlink_get_pairing_status exchanges the approved session and clears pending pairing after finalize", async () => {

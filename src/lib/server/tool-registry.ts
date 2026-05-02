@@ -418,6 +418,35 @@ export async function listToolsForUser(
   return entries.map(({ tool, connections }) => buildToolListItem(tool, connections));
 }
 
+export async function searchToolsForUser(
+  userId: string,
+  query: string,
+  options: { integration?: string; limit?: number } = {},
+): Promise<ToolListItem[]> {
+  const normalizedQuery = normalizeSearchText(query);
+
+  if (!normalizedQuery) {
+    return [];
+  }
+
+  const limit = Math.min(Math.max(options.limit ?? 10, 1), 25);
+  const integration = options.integration?.trim().toLowerCase();
+  const entries = await listConnectedToolEntries(userId, { integration });
+
+  return entries
+    .map((entry) => ({
+      entry,
+      score: scoreTool(entry.tool, normalizedQuery, integration),
+    }))
+    .filter(({ score }) => score > 0)
+    .sort(
+      (left, right) =>
+        right.score - left.score || left.entry.tool.name.localeCompare(right.entry.tool.name),
+    )
+    .slice(0, limit)
+    .map(({ entry }) => buildToolListItem(entry.tool, entry.connections));
+}
+
 export async function describeToolForUser(
   userId: string,
   toolName: string,
