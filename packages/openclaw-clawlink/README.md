@@ -11,6 +11,13 @@ ClawLink stores OAuth tokens and API keys for a growing catalog of business apps
 ## Install
 
 ```bash
+openclaw plugins install clawhub:clawlink-plugin
+openclaw gateway restart
+```
+
+Or directly from npm:
+
+```bash
 openclaw plugins install @useclawlink/openclaw-plugin
 openclaw gateway restart
 ```
@@ -23,7 +30,7 @@ openclaw gateway restart
 2. Open the returned ClawLink pairing URL in your browser and approve the device.
 3. Let OpenClaw call `clawlink_get_pairing_status` to finish storing the local credential.
 
-The resulting device credential is stored locally in `~/.openclaw/openclaw.json` under `plugins.entries.clawlink.config.apiKey` and is only sent to `claw-link.dev`.
+The resulting device credential is stored locally in `~/.openclaw/openclaw.json` under `plugins.entries.clawlink-plugin.config.apiKey` and is only sent to `claw-link.dev`.
 
 Advanced/manual fallback: generate an API key at https://claw-link.dev/dashboard/settings?tab=api and paste the raw key into the **ClawLink API key** field if your client renders a plugin settings UI.
 

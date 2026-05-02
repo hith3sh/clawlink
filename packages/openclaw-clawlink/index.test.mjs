@@ -11,7 +11,7 @@ function createFakeApi(initialPluginConfig = {
   let fileConfig = {
     plugins: {
       entries: {
-        clawlink: {
+        "clawlink-plugin": {
           enabled: true,
           config: structuredClone(initialPluginConfig),
         },
@@ -20,7 +20,7 @@ function createFakeApi(initialPluginConfig = {
   };
 
   return {
-    id: "clawlink",
+    id: "clawlink-plugin",
     pluginConfig: structuredClone(initialPluginConfig),
     runtime: {
       config: {
@@ -50,7 +50,7 @@ function createFakeApi(initialPluginConfig = {
       return command;
     },
     getPluginConfig() {
-      return structuredClone(fileConfig.plugins.entries.clawlink.config);
+      return structuredClone(fileConfig.plugins.entries["clawlink-plugin"].config);
     },
   };
 }
@@ -109,7 +109,7 @@ test("clawlink_call_tool forwards nested arguments unchanged", async () => {
     headers: {
       "X-ClawLink-API-Key": "cllk_test_123",
       "Content-Type": "application/json",
-      "User-Agent": "@useclawlink/openclaw-plugin/0.1.19",
+      "User-Agent": "@useclawlink/openclaw-plugin/0.1.21",
     },
     body: {
       arguments: {
