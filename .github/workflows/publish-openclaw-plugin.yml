@@ -56,17 +56,23 @@ jobs:
       - name: Publish to npm
         run: npx --yes npm@11.6.2 publish --provenance --access public
 
-      - name: Configure ClawHub auth
+      - name: Write ClawHub config
         if: startsWith(github.ref, 'refs/tags/')
         env:
-          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_CLI_TOKEN }}
         run: |
-          CLAWHUB_CFG="${RUNNER_TEMP}/clawhub-config.json"
-          echo '{"registry":"https://clawhub.ai","token":"'"$CLAWHUB_TOKEN"'"}' > "$CLAWHUB_CFG"
-          chmod 600 "$CLAWHUB_CFG"
-          echo "CLAWHUB_CONFIG_PATH=$CLAWHUB_CFG" >> "$GITHUB_ENV"
-          # Verify token was written (redacted)
-          node -e "const c=require('$CLAWHUB_CFG'); console.log('token length:', c.token?.length ?? 0, '| registry:', c.registry)"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          path = Path(os.environ["RUNNER_TEMP"]) / "clawhub-config.json"
+          path.write_text(
+              json.dumps({"registry": "https://clawhub.ai", "token": os.environ["CLAWHUB_TOKEN"]}, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          path.chmod(0o600)
+          print(f"Config written to {path} (token length: {len(os.environ['CLAWHUB_TOKEN'])})")
+          PY
+          echo "CLAWHUB_CONFIG_PATH=$RUNNER_TEMP/clawhub-config.json" >> "$GITHUB_ENV"
 
       - name: Publish to ClawHub
         if: startsWith(github.ref, 'refs/tags/')
