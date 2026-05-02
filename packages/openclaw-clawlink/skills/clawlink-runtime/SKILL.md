@@ -84,9 +84,10 @@ If a ClawLink tool reports that the plugin is not configured, the plugin has not
 If the ClawLink plugin is installed and enabled but ClawLink tools still do not appear in the current or next chat:
 
 1. Ask the user to start a fresh chat first so OpenClaw reloads the plugin tool catalog.
-2. If that still fails, have them inspect `~/.openclaw/openclaw.json` for a `plugins.allow` list.
-3. If `plugins.allow` is present, it must include `"tools"`. The bundled `tools` plugin is responsible for exposing runtime-registered tools like ClawLink to agents.
-4. After changing `plugins.allow`, tell the user to restart the OpenClaw gateway and start a fresh chat again.
+2. If that still fails, tell the user their OpenClaw install likely needs the built-in `tools` plugin enabled.
+3. For managed/non-technical users: tell them to ask their OpenClaw admin or support contact to enable the `tools` plugin and restart the gateway.
+4. For self-hosted/technical users only: if `~/.openclaw/openclaw.json` contains a `plugins.allow` list, it must include `"tools"`.
+5. After the admin or self-hosted user fixes that setting, tell them to restart the OpenClaw gateway and start a fresh chat again.
 
 ## Rules
 

@@ -263,7 +263,7 @@ export default function IntegrationDetails({ integration }: Props) {
                 </dl>
 
                 {needsReauth ? (
-                  <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
                     {connection.authError ?? `Reconnect ${integration.name} to refresh its credentials.`}
                   </div>
                 ) : null}

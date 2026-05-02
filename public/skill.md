@@ -72,11 +72,7 @@ The resulting device credential is stored locally in `~/.openclaw/openclaw.json`
 ## Tool visibility issues
 
 If the ClawLink plugin is installed and enabled but the ClawLink tools still do not appear:
-
-1. Tell the user to start a fresh chat first so OpenClaw reloads the tool catalog.
-2. If the tools are still missing, check `~/.openclaw/openclaw.json` for a `plugins.allow` list.
-3. If `plugins.allow` exists, it must include `"tools"`. The bundled `tools` plugin is what exposes runtime-registered tools like ClawLink to agents.
-4. After updating `plugins.allow`, restart the OpenClaw gateway and start a fresh chat again.
+check if `~/.openclaw/openclaw.json` contains a `plugins.allow` list, it must include `"tools"`.
 
 ## Rules
 

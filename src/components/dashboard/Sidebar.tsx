@@ -116,7 +116,7 @@ function SlidingNavMenu({ items }: { items: NavItem[] }) {
       {hoverPill ? (
         <motion.div
           aria-hidden
-          className="pointer-events-none absolute left-0 right-0 z-0 rounded-lg bg-sidebar-accent/40 shadow-sm ring-1 ring-black/5"
+          className="pointer-events-none absolute left-0 right-0 z-0 rounded-lg bg-sidebar-accent/40 shadow-sm ring-1 ring-white/5"
           initial={false}
           animate={{
             top: hoverPill.top,

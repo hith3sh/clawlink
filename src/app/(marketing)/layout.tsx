@@ -157,7 +157,7 @@ export default function MarketingLayout({
             <div className="flex flex-col gap-2.5 text-[13.5px]">
               <span className="mb-1 text-[11px] font-semibold uppercase tracking-[0.10em]" style={{ color: "var(--mk-fg-faint)" }}>Product</span>
               <Link className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href="/dashboard">Dashboard</Link>
-              <a className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href="https://docs.claw-link.dev/openclaw" target="_blank" rel="noopener noreferrer">Docs</a>
+              <a className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href="https://docs.claw-link.dev" target="_blank" rel="noopener noreferrer">Docs</a>
               <a className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href={CLAWLINK_SKILL_URL} target="_blank" rel="noopener noreferrer">skill.md</a>
             </div>
             <div className="flex flex-col gap-2.5 text-[13.5px]">

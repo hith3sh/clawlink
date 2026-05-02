@@ -183,12 +183,12 @@ export default function IntegrationsPage() {
         </div>
 
         {error ? (
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="py-4 text-sm text-red-700">{error}</CardContent>
+          <Card className="border-red-500/20 bg-red-500/10">
+            <CardContent className="py-4 text-sm text-red-400">{error}</CardContent>
           </Card>
         ) : null}
 
-        <Card className="overflow-hidden rounded-[28px] border border-black/8 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+        <Card className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_48px_rgba(0,0,0,0.1)]">
           <CardContent className="p-0">
             {loading ? (
               <div className="space-y-3 px-6 py-6">
@@ -210,7 +210,7 @@ export default function IntegrationsPage() {
                 </Button>
               </div>
             ) : (
-              <div className="divide-y divide-black/6">
+              <div className="divide-y divide-border">
                 {connectionRows.map((row) => {
                   const isExpanded = expandedConnectionId === row.connection.id;
 
@@ -218,13 +218,13 @@ export default function IntegrationsPage() {
                     <div key={row.connection.id}>
                       <button
                         type="button"
-                        className="flex w-full flex-wrap items-center justify-between gap-3 px-6 py-4 text-left transition-colors hover:bg-black/[0.015] sm:flex-nowrap"
+                        className="flex w-full flex-wrap items-center justify-between gap-3 px-6 py-4 text-left transition-colors hover:bg-accent/50 sm:flex-nowrap"
                         onClick={() =>
                           setExpandedConnectionId(isExpanded ? null : row.connection.id)
                         }
                       >
                         <div className="flex min-w-0 items-center gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-black/[0.03]">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent">
                             <IntegrationMark integration={row.integration} />
                           </div>
                           <div className="min-w-0">
@@ -237,12 +237,12 @@ export default function IntegrationsPage() {
 
                         <div className="flex items-center gap-2">
                           {row.needsReconnect ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-medium text-red-400">
                               <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                               Needs reconnect
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
                               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                               Connected
                             </span>
@@ -288,10 +288,10 @@ export default function IntegrationsPage() {
                       </div>
 
                       {isExpanded && row.integration.tools.length > 0 && (
-                        <div className="border-t border-black/6">
+                        <div className="border-t border-border">
                           <button
                             type="button"
-                            className="flex w-full items-center gap-2 px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground transition-colors hover:bg-black/[0.015]"
+                            className="flex w-full items-center gap-2 px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground transition-colors hover:bg-accent/50"
                             onClick={() =>
                               setToolsVisibleFor((prev) => {
                                 const next = new Set(prev);
@@ -313,12 +313,12 @@ export default function IntegrationsPage() {
                           </button>
 
                           {toolsVisibleFor.has(row.connection.id) && (
-                            <div className="bg-black/[0.015] px-6 pb-4">
+                            <div className="bg-accent/50 px-6 pb-4">
                               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                                 {row.integration.tools.map((tool) => (
                                   <div
                                     key={tool.name}
-                                    className="rounded-xl border border-black/6 bg-white px-3 py-2 text-sm text-foreground"
+                                    className="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
                                   >
                                     {tool.description}
                                   </div>
@@ -338,8 +338,8 @@ export default function IntegrationsPage() {
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="right" className="w-full max-w-full border-l-black/10 p-0 sm:max-w-xl">
-          <SheetHeader className="border-b border-black/8 px-6 py-5">
+        <SheetContent side="right" className="w-full max-w-full border-l-border p-0 sm:max-w-xl">
+          <SheetHeader className="border-b border-border px-6 py-5">
             <SheetTitle>Add connection</SheetTitle>
             <SheetDescription>
               Choose an app and start a new hosted connection flow.
@@ -361,7 +361,7 @@ export default function IntegrationsPage() {
 
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-8">
               {availableIntegrations.length === 0 ? (
-                <div className="rounded-[24px] border border-dashed border-black/10 bg-black/[0.02] px-5 py-8 text-center">
+                <div className="rounded-[24px] border border-dashed border-border bg-accent/30 px-5 py-8 text-center">
                   <p className="text-sm font-medium text-foreground">No matching apps found</p>
                   <p className="mt-1 text-sm text-muted-foreground">Try a broader search term.</p>
                 </div>
@@ -369,10 +369,10 @@ export default function IntegrationsPage() {
                 availableIntegrations.map((integration) => (
                   <div
                     key={integration.slug}
-                    className="flex items-center justify-between gap-4 rounded-[24px] border border-black/8 bg-white px-4 py-4 shadow-[0_10px_28px_rgba(15,23,42,0.04)]"
+                    className="flex items-center justify-between gap-4 rounded-[24px] border border-border bg-card px-4 py-4 shadow-[0_10px_28px_rgba(0,0,0,0.06)]"
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-black/[0.03]">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent">
                         <IntegrationMark integration={integration} />
                       </div>
 
@@ -390,7 +390,7 @@ export default function IntegrationsPage() {
                     </div>
 
                     {integration.dashboardStatus === "coming-soon" ? (
-                      <span className="shrink-0 rounded-full border border-black/10 bg-black/[0.03] px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                      <span className="shrink-0 rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground">
                         Coming soon
                       </span>
                     ) : integration.setupMode === "oauth" || integration.setupMode === "pipedream" ? (
@@ -402,7 +402,7 @@ export default function IntegrationsPage() {
                         }}
                       />
                     ) : (
-                      <span className="shrink-0 rounded-full border border-black/10 bg-black/[0.03] px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                      <span className="shrink-0 rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground">
                         Hosted flow pending
                       </span>
                     )}

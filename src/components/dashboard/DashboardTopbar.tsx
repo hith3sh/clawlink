@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { BookOpen, MessageSquareText } from "lucide-react";
 
 import { DashboardPlanBadge } from "@/components/dashboard/DashboardPlanBadge";
+import { ThemeToggle } from "@/components/dashboard/ThemeToggle";
 import { buttonVariants } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
@@ -53,6 +54,8 @@ export function DashboardTopbar() {
             Docs
           </Link>
           </div>
+
+          <ThemeToggle />
         </div>
       </div>
     </div>

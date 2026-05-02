@@ -38,8 +38,8 @@ export default function BillingPage() {
       <BillingSettingsPanel isLoaded={isLoaded} hasUser={Boolean(user)} />
 
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Compare plans</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-lg font-semibold text-foreground">Compare plans</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           Upgrade when you&apos;re ready for the full set of integrations.
         </p>
         <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">

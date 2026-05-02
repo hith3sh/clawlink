@@ -42,17 +42,6 @@ interface Props {
   initialError?: string | null;
 }
 
-function formatTimestamp(value: string | null): string | null {
-  if (!value) {
-    return null;
-  }
-
-  return new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
 export function BillingSettingsPanel({ isLoaded, hasUser, checkoutId, initialBilling, initialLoading, initialError }: Props) {
   const [billing, setBilling] = useState<BillingState | null>(initialBilling ?? null);
   const [loading, setLoading] = useState(initialBilling != null ? false : (initialLoading ?? true));
@@ -112,7 +101,7 @@ export function BillingSettingsPanel({ isLoaded, hasUser, checkoutId, initialBil
     return () => {
       active = false;
     };
-  }, [hasUser, isLoaded, checkoutId]);
+  }, [hasUser, isLoaded, checkoutId, initialBilling]);
 
   if (loading) {
     return (

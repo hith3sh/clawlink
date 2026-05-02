@@ -7,7 +7,6 @@ import {
   CLAWLINK_SKILL_URL,
   CLAWLINK_VERIFY_URL,
   OPENCLAW_PLUGIN_INSTALL_COMMAND,
-  OPENCLAW_PLUGIN_SETUP_PROMPT,
 } from "@/lib/openclaw-plugin";
 
 type Audience = "human" | "agent";

@@ -59,8 +59,8 @@ export function DashboardPlanBadge() {
   const planLabel = planKey === "pro" ? "Pro" : "Free";
   const chipClasses =
     planKey === "pro"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100"
-      : "border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-300 hover:bg-amber-100";
+      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/15"
+      : "border-amber-500/20 bg-amber-500/10 text-amber-400 hover:border-amber-500/30 hover:bg-amber-500/15";
 
   return (
     <Link
@@ -71,7 +71,7 @@ export function DashboardPlanBadge() {
       <span>{planLabel}</span>
       <Badge
         variant="outline"
-        className="h-5 border-current/15 bg-white/70 px-1.5 text-[10px] uppercase tracking-[0.16em] text-current"
+        className="h-5 border-current/15 bg-white/10 px-1.5 text-[10px] uppercase tracking-[0.16em] text-current"
       >
         Plan
       </Badge>

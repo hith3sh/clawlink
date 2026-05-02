@@ -45,7 +45,7 @@ export function IntegrationCard({
   const card = (
     <Card
       className={cn(
-        "min-h-[200px] rounded-[22px] border border-black/8 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(15,23,42,0.09)]",
+        "min-h-[200px] rounded-[22px] border border-border bg-card shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(0,0,0,0.12)]",
         connected && "cursor-pointer",
         integration.dashboardStatus === "coming-soon" && "opacity-60 grayscale-[0.6] hover:opacity-80 hover:grayscale-[0.3]",
         className,
@@ -71,19 +71,19 @@ export function IntegrationCard({
           </div>
 
           {connected ? (
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-600">
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-sm font-medium text-emerald-400">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Connected
             </span>
           ) : integration.dashboardStatus === "coming-soon" ? (
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-500">
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground">
               Coming soon
             </span>
           ) : hostedConnectEnabled ? (
             <Button
               variant="outline"
               size="sm"
-              className="h-9 cursor-pointer rounded-full border-black/10 bg-white px-4 text-sm font-medium text-foreground shadow-none hover:bg-black/[0.03]"
+              className="h-9 cursor-pointer rounded-full border-border bg-card px-4 text-sm font-medium text-foreground shadow-none hover:bg-accent"
               onClick={(e) => {
                 e.preventDefault();
                 start();
@@ -94,7 +94,7 @@ export function IntegrationCard({
               Connect
             </Button>
           ) : (
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-500">
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground">
               Hosted flow pending
             </span>
           )}
@@ -105,7 +105,7 @@ export function IntegrationCard({
             {integration.name}
           </h3>
 
-          <p className="line-clamp-3 max-w-[28ch] text-[0.98rem] leading-7 text-neutral-500">
+          <p className="line-clamp-3 max-w-[28ch] text-[0.98rem] leading-7 text-muted-foreground">
             {integration.description}
           </p>
         </div>

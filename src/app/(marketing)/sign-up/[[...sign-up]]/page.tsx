@@ -1,4 +1,5 @@
 import { SignUp } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ export default async function SignUpPage({
       <SignUp
         fallbackRedirectUrl={redirectUrl ?? "/dashboard"}
         forceRedirectUrl={redirectUrl}
+        appearance={{ baseTheme: dark }}
       />
     </div>
   );
