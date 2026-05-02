@@ -300,20 +300,30 @@ function buildIntegrationListText(payload) {
 
 function buildToolListText(payload) {
   const tools = Array.isArray(payload?.tools) ? payload.tools : [];
+  const integration = isNonEmptyString(payload?.integration) ? payload.integration : null;
 
   return [
-    tools.length > 0 ? "Available ClawLink tools:" : "No ClawLink tools are currently available.",
+    tools.length > 0
+      ? integration
+        ? `Available ClawLink tools for ${integration}:`
+        : "Available ClawLink tools:"
+      : integration
+        ? `No ClawLink tools are currently available for ${integration}.`
+        : "No ClawLink tools are currently available.",
+    "",
+    "Use clawlink_describe_tool with one exact tool name to fetch arguments and examples before calling it.",
     "",
     stringifyPayload(
       tools.map((tool) => ({
         integration: tool?.integration ?? null,
         name: tool?.name ?? null,
-        description: tool?.description ?? null,
+        description: tool?.description ?? tool?.summary ?? null,
+        mode: tool?.mode ?? null,
         accessLevel: tool?.accessLevel ?? null,
         risk: tool?.risk ?? null,
+        guidanceAvailable: Boolean(tool?.guidanceAvailable),
         requiresConfirmation: Boolean(tool?.requiresConfirmation),
         previewAvailable: Boolean(tool?.previewAvailable),
-        tags: Array.isArray(tool?.tags) ? tool.tags : [],
         defaultConnectionId: tool?.defaultConnectionId ?? null,
         connectionCount: tool?.connectionCount ?? 0,
       })),
@@ -921,10 +931,21 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_list_tools",
-      description: "List all available tools for the user's connected external apps and services. Call this first whenever the user wants to interact with any external app. The tool list is dynamic and is the source of truth for what the connected integrations can do right now.",
-      parameters: Type.Object({}),
-      async execute() {
-        const payload = await callClawLink(api, "/api/tools");
+      description: "List available tools for the user's connected external apps and services. Call this first whenever the user wants to interact with any external app. For large accounts, pass an integration slug such as youtube, gmail, or slack so the response stays focused. The tool list is dynamic and is the source of truth for what the connected integrations can do right now.",
+      parameters: Type.Object({
+        integration: Type.Optional(Type.String({
+          description: "Optional integration slug to list only that app's tools, for example youtube, gmail, slack, notion, or github.",
+          minLength: 1,
+        })),
+      }),
+      async execute(_id, params) {
+        const integration = isNonEmptyString(params?.integration)
+          ? params.integration.trim().toLowerCase()
+          : "";
+        const path = integration
+          ? `/api/tools?${new URLSearchParams({ integration }).toString()}`
+          : "/api/tools";
+        const payload = await callClawLink(api, path);
         return textResult(buildToolListText(payload), payload);
       },
     });

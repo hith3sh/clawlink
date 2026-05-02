@@ -13,9 +13,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const tools = await listToolsForUser(actor.user.id);
+    const { searchParams } = new URL(request.url);
+    const integration = searchParams.get("integration")?.trim().toLowerCase() || undefined;
+    const tools = await listToolsForUser(actor.user.id, { integration });
 
-    return NextResponse.json({ tools });
+    return NextResponse.json({
+      tools,
+      count: tools.length,
+      integration: integration ?? null,
+    });
   } catch (error) {
     console.error("Error listing tools:", error);
     return NextResponse.json(

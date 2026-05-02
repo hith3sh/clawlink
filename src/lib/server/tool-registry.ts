@@ -63,6 +63,21 @@ export interface ToolCatalogItem {
   recommendedTimeoutMs?: number;
 }
 
+export interface ToolListItem {
+  integration: string;
+  integrationName: string;
+  name: string;
+  description: string;
+  accessLevel: ToolAccessLevel;
+  mode: ToolMode;
+  risk: ToolRisk;
+  guidanceAvailable: boolean;
+  requiresConfirmation: boolean;
+  previewAvailable: boolean;
+  defaultConnectionId: number | null;
+  connectionCount: number;
+}
+
 export interface ToolDescription extends ToolCatalogItem {
   whenToUse: string[];
   askBefore: string[];
@@ -156,6 +171,29 @@ export function buildCatalogItem(
     supportsBatch: tool.supportsBatch,
     maxBatchSize: tool.maxBatchSize,
     recommendedTimeoutMs: tool.recommendedTimeoutMs,
+  };
+}
+
+export function buildToolListItem(
+  tool: IntegrationTool,
+  connections: IntegrationConnectionRecord[],
+): ToolListItem {
+  const integrationMeta = getIntegrationBySlug(tool.integration);
+  const policy = summarizeToolPolicy(tool);
+
+  return {
+    integration: tool.integration,
+    integrationName: integrationMeta?.name ?? tool.integration,
+    name: tool.name,
+    description: tool.description,
+    accessLevel: tool.accessLevel,
+    mode: tool.mode,
+    risk: tool.risk,
+    guidanceAvailable: hasGuidance(tool),
+    requiresConfirmation: policy.requiresConfirmation,
+    previewAvailable: policy.previewAvailable,
+    defaultConnectionId: connections.find((connection) => connection.isDefault)?.id ?? null,
+    connectionCount: connections.length,
   };
 }
 
@@ -306,7 +344,10 @@ export function searchToolDefinitions(
     .map((entry) => entry.tool);
 }
 
-export async function listConnectedToolEntries(userId: string): Promise<ToolRegistryEntry[]> {
+export async function listConnectedToolEntries(
+  userId: string,
+  options: { integration?: string } = {},
+): Promise<ToolRegistryEntry[]> {
   const db = getDatabase();
 
   if (!db) {
@@ -323,8 +364,13 @@ export async function listConnectedToolEntries(userId: string): Promise<ToolRegi
   }
 
   const entries: ToolRegistryEntry[] = [];
+  const integrationFilter = options.integration?.trim().toLowerCase();
 
   for (const [integration, integrationConnections] of connectionsByIntegration.entries()) {
+    if (integrationFilter && integration.toLowerCase() !== integrationFilter) {
+      continue;
+    }
+
     const handlerTools = listHandlerToolsForIntegration(integration);
 
     for (const tool of handlerTools) {
@@ -361,11 +407,15 @@ export async function listConnectedToolEntries(userId: string): Promise<ToolRegi
   return entries.sort((left, right) => left.tool.name.localeCompare(right.tool.name));
 }
 
-export async function listToolsForUser(userId: string): Promise<ToolCatalogItem[]> {
-  const entries = await listConnectedToolEntries(userId);
-  const tools = entries.map((entry) => entry.tool);
-  await hydrateSchemas(tools);
-  return entries.map(({ tool, connections }) => buildCatalogItem(tool, connections));
+export async function listToolsForUser(
+  userId: string,
+  options: { integration?: string } = {},
+): Promise<ToolListItem[]> {
+  const entries = await listConnectedToolEntries(userId, {
+    integration: options.integration,
+  });
+
+  return entries.map(({ tool, connections }) => buildToolListItem(tool, connections));
 }
 
 export async function describeToolForUser(

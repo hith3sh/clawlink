@@ -218,6 +218,96 @@ test("clawlink_preview_tool also accepts top-level tool args", async () => {
   });
 });
 
+test("clawlink_list_tools requests the compact unfiltered tool list by default", async () => {
+  const api = createFakeApi();
+  clawlinkPlugin.register(api);
+  const tool = api.getTool("clawlink_list_tools");
+  let capturedRequest = null;
+
+  await withFetchMock(async (url, options) => {
+    capturedRequest = {
+      url,
+      method: options.method,
+    };
+
+    return successResponse({
+      tools: [
+        {
+          integration: "youtube",
+          name: "youtube_list_user_playlists",
+          description: "List playlists owned by the authenticated YouTube user.",
+          mode: "read",
+          accessLevel: "read",
+          risk: "low",
+          guidanceAvailable: false,
+          requiresConfirmation: false,
+          previewAvailable: true,
+          defaultConnectionId: 23,
+          connectionCount: 1,
+        },
+      ],
+      count: 1,
+      integration: null,
+    });
+  }, async () => {
+    const result = await tool.execute("test", {});
+
+    assert.match(result.content[0].text, /Available ClawLink tools:/);
+    assert.match(result.content[0].text, /youtube_list_user_playlists/);
+    assert.match(result.content[0].text, /clawlink_describe_tool/);
+  });
+
+  assert.deepEqual(capturedRequest, {
+    url: "https://claw-link.dev/api/tools",
+    method: "GET",
+  });
+});
+
+test("clawlink_list_tools supports integration filtering", async () => {
+  const api = createFakeApi();
+  clawlinkPlugin.register(api);
+  const tool = api.getTool("clawlink_list_tools");
+  let capturedRequest = null;
+
+  await withFetchMock(async (url, options) => {
+    capturedRequest = {
+      url,
+      method: options.method,
+    };
+
+    return successResponse({
+      tools: [
+        {
+          integration: "youtube",
+          name: "youtube_list_user_playlists",
+          description: "List playlists owned by the authenticated YouTube user.",
+          mode: "read",
+          accessLevel: "read",
+          risk: "low",
+          guidanceAvailable: true,
+          requiresConfirmation: false,
+          previewAvailable: true,
+          defaultConnectionId: 23,
+          connectionCount: 1,
+        },
+      ],
+      count: 1,
+      integration: "youtube",
+    });
+  }, async () => {
+    const result = await tool.execute("test", { integration: " YouTube " });
+
+    assert.match(result.content[0].text, /Available ClawLink tools for youtube:/);
+    assert.match(result.content[0].text, /youtube_list_user_playlists/);
+    assert.doesNotMatch(result.content[0].text, /inputSchema/);
+  });
+
+  assert.deepEqual(capturedRequest, {
+    url: "https://claw-link.dev/api/tools?integration=youtube",
+    method: "GET",
+  });
+});
+
 test("clawlink_get_pairing_status exchanges the approved session and clears pending pairing after finalize", async () => {
   const api = createFakeApi({});
   clawlinkPlugin.register(api);
