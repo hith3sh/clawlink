@@ -2,7 +2,7 @@
   "id": "clawlink-plugin",
   "name": "ClawLink",
   "description": "Trusted SaaS integrations for OpenClaw agents. Connect Gmail, Google Docs, Sheets, Calendar, Drive, Twilio, Notion, and a growing catalog of business apps through one plugin. Not affiliated with OpenClaw.",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "author": "ClawLink (hith3sh) <hithesh@gmail.com>",
   "homepage": "https://claw-link.dev",
   "repository": "https://github.com/hith3sh/clawlink",
