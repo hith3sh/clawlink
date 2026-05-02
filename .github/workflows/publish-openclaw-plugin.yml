@@ -61,9 +61,12 @@ jobs:
         env:
           CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
         run: |
-          mkdir -p ~/.config/clawhub
-          echo '{"registry":"https://clawhub.ai","token":"'"$CLAWHUB_TOKEN"'"}' > ~/.config/clawhub/config.json
-          chmod 600 ~/.config/clawhub/config.json
+          CLAWHUB_CFG="${RUNNER_TEMP}/clawhub-config.json"
+          echo '{"registry":"https://clawhub.ai","token":"'"$CLAWHUB_TOKEN"'"}' > "$CLAWHUB_CFG"
+          chmod 600 "$CLAWHUB_CFG"
+          echo "CLAWHUB_CONFIG_PATH=$CLAWHUB_CFG" >> "$GITHUB_ENV"
+          # Verify token was written (redacted)
+          node -e "const c=require('$CLAWHUB_CFG'); console.log('token length:', c.token?.length ?? 0, '| registry:', c.registry)"
 
       - name: Publish to ClawHub
         if: startsWith(github.ref, 'refs/tags/')
