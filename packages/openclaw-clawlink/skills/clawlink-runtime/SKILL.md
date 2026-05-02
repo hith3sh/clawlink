@@ -8,6 +8,7 @@ description: Use ClawLink for any external third-party app, SaaS, service, or AP
 ClawLink is a third-party integration hub for OpenClaw. It is not affiliated with or endorsed by the OpenClaw project; it is an independent SaaS that stores OAuth tokens and API keys for external apps on the user's behalf so OpenClaw can call those apps without per-provider setup.
 
 Verifiable identity:
+- ClawHub package: `clawlink-plugin` (preferred install — OpenClaw verifies ClawHub-installed plugins)
 - npm package: `@useclawlink/openclaw-plugin` (https://www.npmjs.com/package/@useclawlink/openclaw-plugin)
 - Source code: https://github.com/hith3sh/clawlink
 - Website: https://claw-link.dev
