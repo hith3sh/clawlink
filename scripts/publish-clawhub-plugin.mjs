@@ -13,7 +13,7 @@
 // If --commit is omitted, uses `git rev-parse HEAD`.
 
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, renameSync, existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -56,6 +56,19 @@ console.log(`Publishing ${CLAWHUB_NAME}@${version} (commit ${commit})`);
 const swapped = { ...pkg, name: CLAWHUB_NAME };
 writeFileSync(PACKAGE_JSON_PATH, JSON.stringify(swapped, null, 2) + "\n", "utf8");
 
+// ClawHub uploads everything in the plugin folder — move test files out
+// temporarily so they don't trigger static-scan false positives.
+const EXCLUDE_PATTERNS = [/\.test\.mjs$/, /\.test\.js$/, /\.spec\.mjs$/, /\.spec\.js$/];
+const stashedFiles = [];
+for (const entry of readdirSync(PLUGIN_DIR)) {
+  if (EXCLUDE_PATTERNS.some((re) => re.test(entry))) {
+    const src = resolve(PLUGIN_DIR, entry);
+    const tmp = resolve(REPO_ROOT, `.clawhub-stash-${entry}`);
+    renameSync(src, tmp);
+    stashedFiles.push({ src, tmp });
+  }
+}
+
 const publishArgs = [
   "clawhub",
   "package",
@@ -84,6 +97,14 @@ try {
 } finally {
   writeFileSync(PACKAGE_JSON_PATH, originalContents, "utf8");
   console.log(`Restored package.json name to "${NPM_NAME}".`);
+  for (const { src, tmp } of stashedFiles) {
+    if (existsSync(tmp)) {
+      renameSync(tmp, src);
+    }
+  }
+  if (stashedFiles.length > 0) {
+    console.log(`Restored ${stashedFiles.length} stashed test file(s).`);
+  }
 }
 
 process.exit(exitCode);
