@@ -87,6 +87,14 @@ Most users should not need slash commands. Use browser pairing through the ClawL
 - If the tools are missing because the plugin was just installed, start a fresh chat and retry setup
 - If you are using the manual fallback, refresh the API key in the plugin settings UI
 
+### Plugin installed and enabled, but no ClawLink tools appear
+
+- Start a fresh chat first so OpenClaw reloads the plugin tool catalog
+- If the tools are still missing, inspect `~/.openclaw/openclaw.json`
+- If a `plugins.allow` list is present, make sure it includes `"tools"`
+- The bundled `tools` plugin is what exposes runtime-registered tools like ClawLink to agents
+- Restart the OpenClaw gateway after changing `plugins.allow`, then start a fresh chat again
+
 ### Need the manual API-key fallback
 
 Go to:

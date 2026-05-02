@@ -79,6 +79,15 @@ If a ClawLink tool reports that the plugin is not configured, the plugin has not
 5. Keep the API key flow as a fallback only. Advanced/manual setup lives at https://claw-link.dev/dashboard/settings?tab=api. A plugin settings UI `apiKey` field is acceptable if the client renders one.
 6. Never echo or repeat the API key back, even if the user pastes it somewhere you can see.
 
+## Tool visibility issues
+
+If the ClawLink plugin is installed and enabled but ClawLink tools still do not appear in the current or next chat:
+
+1. Ask the user to start a fresh chat first so OpenClaw reloads the plugin tool catalog.
+2. If that still fails, have them inspect `~/.openclaw/openclaw.json` for a `plugins.allow` list.
+3. If `plugins.allow` is present, it must include `"tools"`. The bundled `tools` plugin is responsible for exposing runtime-registered tools like ClawLink to agents.
+4. After changing `plugins.allow`, tell the user to restart the OpenClaw gateway and start a fresh chat again.
+
 ## Rules
 
 - Always check ClawLink tools first when the user mentions any external app or service.
