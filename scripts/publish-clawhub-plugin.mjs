@@ -95,10 +95,37 @@ if (dryRun) publishArgs.push("--dry-run");
 if (manualOverrideReason) {
   publishArgs.push("--manual-override-reason", manualOverrideReason);
 }
+publishArgs.push("--json");
 
 // Debug: check if GitHub Actions OIDC env vars are available
 const hasOidc = !!(process.env.ACTIONS_ID_TOKEN_REQUEST_URL && process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN);
 console.log(`OIDC env available: ${hasOidc} (URL set: ${!!process.env.ACTIONS_ID_TOKEN_REQUEST_URL}, TOKEN set: ${!!process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN})`);
+
+// Debug: attempt OIDC mint directly so we can see the real error
+if (hasOidc && !manualOverrideReason) {
+  try {
+    const url = new URL(process.env.ACTIONS_ID_TOKEN_REQUEST_URL);
+    url.searchParams.set("audience", "clawhub");
+    const resp = await fetch(url, {
+      headers: { Authorization: `Bearer ${process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}` },
+    });
+    const data = await resp.json();
+    const oidcJwt = data.value;
+    console.log(`OIDC JWT obtained: ${!!oidcJwt} (length: ${oidcJwt?.length ?? 0})`);
+
+    // Try minting a publish token
+    const mintResp = await fetch("https://clawhub.ai/api/v1/publish-token/mint", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ packageName: CLAWHUB_NAME, version, githubOidcToken: oidcJwt }),
+    });
+    const mintText = await mintResp.text();
+    console.log(`Mint response: ${mintResp.status} ${mintText.substring(0, 500)}`);
+  } catch (e) {
+    console.log(`OIDC debug error: ${e.message}`);
+  }
+}
+
 console.log(`Args: npx ${publishArgs.join(" ")}`);
 
 let exitCode = 0;
