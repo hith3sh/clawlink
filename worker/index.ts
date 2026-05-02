@@ -11,6 +11,7 @@
 import "./integrations";
 
 import { executeComposioTool } from "../src/lib/composio/tool-executor";
+import { hydrateComposioToolSchemas } from "../src/lib/composio/manifest-registry";
 import { executePipedreamActionTool } from "../src/lib/pipedream/action-executor";
 import { verifyAuth } from "./auth";
 import {
@@ -565,10 +566,43 @@ async function handleToolCall(
 }
 
 /**
- * Handle MCP list_tools request
+ * Handle MCP list_tools request.
+ *
+ * Composio tool manifests ship without inputSchema to keep the bundle small.
+ * We hydrate schemas lazily from KV / Composio API only for integrations the
+ * authenticated user has connected. Unconnected integrations keep the stub
+ * schema — the user can't invoke those tools anyway.
  */
-function handleListTools(): IntegrationTool[] {
-  return getAllRegisteredTools();
+async function handleListTools(env: Env, userId: string): Promise<IntegrationTool[]> {
+  const tools = getAllRegisteredTools();
+
+  // Determine which integrations the user has Composio-backed connections for.
+  const internalUserId = await resolveInternalUserId(env.DB, userId);
+
+  if (internalUserId) {
+    const connectedIntegrations = await env.DB
+      .prepare(
+        `SELECT DISTINCT integration FROM user_integrations
+         WHERE user_id = ? AND (auth_provider = 'composio' OR composio_connected_account_id IS NOT NULL)`,
+      )
+      .bind(internalUserId)
+      .all<{ integration: string }>();
+
+    const connectedSlugs = new Set(
+      (connectedIntegrations.results ?? []).map((row) => row.integration),
+    );
+
+    // Only hydrate schemas for tools that belong to connected integrations.
+    const toolsToHydrate = connectedSlugs.size > 0
+      ? tools.filter((tool) => tool.execution.kind === "composio_tool" && connectedSlugs.has(tool.integration))
+      : [];
+
+    if (toolsToHydrate.length > 0) {
+      await hydrateComposioToolSchemas(toolsToHydrate, env.CREDENTIALS, env as unknown as Record<string, unknown>);
+    }
+  }
+
+  return tools;
 }
 
 export default {
@@ -621,7 +655,7 @@ export default {
       
       switch (mcpRequest.method) {
         case "tools/list":
-          result = { tools: handleListTools() };
+          result = { tools: await handleListTools(env, userId) };
           break;
           
         case "tools/call":

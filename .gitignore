@@ -62,3 +62,18 @@ packages/*/node_modules
 /matona/
 /playwright-signin-snapshot*.md
 public/figma/
+
+# firecrawl scraped reference docs
+.firecrawl/
+
+# built package tarballs
+*.tgz
+
+# stray root-level files
+/Microsoft_Outlook-Logo.wine.png
+/copyandpaste.png
+/google-search-console-icon-logo.png
+/motion.jpg
+/postiz (2).png
+
+

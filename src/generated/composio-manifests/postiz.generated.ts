@@ -1,7 +1,7 @@
 import type { IntegrationTool } from "../../../worker/integrations/base";
 
 function composioTool(
-  partial: Omit<IntegrationTool, "integration" | "accessLevel" | "tags" | "whenToUse" | "askBefore" | "safeDefaults" | "examples" | "followups" | "requiresScopes" | "idempotent" | "supportsBatch" | "supportsDryRun" | "execution"> & {
+  partial: Omit<IntegrationTool, "integration" | "inputSchema" | "accessLevel" | "tags" | "whenToUse" | "askBefore" | "safeDefaults" | "examples" | "followups" | "requiresScopes" | "idempotent" | "supportsBatch" | "supportsDryRun" | "execution"> & {
     accessLevel?: IntegrationTool["accessLevel"];
     tags?: string[];
     whenToUse?: string[];
@@ -19,7 +19,7 @@ function composioTool(
     integration: "postiz",
     name: partial.name,
     description: partial.description,
-    inputSchema: partial.inputSchema,
+    inputSchema: { type: "object", properties: {} },
     outputSchema: partial.outputSchema,
     accessLevel: partial.accessLevel ?? partial.mode,
     mode: partial.mode,
@@ -46,23 +46,10 @@ function composioTool(
 export const postizComposioTools: IntegrationTool[] = [
   composioTool({
     name: "postiz_mcp_ask_postiz",
-    description: "Ask the Postiz agent a question about managing or scheduling social media posts",
+    description: "Ask agent 'postiz' a question. Agent description: Agent that helps manage and schedule social media posts for users",
     toolSlug: "POSTIZ_MCP_ASK_POSTIZ",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        message: {
-          type: "string",
-          description: "The question or input for the agent.",
-        },
-      },
-      required: [
-        "message",
-      ],
-    },
     tags: [
       "composio",
       "postiz",
@@ -74,321 +61,122 @@ export const postizComposioTools: IntegrationTool[] = [
   }),
   composioTool({
     name: "postiz_mcp_generateimagetool",
-    description: "Generate an image to use in a social media post. Use when a platform requires an image attachment and none was provided.",
+    description: "Generate image to use in a post,\n                    in case the user specified a platform that requires attachment and attachment was not provided,\n                    ask if they want to generate a picture of a video.\n      ",
     toolSlug: "POSTIZ_MCP_GENERATEIMAGETOOL",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        prompt: {
-          type: "string",
-        },
-      },
-      required: [
-        "prompt",
-      ],
-    },
     tags: [
       "composio",
       "postiz",
       "write",
     ],
     askBefore: [
-      "Confirm before generating an image for a social media post.",
+      "Confirm the parameters before executing Generateimagetool.",
     ],
   }),
   composioTool({
     name: "postiz_mcp_generatevideooptions",
-    description: "Get available options for generating videos in Postiz. Returns the list of video generation types and their configurable parameters.",
+    description: "All the options to generate videos, some tools might require another call to generateVideoFunction",
     toolSlug: "POSTIZ_MCP_GENERATEVIDEOOPTIONS",
-    mode: "read",
-    risk: "safe",
-    inputSchema: {
-      type: "object",
-      properties: {},
-    },
+    mode: "write",
+    risk: "confirm",
     tags: [
       "composio",
       "postiz",
-      "read",
+      "write",
+    ],
+    askBefore: [
+      "Confirm the parameters before executing Generatevideooptions.",
     ],
   }),
   composioTool({
     name: "postiz_mcp_generatevideotool",
-    description: "Generate a video to use in a social media post. Supports Image Text Slides and Veo3 (Audio + Video) formats. Call videoFunctionTool first if you need options like voice ID.",
+    description: "Generate video to use in a post,\n                    in case the user specified a platform that requires attachment and attachment was not provided,\n                    ask if they want to generate a picture of a video.\n                    In many cases 'videoFunctionTool' will need to be called first, to get things like voice id\n                    Here are the type of video that can be generated:\n                    -Image Text Slides\n-Veo3 (Audio + Video)\n      ",
     toolSlug: "POSTIZ_MCP_GENERATEVIDEOTOOL",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        output: {
-          type: "string",
-          enum: [
-            "vertical",
-            "horizontal",
-          ],
-        },
-        identifier: {
-          type: "string",
-        },
-        customParams: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-            properties: {
-              key: {
-                type: "string",
-                description: "Name of the settings key to pass",
-              },
-              value: {
-                type: "string",
-                description: "Value of the key",
-              },
-            },
-          },
-        },
-      },
-      required: [
-        "identifier",
-        "output",
-        "customParams",
-      ],
-    },
     tags: [
       "composio",
       "postiz",
       "write",
     ],
     askBefore: [
-      "Confirm before generating a video for a social media post.",
+      "Confirm the parameters before executing Generatevideotool.",
     ],
   }),
   composioTool({
     name: "postiz_mcp_integrationlist",
-    description: "List available integrations connected in Postiz that you can schedule posts to",
+    description: "This tool list available integrations to schedule posts to",
     toolSlug: "POSTIZ_MCP_INTEGRATIONLIST",
-    mode: "read",
-    risk: "safe",
-    inputSchema: {
-      type: "object",
-      properties: {},
-    },
+    mode: "write",
+    risk: "confirm",
     tags: [
       "composio",
       "postiz",
-      "read",
+      "write",
+    ],
+    askBefore: [
+      "Confirm the parameters before executing Integrationlist.",
     ],
   }),
   composioTool({
     name: "postiz_mcp_integrationscheduleposttool",
-    description: "Schedule or publish a social media post through Postiz. Supports drafting, scheduling, and immediate posting across connected platforms.",
+    description: "\nThis tool allows you to schedule a post to a social media platform, based on integrationSchema tool.\nSo for example:\n\nIf the user want to post a post to LinkedIn with one comment\n- socialPost array length will be one\n- postsAndComments array length will be two (one for the post, one for the comment)\n\nIf the user want to post 20 posts for facebook each in individual days without comments\n- socialPost array length will be 20\n- postsAndComments array length will be one\n\nIf the tools return errors, you would need to rerun it with the right parameters, don't ask again, just run it\n",
     toolSlug: "POSTIZ_MCP_INTEGRATIONSCHEDULEPOSTTOOL",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        socialPost: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-            properties: {
-              date: {
-                type: "string",
-                description: "The date of the post in UTC time",
-              },
-              type: {
-                type: "string",
-                description: "The type of the post, if we pass now, we should pass the current date also",
-                enum: [
-                  "draft",
-                  "schedule",
-                  "now",
-                ],
-              },
-              settings: {
-                type: "array",
-                items: {
-                  type: "object",
-                  additionalProperties: true,
-                  properties: {
-                    key: {
-                      type: "string",
-                      description: "Name of the settings key to pass",
-                    },
-                    value: {
-                      type: "string",
-                      description: "Value of the key, always prefer the id then label if possible",
-                    },
-                  },
-                },
-                description: "This relies on the integrationSchema tool to get the settings [input:settings]",
-              },
-              isPremium: {
-                type: "boolean",
-                description: "If the integration is X, return if it's premium or not",
-              },
-              shortLink: {
-                type: "boolean",
-                description: "If the post has a link inside, we can ask the user if they want to add a short link",
-              },
-              integrationId: {
-                type: "string",
-                description: "The id of the integration (not internal id)",
-              },
-              postsAndComments: {
-                type: "array",
-                items: {
-                  type: "object",
-                  additionalProperties: true,
-                  properties: {
-                    content: {
-                      type: "string",
-                      description: "The content of the post, HTML, Each line must be wrapped in <p> here is the possible tags: h1, h2, h3, u, strong, li, ul, p (you can't have u and strong together)",
-                    },
-                    attachments: {
-                      type: "array",
-                      items: {
-                        type: "string",
-                      },
-                      description: "The image of the post (URLS)",
-                    },
-                  },
-                },
-                description: "first item is the post, every other item is the comments",
-              },
-            },
-          },
-          description: "Individual post",
-        },
-      },
-      required: [
-        "socialPost",
-      ],
-    },
     tags: [
       "composio",
       "postiz",
       "write",
     ],
     askBefore: [
-      "Confirm the parameters before scheduling a social media post.",
+      "Confirm the parameters before executing Integrationscheduleposttool.",
     ],
   }),
   composioTool({
     name: "postiz_mcp_integrationschema",
-    description: "Get the posting schema and requirements for a social media platform in Postiz. Call this before scheduling posts to understand available settings and required fields for each platform.",
+    description: "Everytime we want to schedule a social media post, we need to understand the schema of the integration.\n         This tool helps us get the schema of the integration.\n         Sometimes we might get a schema back the requires some id, for that, you can get information from 'tools'\n         And use the triggerTool function.\n        ",
     toolSlug: "POSTIZ_MCP_INTEGRATIONSCHEMA",
-    mode: "read",
-    risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        platform: {
-          type: "string",
-          description: "Platform identifier (x, linkedin, linkedin-page, reddit, instagram, instagram-standalone, facebook, threads, youtube, gmb, tiktok, pinterest, dribbble, discord, slack, kick, twitch, mastodon, bluesky, lemmy, wrapcast, telegram, nostr, vk, medium, devto, hashnode, wordpress, listmonk, moltbook, whop, skool)",
-        },
-        isPremium: {
-          type: "boolean",
-          description: "Whether the user has a premium Postiz account. Set to false if unsure.",
-        },
-      },
-      required: [
-        "isPremium",
-        "platform",
-      ],
-    },
-    tags: [
-      "composio",
-      "postiz",
-      "read",
-    ],
-  }),
-  composioTool({
-    name: "postiz_mcp_triggertool",
-    description: "Fetch additional details needed for scheduling posts, such as resolving IDs that integrationSchema requires. Call this after integrationSchema when specific lookups are needed.",
-    toolSlug: "POSTIZ_MCP_TRIGGERTOOL",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        dataSchema: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-            properties: {
-              key: {
-                type: "string",
-                description: "Name of the settings key to pass",
-              },
-              value: {
-                type: "string",
-                description: "Value of the key",
-              },
-            },
-          },
-        },
-        methodName: {
-          type: "string",
-          description: "The methodName from the `integrationSchema` functions in the tools array, required",
-        },
-        integrationId: {
-          type: "string",
-          description: "The id of the integration",
-        },
-      },
-      required: [
-        "integrationId",
-        "methodName",
-        "dataSchema",
-      ],
-    },
     tags: [
       "composio",
       "postiz",
       "write",
     ],
     askBefore: [
-      "Confirm before triggering a Postiz lookup action.",
+      "Confirm the parameters before executing Integrationschema.",
+    ],
+  }),
+  composioTool({
+    name: "postiz_mcp_triggertool",
+    description: "After using the integrationSchema, we sometimes miss details we can't ask from the user, like ids.\n      Sometimes this tool requires to user prompt for some settings, like a word to search for. methodName is required [input:callable-tools]",
+    toolSlug: "POSTIZ_MCP_TRIGGERTOOL",
+    mode: "write",
+    risk: "confirm",
+    tags: [
+      "composio",
+      "postiz",
+      "write",
+    ],
+    askBefore: [
+      "Confirm the parameters before executing Triggertool.",
     ],
   }),
   composioTool({
     name: "postiz_mcp_videofunctiontool",
-    description: "Retrieve additional video generation details from Postiz, such as available voice IDs for video creation. Call this before generating videos when specific options are needed.",
+    description: "Sometimes when we want to generate videos we might need to get some additional information like voice_id, etc",
     toolSlug: "POSTIZ_MCP_VIDEOFUNCTIONTOOL",
-    mode: "read",
-    risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        identifier: {
-          type: "string",
-        },
-        functionName: {
-          type: "string",
-        },
-      },
-      required: [
-        "identifier",
-        "functionName",
-      ],
-    },
+    mode: "write",
+    risk: "confirm",
     tags: [
       "composio",
       "postiz",
-      "read",
+      "write",
+    ],
+    askBefore: [
+      "Confirm the parameters before executing Videofunctiontool.",
     ],
   }),
 ];

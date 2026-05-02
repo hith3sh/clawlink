@@ -40,6 +40,23 @@ const BRAND_LOGO_SLUGS = new Set<string>([
   "postiz",
   "klaviyo",
   "instantly",
+  "activecampaign",
+  "ahrefs",
+  "dataforseo",
+  "highlevel",
+  "kit",
+  "lemlist",
+  "mailerlite",
+  "omnisend",
+"phantombuster",
+  "reddit-ads",
+  "snapchat",
+  "google-docs",
+  "google-ads",
+  "facebook",
+  "airtable",
+  "clickup",
+  "dropbox",
 ]);
 
 // Brands whose logo is monochrome and therefore needs a theme-specific variant

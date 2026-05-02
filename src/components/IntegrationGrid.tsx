@@ -28,7 +28,7 @@ export default function IntegrationGrid() {
     <div className="w-full space-y-8">
       <div className="text-center mb-4">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
-          40+ integrations ready to go
+          100+ integrations ready to go
         </h2>
         <p className="text-gray-500 mt-3 text-lg">
           Search for any app — if we support it, it shows up

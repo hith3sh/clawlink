@@ -1,7 +1,7 @@
 import type { IntegrationTool } from "../../../worker/integrations/base";
 
 function composioTool(
-  partial: Omit<IntegrationTool, "integration" | "accessLevel" | "tags" | "whenToUse" | "askBefore" | "safeDefaults" | "examples" | "followups" | "requiresScopes" | "idempotent" | "supportsBatch" | "supportsDryRun" | "execution"> & {
+  partial: Omit<IntegrationTool, "integration" | "inputSchema" | "accessLevel" | "tags" | "whenToUse" | "askBefore" | "safeDefaults" | "examples" | "followups" | "requiresScopes" | "idempotent" | "supportsBatch" | "supportsDryRun" | "execution"> & {
     accessLevel?: IntegrationTool["accessLevel"];
     tags?: string[];
     whenToUse?: string[];
@@ -19,7 +19,7 @@ function composioTool(
     integration: "google-ads",
     name: partial.name,
     description: partial.description,
-    inputSchema: partial.inputSchema,
+    inputSchema: { type: "object", properties: {} },
     outputSchema: partial.outputSchema,
     accessLevel: partial.accessLevel ?? partial.mode,
     mode: partial.mode,
@@ -50,35 +50,6 @@ export const googleAdsComposioTools: IntegrationTool[] = [
     toolSlug: "GOOGLEADS_ADD_OR_REMOVE_TO_CUSTOMER_LIST",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        emails: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "Array of emails of the contacts to be added to the customer list. Emails must be valid, normalized strings (lowercase, trimmed); malformed addresses reduce match rates.",
-        },
-        operation: {
-          type: "string",
-          description: "Operation to be performed on the customer list. Either create or remove.",
-          enum: [
-            "create",
-            "remove",
-          ],
-        },
-        resource_name: {
-          type: "string",
-          description: "Resource name of the customer list. For example: customers/1234567890/userLists/1234567890",
-        },
-      },
-      required: [
-        "resource_name",
-        "emails",
-      ],
-    },
     tags: [
       "composio",
       "google-ads",
@@ -94,23 +65,6 @@ export const googleAdsComposioTools: IntegrationTool[] = [
     toolSlug: "GOOGLEADS_CREATE_CUSTOMER_LIST",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "Name of the customer list.",
-        },
-        description: {
-          type: "string",
-          description: "Description of the customer list.",
-        },
-      },
-      required: [
-        "name",
-      ],
-    },
     tags: [
       "composio",
       "google-ads",
@@ -126,19 +80,6 @@ export const googleAdsComposioTools: IntegrationTool[] = [
     toolSlug: "GOOGLEADS_GET_CAMPAIGN_BY_ID",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "id of the campaign to search on GoogleAds.",
-        },
-      },
-      required: [
-        "id",
-      ],
-    },
     tags: [
       "composio",
       "google-ads",
@@ -151,19 +92,6 @@ export const googleAdsComposioTools: IntegrationTool[] = [
     toolSlug: "GOOGLEADS_GET_CAMPAIGN_BY_NAME",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "name of the campaign to search on GoogleAds. Matched using exact SQL equality; paused or inactive campaigns may return no results — an empty result means no matching active campaign was found.",
-        },
-      },
-      required: [
-        "name",
-      ],
-    },
     tags: [
       "composio",
       "google-ads",
@@ -176,10 +104,6 @@ export const googleAdsComposioTools: IntegrationTool[] = [
     toolSlug: "GOOGLEADS_GET_CUSTOMER_LISTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      properties: {},
-    },
     tags: [
       "composio",
       "google-ads",
@@ -192,10 +116,6 @@ export const googleAdsComposioTools: IntegrationTool[] = [
     toolSlug: "GOOGLEADS_LIST_ACCESSIBLE_CUSTOMERS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      properties: {},
-    },
     tags: [
       "composio",
       "google-ads",
@@ -209,109 +129,6 @@ export const googleAdsComposioTools: IntegrationTool[] = [
     toolSlug: "GOOGLEADS_MUTATE_AD_GROUPS",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        operations: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-            properties: {
-              create: {
-                type: "object",
-                additionalProperties: true,
-                properties: {
-                  name: {
-                    type: "string",
-                    description: "Name of the ad group. Must be unique within the campaign.",
-                  },
-                  type: {
-                    type: "string",
-                    description: "Type of ad group.",
-                    enum: [
-                      "SEARCH_STANDARD",
-                      "DISPLAY_STANDARD",
-                      "SHOPPING_PRODUCT_ADS",
-                      "VIDEO_BUMPER",
-                      "VIDEO_TRUEVIEW_IN_STREAM",
-                      "VIDEO_TRUEVIEW_IN_DISPLAY",
-                      "VIDEO_NON_SKIPPABLE_IN_STREAM",
-                      "SEARCH_DYNAMIC",
-                      "SHOPPING_COMPARISON_LISTING",
-                      "SMART_DISPLAY",
-                      "VIDEO_EFFICIENT_REACH",
-                      "PERFORMANCE_MAX",
-                      "SEARCH_AS_MUCH_AS_POSSIBLE",
-                      "SEARCH_TARGET_OUTCOME",
-                      "DISPLAY_CUSTOM",
-                      "SEARCH_UNIFORM",
-                      "DISPLAY_AUTO",
-                    ],
-                  },
-                  status: {
-                    type: "string",
-                    description: "Status of an ad group.",
-                    enum: [
-                      "ENABLED",
-                      "PAUSED",
-                      "REMOVED",
-                    ],
-                  },
-                  campaign: {
-                    type: "string",
-                    description: "Resource name of the campaign that owns the ad group. Example: customers/1234567890/campaigns/9876543210",
-                  },
-                },
-                description: "Fields for creating a new ad group.",
-              },
-              remove: {
-                type: "string",
-                description: "Resource name of the ad group to remove. Example: customers/1234567890/adGroups/9876543210",
-              },
-              update: {
-                type: "object",
-                additionalProperties: true,
-                properties: {
-                  name: {
-                    type: "string",
-                    description: "Name of the ad group.",
-                  },
-                  status: {
-                    type: "string",
-                    description: "Status of an ad group.",
-                    enum: [
-                      "ENABLED",
-                      "PAUSED",
-                      "REMOVED",
-                    ],
-                  },
-                  resource_name: {
-                    type: "string",
-                    description: "Resource name of the ad group to update. Example: customers/1234567890/adGroups/9876543210",
-                  },
-                },
-                description: "Fields for updating an existing ad group (only include fields to update).",
-              },
-            },
-            description: "A single ad group operation.",
-          },
-          description: "List of ad group operations (create, update, or remove). At least one operation is required.",
-        },
-        validate_only: {
-          type: "boolean",
-          description: "If true, validates the request without executing. Useful for testing before making actual changes.",
-        },
-        partial_failure: {
-          type: "boolean",
-          description: "If true, valid operations succeed even if other operations fail. Defaults to false.",
-        },
-      },
-      required: [
-        "operations",
-      ],
-    },
     tags: [
       "composio",
       "google-ads",
@@ -328,447 +145,6 @@ export const googleAdsComposioTools: IntegrationTool[] = [
     toolSlug: "GOOGLEADS_MUTATE_CAMPAIGNS",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        operations: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-            properties: {
-              create: {
-                type: "object",
-                additionalProperties: true,
-                properties: {
-                  name: {
-                    type: "string",
-                    description: "Name of the campaign. Must be unique within the customer account. Required for create.",
-                  },
-                  status: {
-                    type: "string",
-                    description: "Status of the campaign.",
-                    enum: [
-                      "unspecified",
-                      "unknown",
-                      "enabled",
-                      "paused",
-                      "removed",
-                    ],
-                  },
-                  end_date: {
-                    type: "string",
-                    description: "End date of the campaign in YYYY-MM-DD format.",
-                  },
-                  manual_cpc: {
-                    type: "object",
-                    additionalProperties: true,
-                    description: "Manual CPC bidding strategy. Provide an empty object {} to use manual CPC without a bidding strategy.",
-                  },
-                  start_date: {
-                    type: "string",
-                    description: "Start date of the campaign in YYYY-MM-DD format.",
-                  },
-                  daily_budget: {
-                    type: "number",
-                    description: "Daily budget amount in the account's currency.",
-                  },
-                  network_type: {
-                    type: "string",
-                    description: "Network settings for the campaign (e.g., 'google_search', 'youtube').",
-                  },
-                  resource_name: {
-                    type: "string",
-                    description: "Resource name of the campaign for update operations. Format: customers/{customer_id}/campaigns/{campaign_id}",
-                  },
-                  campaign_budget: {
-                    type: "string",
-                    description: "Resource name of the campaign budget to associate with the campaign. Required for create.",
-                  },
-                  final_url_suffix: {
-                    type: "string",
-                    description: "Suffix appended to landing page URLs served with parallel tracking. Use for adding tracking parameters (e.g., 'gclid={gclid}&campaign={campaignid}').",
-                  },
-                  network_settings: {
-                    type: "object",
-                    additionalProperties: true,
-                    properties: {
-                      target_youtube: {
-                        type: "boolean",
-                        description: "Whether ads will be served on YouTube.",
-                      },
-                      target_google_search: {
-                        type: "boolean",
-                        description: "Whether ads will be served with google.com search results.",
-                      },
-                      target_search_network: {
-                        type: "boolean",
-                        description: "Whether ads will be served on the Google Search Partners Network (requires target_google_search to be true).",
-                      },
-                      target_content_network: {
-                        type: "boolean",
-                        description: "Whether ads will be served on specified placements in the Google Display Network.",
-                      },
-                      target_google_tv_network: {
-                        type: "boolean",
-                        description: "Whether ads will be served on the Google TV network.",
-                      },
-                      target_partner_search_network: {
-                        type: "boolean",
-                        description: "Whether ads will be served on the partner network. Only available for select partner accounts.",
-                      },
-                    },
-                    description: "Network settings for the campaign controlling where ads are served.",
-                  },
-                  targeted_locations: {
-                    type: "array",
-                    items: {
-                      type: "string",
-                    },
-                    description: "Geo target criteria IDs for location targeting.",
-                  },
-                  exclusion_locations: {
-                    type: "array",
-                    items: {
-                      type: "string",
-                    },
-                    description: "Geo target criteria IDs for location exclusions.",
-                  },
-                  bidding_strategy_type: {
-                    type: "string",
-                    description: "Type of bidding strategy.",
-                    enum: [
-                      "unspecified",
-                      "unknown",
-                      "manual_cpc",
-                      "manual_cpm",
-                      "pageone_promoted",
-                      "target_spend",
-                      "target_cpa",
-                      "target_roas",
-                      "maximize_conversions",
-                      "maximize_conversion_value",
-                      "target_impression_share",
-                    ],
-                  },
-                  tracking_url_template: {
-                    type: "string",
-                    description: "The URL template for constructing a tracking URL. Use ValueTrack parameters like {lpurl} for the landing page URL.",
-                  },
-                  url_custom_parameters: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      additionalProperties: true,
-                      properties: {
-                        key: {
-                          type: "string",
-                          description: "The key of the custom parameter. Max 16 bytes.",
-                        },
-                        value: {
-                          type: "string",
-                          description: "The value of the custom parameter. Max 200 bytes.",
-                        },
-                      },
-                      description: "A custom parameter tag for tracking URLs.",
-                    },
-                    description: "Custom parameter tags for substitution in tracking_url_template, final_urls, or mobile_final_urls. Max 8 parameters, key max 16 bytes, value max 200 bytes.",
-                  },
-                  geo_target_type_setting: {
-                    type: "object",
-                    additionalProperties: true,
-                    properties: {
-                      negative_geo_target_type: {
-                        type: "string",
-                        description: "Negative geo target type for geotargeting.",
-                        enum: [
-                          "UNSPECIFIED",
-                          "UNKNOWN",
-                          "PRESENCE_OR_INTEREST",
-                          "PRESENCE",
-                        ],
-                      },
-                      positive_geo_target_type: {
-                        type: "string",
-                        description: "Positive geo target type for geotargeting.",
-                        enum: [
-                          "UNSPECIFIED",
-                          "UNKNOWN",
-                          "PRESENCE_OR_INTEREST",
-                          "SEARCH_INTEREST",
-                          "PRESENCE",
-                        ],
-                      },
-                    },
-                    description: "Settings for ads geotargeting.",
-                  },
-                  advertising_channel_type: {
-                    type: "string",
-                    description: "Type of advertising channel for the campaign.",
-                    enum: [
-                      "unspecified",
-                      "unknown",
-                      "search",
-                      "display",
-                      "shopping",
-                      "video",
-                      "multi_channel",
-                      "local",
-                      "smart",
-                      "video_reach",
-                    ],
-                  },
-                  campaign_bidding_strategy: {
-                    type: "string",
-                    description: "Resource name of the bidding strategy to use. Format: customers/{customer_id}/biddingStrategies/{bidding_strategy_id}",
-                  },
-                  contains_eu_political_advertising: {
-                    type: "string",
-                    description: "EU political advertising status.",
-                    enum: [
-                      "UNSPECIFIED",
-                      "UNKNOWN",
-                      "DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING",
-                      "CONTAINS_EU_POLITICAL_ADVERTISING",
-                    ],
-                  },
-                },
-                description: "Campaign data for create or update operations.",
-              },
-              remove: {
-                type: "string",
-                description: "Resource name of the campaign to remove. Required when operation_type is 'remove'.",
-              },
-              update: {
-                type: "object",
-                additionalProperties: true,
-                properties: {
-                  name: {
-                    type: "string",
-                    description: "Name of the campaign. Must be unique within the customer account. Required for create.",
-                  },
-                  status: {
-                    type: "string",
-                    description: "Status of the campaign.",
-                    enum: [
-                      "unspecified",
-                      "unknown",
-                      "enabled",
-                      "paused",
-                      "removed",
-                    ],
-                  },
-                  end_date: {
-                    type: "string",
-                    description: "End date of the campaign in YYYY-MM-DD format.",
-                  },
-                  manual_cpc: {
-                    type: "object",
-                    additionalProperties: true,
-                    description: "Manual CPC bidding strategy. Provide an empty object {} to use manual CPC without a bidding strategy.",
-                  },
-                  start_date: {
-                    type: "string",
-                    description: "Start date of the campaign in YYYY-MM-DD format.",
-                  },
-                  daily_budget: {
-                    type: "number",
-                    description: "Daily budget amount in the account's currency.",
-                  },
-                  network_type: {
-                    type: "string",
-                    description: "Network settings for the campaign (e.g., 'google_search', 'youtube').",
-                  },
-                  resource_name: {
-                    type: "string",
-                    description: "Resource name of the campaign for update operations. Format: customers/{customer_id}/campaigns/{campaign_id}",
-                  },
-                  campaign_budget: {
-                    type: "string",
-                    description: "Resource name of the campaign budget to associate with the campaign. Required for create.",
-                  },
-                  final_url_suffix: {
-                    type: "string",
-                    description: "Suffix appended to landing page URLs served with parallel tracking. Use for adding tracking parameters (e.g., 'gclid={gclid}&campaign={campaignid}').",
-                  },
-                  network_settings: {
-                    type: "object",
-                    additionalProperties: true,
-                    properties: {
-                      target_youtube: {
-                        type: "boolean",
-                        description: "Whether ads will be served on YouTube.",
-                      },
-                      target_google_search: {
-                        type: "boolean",
-                        description: "Whether ads will be served with google.com search results.",
-                      },
-                      target_search_network: {
-                        type: "boolean",
-                        description: "Whether ads will be served on the Google Search Partners Network (requires target_google_search to be true).",
-                      },
-                      target_content_network: {
-                        type: "boolean",
-                        description: "Whether ads will be served on specified placements in the Google Display Network.",
-                      },
-                      target_google_tv_network: {
-                        type: "boolean",
-                        description: "Whether ads will be served on the Google TV network.",
-                      },
-                      target_partner_search_network: {
-                        type: "boolean",
-                        description: "Whether ads will be served on the partner network. Only available for select partner accounts.",
-                      },
-                    },
-                    description: "Network settings for the campaign controlling where ads are served.",
-                  },
-                  targeted_locations: {
-                    type: "array",
-                    items: {
-                      type: "string",
-                    },
-                    description: "Geo target criteria IDs for location targeting.",
-                  },
-                  exclusion_locations: {
-                    type: "array",
-                    items: {
-                      type: "string",
-                    },
-                    description: "Geo target criteria IDs for location exclusions.",
-                  },
-                  bidding_strategy_type: {
-                    type: "string",
-                    description: "Type of bidding strategy.",
-                    enum: [
-                      "unspecified",
-                      "unknown",
-                      "manual_cpc",
-                      "manual_cpm",
-                      "pageone_promoted",
-                      "target_spend",
-                      "target_cpa",
-                      "target_roas",
-                      "maximize_conversions",
-                      "maximize_conversion_value",
-                      "target_impression_share",
-                    ],
-                  },
-                  tracking_url_template: {
-                    type: "string",
-                    description: "The URL template for constructing a tracking URL. Use ValueTrack parameters like {lpurl} for the landing page URL.",
-                  },
-                  url_custom_parameters: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      additionalProperties: true,
-                      properties: {
-                        key: {
-                          type: "string",
-                          description: "The key of the custom parameter. Max 16 bytes.",
-                        },
-                        value: {
-                          type: "string",
-                          description: "The value of the custom parameter. Max 200 bytes.",
-                        },
-                      },
-                      description: "A custom parameter tag for tracking URLs.",
-                    },
-                    description: "Custom parameter tags for substitution in tracking_url_template, final_urls, or mobile_final_urls. Max 8 parameters, key max 16 bytes, value max 200 bytes.",
-                  },
-                  geo_target_type_setting: {
-                    type: "object",
-                    additionalProperties: true,
-                    properties: {
-                      negative_geo_target_type: {
-                        type: "string",
-                        description: "Negative geo target type for geotargeting.",
-                        enum: [
-                          "UNSPECIFIED",
-                          "UNKNOWN",
-                          "PRESENCE_OR_INTEREST",
-                          "PRESENCE",
-                        ],
-                      },
-                      positive_geo_target_type: {
-                        type: "string",
-                        description: "Positive geo target type for geotargeting.",
-                        enum: [
-                          "UNSPECIFIED",
-                          "UNKNOWN",
-                          "PRESENCE_OR_INTEREST",
-                          "SEARCH_INTEREST",
-                          "PRESENCE",
-                        ],
-                      },
-                    },
-                    description: "Settings for ads geotargeting.",
-                  },
-                  advertising_channel_type: {
-                    type: "string",
-                    description: "Type of advertising channel for the campaign.",
-                    enum: [
-                      "unspecified",
-                      "unknown",
-                      "search",
-                      "display",
-                      "shopping",
-                      "video",
-                      "multi_channel",
-                      "local",
-                      "smart",
-                      "video_reach",
-                    ],
-                  },
-                  campaign_bidding_strategy: {
-                    type: "string",
-                    description: "Resource name of the bidding strategy to use. Format: customers/{customer_id}/biddingStrategies/{bidding_strategy_id}",
-                  },
-                  contains_eu_political_advertising: {
-                    type: "string",
-                    description: "EU political advertising status.",
-                    enum: [
-                      "UNSPECIFIED",
-                      "UNKNOWN",
-                      "DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING",
-                      "CONTAINS_EU_POLITICAL_ADVERTISING",
-                    ],
-                  },
-                },
-                description: "Campaign data for create or update operations.",
-              },
-              operation_type: {
-                type: "string",
-                description: "Type of operation: create, update, or remove.",
-                enum: [
-                  "create",
-                  "update",
-                  "remove",
-                ],
-              },
-            },
-            description: "A single campaign operation (create, update, or remove).",
-          },
-          description: "List of campaign operations to perform. Each operation can be create, update, or remove. At least one operation is required.",
-        },
-        validate_only: {
-          type: "boolean",
-          description: "If true, validates the request without executing. Useful for testing before making actual changes.",
-        },
-        partial_failure: {
-          type: "boolean",
-          description: "If true, valid operations succeed even if others fail. Partial failures will be reported in the response.",
-        },
-        response_content_type: {
-          type: "string",
-          description: "Whether to return full resource or just resource name. Options: 'RESOURCE_NAME_ONLY' or 'MUTABLE_RESOURCE'.",
-        },
-      },
-      required: [
-        "operations",
-      ],
-    },
     tags: [
       "composio",
       "google-ads",
@@ -785,23 +161,6 @@ export const googleAdsComposioTools: IntegrationTool[] = [
     toolSlug: "GOOGLEADS_SEARCH_STREAM_GAQL",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        query: {
-          type: "string",
-          description: "The Google Ads Query Language (GAQL) query string. Must follow SELECT ... FROM ... WHERE ... format. Example: SELECT campaign.name, campaign.id, metrics.impressions FROM campaign WHERE campaign.status = 'ENABLED'",
-        },
-        summary_row_setting: {
-          type: "string",
-          description: "Whether to include a summary row with aggregated metrics. Use 'UNSPECIFIED' for default, 'DONOT_POST' to skip summary, or 'GENERATE' to include it.",
-        },
-      },
-      required: [
-        "query",
-      ],
-    },
     tags: [
       "composio",
       "google-ads",

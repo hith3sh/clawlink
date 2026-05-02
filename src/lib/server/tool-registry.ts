@@ -3,6 +3,7 @@ import "server-only";
 import { getIntegrationBySlug } from "@/data/integrations";
 import {
   getDatabase,
+  getEnvBinding,
   listIntegrationConnectionsForUserId,
   type IntegrationConnectionRecord,
 } from "@/lib/server/integration-store";
@@ -15,6 +16,7 @@ import {
   type IntegrationToolExample,
   type ToolAccessLevel,
 } from "../../../worker/integrations";
+import { hydrateComposioToolSchemas } from "@/lib/composio/manifest-registry";
 import { summarizeToolPolicy } from "@/lib/server/policy";
 import type { ToolMode, ToolRisk } from "@/lib/runtime/tool-runtime";
 
@@ -109,6 +111,18 @@ function isPipedreamBackedConnection(connection: IntegrationConnectionRecord): b
 
 function isComposioBackedConnection(connection: IntegrationConnectionRecord): boolean {
   return connection.authBackend === "composio" && Boolean(connection.composioConnectedAccountId);
+}
+
+/**
+ * Hydrate inputSchema for Composio-backed tools using the frontend's
+ * Cloudflare bindings (CREDENTIALS KV + process.env for API keys).
+ */
+async function hydrateSchemas(tools: IntegrationTool[]): Promise<void> {
+  const composioTools = tools.filter((tool) => tool.execution.kind === "composio_tool");
+  if (composioTools.length === 0) return;
+
+  const kv = getEnvBinding<KVNamespace>("CREDENTIALS");
+  await hydrateComposioToolSchemas(composioTools, kv, undefined);
 }
 
 export function buildCatalogItem(
@@ -349,6 +363,8 @@ export async function listConnectedToolEntries(userId: string): Promise<ToolRegi
 
 export async function listToolsForUser(userId: string): Promise<ToolCatalogItem[]> {
   const entries = await listConnectedToolEntries(userId);
+  const tools = entries.map((entry) => entry.tool);
+  await hydrateSchemas(tools);
   return entries.map(({ tool, connections }) => buildCatalogItem(tool, connections));
 }
 
@@ -363,6 +379,7 @@ export async function describeToolForUser(
     return null;
   }
 
+  await hydrateSchemas([match.tool]);
   return buildToolDescription(match.tool, match.connections);
 }
 
@@ -397,16 +414,20 @@ export async function listToolDescriptionsForIntegration(
     }
   }
 
-  return Array.from(uniqueDefinitions.values())
-    .sort((left, right) => left.name.localeCompare(right.name))
-    .map((tool) =>
-      buildToolDescription(
-        tool,
-        tool.execution.kind === "pipedream_action"
-          ? pipedreamConnections
-          : tool.execution.kind === "composio_tool"
-            ? composioConnections
-            : connections,
-      ),
-    );
+  const sortedTools = Array.from(uniqueDefinitions.values())
+    .sort((left, right) => left.name.localeCompare(right.name));
+
+  // Hydrate Composio tool schemas from KV / API before building descriptions.
+  await hydrateSchemas(sortedTools);
+
+  return sortedTools.map((tool) =>
+    buildToolDescription(
+      tool,
+      tool.execution.kind === "pipedream_action"
+        ? pipedreamConnections
+        : tool.execution.kind === "composio_tool"
+          ? composioConnections
+          : connections,
+    ),
+  );
 }

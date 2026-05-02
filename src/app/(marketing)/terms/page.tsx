@@ -18,28 +18,31 @@ function Section({
 }) {
   return (
     <section className="space-y-4">
-      <h2 className="text-2xl font-semibold tracking-tight text-gray-900">{title}</h2>
-      <div className="space-y-4 text-base leading-8 text-gray-600">{children}</div>
+      <h2 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--mk-fg)" }}>{title}</h2>
+      <div className="space-y-4 text-base leading-8" style={{ color: "var(--mk-fg-muted)" }}>{children}</div>
     </section>
   );
 }
 
 export default function TermsPage() {
   return (
-    <main className="flex-1 bg-white">
-      <section className="border-b border-gray-100 bg-gradient-to-b from-[#f7f6f2] via-white to-white px-6 py-16">
+    <main className="flex-1">
+      <section className="px-6 py-16" style={{ borderBottom: "1px solid var(--mk-border)" }}>
         <div className="mx-auto max-w-4xl">
-          <div className="inline-flex rounded-full border border-gray-200 bg-white/80 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-gray-600">
+          <div
+            className="inline-flex rounded-full px-3 py-1 text-xs font-medium uppercase tracking-[0.18em]"
+            style={{ background: "rgba(224,53,43,0.10)", border: "1px solid rgba(224,53,43,0.28)", color: "#FFC8B6" }}
+          >
             Legal
           </div>
-          <h1 className="mt-6 text-4xl font-semibold tracking-tight text-gray-950 sm:text-5xl">
+          <h1 className="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl" style={{ color: "var(--mk-fg)" }}>
             Terms of Service
           </h1>
-          <p className="mt-4 max-w-2xl text-lg leading-8 text-gray-600">
+          <p className="mt-4 max-w-2xl text-lg leading-8" style={{ color: "var(--mk-fg-muted)" }}>
             These terms govern access to and use of ClawLink, including hosted integration setup, credential handling,
             and the execution of user-authorized actions through connected services.
           </p>
-          <p className="mt-4 text-sm text-gray-500">Last updated: April 7, 2026</p>
+          <p className="mt-4 text-sm" style={{ color: "var(--mk-fg-faint)" }}>Last updated: April 7, 2026</p>
         </div>
       </section>
 
@@ -97,15 +100,15 @@ export default function TermsPage() {
           <Section title="Contact">
             <p>
               Questions about these terms can be sent to{" "}
-              <a className="font-medium text-gray-900 hover:text-[var(--brand-dark)]" href="mailto:hello@claw-link.dev">
+              <a className="font-medium underline transition-colors hover:text-white" style={{ color: "var(--brand)" }} href="mailto:hello@claw-link.dev">
                 hello@claw-link.dev
               </a>
               .
             </p>
           </Section>
 
-          <div className="border-t border-gray-100 pt-8 text-sm text-gray-500">
-            <Link className="font-medium text-gray-900 hover:text-[var(--brand-dark)]" href="/">
+          <div className="pt-8 text-sm" style={{ borderTop: "1px solid var(--mk-border)", color: "var(--mk-fg-faint)" }}>
+            <Link className="font-medium transition-colors hover:text-white" style={{ color: "var(--mk-fg)" }} href="/">
               Back to ClawLink
             </Link>
           </div>

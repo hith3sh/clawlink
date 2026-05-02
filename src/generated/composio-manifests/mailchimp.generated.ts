@@ -1,7 +1,7 @@
 import type { IntegrationTool } from "../../../worker/integrations/base";
 
 function composioTool(
-  partial: Omit<IntegrationTool, "integration" | "accessLevel" | "tags" | "whenToUse" | "askBefore" | "safeDefaults" | "examples" | "followups" | "requiresScopes" | "idempotent" | "supportsBatch" | "supportsDryRun" | "execution"> & {
+  partial: Omit<IntegrationTool, "integration" | "inputSchema" | "accessLevel" | "tags" | "whenToUse" | "askBefore" | "safeDefaults" | "examples" | "followups" | "requiresScopes" | "idempotent" | "supportsBatch" | "supportsDryRun" | "execution"> & {
     accessLevel?: IntegrationTool["accessLevel"];
     tags?: string[];
     whenToUse?: string[];
@@ -19,7 +19,7 @@ function composioTool(
     integration: "mailchimp",
     name: partial.name,
     description: partial.description,
-    inputSchema: partial.inputSchema,
+    inputSchema: { type: "object", properties: {} },
     outputSchema: partial.outputSchema,
     accessLevel: partial.accessLevel ?? partial.mode,
     mode: partial.mode,
@@ -50,35 +50,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_AUTOMATION",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        settings__reply__to: {
-          type: "string",
-          description: "The email address that recipients can reply to (e.g., 'support@yourcompany.com').",
-        },
-        recipients__list__id: {
-          type: "string",
-          description: "The unique ID of the Mailchimp audience/list that this automation will target. Required for creating an automation. Get this from MAILCHIMP_GET_LISTS_INFO.",
-        },
-        settings__from__name: {
-          type: "string",
-          description: "The sender name that appears in the \"From\" field of automation emails (e.g., 'Your Company Name'). Not an email address.",
-        },
-        recipients__store__id: {
-          type: "string",
-          description: "The unique ID of the connected e-commerce store. Required for abandonedCart workflow type to enable cart tracking. Get this from MAILCHIMP_LIST_STORES.",
-        },
-        trigger__settings__workflow__type: {
-          type: "string",
-          description: "The type of classic automation workflow to create. Currently only 'abandonedCart' is supported via the API. This triggers emails when a customer abandons their shopping cart.",
-        },
-      },
-      required: [
-        "recipients__list__id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -95,23 +66,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_BATCH_WEBHOOK",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        url: {
-          type: "string",
-          description: "A valid URL for the batch webhook. Mailchimp will POST data to this URL when a batch operation completes processing. Must be a publicly accessible HTTPS URL.",
-        },
-        enabled: {
-          type: "boolean",
-          description: "Whether the webhook should be enabled to receive requests. Defaults to True if not specified.",
-        },
-      },
-      required: [
-        "url",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -128,285 +82,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_CAMPAIGN",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        type: {
-          type: "string",
-          description: "There are four types of [campaigns](https://mailchimp.com/help/getting-started-with-campaigns/) you can create in Mailchimp. A/B Split campaigns have been deprecated and variate campaigns should be used instead. ",
-          enum: [
-            "regular",
-            "plaintext",
-            "absplit",
-            "rss",
-            "variate",
-          ],
-        },
-        content_type: {
-          type: "string",
-          description: "How the campaign\"s content is put together. The old drag and drop editor uses \"template\" while the new editor uses \"multichannel\". Defaults to template. ",
-          enum: [
-            "template",
-            "multichannel",
-          ],
-        },
-        settings__title: {
-          type: "string",
-          description: "The title of the campaign.",
-        },
-        tracking__opens: {
-          type: "boolean",
-          description: "Whether to [track opens](https://mailchimp.com/help/about-open-tracking/). Defaults to `true`. Cannot be set to false for variate campaigns. ",
-        },
-        settings__to__name: {
-          type: "string",
-          description: "The campaign\"s custom \"To\" name. Typically the first name [audience field](https://mailchimp.com/help/getting-started-with-merge-tags/). ",
-        },
-        tracking__ecomm360: {
-          type: "boolean",
-          description: "Whether to enable e-commerce tracking.",
-        },
-        settings__reply__to: {
-          type: "string",
-          description: "The reply-to email address for the campaign. Note: while this field is not required for campaign creation, it is required for sending. ",
-        },
-        social__card__title: {
-          type: "string",
-          description: "The title for the card. Typically the subject line of the campaign.",
-        },
-        tracking__clicktale: {
-          type: "string",
-          description: "The custom slug for [ClickTale](https://mailchimp.com/help/additional-tracking-options-for-campaigns/) tracking (max of 50 bytes). ",
-        },
-        recipients__list__id: {
-          type: "string",
-          description: "The unique list id.",
-        },
-        rss__opts__feed__url: {
-          type: "string",
-          description: "The URL for the RSS feed.",
-        },
-        rss__opts__frequency: {
-          type: "string",
-          description: "The frequency of the RSS Campaign.",
-          enum: [
-            "daily",
-            "weekly",
-            "monthly",
-          ],
-        },
-        settings__folder__id: {
-          type: "string",
-          description: "If the campaign is listed in a folder, the id for that folder.",
-        },
-        settings__from__name: {
-          type: "string",
-          description: "The \"from\" name on the campaign (not an email address).",
-        },
-        settings__auto__tweet: {
-          type: "boolean",
-          description: "Automatically tweet a link to the [campaign archive](https://mailchimp.com/help/about-email-campaign-archives-and-pages/) page when the campaign is sent. ",
-        },
-        settings__inline__css: {
-          type: "boolean",
-          description: "Automatically inline the CSS included with the campaign content.",
-        },
-        settings__authenticate: {
-          type: "boolean",
-          description: "Whether Mailchimp [authenticated](https://mailchimp.com/help/about-email-authentication/) the campaign. Defaults to `true`. ",
-        },
-        settings__auto__footer: {
-          type: "boolean",
-          description: "Automatically append Mailchimp\"s [default footer](https://mailchimp.com/help/about-campaign-footers/) to the campaign. ",
-        },
-        settings__fb__comments: {
-          type: "boolean",
-          description: "Allows Facebook comments on the campaign (also force-enables the Campaign Archive toolbar). Defaults to `true`. ",
-        },
-        settings__template__id: {
-          type: "integer",
-          description: "The id of the template to use.",
-        },
-        tracking__html__clicks: {
-          type: "boolean",
-          description: "Whether to [track clicks](https://mailchimp.com/help/enable-and-view-click-tracking/) in the HTML version of the campaign. Defaults to `true`. Cannot be set to false for variate campaigns. ",
-        },
-        tracking__text__clicks: {
-          type: "boolean",
-          description: "Whether to [track clicks](https://mailchimp.com/help/enable-and-view-click-tracking/) in the plain-text version of the campaign. Defaults to `true`. Cannot be set to false for variate campaigns. ",
-        },
-        settings__preview__text: {
-          type: "string",
-          description: "The preview text for the campaign.",
-        },
-        settings__subject__line: {
-          type: "string",
-          description: "The subject line for the campaign.",
-        },
-        settings__auto__fb__post: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "An array of [Facebook](https://mailchimp.com/help/connect-or-disconnect-the-facebook-integration/) page ids to auto-post to. ",
-        },
-        social__card__image__url: {
-          type: "string",
-          description: "The url for the header image for the card.",
-        },
-        tracking__capsule__notes: {
-          type: "boolean",
-          description: "Update contact notes for a campaign based on subscriber email addresses.",
-        },
-        tracking__goal__tracking: {
-          type: "boolean",
-          description: "Deprecated",
-        },
-        rss__opts__schedule__hour: {
-          type: "integer",
-          description: "The hour to send the campaign in local time. Acceptable hours are 0-23. For example, \"4\" would be 4am in [your account\"s default time zone](https://mailchimp.com/help/set-account-defaults/). ",
-        },
-        social__card__description: {
-          type: "string",
-          description: "A short summary of the campaign to display.",
-        },
-        settings__use__conversation: {
-          type: "boolean",
-          description: "Use Mailchimp Conversation feature to manage out-of-office replies.",
-        },
-        tracking__google__analytics: {
-          type: "string",
-          description: "The custom slug for [Google Analytics](https://mailchimp.com/help/integrate-google-analytics-with-mailchimp/) tracking (max of 50 bytes). ",
-        },
-        tracking__salesforce__notes: {
-          type: "boolean",
-          description: "Update contact notes for a campaign based on subscriber email addresses.",
-        },
-        variate__settings__test__size: {
-          type: "integer",
-          description: "The percentage of recipients to send the test combinations to, must be a value between 10 and 100. ",
-        },
-        variate__settings__wait__time: {
-          type: "integer",
-          description: "The number of minutes to wait before choosing the winning campaign. The value of wait_time must be greater than 0 and in whole hours, specified in minutes. ",
-        },
-        rss__opts__constrain__rss__img: {
-          type: "boolean",
-          description: "Whether to add CSS to images in the RSS feed to constrain their width in campaigns. ",
-        },
-        tracking__salesforce__campaign: {
-          type: "boolean",
-          description: "Create a campaign in a connected Salesforce account.",
-        },
-        variate__settings__from__names: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "The possible from names. The number of from_names provided must match the number of reply_to_addresses. If no from_names are provided, settings.from_name will be used. ",
-        },
-        variate__settings__send__times: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "The possible send times to test. The times provided should be in the format YYYY-MM-DD HH:MM:SS. If send_times are provided to test, the test_size will be set to 100% and winner_criteria will be ignored. ",
-        },
-        recipients__segment__opts__match: {
-          type: "string",
-          description: "Segment match type.",
-          enum: [
-            "any",
-            "all",
-          ],
-        },
-        variate__settings__subject__lines: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "The possible subject lines to test. If no subject lines are provided, settings.subject_line will be used. ",
-        },
-        variate__settings__winner__criteria: {
-          type: "string",
-          description: "The combination that performs the best. This may be determined automatically by click rate, open rate, or total revenue -- or you may choose manually based on the reporting data you find the most valuable. For Multivariate Campaigns testing send_time, winner_criteria is ignored. For Multivariate Campaigns with \"manual\" as the winner_criteria, the winner must be chosen in the Mailchimp web application. ",
-          enum: [
-            "opens",
-            "clicks",
-            "manual",
-            "total_revenue",
-          ],
-        },
-        recipients__segment__opts__conditions: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "Segment match conditions. There are multiple possible types, see the [condition types documentation](https://mailchimp.com/developer/marketing/docs/alternative-schemas/#segment-condition-schemas). ",
-        },
-        rss__opts__schedule__weekly__send__day: {
-          type: "string",
-          description: "The day of the week to send a weekly RSS Campaign.",
-          enum: [
-            "sunday",
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-          ],
-        },
-        variate__settings__reply__to__addresses: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "The possible reply-to addresses. The number of reply_to_addresses provided must match the number of from_names. If no reply_to_addresses are provided, settings.reply_to will be used. ",
-        },
-        rss__opts__schedule__daily__send__friday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Fridays.",
-        },
-        rss__opts__schedule__daily__send__monday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Mondays.",
-        },
-        rss__opts__schedule__daily__send__sunday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Sundays.",
-        },
-        rss__opts__schedule__monthly__send__date: {
-          type: "integer",
-          description: "The day of the month to send a monthly RSS Campaign. Acceptable days are 0-31, where \"0\" is always the last day of a month. Months with fewer than the selected number of days will not have an RSS campaign sent out that day. For example, RSS Campaigns set to send on the 30th will not go out in February. ",
-        },
-        rss__opts__schedule__daily__send__tuesday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Tuesdays.",
-        },
-        rss__opts__schedule__daily__send__saturday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Saturdays.",
-        },
-        rss__opts__schedule__daily__send__thursday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Thursdays.",
-        },
-        rss__opts__schedule__daily__send__wednesday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Wednesdays.",
-        },
-        recipients__segment__opts__saved__segment__id: {
-          type: "integer",
-          description: "The id for an existing saved segment.",
-        },
-      },
-      required: [
-        "type",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -423,32 +98,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_CAMPAIGN_FEEDBACK",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        message: {
-          type: "string",
-          description: "The content of the feedback message. This is the text of the feedback comment.",
-        },
-        block_id: {
-          type: "integer",
-          description: "The block ID for the editable block that the feedback addresses. Optional - omit if providing general feedback on the campaign.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique ID for the campaign. You can get this from the List Campaigns endpoint or when creating a campaign.",
-        },
-        is_complete: {
-          type: "boolean",
-          description: "Whether the feedback item is complete. Set to true to mark as resolved, false otherwise. Defaults to false if not provided.",
-        },
-      },
-      required: [
-        "campaign_id",
-        "message",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -465,19 +114,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_CAMPAIGN_FOLDER",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The name for the new campaign folder. This is used to organize campaigns in the Mailchimp interface.",
-        },
-      },
-      required: [
-        "name",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -494,114 +130,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_CART",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "A unique identifier for the cart.",
-        },
-        lines: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "An array of the cart's line items. Each line item must include: 'id' (unique identifier for the line item), 'product_id' (ID of the product in your store), 'product_variant_id' (ID of the product variant), 'quantity' (number of items), and 'price' (price of the item as a number). Example: [{'id': 'line1', 'product_id': 'prod123', 'product_variant_id': 'var123', 'quantity': 1, 'price': 29.99}]",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. Must be an existing store ID in your Mailchimp account.",
-        },
-        tax_total: {
-          type: "number",
-          description: "The total tax amount for the cart. Optional field that can be used to track tax separately.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "A string that uniquely identifies the campaign for a cart.",
-        },
-        order_total: {
-          type: "number",
-          description: "The total price for all items in the cart. This should be the sum of all line item prices multiplied by their quantities.",
-        },
-        checkout_url: {
-          type: "string",
-          description: "The URL for the cart. This parameter is required for [Abandoned Cart](https://mailchimp.com/help/create-an-abandoned-cart-email/) automations. ",
-        },
-        customer__id: {
-          type: "string",
-          description: "A unique identifier for the customer who owns this cart. Limited to 50 characters. Required field.",
-        },
-        currency_code: {
-          type: "string",
-          description: "The three-letter ISO 4217 currency code (e.g., 'USD', 'EUR', 'GBP'). Must match the currency configured for the store.",
-        },
-        customer__company: {
-          type: "string",
-          description: "The customer's company name.",
-        },
-        customer__last__name: {
-          type: "string",
-          description: "The customer's last name.",
-        },
-        customer__first__name: {
-          type: "string",
-          description: "The customer's first name.",
-        },
-        customer__address__city: {
-          type: "string",
-          description: "The city the customer is located in.",
-        },
-        customer__email__address: {
-          type: "string",
-          description: "Required. The customer's email address. Must be a valid, real email address.",
-        },
-        customer__opt__in__status: {
-          type: "boolean",
-          description: "Required. The customer's opt-in status. This value will never overwrite the opt-in status of a pre-existing Mailchimp list member, but will apply to list members that are added through the e-commerce API endpoints. Customers who don't opt in to your Mailchimp list will be added as Transactional members.",
-        },
-        customer__address__country: {
-          type: "string",
-          description: "The customer's country.",
-        },
-        customer__address__address1: {
-          type: "string",
-          description: "The mailing address of the customer.",
-        },
-        customer__address__address2: {
-          type: "string",
-          description: "An additional field for the customer's mailing address.",
-        },
-        customer__address__province: {
-          type: "string",
-          description: "The customer's state name or normalized province.",
-        },
-        customer__address__postal__code: {
-          type: "string",
-          description: "The customer's postal or zip code.",
-        },
-        customer__address__country__code: {
-          type: "string",
-          description: "The two-letter ISO country code for the customer's country (e.g., 'US', 'DE').",
-        },
-        customer__address__province__code: {
-          type: "string",
-          description: "The two-letter code for the customer's province or state.",
-        },
-      },
-      required: [
-        "store_id",
-        "id",
-        "customer__id",
-        "customer__email__address",
-        "customer__opt__in__status",
-        "currency_code",
-        "order_total",
-        "lines",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -618,49 +146,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_CART_LINE_ITEM",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "A unique identifier for the cart line item. Must be unique within the cart.",
-        },
-        price: {
-          type: "number",
-          description: "The price per unit for the cart line item in the store's currency.",
-        },
-        cart_id: {
-          type: "string",
-          description: "The unique identifier for the cart to add the line item to.",
-        },
-        quantity: {
-          type: "integer",
-          description: "The quantity of this product variant to add to the cart. Must be a positive integer.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store.",
-        },
-        product_id: {
-          type: "string",
-          description: "The unique identifier for the product. The product must already exist in the store.",
-        },
-        product_variant_id: {
-          type: "string",
-          description: "The unique identifier for the product variant. The variant must exist for the specified product.",
-        },
-      },
-      required: [
-        "store_id",
-        "cart_id",
-        "id",
-        "product_id",
-        "product_variant_id",
-        "quantity",
-        "price",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -677,24 +162,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_CONNECTED_SITE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        domain: {
-          type: "string",
-          description: "The full domain name of the connected site (e.g., 'example.com' or 'shop.mystore.com'). This is the website URL where the Mailchimp tracking script will be installed.",
-        },
-        foreign_id: {
-          type: "string",
-          description: "A unique identifier for the connected site that you define. This ID is used to reference the site in subsequent API calls. Example: 'my-website-001' or 'store-12345'.",
-        },
-      },
-      required: [
-        "foreign_id",
-        "domain",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -711,107 +178,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_CONTACT_TO_AUDIENCE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        tags: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "An array of tag names to add to the contact. This operation is append-only; existing tags will be preserved, and only new tags from this array will be added.",
-        },
-        language: {
-          type: "string",
-          description: "The subscriber's language preference as a two-letter ISO 639-1 code (e.g., 'en', 'es', 'fr').",
-        },
-        data_mode: {
-          type: "string",
-          description: "Data processing mode.",
-          enum: [
-            "historical",
-            "live",
-          ],
-        },
-        audience_id: {
-          type: "string",
-          description: "The unique ID for the audience. Get this from the Mailchimp account or via the list audiences endpoint.",
-        },
-        sms_channel: {
-          type: "object",
-          additionalProperties: true,
-          properties: {
-            sms_phone: {
-              type: "string",
-              description: "SMS phone number in E.164 format (e.g., +14045550102 for US numbers).",
-            },
-            marketing_consent: {
-              type: "object",
-              additionalProperties: true,
-              properties: {
-                status: {
-                  type: "string",
-                  description: "Marketing consent status. Use 'consented' for users who have given consent, 'denied' for those who have not, 'unknown' if consent status is unclear, or 'confirmed' for double opt-in confirmed consent.",
-                  enum: [
-                    "denied",
-                    "unknown",
-                    "consented",
-                    "confirmed",
-                  ],
-                },
-              },
-              description: "A contact's current consent status for SMS marketing communications.",
-            },
-          },
-          description: "SMS channel details for a contact.",
-        },
-        merge_fields: {
-          type: "object",
-          additionalProperties: true,
-          description: "A dictionary of merge fields where the keys are the merge tags (like FNAME, LNAME). Values are strings representing the field values. See the Merge Fields documentation for more about the structure.",
-        },
-        email_channel: {
-          type: "object",
-          additionalProperties: true,
-          properties: {
-            email: {
-              type: "string",
-              description: "Email address for the contact. Must be a valid email format.",
-            },
-            marketing_consent: {
-              type: "object",
-              additionalProperties: true,
-              properties: {
-                status: {
-                  type: "string",
-                  description: "Marketing consent status. Use 'consented' for users who have given consent, 'denied' for those who have not, 'unknown' if consent status is unclear, or 'confirmed' for double opt-in confirmed consent.",
-                  enum: [
-                    "denied",
-                    "unknown",
-                    "consented",
-                    "confirmed",
-                  ],
-                },
-              },
-              description: "A contact's current consent status for email marketing communications.",
-            },
-          },
-          description: "Email channel details for a contact.",
-        },
-        merge_field_validation_mode: {
-          type: "string",
-          description: "Merge field validation mode.",
-          enum: [
-            "ignore_required_checks",
-            "strict",
-          ],
-        },
-      },
-      required: [
-        "audience_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -828,19 +194,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_DOMAIN_TO_ACCOUNT",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        verification_email: {
-          type: "string",
-          description: "The email address at the domain you want to verify (e.g., 'admin@yourdomain.com'). A verification code will be sent to this email address to confirm domain ownership. You must have access to this email inbox to complete the verification process.",
-        },
-      },
-      required: [
-        "verification_email",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -857,42 +210,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_EVENT",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The name for this type of event (e.g., 'purchased', 'visited', 'signup_completed'). Must be 2-30 characters in length. Use lowercase letters, numbers, and underscores only.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp list/audience.",
-        },
-        is_syncing: {
-          type: "boolean",
-          description: "Set to true to prevent this event from triggering automations. Useful when bulk-importing historical events.",
-        },
-        properties: {
-          type: "object",
-          additionalProperties: true,
-          description: "Optional key-value pairs of custom properties for the event. Example: {'product_name': 'T-Shirt', 'price': '29.99'}. Property names must be 2-30 characters.",
-        },
-        occurred_at: {
-          type: "string",
-          description: "The date and time the event occurred in ISO 8601 format (e.g., '2024-01-15T10:30:00Z'). Defaults to current time if not specified.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. This endpoint also accepts a list member's email address or contact_id.",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-        "name",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -909,35 +226,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_EXPORT",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        include_stages: {
-          type: "array",
-          items: {
-            type: "string",
-            description: "Types of data that can be included in the account export.",
-            enum: [
-              "audiences",
-              "campaigns",
-              "events",
-              "gallery_files",
-              "reports",
-              "templates",
-            ],
-          },
-          description: "The types of data to include in the export. At least one stage is required. Available stages: 'audiences' (contact lists and segments), 'campaigns' (email campaign content), 'events' (contact activity events), 'gallery_files' (uploaded images and files), 'reports' (campaign performance reports), 'templates' (email template designs). Example: ['audiences', 'campaigns'] to export both audiences and campaigns.",
-        },
-        since_timestamp: {
-          type: "string",
-          description: "Optional ISO 8601 timestamp to limit the export to data created after this time. Format: YYYY-MM-DDTHH:MM:SS+00:00 (e.g., '2024-01-15T00:00:00+00:00'). Note: This limit does NOT apply to audiences - all audience data is always included. Useful for incremental exports when you only need recent campaign reports or events.",
-        },
-      },
-      required: [
-        "include_stages",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -954,28 +242,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_FILE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The name of the file including extension (e.g., 'image.png', 'document.pdf'). This will be the display name in the File Manager.",
-        },
-        file_data: {
-          type: "string",
-          description: "The base64-encoded contents of the file to upload. The file must be a supported type (images: jpg, jpeg, gif, png, svg; documents: pdf, txt, csv, etc.) and under 10MB.",
-        },
-        folder_id: {
-          type: "integer",
-          description: "The ID of the folder to upload the file to. If not provided, the file will be uploaded to the root folder.",
-        },
-      },
-      required: [
-        "name",
-        "file_data",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -992,31 +258,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_FOLDER",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The name of the folder to create in the File Manager. Must be unique within the account.",
-        },
-        created_at: {
-          type: "string",
-          description: "The date and time the folder was created in ISO 8601 format.",
-        },
-        created_by: {
-          type: "string",
-          description: "The username of the profile that created the folder.",
-        },
-        file_count: {
-          type: "integer",
-          description: "The number of files in the folder.",
-        },
-      },
-      required: [
-        "name",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1033,39 +274,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_INTEREST_CATEGORY",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        type: {
-          type: "string",
-          description: "Determines how this category's interests appear on signup forms. Options: 'checkboxes' (multiple selection), 'dropdown' (single selection from dropdown), 'radio' (single selection from radio buttons), 'hidden' (not visible on forms).",
-          enum: [
-            "checkboxes",
-            "dropdown",
-            "radio",
-            "hidden",
-          ],
-        },
-        title: {
-          type: "string",
-          description: "The text description of this category. This field appears on signup forms and is often phrased as a question (e.g., 'What topics interest you?').",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list/audience to add the interest category to.",
-        },
-        display_order: {
-          type: "integer",
-          description: "The order that the categories are displayed in the list. Lower numbers display first. Defaults to 0 if not specified.",
-        },
-      },
-      required: [
-        "list_id",
-        "title",
-        "type",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1082,33 +290,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_INTEREST_IN_CATEGORY",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The name of the interest (group name). This is shown publicly on subscription forms and used to group subscribers by their preferences.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp list/audience (e.g., 'abc123def4').",
-        },
-        display_order: {
-          type: "integer",
-          description: "The display order for this interest within the category. Lower numbers display first. If not specified, the interest is added at the end.",
-        },
-        interest_category_id: {
-          type: "string",
-          description: "The unique ID for the interest category (group) where the interest will be added (e.g., 'xyz789ghi0').",
-        },
-      },
-      required: [
-        "list_id",
-        "interest_category_id",
-        "name",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1125,56 +306,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_LANDING_PAGE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The internal name of this landing page (for your reference, not visible to visitors).",
-        },
-        type: {
-          type: "string",
-          description: "The type of landing page template: 'signup' for email list signups, or 'product' for product promotions.",
-          enum: [
-            "signup",
-            "product",
-          ],
-        },
-        title: {
-          type: "string",
-          description: "The title of this landing page displayed in the browser's title bar.",
-        },
-        list_id: {
-          type: "string",
-          description: "The audience/list ID to associate with this landing page. Either list_id or use_default_list=true must be provided.",
-        },
-        store_id: {
-          type: "string",
-          description: "The ID of the e-commerce store to associate with this landing page. Required for 'product' type pages.",
-        },
-        description: {
-          type: "string",
-          description: "A brief description of this landing page for internal reference.",
-        },
-        template_id: {
-          type: "integer",
-          description: "The specific template ID to use for this landing page. If not provided, a default template is used.",
-        },
-        use_default_list: {
-          type: "boolean",
-          description: "If true, creates the landing page using the account's default list instead of requiring a list_id. Either list_id or use_default_list=true must be provided.",
-        },
-        tracking__track__with__mailchimp: {
-          type: "boolean",
-          description: "Enable Mailchimp cookie tracking to monitor unique visitors and calculate conversion rates.",
-        },
-        tracking__enable__restricted__data__processing: {
-          type: "boolean",
-          description: "Enable Google's restricted data processing for CCPA compliance, limiting how Google uses certain identifiers and data in its services.",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1191,104 +322,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_LIST",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The name of the audience/list. Must be unique within your Mailchimp account.",
-        },
-        contact__zip: {
-          type: "string",
-          description: "The postal or zip code for the list contact (optional).",
-        },
-        double_optin: {
-          type: "boolean",
-          description: "Whether to require double opt-in (subscriber must confirm via email). Recommended for GDPR compliance. Defaults to false.",
-        },
-        contact__city: {
-          type: "string",
-          description: "The city for the list contact. Required.",
-        },
-        contact__phone: {
-          type: "string",
-          description: "The phone number for the list contact. Optional.",
-        },
-        contact__state: {
-          type: "string",
-          description: "The state or province for the list contact (optional).",
-        },
-        use_archive_bar: {
-          type: "boolean",
-          description: "Whether campaigns for this list use the Archive Bar in archives by default. Defaults to false.",
-        },
-        contact__company: {
-          type: "string",
-          description: "The company name for the list. Required.",
-        },
-        contact__country: {
-          type: "string",
-          description: "A two-character ISO3166 country code (e.g., 'US', 'GB', 'CA'). Required.",
-        },
-        contact__address1: {
-          type: "string",
-          description: "The street address for the list contact. Required.",
-        },
-        contact__address2: {
-          type: "string",
-          description: "The secondary street address for the list contact (optional).",
-        },
-        email_type_option: {
-          type: "boolean",
-          description: "Whether subscribers can choose their email format (HTML vs plain-text). When true, subscribers choose their format. When false, all receive HTML with plain-text backup.",
-        },
-        notify_on_subscribe: {
-          type: "string",
-          description: "Email address to send subscribe notifications to. Provide a valid email address or omit to disable notifications.",
-        },
-        permission_reminder: {
-          type: "string",
-          description: "The permission reminder explaining why contacts are receiving emails from this list. Example: 'You are receiving this email because you opted in via our website.'",
-        },
-        marketing_permissions: {
-          type: "boolean",
-          description: "Whether to enable GDPR-friendly marketing permissions. Defaults to false.",
-        },
-        notify_on_unsubscribe: {
-          type: "string",
-          description: "Email address to send unsubscribe notifications to. Provide a valid email address or omit to disable notifications.",
-        },
-        campaign__defaults__subject: {
-          type: "string",
-          description: "The default subject line for campaigns sent to this list. Required.",
-        },
-        campaign__defaults__language: {
-          type: "string",
-          description: "The default language for this list's forms (e.g., 'en' for English). Required.",
-        },
-        campaign__defaults__from__name: {
-          type: "string",
-          description: "The default 'From' name for campaigns sent to this list. Required.",
-        },
-        campaign__defaults__from__email: {
-          type: "string",
-          description: "The default 'From' email address for campaigns sent to this list. Required.",
-        },
-      },
-      required: [
-        "name",
-        "contact__company",
-        "contact__address1",
-        "contact__city",
-        "contact__country",
-        "permission_reminder",
-        "campaign__defaults__from__name",
-        "campaign__defaults__from__email",
-        "campaign__defaults__subject",
-        "campaign__defaults__language",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1305,29 +338,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_MEMBER_NOTE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        note: {
-          type: "string",
-          description: "The content of the note to add to the member. Note length is limited to 1,000 characters.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list (audience).",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. Alternatively, you can provide the member's email address or contact_id directly.",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-        "note",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1344,29 +354,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_MEMBER_TO_SEGMENT",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp audience/list. This can be found in the Audience settings or retrieved using the Get Lists Info action.",
-        },
-        segment_id: {
-          type: "string",
-          description: "The unique ID of the static segment (also known as a tag) within the list. This must be a static segment, not a saved segment with conditions. The segment ID can be retrieved using the List Segments action.",
-        },
-        email_address: {
-          type: "string",
-          description: "The email address of the subscriber to add to the segment. The subscriber must already exist in the list; this action does not create new list members.",
-        },
-      },
-      required: [
-        "list_id",
-        "segment_id",
-        "email_address",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1383,89 +370,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_MERGE_FIELD",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        tag: {
-          type: "string",
-          description: "The merge tag used in campaigns (e.g., 'FNAME', 'COMPANY'). Must be 1-10 uppercase letters/numbers. If not provided, Mailchimp auto-generates one from the name.",
-        },
-        name: {
-          type: "string",
-          description: "The display name of the merge field shown to users (e.g., 'First Name', 'Company').",
-        },
-        type: {
-          type: "string",
-          description: "The field type. Use 'text' for general text, 'number' for numeric values, 'address' for full addresses, 'phone' for phone numbers, 'date' for dates, 'url' for web links, 'imageurl' for image URLs, 'radio' or 'dropdown' for single-choice fields (requires options_choices), 'birthday' for birthdays, 'zip' for postal codes.",
-          enum: [
-            "text",
-            "number",
-            "address",
-            "phone",
-            "date",
-            "url",
-            "imageurl",
-            "radio",
-            "dropdown",
-            "birthday",
-            "zip",
-          ],
-        },
-        public: {
-          type: "boolean",
-          description: "Whether this field is visible on signup forms. Defaults to true.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the audience/list. Get this from the List Audiences endpoint or your Mailchimp dashboard.",
-        },
-        required: {
-          type: "boolean",
-          description: "Whether this field is required when importing or adding contacts. Defaults to false.",
-        },
-        help_text: {
-          type: "string",
-          description: "Help text displayed below the field on signup forms to guide users.",
-        },
-        default_value: {
-          type: "string",
-          description: "The default value to use when the field is empty or null.",
-        },
-        display_order: {
-          type: "integer",
-          description: "The display order of this field on signup forms. Lower numbers appear first.",
-        },
-        options__size: {
-          type: "integer",
-          description: "For 'text' type fields: the default display width of the text field (in characters).",
-        },
-        options__choices: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "For 'radio' or 'dropdown' type fields: list of choices for users to select from (e.g., ['Option 1', 'Option 2', 'Option 3']).",
-        },
-        options__date__format: {
-          type: "string",
-          description: "For 'date' or 'birthday' type fields: the date format (e.g., 'MM/DD/YYYY', 'DD/MM/YYYY').",
-        },
-        options__phone__format: {
-          type: "string",
-          description: "For 'phone' type fields: the format - 'US' for US format or 'International' for international format.",
-        },
-        options__default__country: {
-          type: "integer",
-          description: "For 'address' type fields: the default country code (ISO 3166-1 numeric, e.g., 840 for USA).",
-        },
-      },
-      required: [
-        "list_id",
-        "name",
-        "type",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1482,37 +386,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_OR_REMOVE_MEMBER_TAGS",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        tags: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "A list of tag objects to add or remove from the member. Each tag object must have: 'name' (string) - the tag name, and 'status' (string) - either 'active' to add the tag or 'inactive' to remove it. Example: [{'name': 'VIP', 'status': 'active'}]. If a tag doesn't exist and status is 'active', a new tag will be created.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list (audience). You can get this from the Lists/Audiences endpoint.",
-        },
-        is_syncing: {
-          type: "boolean",
-          description: "When is_syncing is true, automations based on the tags in the request will not fire. Useful for bulk imports where you don't want to trigger automations.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address, or the member's email address itself, or the contact_id.",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-        "tags",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1530,83 +403,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_OR_UPDATE_CUSTOMER",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "A unique identifier for the customer. Limited to 50 characters. This should match the customer_id path parameter.",
-        },
-        company: {
-          type: "string",
-          description: "The customer's company name.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store in Mailchimp.",
-        },
-        last_name: {
-          type: "string",
-          description: "The customer's last name.",
-        },
-        first_name: {
-          type: "string",
-          description: "The customer's first name.",
-        },
-        customer_id: {
-          type: "string",
-          description: "The unique identifier for the customer within the store. This is used in the URL path and should match the 'id' field in the request body.",
-        },
-        address__city: {
-          type: "string",
-          description: "The city where the customer is located.",
-        },
-        email_address: {
-          type: "string",
-          description: "The customer's email address. Must be a valid email format.",
-        },
-        opt_in_status: {
-          type: "boolean",
-          description: "The customer's opt-in status for marketing emails. Set to true to subscribe the customer to marketing, false for transactional-only. This value will never overwrite the opt-in status of a pre-existing Mailchimp list member.",
-        },
-        address__country: {
-          type: "string",
-          description: "The customer's country name.",
-        },
-        address__address1: {
-          type: "string",
-          description: "The primary street address of the customer.",
-        },
-        address__address2: {
-          type: "string",
-          description: "Additional address information (apartment, suite, etc.).",
-        },
-        address__province: {
-          type: "string",
-          description: "The customer's state or province name.",
-        },
-        address__postal__code: {
-          type: "string",
-          description: "The customer's postal or ZIP code.",
-        },
-        address__country__code: {
-          type: "string",
-          description: "The two-letter ISO country code (e.g., 'US', 'CA', 'GB').",
-        },
-        address__province__code: {
-          type: "string",
-          description: "The two-letter code for the customer's state or province (e.g., 'CA', 'NY').",
-        },
-      },
-      required: [
-        "store_id",
-        "customer_id",
-        "id",
-        "email_address",
-        "opt_in_status",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1624,110 +420,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_OR_UPDATE_LIST_MEMBER",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        vip: {
-          type: "boolean",
-          description: "[VIP status](https://mailchimp.com/help/designate-and-send-to-vip-contacts/) for subscriber. ",
-        },
-        ip_opt: {
-          type: "string",
-          description: "The IP address the subscriber used to confirm their opt-in status.",
-        },
-        status: {
-          type: "string",
-          description: "Subscriber's current status. Values: 'subscribed', 'unsubscribed', 'cleaned', 'pending', 'transactional'.",
-          enum: [
-            "subscribed",
-            "unsubscribed",
-            "cleaned",
-            "pending",
-            "transactional",
-          ],
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        language: {
-          type: "string",
-          description: "The subscriber's language preference as a two-letter ISO 639-1 code (e.g., 'en', 'es', 'fr').",
-        },
-        interests: {
-          type: "object",
-          additionalProperties: true,
-          description: "A dictionary of interest IDs as keys and boolean values indicating subscription to that interest. Get available interests from the list's interest-categories endpoint.",
-        },
-        ip_signup: {
-          type: "string",
-          description: "IP address the subscriber signed up from.",
-        },
-        email_type: {
-          type: "string",
-          description: "Type of email this member asked to get (\"html\" or \"text\").",
-        },
-        merge_fields: {
-          type: "object",
-          additionalProperties: true,
-          description: "A dictionary of merge fields where the keys are the merge tags. See the [Merge Fields documentation](https://mailchimp.com/developer/marketing/docs/merge-fields/#structure) for more about the structure. ",
-        },
-        email_address: {
-          type: "string",
-          description: "Email address for a subscriber. This value is required only if the email address is not already present on the list. ",
-        },
-        status_if_new: {
-          type: "string",
-          description: "Subscriber's status when creating a new member. Required if email is not already on list. Values: 'subscribed', 'unsubscribed', 'cleaned', 'pending', 'transactional'.",
-          enum: [
-            "subscribed",
-            "unsubscribed",
-            "cleaned",
-            "pending",
-            "transactional",
-          ],
-        },
-        timestamp_opt: {
-          type: "string",
-          description: "The date and time the subscriber confirmed their opt-in status in ISO 8601 format. ",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. This endpoint also accepts a list member's email address or contact_id. Example: for 'user@example.com', use MD5('user@example.com') = 'b58996c504c5638798eb6b511e6f49af'.",
-        },
-        timestamp_signup: {
-          type: "string",
-          description: "The date and time the subscriber signed up for the list in ISO 8601 format. ",
-        },
-        location__latitude: {
-          type: "number",
-          description: "The location latitude (e.g., 37.7749 for San Francisco).",
-        },
-        location__longitude: {
-          type: "number",
-          description: "The location longitude (e.g., -122.4194 for San Francisco).",
-        },
-        marketing_permissions: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "The marketing permissions for the subscriber.",
-        },
-        skip_merge_validation: {
-          type: "boolean",
-          description: "If skip_merge_validation is true, member data will be accepted without merge field values, even if the merge field is usually required. This defaults to false. ",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-        "email_address",
-        "status_if_new",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1745,67 +437,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_OR_UPDATE_PRODUCT_VARIANT",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "A unique identifier for the product variant in the request body. Should match variant_id.",
-        },
-        sku: {
-          type: "string",
-          description: "The stock keeping unit (SKU) of the product variant for inventory tracking.",
-        },
-        url: {
-          type: "string",
-          description: "The URL where the product variant can be purchased.",
-        },
-        price: {
-          type: "number",
-          description: "The price of the product variant in the store's currency.",
-        },
-        title: {
-          type: "string",
-          description: "The title of the product variant (e.g., 'Small', 'Red', 'Size 10').",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store.",
-        },
-        image_url: {
-          type: "string",
-          description: "The URL of the product variant's image.",
-        },
-        backorders: {
-          type: "string",
-          description: "The backorder status of the product variant.",
-        },
-        product_id: {
-          type: "string",
-          description: "The unique identifier for the product within the store.",
-        },
-        variant_id: {
-          type: "string",
-          description: "The unique identifier for the product variant. Used in the URL path.",
-        },
-        visibility: {
-          type: "string",
-          description: "The visibility setting of the product variant (e.g., 'visible', 'hidden').",
-        },
-        inventory_quantity: {
-          type: "integer",
-          description: "The available inventory quantity. Must be > 0 for product recommendations to work.",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-        "variant_id",
-        "title",
-        "id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1823,53 +454,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_ORDER_LINE_ITEM",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "A unique identifier for this order line item. Must be unique within the order (e.g., 'line_001', 'item_123').",
-        },
-        price: {
-          type: "number",
-          description: "The unit price of the line item in the store's currency (e.g., 29.99, 100.00).",
-        },
-        discount: {
-          type: "number",
-          description: "Optional discount amount applied to this line item in the store's currency (e.g., 5.00 for a $5 discount).",
-        },
-        order_id: {
-          type: "string",
-          description: "The unique identifier for an existing order in the store. Use MAILCHIMP_LIST_ORDERS to find available order IDs.",
-        },
-        quantity: {
-          type: "integer",
-          description: "The quantity of items to add. Must be a positive integer (e.g., 1, 2, 5).",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. Use MAILCHIMP_LIST_STORES to find available store IDs.",
-        },
-        product_id: {
-          type: "string",
-          description: "The unique identifier of the product to add to the order. The product must already exist in the store. Use MAILCHIMP_LIST_PRODUCT to find available product IDs.",
-        },
-        product_variant_id: {
-          type: "string",
-          description: "The unique identifier of the specific product variant to add. Each product has at least one variant. Use MAILCHIMP_LIST_PRODUCT_VARIANTS to find available variant IDs.",
-        },
-      },
-      required: [
-        "store_id",
-        "order_id",
-        "id",
-        "product_id",
-        "product_variant_id",
-        "quantity",
-        "price",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1886,74 +470,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_PRODUCT",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "A unique identifier for the product within the store. This ID is used to reference the product in carts and orders.",
-        },
-        url: {
-          type: "string",
-          description: "The URL where customers can view or purchase the product.",
-        },
-        type: {
-          type: "string",
-          description: "The type or category of the product (e.g., 'Clothing', 'Electronics').",
-        },
-        title: {
-          type: "string",
-          description: "The display title of the product shown to customers.",
-        },
-        handle: {
-          type: "string",
-          description: "The handle or slug for the product, typically used in URLs.",
-        },
-        images: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "An array of additional product images. Each image object should include 'id' (unique identifier) and 'url' (image URL).",
-        },
-        vendor: {
-          type: "string",
-          description: "The vendor or brand name for the product. Required for segmenting campaigns by 'Category Purchased'.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the Mailchimp e-commerce store where the product will be added.",
-        },
-        variants: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "An array of product variants. At least one variant is required. Each variant object should include: 'id' (required, unique variant identifier), 'title' (required, variant name), 'price' (optional, decimal price), 'inventory_quantity' (optional, must be > 0 for recommendations). A variant can use the same 'id' and 'title' as the parent product for single-variant products.",
-        },
-        image_url: {
-          type: "string",
-          description: "The URL of the product's main image. Required for product recommendations to display properly.",
-        },
-        description: {
-          type: "string",
-          description: "A text description of the product that provides details to customers.",
-        },
-        published_at_foreign: {
-          type: "string",
-          description: "The date and time the product was published in ISO 8601 format (e.g., '2024-01-15T10:30:00Z').",
-        },
-      },
-      required: [
-        "store_id",
-        "id",
-        "title",
-        "variants",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -1970,41 +486,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_PRODUCT_IMAGE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "A unique identifier for the product image. This should be a unique string that identifies this specific image.",
-        },
-        url: {
-          type: "string",
-          description: "The URL for the product image. Must be a valid, publicly accessible URL pointing to an image file (e.g., https://example.com/images/product.jpg).",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. This is the store ID you created when adding the store to Mailchimp.",
-        },
-        product_id: {
-          type: "string",
-          description: "The unique identifier for the product within the store. This is the product ID you specified when creating the product.",
-        },
-        variant_ids: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "Optional list of product variant IDs that use this image. If specified, associates the image with specific product variants.",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-        "id",
-        "url",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2021,55 +502,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_PROMO_CODE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "A unique identifier for the promo code. Restricted to UTF-8 characters with max length 50. ",
-        },
-        code: {
-          type: "string",
-          description: "The discount code. Restricted to UTF-8 characters with max length 50.",
-        },
-        enabled: {
-          type: "boolean",
-          description: "Whether the promo code is currently enabled.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the Mailchimp e-commerce store.",
-        },
-        usage_count: {
-          type: "integer",
-          description: "Number of times promo code has been used.",
-        },
-        promo_rule_id: {
-          type: "string",
-          description: "The unique identifier for the promo rule. A promo code must be associated with an existing promo rule.",
-        },
-        redemption_url: {
-          type: "string",
-          description: "The url that should be used in the promotion campaign restricted to UTF-8 characters with max length 2000. ",
-        },
-        created_at_foreign: {
-          type: "string",
-          description: "The date and time the promotion was created in ISO 8601 format.",
-        },
-        updated_at_foreign: {
-          type: "string",
-          description: "The date and time the promotion was updated in ISO 8601 format.",
-        },
-      },
-      required: [
-        "store_id",
-        "promo_rule_id",
-        "id",
-        "code",
-        "redemption_url",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2086,77 +518,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_PROMO_RULE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "A unique identifier for the promo rule. If your e-commerce platform does not support promo rules, use the promo code id as the promo rule id. Restricted to UTF-8 characters with max length of 50 characters.",
-        },
-        type: {
-          type: "string",
-          description: "The type of discount: 'fixed' for a fixed monetary amount off, or 'percentage' for a percentage discount. For free shipping promotions, use 'fixed' type with target 'shipping'.",
-          enum: [
-            "fixed",
-            "percentage",
-          ],
-        },
-        title: {
-          type: "string",
-          description: "The title that will show up in promotion campaign. Restricted to UTF-8 characters with max length of 100 bytes.",
-        },
-        amount: {
-          type: "number",
-          description: "The discount amount. For 'fixed' type, this is the monetary value (e.g., 10.00 for $10 off). For 'percentage' type, this must be a decimal between 0.0 and 1.0 (e.g., 0.15 for 15% off).",
-        },
-        target: {
-          type: "string",
-          description: "What the discount applies to: 'per_item' applies discount to each item, 'total' applies to the order total, 'shipping' applies to shipping costs (use with type 'fixed' for free shipping).",
-          enum: [
-            "per_item",
-            "total",
-            "shipping",
-          ],
-        },
-        enabled: {
-          type: "boolean",
-          description: "Whether the promo rule is currently enabled. Defaults to true if not specified.",
-        },
-        ends_at: {
-          type: "string",
-          description: "The date and time when the promotion ends, in ISO 8601 format (e.g., '2024-12-31T23:59:59Z'). Must be after starts_at if both are specified.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. Use MAILCHIMP_LIST_STORES to get available store IDs.",
-        },
-        starts_at: {
-          type: "string",
-          description: "The date and time when the promotion becomes active, in ISO 8601 format (e.g., '2024-01-15T00:00:00Z').",
-        },
-        description: {
-          type: "string",
-          description: "The description of the promotion. Restricted to UTF-8 characters with max length of 255 characters.",
-        },
-        created_at_foreign: {
-          type: "string",
-          description: "The date and time the promotion was created in your e-commerce platform, in ISO 8601 format.",
-        },
-        updated_at_foreign: {
-          type: "string",
-          description: "The date and time the promotion was last updated in your e-commerce platform, in ISO 8601 format.",
-        },
-      },
-      required: [
-        "store_id",
-        "description",
-        "id",
-        "amount",
-        "type",
-        "target",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2173,47 +534,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_SEGMENT",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The name of the segment. Must be unique within the list.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp list/audience where the segment will be created. You can get list IDs using the 'Get lists info' action.",
-        },
-        options__match: {
-          type: "string",
-          description: "Match type for segment conditions. Use 'any' to match contacts that meet ANY condition (OR logic), or 'all' to match contacts that meet ALL conditions (AND logic). Required when using options_conditions.",
-          enum: [
-            "any",
-            "all",
-          ],
-        },
-        static_segment: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "An array of email addresses of existing list members to include in a static segment. Pass an empty array [] to create an empty static segment. Cannot be used together with options__match/options__conditions (use one or the other).",
-        },
-        options__conditions: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "Array of condition objects for dynamic segments. Each condition should have: 'condition_type' (e.g., 'EmailAddress', 'Merge'), 'field' (e.g., 'EMAIL'), 'op' (e.g., 'contains', 'is'), and 'value'. Example: [{\"condition_type\": \"EmailAddress\", \"field\": \"EMAIL\", \"op\": \"contains\", \"value\": \"@gmail.com\"}]. Cannot be used with static_segment.",
-        },
-      },
-      required: [
-        "list_id",
-        "name",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2230,106 +550,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_STORE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "A unique client-defined identifier for the store (e.g., 'my-store-001'). Once created, this cannot be changed.",
-        },
-        name: {
-          type: "string",
-          description: "The name of the store.",
-        },
-        phone: {
-          type: "string",
-          description: "The store phone number.",
-        },
-        domain: {
-          type: "string",
-          description: "The store domain. This parameter is required for Connected Sites and Google Ads. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique identifier for the list associated with the store. The `list_id` for a specific store cannot change. ",
-        },
-        platform: {
-          type: "string",
-          description: "The e-commerce platform of the store.",
-        },
-        timezone: {
-          type: "string",
-          description: "The timezone for the store in IANA format (e.g., 'America/New_York', 'Europe/London').",
-        },
-        is_syncing: {
-          type: "boolean",
-          description: "Whether to disable automations because the store is currently [syncing](https://mailchimp.com/developer/marketing/docs/e-commerce/#pausing-store-automations). ",
-        },
-        money_format: {
-          type: "string",
-          description: "The currency format for the store. For example: `$`, `£`, etc.",
-        },
-        address__city: {
-          type: "string",
-          description: "The city the store is located in.",
-        },
-        currency_code: {
-          type: "string",
-          description: "The three-letter ISO 4217 currency code for the store (e.g., 'USD', 'EUR', 'GBP', 'CAD').",
-        },
-        email_address: {
-          type: "string",
-          description: "The email address for the store.",
-        },
-        primary_locale: {
-          type: "string",
-          description: "The primary locale for the store. For example: `en`, `de`, etc.",
-        },
-        address__country: {
-          type: "string",
-          description: "The store's country name (e.g., 'United States', 'Canada').",
-        },
-        address__address1: {
-          type: "string",
-          description: "The store's mailing address (street address line 1).",
-        },
-        address__address2: {
-          type: "string",
-          description: "An additional field for the store's mailing address (street address line 2).",
-        },
-        address__latitude: {
-          type: "number",
-          description: "The latitude of the store location (decimal degrees, e.g., 37.7749).",
-        },
-        address__province: {
-          type: "string",
-          description: "The store's state name or normalized province (e.g., 'California', 'Ontario').",
-        },
-        address__longitude: {
-          type: "number",
-          description: "The longitude of the store location (decimal degrees, e.g., -122.4194).",
-        },
-        address__postal__code: {
-          type: "string",
-          description: "The store's postal or zip code (e.g., '94102', 'M5V 3L9').",
-        },
-        address__country__code: {
-          type: "string",
-          description: "The two-letter ISO 3166-1 alpha-2 country code for the store (e.g., 'US', 'CA').",
-        },
-        address__province__code: {
-          type: "string",
-          description: "The two-letter code for the store's province or state (e.g., 'CA', 'ON').",
-        },
-      },
-      required: [
-        "id",
-        "list_id",
-        "name",
-        "currency_code",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2346,29 +566,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_SUBSCRIBER_TO_WORKFLOW_EMAIL",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique ID of the Automation workflow. Obtain this from the list_automations action.",
-        },
-        email_address: {
-          type: "string",
-          description: "The email address of the subscriber to add to the workflow. The subscriber must be a member of the list associated with the automation.",
-        },
-        workflow_email_id: {
-          type: "string",
-          description: "The unique ID of the Automation workflow email. Obtain this from the list_automated_emails action using the workflow_id.",
-        },
-      },
-      required: [
-        "workflow_id",
-        "workflow_email_id",
-        "email_address",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2385,28 +582,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_TEMPLATE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        html: {
-          type: "string",
-          description: "The raw HTML content for the template. Supports Mailchimp Template Language for dynamic content. Must be valid HTML. Example: '<html><body><h1>Hello *|FNAME|*</h1></body></html>'",
-        },
-        name: {
-          type: "string",
-          description: "The name of the template. Must be unique within the account.",
-        },
-        folder_id: {
-          type: "string",
-          description: "The ID of the folder to store the template in. If not provided, the template will not be assigned to any folder.",
-        },
-      },
-      required: [
-        "name",
-        "html",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2423,19 +598,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_TEMPLATE_FOLDER",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The name of the template folder. This will be used to organize your templates within Mailchimp.",
-        },
-      },
-      required: [
-        "name",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2452,60 +614,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ADD_WEBHOOK",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        url: {
-          type: "string",
-          description: "A valid URL endpoint that will receive webhook POST requests. Must return HTTP 200 to HEAD or POST requests.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp audience/list to add the webhook to.",
-        },
-        sources__api: {
-          type: "boolean",
-          description: "Whether the webhook is triggered by actions initiated via the API.",
-        },
-        sources__user: {
-          type: "boolean",
-          description: "Whether the webhook is triggered by subscriber-initiated actions.",
-        },
-        sources__admin: {
-          type: "boolean",
-          description: "Whether the webhook is triggered by admin-initiated actions in the web interface.",
-        },
-        events__cleaned: {
-          type: "boolean",
-          description: "Whether the webhook is triggered when a subscriber's email address is cleaned from the list.",
-        },
-        events__profile: {
-          type: "boolean",
-          description: "Whether the webhook is triggered when a subscriber's profile is updated.",
-        },
-        events__upemail: {
-          type: "boolean",
-          description: "Whether the webhook is triggered when a subscriber's email address is changed.",
-        },
-        events__campaign: {
-          type: "boolean",
-          description: "Whether the webhook is triggered when a campaign is sent or cancelled.",
-        },
-        events__subscribe: {
-          type: "boolean",
-          description: "Whether the webhook is triggered when a list subscriber is added.",
-        },
-        events__unsubscribe: {
-          type: "boolean",
-          description: "Whether the webhook is triggered when a list member unsubscribes.",
-        },
-      },
-      required: [
-        "list_id",
-        "url",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2522,19 +630,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ARCHIVE_AUTOMATION",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique identifier for the Automation workflow to archive. You can obtain this ID from the list_automations action or from the Mailchimp dashboard URL when viewing an automation.",
-        },
-      },
-      required: [
-        "workflow_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2551,24 +646,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ARCHIVE_CONTACT",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        contact_id: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the member's email address, the member's email address, or the contact_id.",
-        },
-        audience_id: {
-          type: "string",
-          description: "The unique ID for the list (audience).",
-        },
-      },
-      required: [
-        "audience_id",
-        "contact_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2585,24 +662,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_ARCHIVE_LIST_MEMBER",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list (audience). Can be obtained from the 'Get lists info' action.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. This endpoint also accepts a list member's email address directly or the contact_id.",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2619,38 +678,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_BATCH_ADD_OR_REMOVE_MEMBERS",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp list/audience. Obtain this using the 'Get lists info' or 'List segments' actions.",
-        },
-        segment_id: {
-          type: "string",
-          description: "The unique ID for the static segment. This must be a static segment, not a saved/dynamic segment. Obtain this using the 'List segments' action and filter by type='static'.",
-        },
-        members_to_add: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "An array of email addresses to add to the static segment. Emails must already exist as subscribers in the list - non-existent emails are ignored. Maximum 500 emails per request. Example: ['user1@example.com', 'user2@example.com']",
-        },
-        members_to_remove: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "An array of email addresses to remove from the static segment. Emails not in the segment are ignored. Maximum 500 emails per request. Example: ['user3@example.com', 'user4@example.com']",
-        },
-      },
-      required: [
-        "list_id",
-        "segment_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2667,44 +694,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_BATCH_SUBSCRIBE_OR_UNSUBSCRIBE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        members: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "An array of member objects. Each object must contain 'email_address' (string) and 'status' (one of: 'subscribed', 'unsubscribed', 'cleaned', 'pending', 'transactional'). Optional fields include: 'merge_fields' (dict with field tags like FNAME, LNAME), 'tags' (list of tag names), 'vip' (bool), 'language' (string), 'email_type' ('html' or 'text'), 'ip_signup' and 'ip_opt' (strings). Up to 500 members may be added or updated with each API call.",
-        },
-        sync_tags: {
-          type: "boolean",
-          description: "Whether this batch operation will replace all existing tags with tags in request. ",
-        },
-        update_existing: {
-          type: "boolean",
-          description: "Whether this batch operation will change existing members' subscription status and data. Set to true to update existing members, false to only add new members. Defaults to false.",
-        },
-        skip_duplicate_check: {
-          type: "boolean",
-          description: "If skip_duplicate_check is true, we will ignore duplicates sent in the request when using the batch sub/unsub on the lists endpoint. The status of the first appearance in the request will be saved. This defaults to false. ",
-        },
-        skip_merge_validation: {
-          type: "boolean",
-          description: "If skip_merge_validation is true, member data will be accepted without merge field values, even if the merge field is usually required. This defaults to false. ",
-        },
-      },
-      required: [
-        "list_id",
-        "members",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2721,38 +710,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_CAMPAIGN_ABUSE_REPORT_DETAILS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. Example: 'id,email_address,date'.",
-        },
-        report_id: {
-          type: "string",
-          description: "The unique ID of the abuse report to retrieve. This can be obtained from the 'retrieve_campaign_abuse_complaints' action which lists all abuse reports for a campaign.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique ID of the campaign. This can be obtained from the 'list_campaigns' action or from campaign reports.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude from the response. Reference parameters of sub-objects with dot notation.",
-        },
-      },
-      required: [
-        "campaign_id",
-        "report_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2766,33 +723,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_CAMPAIGN_STATISTICS_FEEDBACK",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Reference parameters of sub-objects with dot notation (e.g., 'advice.type', 'advice.message'). ",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude. Reference parameters of sub-objects with dot notation (e.g., '_links'). ",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2806,19 +736,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_CANCEL_CAMPAIGN",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign to cancel. The campaign must be in 'sending' status (i.e., currently being delivered but not yet complete). You can obtain campaign IDs from the List Campaigns endpoint.",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2835,24 +752,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_CREATE_A_SURVEY_CAMPAIGN",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp audience/list. This is a 10-character alphanumeric string (e.g., 'abc1234567'). You can obtain this from the 'Get lists info' action or from the Mailchimp dashboard.",
-        },
-        survey_id: {
-          type: "string",
-          description: "The unique ID for the survey to create a campaign for. This is a 10-character alphanumeric string (e.g., 'xyz9876543'). You can obtain this from the 'Get information about all surveys for a list' action.",
-        },
-      },
-      required: [
-        "list_id",
-        "survey_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2869,29 +768,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_CUSTOMER_JOURNEYS_API_TRIGGER_FOR_A_CONTACT",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        step_id: {
-          type: "integer",
-          description: "The unique identifier for the step within the Customer Journey. This ID is provided by Mailchimp when you create an API trigger step in the Customer Journey builder.",
-        },
-        journey_id: {
-          type: "integer",
-          description: "The unique identifier for the Customer Journey. This ID is provided by Mailchimp when you create an API trigger step in the Customer Journey builder.",
-        },
-        email_address: {
-          type: "string",
-          description: "The email address of the contact to trigger in the Customer Journey. The contact must be a member of the audience associated with the journey.",
-        },
-      },
-      required: [
-        "journey_id",
-        "step_id",
-        "email_address",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -2908,100 +784,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_CUSTOMIZE_SIGNUP_FORM",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        styles: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "List of style customizations for form elements. Each item should have 'selector' (e.g., 'page_background', 'body_link_style') and 'options' (list of CSS property/value pairs like [{'property': 'background-color', 'value': '#ffffff'}]).",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp list/audience whose signup form you want to customize.",
-        },
-        contents: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "List of content sections for the signup form body. Each item should have 'section' (e.g., 'signup_message') and 'value' (the text content) keys.",
-        },
-        header__text: {
-          type: "string",
-          description: "The title/heading text displayed at the top of the signup form (e.g., 'Subscribe to Our Newsletter').",
-        },
-        header__image__alt: {
-          type: "string",
-          description: "Alternative text for the header image, used for accessibility and when the image cannot be displayed.",
-        },
-        header__image__url: {
-          type: "string",
-          description: "URL of the header image to display at the top of the signup form. Must be a publicly accessible image URL.",
-        },
-        header__image__link: {
-          type: "string",
-          description: "URL that users will be directed to when clicking the header image.",
-        },
-        header__image__align: {
-          type: "string",
-          description: "Horizontal alignment of the header image. Options: 'none', 'left', 'center', 'right'.",
-          enum: [
-            "none",
-            "left",
-            "center",
-            "right",
-          ],
-        },
-        header__image__width: {
-          type: "string",
-          description: "Width of the header image in pixels (e.g., '200').",
-        },
-        header__image__height: {
-          type: "string",
-          description: "Height of the header image in pixels (e.g., '100').",
-        },
-        header__image__target: {
-          type: "string",
-          description: "Target window for the header image link. '_blank' opens in new tab, 'null' opens in same window.",
-          enum: [
-            "_blank",
-            "null",
-          ],
-        },
-        header__image__border__color: {
-          type: "string",
-          description: "Color of the header image border in hex format (e.g., '#000000' for black).",
-        },
-        header__image__border__style: {
-          type: "string",
-          description: "CSS border style for the header image. Options: 'none', 'solid', 'dotted', 'dashed', 'double', 'groove', 'outset', 'inset', 'ridge'.",
-          enum: [
-            "none",
-            "solid",
-            "dotted",
-            "dashed",
-            "double",
-            "groove",
-            "outset",
-            "inset",
-            "ridge",
-          ],
-        },
-        header__image__border__width: {
-          type: "string",
-          description: "Width of the border around the header image in pixels (e.g., '2').",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3018,19 +800,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_BATCH_REQUEST",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        batch_id: {
-          type: "string",
-          description: "The unique ID of the batch operation to stop/delete. This ID is returned when you create a batch request using the 'Start batch operation' endpoint.",
-        },
-      },
-      required: [
-        "batch_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3047,19 +816,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_BATCH_WEBHOOK",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        batch_webhook_id: {
-          type: "string",
-          description: "The unique identifier for the batch webhook to delete. This ID can be obtained from the 'list_batch_webhooks' action or from the response of 'add_batch_webhook'. Example: '1537c038e7'.",
-        },
-      },
-      required: [
-        "batch_webhook_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3077,19 +833,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_CAMPAIGN",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        campaign_id: {
-          type: "string",
-          description: "The unique identifier for the campaign to delete. This can be obtained from the campaign list or campaign creation response.",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3106,24 +849,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_CAMPAIGN_FEEDBACK_MESSAGE",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign. Can be obtained from the list_campaigns action.",
-        },
-        feedback_id: {
-          type: "string",
-          description: "The unique id for the feedback message to delete. Can be obtained from the list_campaign_feedback or add_campaign_feedback actions.",
-        },
-      },
-      required: [
-        "campaign_id",
-        "feedback_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3141,19 +866,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_CAMPAIGN_FOLDER",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        folder_id: {
-          type: "string",
-          description: "The unique identifier for the campaign folder to delete. This ID can be obtained from the list_campaign_folders or add_campaign_folder actions.",
-        },
-      },
-      required: [
-        "folder_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3171,24 +883,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_CART",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        cart_id: {
-          type: "string",
-          description: "The unique identifier for the cart to delete. This is the cart ID that was assigned when the cart was created. You can find cart IDs using the List Carts endpoint.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. This is the store ID you defined when creating the store using the Add Store endpoint.",
-        },
-      },
-      required: [
-        "store_id",
-        "cart_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3205,29 +899,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_CART_LINE_ITEM",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        cart_id: {
-          type: "string",
-          description: "The unique identifier for the cart containing the line item. You can get this from the 'list_carts' action or from the response when creating a cart.",
-        },
-        line_id: {
-          type: "string",
-          description: "The unique identifier for the line item to delete. You can get this from the 'list_cart_line_items' action or from the 'lines' array in cart details.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. You can get this from the 'list_stores' action or from the response when creating a store.",
-        },
-      },
-      required: [
-        "store_id",
-        "cart_id",
-        "line_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3244,19 +915,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_CONNECTED_SITE",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        connected_site_id: {
-          type: "string",
-          description: "The unique identifier for the connected site to delete. This ID can be obtained from the List Connected Sites or Get Connected Site actions (returned as 'foreign_id').",
-        },
-      },
-      required: [
-        "connected_site_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3274,24 +932,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_CUSTOMER",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. This is the ID assigned when the store was created in Mailchimp.",
-        },
-        customer_id: {
-          type: "string",
-          description: "The unique identifier for the customer within the store. This is the customer ID that was assigned when the customer was added to the store.",
-        },
-      },
-      required: [
-        "store_id",
-        "customer_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3309,19 +949,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_DOMAIN",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        domain_name: {
-          type: "string",
-          description: "The verified domain name to delete from the Mailchimp account (e.g., 'example.com').",
-        },
-      },
-      required: [
-        "domain_name",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3339,19 +966,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_FILE",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        file_id: {
-          type: "string",
-          description: "The unique numeric ID of the file to delete from the File Manager. You can get this ID from the 'List stored files' action or from the 'Add file' action response when uploading a new file.",
-        },
-      },
-      required: [
-        "file_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3369,19 +983,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_FOLDER",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        folder_id: {
-          type: "string",
-          description: "The unique ID of the File Manager folder to delete. This can be obtained from the list_folders action or from the response when creating a folder.",
-        },
-      },
-      required: [
-        "folder_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3399,24 +1000,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_INTEREST_CATEGORY",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp audience/list containing the interest category. This is a 10-character alphanumeric string (e.g., '2cc9d141a8'). Retrieve available list IDs using the 'Get lists info' action.",
-        },
-        interest_category_id: {
-          type: "string",
-          description: "The unique ID for the interest category to delete. This is a 10-character alphanumeric string (e.g., 'a788d2f60b'). Retrieve available interest category IDs using the 'List interest categories' action. Note: Deleting an interest category will also delete all interests within it.",
-        },
-      },
-      required: [
-        "list_id",
-        "interest_category_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3434,29 +1017,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_INTEREST_IN_CATEGORY",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list (audience) containing the interest category.",
-        },
-        interest_id: {
-          type: "string",
-          description: "The unique ID of the interest to delete within the category.",
-        },
-        interest_category_id: {
-          type: "string",
-          description: "The unique ID for the interest category containing the interest to delete.",
-        },
-      },
-      required: [
-        "list_id",
-        "interest_category_id",
-        "interest_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3474,19 +1034,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_LANDING_PAGE",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        page_id: {
-          type: "string",
-          description: "The unique identifier for the landing page to delete. This is a 12-character hexadecimal string (e.g., '030001b4e1f0'). Use the List Landing Pages action to retrieve available page IDs.",
-        },
-      },
-      required: [
-        "page_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3503,19 +1050,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_LIST",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list (audience) to delete. This is a 10-character alphanumeric string (e.g., '2cc9d141a8'). Can be obtained from the GET /lists endpoint or list settings in Mailchimp.",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3532,24 +1066,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_LIST_MEMBER",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp audience/list (e.g., 'abc123def4'). Can be obtained from the list_lists or get_lists_info actions.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. For example, for 'User@Example.com', compute MD5 of 'user@example.com'. This hash is also returned as 'id' when adding or listing members.",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3566,24 +1082,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_MERGE_FIELD",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the audience/list. Get this from the List Audiences endpoint (MAILCHIMP_GET_LISTS_INFO) or your Mailchimp dashboard.",
-        },
-        merge_id: {
-          type: "string",
-          description: "The numeric ID for the merge field to delete. Get this from the List Merge Fields endpoint (MAILCHIMP_LIST_MERGE_FIELDS). Note: Default fields like FNAME, LNAME, ADDRESS, and PHONE cannot be deleted.",
-        },
-      },
-      required: [
-        "list_id",
-        "merge_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3600,29 +1098,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_NOTE",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp list (audience).",
-        },
-        note_id: {
-          type: "string",
-          description: "The unique ID of the note to delete.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. This endpoint also accepts the member's email address or contact_id directly.",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-        "note_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3640,24 +1115,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_ORDER",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        order_id: {
-          type: "string",
-          description: "The unique identifier for the order to delete within the specified store.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store containing the order to delete.",
-        },
-      },
-      required: [
-        "store_id",
-        "order_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3674,29 +1131,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_ORDER_LINE_ITEM",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        line_id: {
-          type: "string",
-          description: "The unique identifier for the line item to delete from the order. Use MAILCHIMP_LIST_ORDER_LINE_ITEMS to find available line item IDs.",
-        },
-        order_id: {
-          type: "string",
-          description: "The unique identifier for an order within the store. Use MAILCHIMP_LIST_ORDERS to find available order IDs for a store.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. Use MAILCHIMP_LIST_STORES to find available store IDs.",
-        },
-      },
-      required: [
-        "store_id",
-        "order_id",
-        "line_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3714,24 +1148,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_PRODUCT",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. Use LIST_STORES to find available store IDs.",
-        },
-        product_id: {
-          type: "string",
-          description: "The unique identifier for the product to delete. Use LIST_PRODUCT to find available product IDs for a store.",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3749,29 +1165,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_PRODUCT_IMAGE",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        image_id: {
-          type: "string",
-          description: "The unique identifier for the product image to delete. This is the image ID you specified when adding the image to the product.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. This is the store ID you specified when adding the store to Mailchimp.",
-        },
-        product_id: {
-          type: "string",
-          description: "The unique identifier for the product within the store. This is the product ID you specified when creating the product.",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-        "image_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3789,29 +1182,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_PRODUCT_VARIANT",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the Mailchimp e-commerce store containing the product variant to delete.",
-        },
-        product_id: {
-          type: "string",
-          description: "The unique identifier for the product that contains the variant to be deleted.",
-        },
-        variant_id: {
-          type: "string",
-          description: "The unique identifier for the specific product variant to delete. Note: A product must have at least one variant, so deleting the last variant may fail.",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-        "variant_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3828,29 +1198,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_PROMO_CODE",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. Use MAILCHIMP_LIST_STORES to retrieve available store IDs.",
-        },
-        promo_code_id: {
-          type: "string",
-          description: "The unique identifier for the promo code to delete. Use MAILCHIMP_LIST_PROMO_CODES to retrieve available promo code IDs for a promo rule.",
-        },
-        promo_rule_id: {
-          type: "string",
-          description: "The unique identifier for the promo rule that contains the promo code. Use MAILCHIMP_LIST_PROMO_RULES to retrieve available promo rule IDs for a store.",
-        },
-      },
-      required: [
-        "store_id",
-        "promo_rule_id",
-        "promo_code_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3868,24 +1215,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_PROMO_RULE",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store containing the promo rule to delete. Use MAILCHIMP_LIST_STORES to find available store IDs.",
-        },
-        promo_rule_id: {
-          type: "string",
-          description: "The unique identifier for the promo rule to delete. Use MAILCHIMP_LIST_PROMO_RULES to find promo rule IDs for a specific store.",
-        },
-      },
-      required: [
-        "store_id",
-        "promo_rule_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3903,24 +1232,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_SEGMENT",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp list (audience) containing the segment. You can retrieve list IDs using the 'Get lists info' action.",
-        },
-        segment_id: {
-          type: "string",
-          description: "The unique ID of the segment to delete. You can retrieve segment IDs using the 'List segments' action. This can be either a saved segment (based on conditions) or a static segment (based on specific email addresses).",
-        },
-      },
-      required: [
-        "list_id",
-        "segment_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3938,19 +1249,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_STORE",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store to delete. This is the client-defined ID that was provided when the store was created (e.g., 'my-store-001').",
-        },
-      },
-      required: [
-        "store_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3967,19 +1265,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_TEMPLATE",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        template_id: {
-          type: "string",
-          description: "The unique numeric ID for the template to delete. Only user-created templates can be deleted; system/gallery templates cannot be deleted. Use the List Templates action to find available template IDs.",
-        },
-      },
-      required: [
-        "template_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -3996,19 +1281,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_TEMPLATE_FOLDER",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        folder_id: {
-          type: "string",
-          description: "The unique ID of the template folder to delete. This is a 10-character alphanumeric string (e.g., '1033a6ad30'). You can obtain this ID from the 'list_template_folders' or 'add_template_folder' actions.",
-        },
-      },
-      required: [
-        "folder_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4025,24 +1297,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_WEBHOOK",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp audience/list containing the webhook to delete.",
-        },
-        webhook_id: {
-          type: "string",
-          description: "The unique identifier for the webhook to delete. Can be obtained from the list webhooks endpoint.",
-        },
-      },
-      required: [
-        "list_id",
-        "webhook_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4060,24 +1314,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_DELETE_WORKFLOW_EMAIL",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique identifier for the Automation workflow. This can be obtained from the list automations endpoint or automation creation response.",
-        },
-        workflow_email_id: {
-          type: "string",
-          description: "The unique identifier for the Automation workflow email to delete. This can be obtained from the list automated emails endpoint.",
-        },
-      },
-      required: [
-        "workflow_id",
-        "workflow_email_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4094,24 +1330,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_FORGET_CONTACT",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        contact_id: {
-          type: "string",
-          description: "The unique ID for the contact. This can be the MD5 hash of the lowercase email address, the contact_id, or the subscriber_hash.",
-        },
-        audience_id: {
-          type: "string",
-          description: "The unique ID for the audience (list). Can be obtained from the get_lists_info action.",
-        },
-      },
-      required: [
-        "audience_id",
-        "contact_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4128,38 +1346,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_ABUSE_REPORT",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. Example: 'id,email_address,date'.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list/audience.",
-        },
-        report_id: {
-          type: "string",
-          description: "The unique ID for the abuse report.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. Cannot be used with 'fields' parameter.",
-        },
-      },
-      required: [
-        "list_id",
-        "report_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4173,33 +1359,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_ACCOUNT_EXPORT_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "Optional list of fields to include in the response. Use dot notation for nested fields (e.g., ['export_id', 'finished', 'download_url', 'stages.status']). If not specified, all fields are returned.",
-        },
-        export_id: {
-          type: "string",
-          description: "The unique identifier for the account export. This ID is returned when creating an export via 'add_export' or can be obtained from 'list_account_exports'.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "Optional list of fields to exclude from the response. Use dot notation for nested fields (e.g., ['_links']). Cannot be used together with 'fields'.",
-        },
-      },
-      required: [
-        "export_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4213,73 +1372,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_AUDIENCES_CONTACTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000.",
-        },
-        cursor: {
-          type: "string",
-          description: "Paginate through a collection of records by setting the cursor parameter to a next_cursor attribute returned by a previous request. Default value fetches the first page of results.",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation.",
-        },
-        sort_dir: {
-          type: "string",
-          description: "Enum for sort_dir parameter",
-          enum: [
-            "ASC",
-            "DESC",
-          ],
-        },
-        sort_field: {
-          type: "string",
-          description: "Enum for sort_field parameter",
-          enum: [
-            "created_at",
-            "updated_at",
-          ],
-        },
-        audience_id: {
-          type: "string",
-          description: "The unique ID for the audience.",
-        },
-        created_since: {
-          type: "string",
-          description: "Restricts the response to contacts created after the specified time (exclusive). Uses ISO 8601 format: 2025-04-23T15:41:36+00:00.",
-        },
-        updated_since: {
-          type: "string",
-          description: "Restricts the response to contacts updated after the specified time (exclusive). Uses ISO 8601 format: 2025-04-23T15:41:36+00:00.",
-        },
-        created_before: {
-          type: "string",
-          description: "Restricts the response to contacts created at or before the specified time (inclusive). Uses ISO 8601 format: 2025-04-23T15:41:36+00:00.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation.",
-        },
-        updated_before: {
-          type: "string",
-          description: "Restricts the response to contacts updated at or before the specified time (inclusive). Uses ISO 8601 format: 2025-04-23T15:41:36+00:00.",
-        },
-      },
-      required: [
-        "audience_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4293,38 +1385,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_AUDIENCES_CONTACTS_DETAIL",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation.",
-        },
-        contact_id: {
-          type: "string",
-          description: "A unique identifier for the contact, which can be a Mailchimp contact ID or a channel hash. A channel hash must follow the format email:[md5_hash] (where the hash is the MD5 of the lowercased email address) or sms:[sha256_hash] (where the hash is the SHA256 of the E.164-formatted phone number).",
-        },
-        audience_id: {
-          type: "string",
-          description: "The unique ID for the audience.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation.",
-        },
-      },
-      required: [
-        "audience_id",
-        "contact_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4338,33 +1398,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_AUTHORIZED_APP_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        app_id: {
-          type: "string",
-          description: "The unique numeric ID of the authorized application. Obtain this from the LIST_AUTHORIZED_APPS action.",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return in the response. Use dot notation for nested fields (e.g., ['id', 'name', 'description']). If not specified, all fields are returned.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for nested fields (e.g., ['_links']). Cannot be used with 'fields' parameter.",
-        },
-      },
-      required: [
-        "app_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4378,29 +1411,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_AUTOMATED_EMAIL_SUBSCRIBER",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique ID for the Automation workflow. Can be obtained from list_automations action.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address.",
-        },
-        workflow_email_id: {
-          type: "string",
-          description: "The unique ID for the Automation workflow email. Can be obtained from list_automated_emails action.",
-        },
-      },
-      required: [
-        "workflow_id",
-        "workflow_email_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4414,33 +1424,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_AUTOMATION_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Reference parameters of sub-objects with dot notation. Example: ['id', 'settings.title', 'recipients.list_id']",
-        },
-        workflow_id: {
-          type: "string",
-          description: "The unique id for the Automation workflow. Can be obtained from the list_automations action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Reference parameters of sub-objects with dot notation. Example: ['_links', 'tracking']",
-        },
-      },
-      required: [
-        "workflow_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4454,33 +1437,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_BATCH_OPERATION_STATUS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Use dot notation for sub-object fields (e.g., ['id', 'status', 'total_operations']). If not specified, all fields are returned.",
-        },
-        batch_id: {
-          type: "string",
-          description: "The unique ID for the batch operation. Obtain this from list_batch_requests or start_batch_operation.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for sub-object fields (e.g., ['_links']). ",
-        },
-      },
-      required: [
-        "batch_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4494,33 +1450,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_BATCH_WEBHOOK_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return in the response. Use dot notation to reference sub-object parameters (e.g., ['id', 'url', 'enabled']). If not specified, all fields are returned.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation to reference sub-object parameters (e.g., ['_links']). Cannot be used together with 'fields'.",
-        },
-        batch_webhook_id: {
-          type: "string",
-          description: "The unique identifier for the batch webhook. This can be obtained from the list batch webhooks endpoint.",
-        },
-      },
-      required: [
-        "batch_webhook_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4534,33 +1463,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_CAMPAIGN_CONTENT",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4574,38 +1476,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_CAMPAIGN_FEEDBACK_MESSAGE",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Reference parameters of sub-objects with dot notation. Available fields: feedback_id, parent_id, block_id, message, is_complete, created_by, created_at, updated_at, source, campaign_id, _links.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign. Obtain from MAILCHIMP_LIST_CAMPAIGNS.",
-        },
-        feedback_id: {
-          type: "string",
-          description: "The unique id for the feedback message. Obtain from MAILCHIMP_LIST_CAMPAIGN_FEEDBACK or MAILCHIMP_ADD_CAMPAIGN_FEEDBACK.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Reference parameters of sub-objects with dot notation. Example: ['_links'] to exclude HATEOAS links.",
-        },
-      },
-      required: [
-        "campaign_id",
-        "feedback_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4619,33 +1489,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_CAMPAIGN_FOLDER",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. Example: 'id,name,count' to only return those fields.",
-        },
-        folder_id: {
-          type: "string",
-          description: "The unique ID for the campaign folder. This can be obtained from the 'list_campaign_folders' action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude from the response. Reference parameters of sub-objects with dot notation. Example: '_links' to exclude links from response.",
-        },
-      },
-      required: [
-        "folder_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4659,37 +1502,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_CAMPAIGN_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Reference parameters of sub-objects with dot notation. Example: ['id', 'status', 'settings.title', 'recipients.list_id']. If not specified, all fields are returned.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Reference parameters of sub-objects with dot notation. Example: ['_links', 'tracking']. Cannot be used together with 'fields'.",
-        },
-        include_resend_shortcut_eligibility: {
-          type: "boolean",
-          description: "Return the `resend_shortcut_eligibility` field in the response, which tells you if the campaign is eligible for the various Campaign Resend Shortcuts offered. ",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4703,38 +1515,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_CAMPAIGN_LINK_DETAILS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. Example: 'id,url,total_clicks'.",
-        },
-        link_id: {
-          type: "string",
-          description: "The unique identifier for the link. Can be obtained from the list_campaign_details action which returns click details for all links in a campaign.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique identifier for the campaign. Can be obtained from the list_campaigns action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. Example: '_links'.",
-        },
-      },
-      required: [
-        "campaign_id",
-        "link_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4748,38 +1528,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_CAMPAIGN_RECIPIENT_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. Example: 'email_address,status,open_count'.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign. This must be a campaign that has been sent to have recipient data.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. Example: '_links,merge_fields'.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. You can compute this using: md5(email_address.lower()). Also known as email_id in list endpoints.",
-        },
-      },
-      required: [
-        "campaign_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4793,33 +1541,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_CAMPAIGN_REPORT",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation (e.g., 'opens.opens_total,clicks.click_rate'). ",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique ID of the sent campaign to retrieve the report for.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation (e.g., 'industry_stats,timeseries'). ",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4833,33 +1554,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_CAMPAIGN_SEND_CHECKLIST",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to return. Available fields: 'is_ready', 'items', '_links'. Use dot notation for nested fields (e.g., 'items.type', 'items.heading').",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique ID for the campaign. Obtain this from list_campaigns or add_campaign actions.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to exclude from the response. Common use: exclude '_links' to reduce response size.",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4873,38 +1567,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_CART_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Use dot notation for sub-object fields (e.g., 'customer.email_address', 'lines.product_id'). ",
-        },
-        cart_id: {
-          type: "string",
-          description: "The unique identifier for the cart to retrieve.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store containing the cart.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for sub-object fields (e.g., '_links', 'customer._links'). ",
-        },
-      },
-      required: [
-        "store_id",
-        "cart_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4918,43 +1580,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_CART_LINE_ITEM",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. Available fields include: id, product_id, product_title, product_variant_id, product_variant_title, quantity, price, _links.",
-        },
-        cart_id: {
-          type: "string",
-          description: "The unique identifier for the cart. Obtain this from the list_carts action for a given store.",
-        },
-        line_id: {
-          type: "string",
-          description: "The unique identifier for the line item within the cart. Obtain this from list_cart_line_items action.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. Obtain this from the list_stores action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. Use this to reduce response size by excluding unwanted fields.",
-        },
-      },
-      required: [
-        "store_id",
-        "cart_id",
-        "line_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -4968,43 +1593,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_CLICKED_LINK_SUBSCRIBER",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. Example: 'email_address,clicks,contact_status'.",
-        },
-        link_id: {
-          type: "string",
-          description: "The id for the link. Can be obtained from list_campaign_details action which returns urls_clicked with id field for each link.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign. Can be obtained from list_campaigns action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. Example: '_links,merge_fields'.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. Can be obtained from list_clicked_link_subscribers action (email_id field) or by computing MD5 hash of the lowercased email address.",
-        },
-      },
-      required: [
-        "campaign_id",
-        "link_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5018,33 +1606,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_CONNECTED_SITE",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return in the response. Available fields include: 'foreign_id', 'store_id', 'platform', 'domain', 'site_script', 'site_script.url', 'site_script.fragment', 'created_at', 'updated_at', '_links'. Use dot notation for nested fields (e.g., 'site_script.url').",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use same field names as 'fields' parameter. Useful for omitting large fields like 'site_script' or '_links' when not needed.",
-        },
-        connected_site_id: {
-          type: "string",
-          description: "The unique identifier (foreign_id) of the connected site to retrieve. This is the same ID used when the site was created via add_connected_site. Example: 'site_123', 'my-shop-456'.",
-        },
-      },
-      required: [
-        "connected_site_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5058,38 +1619,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_CUSTOMER_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store.",
-        },
-        customer_id: {
-          type: "string",
-          description: "The unique identifier for the customer within the specified store.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "store_id",
-        "customer_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5103,19 +1632,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_DOMAIN_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        domain_name: {
-          type: "string",
-          description: "The domain name to retrieve information for (e.g., 'example.com'). This should be a domain that has been previously added to your Mailchimp account via the add_domain_to_account action. Use list_sending_domains to see all available domains.",
-        },
-      },
-      required: [
-        "domain_name",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5129,33 +1645,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_FACEBOOK_AD_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Reference sub-object parameters with dot notation. Example: ['id', 'name', 'status', 'audience.email_source']. If not specified, all fields are returned.",
-        },
-        outreach_id: {
-          type: "string",
-          description: "The unique identifier for the Facebook ad. This ID can be obtained from the list_facebook_ads action response, where it is returned as the 'id' field for each ad.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Reference sub-object parameters with dot notation. Example: ['_links']. Cannot be used together with 'fields'.",
-        },
-      },
-      required: [
-        "outreach_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5169,33 +1658,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_FACEBOOK_AD_REPORT",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation (e.g., 'report_summary.opens', 'budget.amount'). If not specified, all fields are returned.",
-        },
-        outreach_id: {
-          type: "string",
-          description: "The unique identifier of the Facebook ad to retrieve the report for. This ID can be obtained from the list_facebook_ads or list_facebook_ads_reports endpoints.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude from the response. Reference parameters of sub-objects with dot notation (e.g., '_links', 'content'). ",
-        },
-      },
-      required: [
-        "outreach_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5209,33 +1671,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_FILE",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of specific fields to include in the response. Use dot notation for nested fields (e.g., ['id', 'name', 'full_size_url']). If not specified, all fields are returned.",
-        },
-        file_id: {
-          type: "string",
-          description: "The unique numeric ID of the file in the File Manager. You can obtain file IDs by using the 'List stored files' action (MAILCHIMP_LIST_STORED_FILES) which returns all files with their IDs.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for nested fields (e.g., ['_links'] to exclude HATEOAS links). Cannot be used together with 'fields' parameter.",
-        },
-      },
-      required: [
-        "file_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5249,33 +1684,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_FOLDER",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Reference parameters of sub-objects with dot notation. Example: ['id', 'name', 'file_count'].",
-        },
-        folder_id: {
-          type: "string",
-          description: "The unique ID for the File Manager folder. Get folder IDs using the List Folders action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Reference parameters of sub-objects with dot notation. Example: ['_links'] to exclude HATEOAS links.",
-        },
-      },
-      required: [
-        "folder_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5289,38 +1697,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_GROWTH_HISTORY_BY_MONTH",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        month: {
-          type: "string",
-          description: "The month to retrieve growth history for in YYYY-MM format (e.g., '2024-01' for January 2024). Returns 404 if no growth data exists for the specified month.",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp audience/list (e.g., 'abc123def4'). Use the 'List all lists' action to get available list IDs.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "list_id",
-        "month",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5334,19 +1710,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_INFORMATION_ABOUT_ALL_SURVEYS_FOR_A_LIST",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5360,38 +1723,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_INTEREST_CATEGORY_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Available fields: id, list_id, title, display_order, type, _links. Use dot notation for sub-object fields (e.g., '_links.rel').",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list/audience. Can be obtained from the List Lists action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for sub-object fields (e.g., '_links' to exclude all links).",
-        },
-        interest_category_id: {
-          type: "string",
-          description: "The unique ID for the interest category. Can be obtained from the List Interest Categories action.",
-        },
-      },
-      required: [
-        "list_id",
-        "interest_category_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5405,43 +1736,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_INTEREST_IN_CATEGORY",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Available fields include: id, name, category_id, list_id, subscriber_count, display_order, _links. Use dot notation for nested fields.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp list (audience).",
-        },
-        interest_id: {
-          type: "string",
-          description: "The unique ID for the specific interest (group) within the category.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for nested fields (e.g., '_links' to exclude HATEOAS links).",
-        },
-        interest_category_id: {
-          type: "string",
-          description: "The unique ID for the interest category within the list.",
-        },
-      },
-      required: [
-        "list_id",
-        "interest_category_id",
-        "interest_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5455,33 +1749,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_LANDING_PAGE_CONTENT",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        page_id: {
-          type: "string",
-          description: "The unique identifier for the landing page. Can be obtained from the list_landing_pages action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "page_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5495,33 +1762,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_LANDING_PAGE_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        page_id: {
-          type: "string",
-          description: "The unique identifier for the landing page. Can be obtained from the List Landing Pages action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "page_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5535,33 +1775,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_LANDING_PAGE_REPORT",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return in the response. Available fields include: id, name, title, published_at, unpublished_at, status, list_id, visits, clicks, timeseries, ecommerce, web_id, list_name, signup_tags, _links. Use dot notation for nested fields (e.g., 'timeseries.daily_stats').",
-        },
-        outreach_id: {
-          type: "string",
-          description: "The unique identifier for the landing page. This is the 'id' field returned from the list_landing_pages action (e.g., '030001b4e1f0').",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Useful for excluding large nested objects like 'timeseries' or '_links' to reduce response size.",
-        },
-      },
-      required: [
-        "outreach_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5575,20 +1788,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_LATEST_CHIMP_CHATTER",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of activity records to return. Default value is 10. Maximum value is 1000.",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for pagination, the number of records from a collection to skip. Default value is 0.",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5602,37 +1801,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_LIST_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        include_total_contacts: {
-          type: "boolean",
-          description: "Return the total_contacts field in the stats response, which contains an approximate count of all contacts in any state. ",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5646,77 +1814,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_LISTS_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        email: {
-          type: "string",
-          description: "Restrict results to lists that include a specific subscriber\"s email address. ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        sort_dir: {
-          type: "string",
-          description: "Determines the order direction for sorted results.",
-          enum: [
-            "ASC",
-            "DESC",
-          ],
-        },
-        sort_field: {
-          type: "string",
-          description: "Returns files sorted by the specified field.",
-          enum: [
-            "date_created",
-          ],
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        since_date_created: {
-          type: "string",
-          description: "Restrict results to lists created after the set date. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_date_created: {
-          type: "string",
-          description: "Restrict response to lists created before the set date. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        has_ecommerce_store: {
-          type: "boolean",
-          description: "Restrict results to lists that contain an active, connected, undeleted ecommerce store. ",
-        },
-        include_total_contacts: {
-          type: "boolean",
-          description: "Return the total_contacts field in the stats response, which contains an approximate count of all contacts in any state. ",
-        },
-        since_campaign_last_sent: {
-          type: "string",
-          description: "Restrict results to lists created after the last campaign send date. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_campaign_last_sent: {
-          type: "string",
-          description: "Restrict results to lists created before the last campaign send date. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5730,32 +1827,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_MEMBER_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "string",
-          description: "Fields to return. Can be a list or comma-separated string. Use field names for top-level fields (e.g., 'email_address', 'status') or entire sub-objects (e.g., 'merge_fields'). Use dot notation for specific nested fields (e.g., 'merge_fields.FNAME'). Example: ['email_address', 'status', 'merge_fields'] or 'email_address,status,merge_fields'.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list (audience). Can be found via the lists endpoint.",
-        },
-        exclude_fields: {
-          type: "string",
-          description: "Fields to exclude. Can be a list or comma-separated string. Use field names for top-level fields or sub-objects (e.g., '_links', 'location'). Use dot notation for nested fields. Example: ['_links', 'location'] or '_links,location'.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. This endpoint also accepts the member's email address directly or their contact_id.",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5769,43 +1840,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_MEMBER_NOTE",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation (e.g., 'note', 'created_at', 'created_by').",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp list (audience). You can find this in your Mailchimp account under Audience > Settings > Audience name and defaults.",
-        },
-        note_id: {
-          type: "string",
-          description: "The unique numeric ID for the note. Can be obtained from the list_recent_member_notes endpoint.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation (e.g., '_links').",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. This endpoint also accepts the member's email address directly or their contact_id.",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-        "note_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5819,38 +1853,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_MERGE_FIELD",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of specific fields to return. Use dot notation for nested fields. Example: ['merge_id', 'name', 'type'].",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp audience (list). Example: 'af9d6415f0'.",
-        },
-        merge_id: {
-          type: "string",
-          description: "The numeric ID of the merge field to retrieve. Merge fields are custom fields like FNAME, LNAME, etc. Example: '1' for FNAME.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to exclude from the response. Use dot notation for nested fields. Example: ['_links', 'options'].",
-        },
-      },
-      required: [
-        "list_id",
-        "merge_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5864,38 +1866,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_MESSAGE",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        message_id: {
-          type: "string",
-          description: "The unique id for the conversation message.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        conversation_id: {
-          type: "string",
-          description: "The unique id for the conversation.",
-        },
-      },
-      required: [
-        "conversation_id",
-        "message_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5909,38 +1879,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_OPENED_CAMPAIGN_SUBSCRIBER",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Reference parameters of sub-objects with dot notation (e.g., ['campaign_id', 'email_address', 'opens_count']).",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign. The campaign must have been sent to have open data.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude. Reference parameters of sub-objects with dot notation (e.g., ['_links', 'merge_fields']).",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address.",
-        },
-      },
-      required: [
-        "campaign_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5954,38 +1892,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_ORDER_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        order_id: {
-          type: "string",
-          description: "The id for the order in a store.",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "store_id",
-        "order_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -5999,43 +1905,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_ORDER_LINE_ITEM",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Reference parameters of sub-objects with dot notation (e.g., ['id', 'product_id', 'price']).",
-        },
-        line_id: {
-          type: "string",
-          description: "The unique identifier for the line item within the order.",
-        },
-        order_id: {
-          type: "string",
-          description: "The unique identifier for the order within the store.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Reference parameters of sub-objects with dot notation (e.g., ['_links']).",
-        },
-      },
-      required: [
-        "store_id",
-        "order_id",
-        "line_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6049,43 +1918,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_PRODUCT_IMAGE_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to return in the response. Use dot notation for nested fields (e.g., ['id', 'url', 'variant_ids']). If not specified, all fields are returned.",
-        },
-        image_id: {
-          type: "string",
-          description: "The unique identifier for the product image to retrieve (e.g., 'image_001').",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store in Mailchimp (e.g., 'my_store_001').",
-        },
-        product_id: {
-          type: "string",
-          description: "The unique identifier for the product within the specified store (e.g., 'product_123').",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to exclude from the response. Use dot notation for nested fields (e.g., ['variant_ids', '_links']). Cannot be used together with 'fields'.",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-        "image_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6099,38 +1931,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_PRODUCT_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        product_id: {
-          type: "string",
-          description: "The id for the product of a store.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6144,43 +1944,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_PRODUCT_VARIANT_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Use dot notation for sub-object fields (e.g., ['id', 'title', 'price']). If omitted, all fields are returned.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. Use LIST_STORES to find available store IDs.",
-        },
-        product_id: {
-          type: "string",
-          description: "The unique identifier for the product within the store. Use LIST_PRODUCT to find product IDs for a given store.",
-        },
-        variant_id: {
-          type: "string",
-          description: "The unique identifier for the product variant. Use LIST_PRODUCT_VARIANTS to find variant IDs for a given product.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for sub-object fields (e.g., ['_links']). Useful for reducing response size.",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-        "variant_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6194,43 +1957,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_PROMO_CODE",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return in the response. Use dot notation for sub-object fields (e.g., ['id', 'code', 'enabled']). If not specified, all fields are returned.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store in Mailchimp.",
-        },
-        promo_code_id: {
-          type: "string",
-          description: "The unique identifier for the specific promo code to retrieve.",
-        },
-        promo_rule_id: {
-          type: "string",
-          description: "The unique identifier for the promo rule that the promo code belongs to.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for sub-object fields (e.g., ['_links'] to exclude link information). Cannot be used with 'fields'.",
-        },
-      },
-      required: [
-        "store_id",
-        "promo_rule_id",
-        "promo_code_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6244,38 +1970,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_PROMO_RULE",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        promo_rule_id: {
-          type: "string",
-          description: "The id for the promo rule of a store.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "store_id",
-        "promo_rule_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6289,50 +1983,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_SEGMENT_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return in the response. Use dot notation for sub-objects (e.g., 'options.match'). Example: ['id', 'name', 'member_count'].",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list (audience). Can be obtained from the List Lists (audiences) action.",
-        },
-        segment_id: {
-          type: "string",
-          description: "The unique numeric ID for the segment. Can be obtained from the List Segments action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for sub-objects (e.g., '_links'). Example: ['_links', 'options'].",
-        },
-        include_cleaned: {
-          type: "boolean",
-          description: "Include cleaned (bounced/invalid) members in the member_count. Defaults to true.",
-        },
-        include_unsubscribed: {
-          type: "boolean",
-          description: "Include unsubscribed members in the member_count. Defaults to false.",
-        },
-        include_transactional: {
-          type: "boolean",
-          description: "Include transactional members (non-subscribed contacts who received transactional emails) in the member_count. Defaults to false.",
-        },
-      },
-      required: [
-        "list_id",
-        "segment_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6346,33 +1996,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_STORE_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "store_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6386,42 +2009,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_SUBSCRIBER_EMAIL_ACTIVITY",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        since: {
-          type: "string",
-          description: "Restrict results to email activity events that occur after a specific time. Uses ISO 8601 time format (e.g., '2015-10-21T15:41:36+00:00').",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Reference parameters of sub-objects with dot notation (e.g., ['email_id', 'activity.action']).",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign. The campaign must have been sent to have email activity data.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude. Reference parameters of sub-objects with dot notation (e.g., ['_links']).",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. The subscriber must have been a recipient of the campaign.",
-        },
-      },
-      required: [
-        "campaign_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6435,24 +2022,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_SUBSCRIBER_REMOVED_FROM_WORKFLOW",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique ID for the Automation workflow. Can be obtained from the list_automations action.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. For example, for 'example@email.com', compute md5('example@email.com'.lower()).",
-        },
-      },
-      required: [
-        "workflow_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6466,24 +2035,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_SURVEY",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID of the Mailchimp audience (list) containing the survey. You can get this from the 'Get lists info' action or from your Mailchimp dashboard under Audience > Settings > Audience name and defaults.",
-        },
-        survey_id: {
-          type: "string",
-          description: "The unique ID of the survey to retrieve. You can get this from the 'Get information about all surveys for a list' action. Surveys must be created in the Mailchimp web interface before using this action.",
-        },
-      },
-      required: [
-        "list_id",
-        "survey_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6497,38 +2048,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_SURVEY_QUESTION_REPORT",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to include in the response. Use dot notation for nested fields (e.g., ['id', 'question', 'type', 'total_responses']). If not specified, all fields are returned.",
-        },
-        survey_id: {
-          type: "string",
-          description: "The unique ID of the survey containing the question. You can obtain survey IDs from the 'List survey reports' action which returns all surveys with reports in your account.",
-        },
-        question_id: {
-          type: "string",
-          description: "The unique ID of the survey question to retrieve the report for. You can obtain question IDs from the 'List survey question reports' action which returns all questions for a specific survey.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for nested fields (e.g., ['_links']). Cannot be used together with the 'fields' parameter.",
-        },
-      },
-      required: [
-        "survey_id",
-        "question_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6542,33 +2061,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_SURVEY_REPORT",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to include in the response. Use dot notation for nested fields (e.g., ['id', 'title', 'total_responses']). If not specified, all fields are returned.",
-        },
-        survey_id: {
-          type: "string",
-          description: "The unique ID of the survey to retrieve report data for. You can obtain survey IDs from the 'List survey reports' action which returns all surveys with reports in your account.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for nested fields (e.g., ['_links']). Cannot be used with 'fields' parameter.",
-        },
-      },
-      required: [
-        "survey_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6582,24 +2074,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_SURVEY_RESPONSE",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        survey_id: {
-          type: "string",
-          description: "The unique identifier for the survey. You can get this ID from the 'List survey reports' action (/reporting/surveys) or from the 'Get information about all surveys for a list' action.",
-        },
-        response_id: {
-          type: "string",
-          description: "The unique identifier for a specific survey response. You can get this ID from the 'List survey responses' action (/reporting/surveys/{survey_id}/responses).",
-        },
-      },
-      required: [
-        "survey_id",
-        "response_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6613,27 +2087,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_TEMPLATE_FOLDER",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "string",
-          description: "A comma-separated list of fields to return. Available fields: 'id', 'name', 'count', '_links'. Use dot notation for nested fields (e.g., '_links.rel'). If not specified, all fields are returned.",
-        },
-        folder_id: {
-          type: "string",
-          description: "The unique ID of the template folder to retrieve. This ID can be obtained from the 'list_template_folders' action or from the response when creating a folder with 'add_template_folder'.",
-        },
-        exclude_fields: {
-          type: "string",
-          description: "A comma-separated list of fields to exclude from the response. Available fields: 'id', 'name', 'count', '_links'. Use dot notation for nested fields (e.g., '_links.rel').",
-        },
-      },
-      required: [
-        "folder_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6647,33 +2100,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_TEMPLATE_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. Example: 'id,name,type' or 'id,name,thumbnail'. ",
-        },
-        template_id: {
-          type: "string",
-          description: "The unique id for the template. Can be obtained from the list_templates action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. Example: '_links' to exclude HATEOAS links. ",
-        },
-      },
-      required: [
-        "template_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6687,38 +2113,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_UNSUBSCRIBED_MEMBER",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return in the response. Use dot notation for sub-object fields (e.g., ['email_address', 'merge_fields.FNAME']). If not provided, all fields are returned.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique identifier for the campaign. This is the campaign from which the member unsubscribed. You can get campaign IDs from the List Campaigns endpoint.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for sub-object fields (e.g., ['_links']). Cannot be used together with 'fields' parameter.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. For example, for 'user@example.com', use MD5('user@example.com'). You can get subscriber hashes from the List Unsubscribed Members endpoint.",
-        },
-      },
-      required: [
-        "campaign_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6732,24 +2126,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_WEBHOOK_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp list (audience). Use MAILCHIMP_GET_LISTS_INFO to retrieve available list IDs.",
-        },
-        webhook_id: {
-          type: "string",
-          description: "The unique ID of the webhook. Use MAILCHIMP_LIST_WEBHOOKS to retrieve available webhook IDs for a list.",
-        },
-      },
-      required: [
-        "list_id",
-        "webhook_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6763,24 +2139,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_GET_WORKFLOW_EMAIL_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique ID for the Automation workflow. Can be obtained from the list_automations action.",
-        },
-        workflow_email_id: {
-          type: "string",
-          description: "The unique ID for the Automation workflow email. Can be obtained from the list_automated_emails action.",
-        },
-      },
-      required: [
-        "workflow_id",
-        "workflow_email_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6794,41 +2152,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_ABUSE_REPORTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6842,34 +2165,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_ACCOUNT_EXPORTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6883,44 +2178,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_ACCOUNT_ORDERS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000.",
-        },
-        fields: {
-          type: "string",
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. Example: 'orders.id,orders.customer.email_address'.",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for pagination, this is the number of records from a collection to skip. Default value is 0.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "Restrict results to orders with a specific campaign_id value.",
-        },
-        customer_id: {
-          type: "string",
-          description: "Restrict results to orders made by a specific customer.",
-        },
-        outreach_id: {
-          type: "string",
-          description: "Restrict results to orders with a specific outreach_id value.",
-        },
-        has_outreach: {
-          type: "boolean",
-          description: "Restrict results to orders that have an outreach attached (e.g., email campaign or Facebook ad).",
-        },
-        exclude_fields: {
-          type: "string",
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. Example: 'orders._links'.",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6934,47 +2191,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_ANSWERS_FOR_QUESTION",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Use dot notation for nested fields (e.g., 'answers.contact.email_address'). If not specified, all fields are returned.",
-        },
-        survey_id: {
-          type: "string",
-          description: "The unique ID of the survey. You can get this from the 'List survey reports' action or from 'Get information about all surveys for a list'. Surveys must be created in the Mailchimp web interface.",
-        },
-        question_id: {
-          type: "string",
-          description: "The unique ID of the survey question. You can get this from the 'List survey question reports' action by providing the survey_id.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude from the response. Use dot notation for nested fields (e.g., 'answers._links'). Cannot be used with 'fields' parameter.",
-        },
-        respondent_familiarity_is: {
-          type: "string",
-          description: "Filter type for respondent familiarity with your brand.",
-          enum: [
-            "new",
-            "known",
-            "unknown",
-          ],
-        },
-      },
-      required: [
-        "survey_id",
-        "question_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -6988,26 +2204,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_API_ROOT_RESOURCES",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to include in the response. Use dot notation for nested fields (e.g., 'contact.company'). Available fields include: account_id, account_name, email, first_name, last_name, username, role, member_since, pricing_plan_type, account_timezone, contact, total_subscribers, _links.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to exclude from the response. Use dot notation for nested fields (e.g., 'contact.company'). Commonly excluded: _links (to reduce response size).",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7021,34 +2217,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_AUTHORIZED_APPS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7062,24 +2230,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_AUTOMATED_EMAIL_SUBSCRIBERS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique id for the Automation workflow.",
-        },
-        workflow_email_id: {
-          type: "string",
-          description: "The unique id for the Automation workflow email.",
-        },
-      },
-      required: [
-        "workflow_id",
-        "workflow_email_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7093,19 +2243,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_AUTOMATED_EMAILS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique id for the Automation workflow.",
-        },
-      },
-      required: [
-        "workflow_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7119,59 +2256,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_AUTOMATIONS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        status: {
-          type: "string",
-          description: "Restrict the results to automations with the specified status.",
-          enum: [
-            "save",
-            "paused",
-            "sending",
-          ],
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        since_start_time: {
-          type: "string",
-          description: "Restrict the response to automations started after this time. Uses the ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_start_time: {
-          type: "string",
-          description: "Restrict the response to automations started before this time. Uses the ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        since_create_time: {
-          type: "string",
-          description: "Restrict the response to automations created after this time. Uses the ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_create_time: {
-          type: "string",
-          description: "Restrict the response to automations created before this time. Uses the ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7185,34 +2269,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_BATCH_REQUESTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7226,34 +2282,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_BATCH_WEBHOOKS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7267,33 +2295,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_CAMPAIGN_FEEDBACK",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to include in the response. Use dot notation for nested fields (e.g., 'feedback.message', 'feedback.feedback_id', 'total_items'). If not specified, all fields are returned.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique identifier for the campaign. This is a 10-character alphanumeric string (e.g., 'cdf16ea7a1'). You can obtain campaign IDs from the list campaigns action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for nested fields (e.g., 'feedback._links', '_links'). Useful for reducing response size.",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7307,34 +2308,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_CAMPAIGN_FOLDERS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7348,60 +2321,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_CAMPAIGN_OPEN_DETAILS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        since: {
-          type: "string",
-          description: "Restrict results to campaign open events that occur after a specific time. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        sort_dir: {
-          type: "string",
-          description: "Determines the order direction for sorted results.",
-          enum: [
-            "ASC",
-            "DESC",
-          ],
-        },
-        sort_field: {
-          type: "string",
-          description: "Returns open reports sorted by the specified field.",
-          enum: [
-            "opens_count",
-          ],
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7415,50 +2334,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_CAMPAIGN_PRODUCT_ACTIVITY",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        sort_field: {
-          type: "string",
-          description: "Returns products sorted by the specified field (title, total_revenue, or total_purchased).",
-          enum: [
-            "title",
-            "total_revenue",
-            "total_purchased",
-          ],
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique ID for a sent campaign. The campaign must have e-commerce tracking enabled and associated orders to return product activity data.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7472,41 +2347,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_CAMPAIGN_RECIPIENTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7520,53 +2360,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_CAMPAIGN_REPORTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        type: {
-          type: "string",
-          description: "Filter by campaign type. Options: 'regular' (standard email), 'plaintext' (text-only), 'absplit' (A/B test), 'rss' (RSS-driven), 'variate' (multivariate test).",
-          enum: [
-            "regular",
-            "plaintext",
-            "absplit",
-            "rss",
-            "variate",
-          ],
-        },
-        count: {
-          type: "integer",
-          description: "Number of campaign reports to return per page. Default: 10, Maximum: 1000.",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to include in response (e.g., ['reports.id', 'reports.campaign_title', 'total_items']). Use dot notation for nested fields.",
-        },
-        offset: {
-          type: "integer",
-          description: "Number of records to skip for pagination. Default: 0. Use with 'count' to paginate through results.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to exclude from response (e.g., ['_links']). Use dot notation for nested fields.",
-        },
-        since_send_time: {
-          type: "string",
-          description: "Restrict the response to campaigns sent after the set time. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_send_time: {
-          type: "string",
-          description: "Restrict the response to campaigns sent before the set time. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7580,104 +2373,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_CAMPAIGNS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        type: {
-          type: "string",
-          description: "The campaign type.",
-          enum: [
-            "regular",
-            "plaintext",
-            "absplit",
-            "rss",
-            "variate",
-          ],
-        },
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        status: {
-          type: "string",
-          description: "The status of the campaign.",
-          enum: [
-            "save",
-            "paused",
-            "schedule",
-            "sending",
-            "sent",
-          ],
-        },
-        list_id: {
-          type: "string",
-          description: "The unique id for the list.",
-        },
-        sort_dir: {
-          type: "string",
-          description: "Determines the order direction for sorted results.",
-          enum: [
-            "ASC",
-            "DESC",
-          ],
-        },
-        folder_id: {
-          type: "string",
-          description: "The unique folder id.",
-        },
-        member_id: {
-          type: "string",
-          description: "Retrieve campaigns sent to a particular list member. Member ID is The MD5 hash of the lowercase version of the list member’s email address. ",
-        },
-        sort_field: {
-          type: "string",
-          description: "Returns files sorted by the specified field.",
-          enum: [
-            "create_time",
-            "send_time",
-          ],
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        since_send_time: {
-          type: "string",
-          description: "Restrict the response to campaigns sent after the set time. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_send_time: {
-          type: "string",
-          description: "Restrict the response to campaigns sent before the set time. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        since_create_time: {
-          type: "string",
-          description: "Restrict the response to campaigns created after the set time. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_create_time: {
-          type: "string",
-          description: "Restrict the response to campaigns created before the set time. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        include_resend_shortcut_eligibility: {
-          type: "boolean",
-          description: "Return the `resend_shortcut_eligibility` field in the response, which tells you if the campaign is eligible for the various Campaign Resend Shortcuts offered. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7691,46 +2386,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_CART_LINE_ITEMS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of line item records to return. Default value is 10. Maximum value is 1000.",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return in the response. Use dot notation to reference sub-object fields (e.g., 'lines.id', 'lines.product_id', 'total_items').",
-        },
-        offset: {
-          type: "integer",
-          description: "The number of records to skip for pagination. Default value is 0. Use with 'count' to paginate through large result sets.",
-        },
-        cart_id: {
-          type: "string",
-          description: "The unique identifier of the cart whose line items you want to retrieve.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier of the e-commerce store containing the cart.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation to reference sub-object fields (e.g., '_links', 'lines._links').",
-        },
-      },
-      required: [
-        "store_id",
-        "cart_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7744,41 +2399,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_CARTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. Use the List Stores action to retrieve available store IDs.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "store_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7792,33 +2412,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_CHILD_CAMPAIGN_REPORTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Use dot notation for sub-object fields (e.g., 'reports.id', 'reports.campaign_title', 'reports.opens.opens_total').",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique identifier for the parent campaign (10-character alphanumeric string).",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for sub-object fields (e.g., '_links', 'reports._links').",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7832,46 +2425,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_CLICKED_LINK_SUBSCRIBERS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default is 10. Maximum is 1000.",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to return. Available fields: email_id, email_address, clicks, campaign_id, url_id, list_id, list_is_active, contact_status, merge_fields, vip, _links. Reference sub-object parameters with dot notation (e.g., 'merge_fields.FNAME').",
-        },
-        offset: {
-          type: "integer",
-          description: "Number of records to skip for pagination. Default is 0.",
-        },
-        link_id: {
-          type: "string",
-          description: "The unique id for the tracked link. Get link IDs from list_campaign_details action which returns all clicked links in the 'urls_clicked' array with their 'id' field.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign. The campaign must have been sent (status='sent') and have click tracking enabled. Get campaign IDs from list_campaigns action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to exclude from the response. Useful for excluding verbose fields like '_links' or 'merge_fields' to reduce response size.",
-        },
-      },
-      required: [
-        "campaign_id",
-        "link_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7885,34 +2438,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_CONNECTED_SITES",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7926,45 +2451,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_CUSTOMERS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. This is the custom ID you defined when creating the store via the Mailchimp API.",
-        },
-        email_address: {
-          type: "string",
-          description: "Restrict the response to customers with the email address.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "store_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -7978,33 +2464,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_DOMAIN_PERFORMANCE_STATS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8018,33 +2477,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_EEP_URL_ACTIVITY",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return in the response. Use dot notation for sub-object fields (e.g., 'referrers.clicks'). Available fields: referrers, eepurl, campaign_id, total_items, _links.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique identifier for the campaign. Get this from the LIST_CAMPAIGNS action.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for sub-object fields (e.g., '_links'). Cannot be used together with 'fields'.",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8058,45 +2490,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_EMAIL_ACTIVITY",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        since: {
-          type: "string",
-          description: "Restrict results to email activity events that occur after a specific time. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8110,51 +2503,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_FACEBOOK_ADS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        sort_dir: {
-          type: "string",
-          description: "Determines the order direction for sorted results.",
-          enum: [
-            "ASC",
-            "DESC",
-          ],
-        },
-        sort_field: {
-          type: "string",
-          description: "Returns files sorted by the specified field.",
-          enum: [
-            "created_at",
-            "updated_at",
-            "end_time",
-          ],
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8168,51 +2516,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_FACEBOOK_ADS_REPORTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        sort_dir: {
-          type: "string",
-          description: "Determines the order direction for sorted results.",
-          enum: [
-            "ASC",
-            "DESC",
-          ],
-        },
-        sort_field: {
-          type: "string",
-          description: "Returns files sorted by the specified field.",
-          enum: [
-            "created_at",
-            "updated_at",
-            "end_time",
-          ],
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8226,50 +2529,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_FACEBOOK_ECOMMERCE_REPORT",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of product records to return. Default value is 10. Maximum value is 1000.",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation (e.g., 'products.title', 'products.total_revenue'). If not specified, all fields are returned.",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for pagination - the number of records from the collection to skip. Default value is 0.",
-        },
-        sort_field: {
-          type: "string",
-          description: "Sort field options for ecommerce product activity.",
-          enum: [
-            "title",
-            "total_revenue",
-            "total_purchased",
-          ],
-        },
-        outreach_id: {
-          type: "string",
-          description: "The unique identifier of the Facebook ad outreach to retrieve product activity for. This ID can be obtained from the list_facebook_ads or list_facebook_ads_reports endpoints.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude from the response. Reference parameters of sub-objects with dot notation (e.g., '_links', 'products._links').",
-        },
-      },
-      required: [
-        "outreach_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8283,46 +2542,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_FOLDERS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        created_by: {
-          type: "string",
-          description: "The Mailchimp account user who created the File Manager file.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        since_created_at: {
-          type: "string",
-          description: "Restrict the response to files created after the set date. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_created_at: {
-          type: "string",
-          description: "Restrict the response to files created before the set date. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8336,56 +2555,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_GROWTH_HISTORY_DATA",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        sort_dir: {
-          type: "string",
-          description: "Determines the order direction for sorted results.",
-          enum: [
-            "ASC",
-            "DESC",
-          ],
-        },
-        sort_field: {
-          type: "string",
-          description: "Returns files sorted by the specified field.",
-          enum: [
-            "month",
-          ],
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8399,45 +2568,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_INTEREST_CATEGORIES",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        type: {
-          type: "string",
-          description: "Restrict results a type of interest group",
-        },
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8451,46 +2581,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_INTERESTS_IN_CATEGORY",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        interest_category_id: {
-          type: "string",
-          description: "The unique ID for the interest category.",
-        },
-      },
-      required: [
-        "list_id",
-        "interest_category_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8504,46 +2594,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_LANDING_PAGES",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        sort_dir: {
-          type: "string",
-          description: "Determines the order direction for sorted results.",
-          enum: [
-            "ASC",
-            "DESC",
-          ],
-        },
-        sort_field: {
-          type: "string",
-          description: "Returns files sorted by the specified field.",
-          enum: [
-            "created_at",
-            "updated_at",
-          ],
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8557,34 +2607,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_LANDING_PAGES_REPORTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default is 10. Maximum is 1000.",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to return in the response. Use dot notation for nested fields (e.g., 'landing_pages.id', 'landing_pages.name', 'total_items').",
-        },
-        offset: {
-          type: "integer",
-          description: "The number of records to skip for pagination. Default is 0.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to exclude from the response. Use dot notation for nested fields (e.g., '_links').",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8598,33 +2620,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_LOCATIONS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8638,46 +2633,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_MEMBER_EVENTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member\"s email address. This endpoint also accepts a list member\"s email address or contact_id. ",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8691,38 +2646,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_MEMBER_GOAL_EVENTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member\"s email address. This endpoint also accepts a list member\"s email address or contact_id. ",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8736,46 +2659,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_MEMBER_TAGS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member\"s email address. This endpoint also accepts a list member\"s email address or contact_id. ",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8789,58 +2672,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_MEMBERS_IN_SEGMENT",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        segment_id: {
-          type: "string",
-          description: "The unique id for the segment.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        include_cleaned: {
-          type: "boolean",
-          description: "Include cleaned members in response",
-        },
-        include_unsubscribed: {
-          type: "boolean",
-          description: "Include unsubscribed members in response",
-        },
-        include_transactional: {
-          type: "boolean",
-          description: "Include transactional members in response",
-        },
-      },
-      required: [
-        "list_id",
-        "segment_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8854,123 +2685,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_MEMBERS_INFO",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        status: {
-          type: "string",
-          description: "The subscriber\"s status.",
-          enum: [
-            "subscribed",
-            "unsubscribed",
-            "cleaned",
-            "pending",
-            "transactional",
-            "archived",
-          ],
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        sort_dir: {
-          type: "string",
-          description: "Determines the order direction for sorted results.",
-          enum: [
-            "ASC",
-            "DESC",
-          ],
-        },
-        vip_only: {
-          type: "boolean",
-          description: "A filter to return only the list\"s VIP members. Passing `true` will restrict results to VIP list members, passing `false` will return all list members. ",
-        },
-        email_type: {
-          type: "string",
-          description: "The email type.",
-        },
-        sort_field: {
-          type: "string",
-          description: "Returns files sorted by the specified field.",
-          enum: [
-            "timestamp_opt",
-            "timestamp_signup",
-            "last_changed",
-          ],
-        },
-        interest_ids: {
-          type: "string",
-          description: "Used to filter list members by interests. Must be accompanied by interest_category_id and interest_match. The value must be a comma separated list of interest ids present for any supplied interest categories. ",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        interest_match: {
-          type: "string",
-          description: "Used to filter list members by interests. Must be accompanied by interest_category_id and interest_ids. \"any\" will match a member with any of the interest supplied, \"all\" will only match members with every interest supplied, and \"none\" will match members without any of the interest supplied. ",
-          enum: [
-            "any",
-            "all",
-            "none",
-          ],
-        },
-        unique_email_id: {
-          type: "string",
-          description: "A unique identifier for the email address across all Mailchimp lists.",
-        },
-        since_last_changed: {
-          type: "string",
-          description: "Restrict results to subscribers whose information changed after the set timeframe. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        unsubscribed_since: {
-          type: "string",
-          description: "Filter subscribers by those unsubscribed since a specific date. Using any status other than unsubscribed with this filter will result in an error. ",
-        },
-        before_last_changed: {
-          type: "string",
-          description: "Restrict results to subscribers whose information changed before the set timeframe. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        since_last_campaign: {
-          type: "boolean",
-          description: "Filter subscribers by those subscribed/unsubscribed/pending/cleaned since last email campaign send. Member status is required to use this filter. ",
-        },
-        since_timestamp_opt: {
-          type: "string",
-          description: "Restrict results to subscribers who opted-in after the set timeframe. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_timestamp_opt: {
-          type: "string",
-          description: "Restrict results to subscribers who opted-in before the set timeframe. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        interest_category_id: {
-          type: "string",
-          description: "The unique id for the interest category.",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -8984,49 +2698,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_MERGE_FIELDS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        type: {
-          type: "string",
-          description: "The merge field type.",
-        },
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        required: {
-          type: "boolean",
-          description: "Whether it\"s a required merge field.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9040,46 +2711,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_ORDER_LINE_ITEMS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Use dot notation for sub-object properties (e.g., ['lines.id', 'lines.price', 'lines.quantity']). When specified, only these fields are included in the response.",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        order_id: {
-          type: "string",
-          description: "The unique identifier for the order within the store.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for sub-object properties (e.g., ['lines._links']). When specified, these fields are omitted from the response.",
-        },
-      },
-      required: [
-        "store_id",
-        "order_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9093,57 +2724,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_ORDERS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "Restrict results to orders with a specific `campaign_id` value.",
-        },
-        customer_id: {
-          type: "string",
-          description: "Restrict results to orders made by a specific customer.",
-        },
-        outreach_id: {
-          type: "string",
-          description: "Restrict results to orders with a specific `outreach_id` value.",
-        },
-        has_outreach: {
-          type: "boolean",
-          description: "Restrict results to orders that have an outreach attached. For example, an email campaign or Facebook ad. ",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "store_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9157,41 +2737,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_PRODUCT",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "store_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9205,46 +2750,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_PRODUCT_IMAGES",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        product_id: {
-          type: "string",
-          description: "The id for the product of a store.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9258,46 +2763,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_PRODUCT_VARIANTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of variant records to return. Default is 10. Maximum is 1000.",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Use dot notation for sub-object fields (e.g., ['variants.id', 'variants.title', 'total_items']). If omitted, all fields are returned.",
-        },
-        offset: {
-          type: "integer",
-          description: "The number of records to skip for pagination. Default is 0. Use with 'count' to paginate through large variant lists.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. Use LIST_STORES to find available store IDs.",
-        },
-        product_id: {
-          type: "string",
-          description: "The unique identifier for the product within the store. Use LIST_PRODUCT to find product IDs for a given store.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for sub-object fields (e.g., ['variants._links']). Useful for reducing response size.",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9311,46 +2776,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_PROMO_CODES",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        promo_rule_id: {
-          type: "string",
-          description: "The id for the promo rule of a store.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "promo_rule_id",
-        "store_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9364,41 +2789,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_PROMO_RULES",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "store_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9412,41 +2802,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_RECENT_ACTIVITY",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of activity records to return. Default value is 10. Maximum value is 1000.",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Reference parameters of sub-objects with dot notation (e.g., ['activity.day', 'activity.subs', 'total_items']).",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for pagination, this is the number of records from a collection to skip. Default value is 0.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp audience/list (e.g., 'af9d6415f0').",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude. Reference parameters of sub-objects with dot notation (e.g., ['_links']).",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9460,63 +2815,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_RECENT_MEMBER_NOTES",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to return. Use dot notation for nested fields (e.g., 'notes.id', 'notes.note', 'notes.created_at'). If not specified, all fields are returned.",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        sort_dir: {
-          type: "string",
-          description: "Sort direction. 'ASC' for ascending (oldest first) or 'DESC' for descending (newest first).",
-          enum: [
-            "ASC",
-            "DESC",
-          ],
-        },
-        sort_field: {
-          type: "string",
-          description: "Field to sort notes by. Options: 'created_at', 'updated_at', or 'note_id'.",
-          enum: [
-            "created_at",
-            "updated_at",
-            "note_id",
-          ],
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to exclude from the response. Use dot notation for nested fields (e.g., 'notes._links').",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. This value is also available as the 'id' field when listing members.",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9530,73 +2828,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_SEGMENTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        type: {
-          type: "string",
-          description: "Limit results based on segment type.",
-        },
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        include_cleaned: {
-          type: "boolean",
-          description: "Include cleaned members in response",
-        },
-        since_created_at: {
-          type: "string",
-          description: "Restrict results to segments created after the set time. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        since_updated_at: {
-          type: "string",
-          description: "Restrict results to segments update after the set time. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_created_at: {
-          type: "string",
-          description: "Restrict results to segments created before the set time. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_updated_at: {
-          type: "string",
-          description: "Restrict results to segments update before the set time. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        include_unsubscribed: {
-          type: "boolean",
-          description: "Include unsubscribed members in response",
-        },
-        include_transactional: {
-          type: "boolean",
-          description: "Include transactional members in response",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9610,10 +2841,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_SENDING_DOMAINS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      properties: {},
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9627,19 +2854,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_SIGNUP_FORMS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9653,67 +2867,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_STORED_FILES",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        type: {
-          type: "string",
-          description: "The file type for the File Manager file.",
-        },
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        sort_dir: {
-          type: "string",
-          description: "Determines the order direction for sorted results.",
-          enum: [
-            "ASC",
-            "DESC",
-          ],
-        },
-        created_by: {
-          type: "string",
-          description: "The Mailchimp account user who created the File Manager file.",
-        },
-        sort_field: {
-          type: "string",
-          description: "Returns files sorted by the specified field.",
-          enum: [
-            "added_date",
-            "name",
-            "size",
-          ],
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        since_created_at: {
-          type: "string",
-          description: "Restrict the response to files created after the set date. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_created_at: {
-          type: "string",
-          description: "Restrict the response to files created before the set date. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9727,34 +2880,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_STORES",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9768,19 +2893,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_SUBSCRIBERS_REMOVED_FROM_WORKFLOW",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique id for the Automation workflow.",
-        },
-      },
-      required: [
-        "workflow_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9794,27 +2906,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_SURVEY_QUESTION_REPORTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "string",
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. Example: 'questions.id,questions.text,total_items'.",
-        },
-        survey_id: {
-          type: "string",
-          description: "The unique ID of the survey to get question reports for. You can get this from the 'List survey reports' action or the 'Get information about all surveys for a list' action. Surveys are created in the Mailchimp web interface.",
-        },
-        exclude_fields: {
-          type: "string",
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. Example: '_links'.",
-        },
-      },
-      required: [
-        "survey_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9828,34 +2919,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_SURVEY_REPORTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9869,58 +2932,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_SURVEY_RESPONSES",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000.",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation (e.g., 'responses.response_id,responses.submitted_at'). If not specified, all fields are returned.",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for pagination, this is the number of records from a collection to skip. Default value is 0.",
-        },
-        survey_id: {
-          type: "string",
-          description: "The unique identifier for the survey. You can get this ID from the 'List survey reports' action (/reporting/surveys) or from the 'Get information about all surveys for a list' action. Surveys must be created through the Mailchimp web interface.",
-        },
-        chose_answer: {
-          type: "string",
-          description: "Filter responses to only those that chose a specific answer option. Provide the answer option ID. Works in conjunction with answered_question.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude from the response. Reference parameters of sub-objects with dot notation (e.g., 'responses._links').",
-        },
-        answered_question: {
-          type: "integer",
-          description: "Filter responses to only those that answered a specific question. Provide the numeric question ID from the survey.",
-        },
-        respondent_familiarity_is: {
-          type: "string",
-          description: "Filter type for survey respondent familiarity.",
-          enum: [
-            "new",
-            "known",
-            "unknown",
-          ],
-        },
-      },
-      required: [
-        "survey_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9934,34 +2945,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_TEMPLATE_FOLDERS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Reference sub-object fields with dot notation (e.g., 'folders.id', 'folders.name'). If not specified, all fields are returned.",
-        },
-        offset: {
-          type: "integer",
-          description: "The number of records to skip from the beginning of the result set. Used for pagination. Default value is 0.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Reference sub-object fields with dot notation (e.g., 'folders._links'). Cannot be used with 'fields' parameter.",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -9975,84 +2958,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_TEMPLATES",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        type: {
-          type: "string",
-          description: "Limit results based on template type.",
-        },
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        category: {
-          type: "string",
-          description: "Limit results based on category.",
-        },
-        sort_dir: {
-          type: "string",
-          description: "Determines the order direction for sorted results.",
-          enum: [
-            "ASC",
-            "DESC",
-          ],
-        },
-        folder_id: {
-          type: "string",
-          description: "The unique folder id.",
-        },
-        created_by: {
-          type: "string",
-          description: "The Mailchimp account user who created the template.",
-        },
-        sort_field: {
-          type: "string",
-          description: "Returns user templates sorted by the specified field.",
-          enum: [
-            "date_created",
-            "date_edited",
-            "name",
-          ],
-        },
-        content_type: {
-          type: "string",
-          description: "Limit results based on how the template\"s content is put together. Only templates of type `user` can be filtered by `content_type`. If you want to retrieve saved templates created with the legacy email editor, then filter `content_type` to `template`. If you\"d rather pull your saved templates for the new editor, filter to `multichannel`. For code your own templates, filter to `html`. ",
-          enum: [
-            "html",
-            "template",
-            "multichannel",
-          ],
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        since_date_created: {
-          type: "string",
-          description: "Restrict the response to templates created after the set date. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_date_created: {
-          type: "string",
-          description: "Restrict the response to templates created before the set date. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-      },
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10066,33 +2971,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_TOP_EMAIL_CLIENTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to include in the response. Available fields: 'clients', 'list_id', 'total_items', '_links'. Use dot notation for sub-object fields (e.g., 'clients.client', 'clients.members').",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp audience/list. This is a 10-character alphanumeric string.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Common usage: exclude '_links' to reduce response size. Use dot notation for sub-object fields.",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10106,41 +2984,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_TOP_OPEN_ACTIVITIES",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return. Reference parameters of sub-objects with dot notation (e.g., ['locations', 'campaign_id', 'total_items']). ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for pagination, this is the number of records from a collection to skip. Default value is 0. ",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude. Reference parameters of sub-objects with dot notation (e.g., ['_links']). ",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10154,41 +2997,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_UNSUBSCRIBED_MEMBERS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10202,19 +3010,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_LIST_WEBHOOKS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10228,24 +3023,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_PAUSE_AUTOMATED_EMAIL",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique id for the Automation workflow. Obtain this from list_automations action.",
-        },
-        workflow_email_id: {
-          type: "string",
-          description: "The unique id for the Automation workflow email. Obtain this from list_automated_emails action using the workflow_id.",
-        },
-      },
-      required: [
-        "workflow_id",
-        "workflow_email_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10262,19 +3039,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_PAUSE_AUTOMATION_EMAILS",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique identifier for the Automation workflow. You can obtain this ID from the list_automations action.",
-        },
-      },
-      required: [
-        "workflow_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10292,19 +3056,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_PAUSE_RSS_CAMPAIGN",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the RSS-driven campaign to pause. The campaign must be of type 'rss' and currently in 'sending' status. Use LIST_CAMPAIGNS with type='rss' and status='sending' to find eligible campaigns.",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10321,10 +3072,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_PING",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      properties: {},
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10338,24 +3085,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_PUBLISH_A_SURVEY",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID of the Mailchimp audience (list) containing the survey. You can get this from the 'Get lists info' action or from your Mailchimp dashboard under Audience > Settings > Audience name and defaults.",
-        },
-        survey_id: {
-          type: "string",
-          description: "The unique ID of the survey to publish. You can get this from the 'Get information about all surveys for a list' action. The survey must be in 'draft' or 'unpublished' status. Surveys must be created in the Mailchimp web interface before using this action.",
-        },
-      },
-      required: [
-        "list_id",
-        "survey_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10372,19 +3101,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_PUBLISH_LANDING_PAGE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        page_id: {
-          type: "string",
-          description: "The unique identifier for the landing page to publish. This ID can be obtained from the list landing pages endpoint or when creating a new landing page. Format: 12-character alphanumeric string (e.g., '030001b4e1f0').",
-        },
-      },
-      required: [
-        "page_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10401,29 +3117,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_REMOVE_LIST_MEMBER_FROM_SEGMENT",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp list/audience. You can get this from the get_lists_info action.",
-        },
-        segment_id: {
-          type: "string",
-          description: "The unique ID for the static segment. This action only works with static segments (not dynamic/saved segments). You can get this from the list_segments action.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. For example, for 'user@example.com', compute MD5 of 'user@example.com'. You can also use the member 'id' field returned by list_members_info or add_member_to_segment actions.",
-        },
-      },
-      required: [
-        "list_id",
-        "segment_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10441,24 +3134,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_REMOVE_SUBSCRIBER_FROM_WORKFLOW",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique ID for the classic automation workflow (e.g., 'abc123def4'). Use MAILCHIMP_LIST_AUTOMATIONS to retrieve available workflow IDs. Note: The automation must be in 'sending' or 'paused' status to remove subscribers.",
-        },
-        email_address: {
-          type: "string",
-          description: "The email address of the list member to remove from the workflow (e.g., 'user@example.com'). The subscriber must be on the list associated with this automation. Once removed, they cannot be re-added to this workflow.",
-        },
-      },
-      required: [
-        "workflow_id",
-        "email_address",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10475,19 +3150,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_REPLICATE_CAMPAIGN",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign.",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10504,28 +3166,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_RESEND_CAMPAIGN",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign to resend. The campaign must have been previously sent and have tracking enabled. You can verify a campaign is eligible by checking its 'resendable' field.",
-        },
-        shortcut_type: {
-          type: "string",
-          description: "Which campaign resend shortcut to use. Options: 'to_non_openers' (resend to subscribers who didn't open), 'to_new_subscribers' (send to subscribers added since the campaign was sent), 'to_non_clickers' (resend to subscribers who didn't click). If not specified, defaults to 'to_non_openers' on the server side.",
-          enum: [
-            "to_non_openers",
-            "to_new_subscribers",
-            "to_non_clickers",
-          ],
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10542,19 +3182,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_RESUME_RSS_CAMPAIGN",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the RSS-driven campaign to resume. The campaign must be of type 'rss' and in 'paused' status.",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10571,33 +3198,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_RETRIEVE_CAMPAIGN_ABUSE_COMPLAINTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10611,74 +3211,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_RETRIEVE_FOLDER_CONTENTS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        type: {
-          type: "string",
-          description: "The file type for the File Manager file.",
-        },
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        sort_dir: {
-          type: "string",
-          description: "Determines the order direction for sorted results.",
-          enum: [
-            "ASC",
-            "DESC",
-          ],
-        },
-        folder_id: {
-          type: "string",
-          description: "The unique id for the File Manager folder.",
-        },
-        created_by: {
-          type: "string",
-          description: "The Mailchimp account user who created the File Manager file.",
-        },
-        sort_field: {
-          type: "string",
-          description: "Returns files sorted by the specified field.",
-          enum: [
-            "added_date",
-            "name",
-            "size",
-          ],
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-        since_created_at: {
-          type: "string",
-          description: "Restrict the response to files created after the set date. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-        before_created_at: {
-          type: "string",
-          description: "Restrict the response to files created before the set date. Uses ISO 8601 time format: 2015-10-21T15:41:36+00:00. ",
-        },
-      },
-      required: [
-        "folder_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10692,36 +3224,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_SCHEDULE_CAMPAIGN",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        timewarp: {
-          type: "boolean",
-          description: "Choose whether the campaign should use Timewarp when sending. Campaigns scheduled with Timewarp are localized based on the recipients' time zones. For example, a Timewarp campaign with a schedule_time of 13:00 will be sent to each recipient at 1:00pm in their local time. Cannot be set to true for campaigns using Batch Delivery.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique ID for the campaign to schedule (e.g., 'c16afdffd0').",
-        },
-        schedule_time: {
-          type: "string",
-          description: "The UTC date and time to schedule the campaign for delivery in ISO 8601 format (e.g., '2026-01-26T12:00:00+00:00'). Campaigns may only be scheduled to send on the quarter-hour (:00, :15, :30, :45). Must be at least 15 minutes in the future.",
-        },
-        batch__delivery__batch__count: {
-          type: "integer",
-          description: "The number of batches to divide the campaign send into when using Batch Delivery. Required if batch_delivery_batch_delay is provided. Cannot be used with Timewarp.",
-        },
-        batch__delivery__batch__delay: {
-          type: "integer",
-          description: "The delay, in minutes, between batches when using Batch Delivery. Required if batch_delivery_batch_count is provided. Enables staggered sending to reduce server load.",
-        },
-      },
-      required: [
-        "campaign_id",
-        "schedule_time",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10738,33 +3240,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_SEARCH_CAMPAIGNS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        query: {
-          type: "string",
-          description: "The search query used to filter campaigns. Searches across campaign titles, subject lines, and other campaign content. Returns campaigns that match the specified query terms.",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return in the response. Use dot notation to reference nested fields (e.g., 'results.campaign.id', 'results.campaign.settings.title'). If not specified, all fields are returned.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation to reference nested fields (e.g., 'results.campaign._links'). Useful for reducing response size by removing unnecessary data.",
-        },
-      },
-      required: [
-        "query",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10778,23 +3253,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_SEARCH_FOR_TAGS_ON_A_LIST_BY_NAME",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The search query used to filter tags. The search query will be compared to each tag as a prefix, so all tags that have a name starting with this field will be returned. If not provided, returns all tags on the list.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10808,37 +3266,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_SEARCH_MEMBERS",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        query: {
-          type: "string",
-          description: "The search query used to filter results. Query should be a valid email, or a string representing a contact\"s first or last name. ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to return. Reference parameters of sub-objects with dot notation. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique id for the list. If omitted, search will be performed across all lists in the account.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A comma-separated list of fields to exclude. Reference parameters of sub-objects with dot notation. ",
-        },
-      },
-      required: [
-        "query",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10852,19 +3279,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_SEND_CAMPAIGN",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign to send. The campaign must be in 'save' status and pass all send-checklist requirements (valid audience, subject line, from name, verified from email domain, and content). Use GET /campaigns/{campaign_id}/send-checklist to verify the campaign is ready before sending.",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10881,35 +3295,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_SEND_TEST_EMAIL",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        send_type: {
-          type: "string",
-          description: "The format of the test email. Use 'html' for the HTML version (default) or 'plaintext' for plain-text version.",
-          enum: [
-            "html",
-            "plaintext",
-          ],
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique ID of the campaign to send a test email for. Must be a valid campaign ID from your Mailchimp account.",
-        },
-        test_emails: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of email addresses to receive the test email. Free accounts can send to up to 6 addresses, paid accounts up to 20. Example: ['user1@example.com', 'user2@example.com']",
-        },
-      },
-      required: [
-        "campaign_id",
-        "test_emails",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10926,59 +3311,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_SET_CAMPAIGN_CONTENT",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        url: {
-          type: "string",
-          description: "When importing a campaign, the URL where the HTML lives.",
-        },
-        html: {
-          type: "string",
-          description: "The raw HTML for the campaign.",
-        },
-        plain_text: {
-          type: "string",
-          description: "The plain-text portion of the campaign. If left unspecified, we\"ll generate this automatically. ",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign.",
-        },
-        template__id: {
-          type: "integer",
-          description: "The id of the template to use.",
-        },
-        variate_contents: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "Content options for [Multivariate Campaigns](https://mailchimp.com/help/about-multivariate-campaigns/). Each content option must provide HTML content and may optionally provide plain text. For campaigns not testing content, only one object should be provided. ",
-        },
-        archive__archive__type: {
-          type: "string",
-          description: "The type of encoded file. Defaults to zip.",
-          enum: [
-            "zip",
-            "tar.gz",
-            "tar.bz2",
-            "tar",
-            "tgz",
-            "tbz",
-          ],
-        },
-        archive__archive__content: {
-          type: "string",
-          description: "The base64-encoded representation of the archive file.",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -10995,24 +3327,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_START_AUTOMATED_EMAIL",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique ID for the Automation workflow. Use the List Automations action to get available workflow IDs.",
-        },
-        workflow_email_id: {
-          type: "string",
-          description: "The unique ID for the Automation workflow email to start. Use the List Automated Emails action with the workflow_id to get available email IDs. The email must be in 'paused' status to be started; emails in 'save' status may require additional configuration in Mailchimp before they can be started.",
-        },
-      },
-      required: [
-        "workflow_id",
-        "workflow_email_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11029,19 +3343,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_START_AUTOMATION_EMAILS",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        workflow_id: {
-          type: "string",
-          description: "The unique ID for the Automation workflow. This is a 10-character alphanumeric string (e.g., 'ae5e650e3b'). You can obtain this ID by listing automations using the LIST_AUTOMATIONS action.",
-        },
-      },
-      required: [
-        "workflow_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11058,23 +3359,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_START_BATCH_OPERATION",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        operations: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "An array of objects that describes operations to perform.",
-        },
-      },
-      required: [
-        "operations",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11091,24 +3375,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UNPUBLISH_A_SURVEY",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        list_id: {
-          type: "string",
-          description: "The unique ID of the Mailchimp audience (list) containing the survey. You can get this from the 'Get lists info' action or from your Mailchimp dashboard under Audience > Settings > Audience name and defaults.",
-        },
-        survey_id: {
-          type: "string",
-          description: "The unique ID of the survey to unpublish. You can get this from the 'Get information about all surveys for a list' action. The survey must be currently published - use 'Get survey' to check its status first.",
-        },
-      },
-      required: [
-        "list_id",
-        "survey_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11125,19 +3391,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UNPUBLISH_LANDING_PAGE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        page_id: {
-          type: "string",
-          description: "The unique identifier for the Mailchimp landing page to unpublish. You can get this ID from the list_landing_pages action or when creating a landing page.",
-        },
-      },
-      required: [
-        "page_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11154,19 +3407,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UNSCHEDULE_CAMPAIGN",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign to unschedule. The campaign must be in 'schedule' status (i.e., previously scheduled but not yet sent). Use list_campaigns with status='schedule' to find scheduled campaigns.",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11183,122 +3423,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_AUDIENCES_CONTACTS",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        tags: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "An array of tag names to add to the contact. This operation is append-only; existing tags will be preserved, and only new tags from this array will be added.",
-        },
-        language: {
-          type: "string",
-          description: "The subscriber's detected language.",
-        },
-        data_mode: {
-          type: "string",
-          description: "Indicates the data processing mode. In `historical` mode, contact data changes do not trigger automations or webhooks. In `live` mode, such changes do trigger them.",
-          enum: [
-            "historical",
-            "live",
-          ],
-        },
-        contact_id: {
-          type: "string",
-          description: "A unique identifier for the contact, which can be a Mailchimp contact ID or a channel hash. A channel hash must follow the format email:[md5_hash] (where the hash is the MD5 of the lowercased email address) or sms:[sha256_hash] (where the hash is the SHA256 of the E.164-formatted phone number).",
-        },
-        audience_id: {
-          type: "string",
-          description: "The unique ID for the audience.",
-        },
-        sms_channel: {
-          type: "object",
-          additionalProperties: true,
-          properties: {
-            sms_phone: {
-              type: "string",
-              description: "SMS Phone Number",
-            },
-            marketing_consent: {
-              type: "object",
-              additionalProperties: true,
-              properties: {
-                source: {
-                  type: "object",
-                  additionalProperties: true,
-                  properties: {
-                    name: {
-                      type: "string",
-                      description: "The name of the source.",
-                    },
-                  },
-                  description: "The source from which consent was obtained.",
-                },
-                status: {
-                  type: "string",
-                  description: "The marketing consent status. See Audiences (BETA) documentation for supported values.",
-                },
-              },
-              description: "Marketing consent information for email or SMS.",
-            },
-          },
-          description: "SMS channel details for the contact.",
-        },
-        merge_fields: {
-          type: "object",
-          additionalProperties: true,
-          description: "A dictionary of merge fields where the keys are the merge tags. See the Merge Fields documentation for more about the structure.",
-        },
-        email_channel: {
-          type: "object",
-          additionalProperties: true,
-          properties: {
-            email: {
-              type: "string",
-              description: "Email address",
-            },
-            marketing_consent: {
-              type: "object",
-              additionalProperties: true,
-              properties: {
-                source: {
-                  type: "object",
-                  additionalProperties: true,
-                  properties: {
-                    name: {
-                      type: "string",
-                      description: "The name of the source.",
-                    },
-                  },
-                  description: "The source from which consent was obtained.",
-                },
-                status: {
-                  type: "string",
-                  description: "The marketing consent status. See Audiences (BETA) documentation for supported values.",
-                },
-              },
-              description: "Marketing consent information for email or SMS.",
-            },
-          },
-          description: "Email channel details for the contact.",
-        },
-        merge_field_validation_mode: {
-          type: "string",
-          description: "Defines how merge field validation is handled. When set to `ignore_required_checks`, the API does not raise an error if required merge fields are missing. When set to `strict`, the API enforces validation. If omitted, `strict` is applied by default.",
-          enum: [
-            "ignore_required_checks",
-            "strict",
-          ],
-        },
-      },
-      required: [
-        "audience_id",
-        "contact_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11315,27 +3439,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_BATCH_WEBHOOK",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        url: {
-          type: "string",
-          description: "A valid URL for the webhook endpoint. IMPORTANT: Mailchimp validates this URL by making a GET request to it during update. The URL must be publicly accessible and return a successful HTTP response (2xx) to GET requests. Example: https://example.com/webhook/batch",
-        },
-        enabled: {
-          type: "boolean",
-          description: "Whether the webhook is active and receives batch completion notifications.",
-        },
-        batch_webhook_id: {
-          type: "string",
-          description: "The unique identifier for the batch webhook to update.",
-        },
-      },
-      required: [
-        "batch_webhook_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11352,36 +3455,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_CAMPAIGN_FEEDBACK_MESSAGE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        message: {
-          type: "string",
-          description: "The updated content of the feedback message.",
-        },
-        block_id: {
-          type: "integer",
-          description: "The block id for the editable block that the feedback addresses. Use 0 or omit for general campaign feedback not tied to a specific block.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign. Can be obtained from list_campaigns or add_campaign actions.",
-        },
-        feedback_id: {
-          type: "string",
-          description: "The unique id for the feedback message to update. Can be obtained from list_campaign_feedback or add_campaign_feedback actions.",
-        },
-        is_complete: {
-          type: "boolean",
-          description: "Whether the feedback is marked as complete/resolved. Set to true to mark feedback as addressed, false to mark as pending.",
-        },
-      },
-      required: [
-        "campaign_id",
-        "feedback_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11398,24 +3471,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_CAMPAIGN_FOLDER",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The new name to assign to the campaign folder. This name will be displayed in the Mailchimp interface to help organize campaigns.",
-        },
-        folder_id: {
-          type: "string",
-          description: "The unique identifier for the campaign folder to update. Can be obtained from the list_campaign_folders action.",
-        },
-      },
-      required: [
-        "folder_id",
-        "name",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11432,274 +3487,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_CAMPAIGN_SETTINGS",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        campaign_id: {
-          type: "string",
-          description: "The unique id for the campaign.",
-        },
-        settings__title: {
-          type: "string",
-          description: "The title of the campaign.",
-        },
-        tracking__opens: {
-          type: "boolean",
-          description: "Whether to [track opens](https://mailchimp.com/help/about-open-tracking/). Defaults to `true`. Cannot be set to false for variate campaigns. ",
-        },
-        settings__to__name: {
-          type: "string",
-          description: "The campaign\"s custom \"To\" name. Typically the first name [audience field](https://mailchimp.com/help/getting-started-with-merge-tags/). ",
-        },
-        tracking__ecomm360: {
-          type: "boolean",
-          description: "Whether to enable e-commerce tracking.",
-        },
-        settings__reply__to: {
-          type: "string",
-          description: "The reply-to email address for the campaign.",
-        },
-        social__card__title: {
-          type: "string",
-          description: "The title for the card. Typically the subject line of the campaign.",
-        },
-        tracking__clicktale: {
-          type: "string",
-          description: "The custom slug for [ClickTale](https://mailchimp.com/help/additional-tracking-options-for-campaigns/) tracking (max of 50 bytes). ",
-        },
-        recipients__list__id: {
-          type: "string",
-          description: "The unique list id.",
-        },
-        rss__opts__feed__url: {
-          type: "string",
-          description: "The URL for the RSS feed.",
-        },
-        rss__opts__frequency: {
-          type: "string",
-          description: "The frequency of the RSS Campaign.",
-          enum: [
-            "daily",
-            "weekly",
-            "monthly",
-          ],
-        },
-        settings__folder__id: {
-          type: "string",
-          description: "If the campaign is listed in a folder, the id for that folder.",
-        },
-        settings__from__name: {
-          type: "string",
-          description: "The \"from\" name on the campaign (not an email address).",
-        },
-        settings__auto__tweet: {
-          type: "boolean",
-          description: "Automatically tweet a link to the [campaign archive](https://mailchimp.com/help/about-email-campaign-archives-and-pages/) page when the campaign is sent. ",
-        },
-        settings__inline__css: {
-          type: "boolean",
-          description: "Automatically inline the CSS included with the campaign content.",
-        },
-        settings__authenticate: {
-          type: "boolean",
-          description: "Whether Mailchimp [authenticated](https://mailchimp.com/help/about-email-authentication/) the campaign. Defaults to `true`. ",
-        },
-        settings__auto__footer: {
-          type: "boolean",
-          description: "Automatically append Mailchimp\"s [default footer](https://mailchimp.com/help/about-campaign-footers/) to the campaign. ",
-        },
-        settings__fb__comments: {
-          type: "boolean",
-          description: "Allows Facebook comments on the campaign (also force-enables the Campaign Archive toolbar). Defaults to `true`. ",
-        },
-        settings__template__id: {
-          type: "integer",
-          description: "The id of the template to use.",
-        },
-        tracking__html__clicks: {
-          type: "boolean",
-          description: "Whether to [track clicks](https://mailchimp.com/help/enable-and-view-click-tracking/) in the HTML version of the campaign. Defaults to `true`. Cannot be set to false for variate campaigns. ",
-        },
-        tracking__text__clicks: {
-          type: "boolean",
-          description: "Whether to [track clicks](https://mailchimp.com/help/enable-and-view-click-tracking/) in the plain-text version of the campaign. Defaults to `true`. Cannot be set to false for variate campaigns. ",
-        },
-        settings__preview__text: {
-          type: "string",
-          description: "The preview text for the campaign.",
-        },
-        settings__subject__line: {
-          type: "string",
-          description: "The subject line for the campaign.",
-        },
-        settings__auto__fb__post: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "An array of [Facebook](https://mailchimp.com/help/connect-or-disconnect-the-facebook-integration/) page ids to auto-post to. ",
-        },
-        social__card__image__url: {
-          type: "string",
-          description: "The url for the header image for the card.",
-        },
-        tracking__capsule__notes: {
-          type: "boolean",
-          description: "Update contact notes for a campaign based on subscriber email addresses.",
-        },
-        tracking__goal__tracking: {
-          type: "boolean",
-          description: "Deprecated",
-        },
-        rss__opts__schedule__hour: {
-          type: "integer",
-          description: "The hour to send the campaign in local time. Acceptable hours are 0-23. For example, \"4\" would be 4am in [your account\"s default time zone](https://mailchimp.com/help/set-account-defaults/). ",
-        },
-        social__card__description: {
-          type: "string",
-          description: "A short summary of the campaign to display.",
-        },
-        settings__use__conversation: {
-          type: "boolean",
-          description: "Use Mailchimp Conversation feature to manage out-of-office replies.",
-        },
-        tracking__google__analytics: {
-          type: "string",
-          description: "The custom slug for [Google Analytics](https://mailchimp.com/help/integrate-google-analytics-with-mailchimp/) tracking (max of 50 bytes). ",
-        },
-        tracking__salesforce__notes: {
-          type: "boolean",
-          description: "Update contact notes for a campaign based on subscriber email addresses.",
-        },
-        variate__settings__test__size: {
-          type: "integer",
-          description: "The percentage of recipients to send the test combinations to, must be a value between 10 and 100. ",
-        },
-        variate__settings__wait__time: {
-          type: "integer",
-          description: "The number of minutes to wait before choosing the winning campaign. The value of wait_time must be greater than 0 and in whole hours, specified in minutes. ",
-        },
-        rss__opts__constrain__rss__img: {
-          type: "boolean",
-          description: "Whether to add CSS to images in the RSS feed to constrain their width in campaigns. ",
-        },
-        tracking__salesforce__campaign: {
-          type: "boolean",
-          description: "Create a campaign in a connected Salesforce account.",
-        },
-        variate__settings__from__names: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "The possible from names. The number of from_names provided must match the number of reply_to_addresses. If no from_names are provided, settings.from_name will be used. ",
-        },
-        variate__settings__send__times: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "The possible send times to test. The times provided should be in the format YYYY-MM-DD HH:MM:SS. If send_times are provided to test, the test_size will be set to 100% and winner_criteria will be ignored. ",
-        },
-        recipients__segment__opts__match: {
-          type: "string",
-          description: "Segment match type.",
-          enum: [
-            "any",
-            "all",
-          ],
-        },
-        variate__settings__subject__lines: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "The possible subject lines to test. If no subject lines are provided, settings.subject_line will be used. ",
-        },
-        variate__settings__winner__criteria: {
-          type: "string",
-          description: "The combination that performs the best. This may be determined automatically by click rate, open rate, or total revenue -- or you may choose manually based on the reporting data you find the most valuable. For Multivariate Campaigns testing send_time, winner_criteria is ignored. For Multivariate Campaigns with \"manual\" as the winner_criteria, the winner must be chosen in the Mailchimp web application. ",
-          enum: [
-            "opens",
-            "clicks",
-            "manual",
-            "total_revenue",
-          ],
-        },
-        recipients__segment__opts__conditions: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "Segment match conditions. There are multiple possible types, see the [condition types documentation](https://mailchimp.com/developer/marketing/docs/alternative-schemas/#segment-condition-schemas). ",
-        },
-        rss__opts__schedule__weekly__send__day: {
-          type: "string",
-          description: "The day of the week to send a weekly RSS Campaign.",
-          enum: [
-            "sunday",
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-          ],
-        },
-        variate__settings__reply__to__addresses: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "The possible reply-to addresses. The number of reply_to_addresses provided must match the number of from_names. If no reply_to_addresses are provided, settings.reply_to will be used. ",
-        },
-        rss__opts__schedule__daily__send__friday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Fridays.",
-        },
-        rss__opts__schedule__daily__send__monday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Mondays.",
-        },
-        rss__opts__schedule__daily__send__sunday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Sundays.",
-        },
-        rss__opts__schedule__monthly__send__date: {
-          type: "integer",
-          description: "The day of the month to send a monthly RSS Campaign. Acceptable days are 0-31, where \"0\" is always the last day of a month. Months with fewer than the selected number of days will not have an RSS campaign sent out that day. For example, RSS Campaigns set to send on the 30th will not go out in February. ",
-        },
-        rss__opts__schedule__daily__send__tuesday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Tuesdays.",
-        },
-        rss__opts__schedule__daily__send__saturday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Saturdays.",
-        },
-        rss__opts__schedule__daily__send__thursday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Thursdays.",
-        },
-        rss__opts__schedule__daily__send__wednesday: {
-          type: "boolean",
-          description: "Sends the daily RSS Campaign on Wednesdays.",
-        },
-        recipients__segment__opts__saved__segment__id: {
-          type: "integer",
-          description: "The id for an existing saved segment.",
-        },
-        recipients__segment__opts__prebuilt__segment__id: {
-          type: "string",
-          description: "The prebuilt segment id, if a prebuilt segment has been designated for this campaign. ",
-        },
-      },
-      required: [
-        "campaign_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11716,100 +3503,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_CART",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        lines: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "An array of the cart\"s line items.",
-        },
-        cart_id: {
-          type: "string",
-          description: "The id for the cart.",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        tax_total: {
-          type: "string",
-          description: "The total tax for the cart (supports decimal values).",
-        },
-        campaign_id: {
-          type: "string",
-          description: "A string that uniquely identifies the campaign associated with a cart.",
-        },
-        order_total: {
-          type: "string",
-          description: "The order total for the cart (supports decimal values).",
-        },
-        checkout_url: {
-          type: "string",
-          description: "The URL for the cart. This parameter is required for [Abandoned Cart](https://mailchimp.com/help/create-an-abandoned-cart-email/) automations. ",
-        },
-        currency_code: {
-          type: "string",
-          description: "The three-letter ISO 4217 code for the currency that the cart uses.",
-        },
-        customer__company: {
-          type: "string",
-          description: "The customer\"s company.",
-        },
-        customer__last__name: {
-          type: "string",
-          description: "The customer\"s last name.",
-        },
-        customer__first__name: {
-          type: "string",
-          description: "The customer\"s first name.",
-        },
-        customer__address__city: {
-          type: "string",
-          description: "The city the customer is located in.",
-        },
-        customer__opt__in__status: {
-          type: "boolean",
-          description: "The customer\"s opt-in status. This value will never overwrite the opt-in status of a pre-existing Mailchimp list member, but will apply to list members that are added through the e-commerce API endpoints. Customers who don\"t opt in to your Mailchimp list [will be added as `Transactional` members](https://mailchimp.com/developer/marketing/docs/e-commerce/#customers). ",
-        },
-        customer__address__country: {
-          type: "string",
-          description: "The customer\"s country.",
-        },
-        customer__address__address1: {
-          type: "string",
-          description: "The mailing address of the customer.",
-        },
-        customer__address__address2: {
-          type: "string",
-          description: "An additional field for the customer\"s mailing address.",
-        },
-        customer__address__province: {
-          type: "string",
-          description: "The customer\"s state name or normalized province.",
-        },
-        customer__address__postal__code: {
-          type: "string",
-          description: "The customer\"s postal or zip code.",
-        },
-        customer__address__country__code: {
-          type: "string",
-          description: "The two-letter code for the customer\"s country.",
-        },
-        customer__address__province__code: {
-          type: "string",
-          description: "The two-letter code for the customer\"s province or state.",
-        },
-      },
-      required: [
-        "store_id",
-        "cart_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11826,45 +3519,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_CART_LINE_ITEM",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        price: {
-          type: "number",
-          description: "The unit price of the cart line item in the cart's currency. Can be a decimal value (e.g., 29.99).",
-        },
-        cart_id: {
-          type: "string",
-          description: "The unique identifier for the cart containing the line item to update.",
-        },
-        line_id: {
-          type: "string",
-          description: "The unique identifier for the cart line item to update.",
-        },
-        quantity: {
-          type: "integer",
-          description: "The number of units of this product variant in the cart. Must be a positive integer.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store where the cart resides.",
-        },
-        product_id: {
-          type: "string",
-          description: "The unique identifier for the product to associate with this line item. Must be an existing product in the store.",
-        },
-        product_variant_id: {
-          type: "string",
-          description: "The unique identifier for the product variant. Must be an existing variant of the specified product.",
-        },
-      },
-      required: [
-        "store_id",
-        "cart_id",
-        "line_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11881,72 +3535,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_CUSTOMER",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        company: {
-          type: "string",
-          description: "The customer's company name.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. The store must be associated with a Mailchimp list (audience) for customer updates to work.",
-        },
-        last_name: {
-          type: "string",
-          description: "The customer's last name.",
-        },
-        first_name: {
-          type: "string",
-          description: "The customer's first name.",
-        },
-        customer_id: {
-          type: "string",
-          description: "The unique identifier for the customer within the specified store.",
-        },
-        address__city: {
-          type: "string",
-          description: "The city the customer is located in.",
-        },
-        opt_in_status: {
-          type: "boolean",
-          description: "The customer's opt-in status for marketing emails. This value will never overwrite the opt-in status of a pre-existing Mailchimp list member, but will apply to list members that are added through the e-commerce API endpoints. Customers who don't opt in to your Mailchimp list will be added as Transactional members.",
-        },
-        address__country: {
-          type: "string",
-          description: "The customer's country name.",
-        },
-        address__address1: {
-          type: "string",
-          description: "The primary mailing address line (street address) of the customer.",
-        },
-        address__address2: {
-          type: "string",
-          description: "An additional address line for the customer's mailing address (apartment, suite, etc.).",
-        },
-        address__province: {
-          type: "string",
-          description: "The customer's state name or normalized province.",
-        },
-        address__postal__code: {
-          type: "string",
-          description: "The customer's postal or zip code.",
-        },
-        address__country__code: {
-          type: "string",
-          description: "The two-letter ISO country code for the customer's country (e.g., 'US' for United States).",
-        },
-        address__province__code: {
-          type: "string",
-          description: "The two-letter code for the customer's province or state (e.g., 'CA' for California).",
-        },
-      },
-      required: [
-        "store_id",
-        "customer_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -11963,27 +3551,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_FILE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The new name for the file including extension (e.g., 'logo.png', 'banner.jpg'). Supports Unicode characters. If not specified, the file name remains unchanged.",
-        },
-        file_id: {
-          type: "string",
-          description: "The unique ID of the file to update in the File Manager. Use the List Stored Files action to get available file IDs.",
-        },
-        folder_id: {
-          type: "integer",
-          description: "The ID of the folder to move the file to. Set to 0 to move the file to the root folder. Use the List Folders action to get available folder IDs. If not specified, the file remains in its current folder.",
-        },
-      },
-      required: [
-        "file_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -12001,36 +3568,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_FOLDER",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The new name for the folder. Must be unique within the account's File Manager.",
-        },
-        folder_id: {
-          type: "string",
-          description: "The unique numeric ID for the File Manager folder to update. Obtain this from the 'list_folders' or 'add_folder' actions.",
-        },
-        created_at: {
-          type: "string",
-          description: "The date and time the folder was created in ISO 8601 format.",
-        },
-        created_by: {
-          type: "string",
-          description: "The name of the user who created the folder.",
-        },
-        file_count: {
-          type: "integer",
-          description: "The number of files in the folder.",
-        },
-      },
-      required: [
-        "folder_id",
-        "name",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -12048,43 +3585,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_INTEREST_CATEGORY",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        type: {
-          type: "string",
-          description: "Interest category display type for signup forms.",
-          enum: [
-            "checkboxes",
-            "dropdown",
-            "radio",
-            "hidden",
-          ],
-        },
-        title: {
-          type: "string",
-          description: "The text description of this category (required). This field appears on signup forms and is often phrased as a question (e.g., 'Which topics interest you?').",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list (audience). You can find this in the Mailchimp dashboard or via the GET /lists endpoint.",
-        },
-        display_order: {
-          type: "integer",
-          description: "The order that the categories are displayed in the list. Lower numbers display first (e.g., 0 displays before 1).",
-        },
-        interest_category_id: {
-          type: "string",
-          description: "The unique ID for the interest category to update. You can find this via the GET /lists/{list_id}/interest-categories endpoint.",
-        },
-      },
-      required: [
-        "list_id",
-        "interest_category_id",
-        "title",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -12102,38 +3602,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_INTEREST_IN_CATEGORY",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The name of the interest. This is required and will be shown publicly on subscription forms.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list (audience). Use the LIST_INTERESTS_IN_CATEGORY action to find available lists.",
-        },
-        interest_id: {
-          type: "string",
-          description: "The unique ID of the interest to update. Use the LIST_INTERESTS_IN_CATEGORY action to find interests within a category.",
-        },
-        display_order: {
-          type: "integer",
-          description: "The display order for this interest within the category. Lower numbers appear first.",
-        },
-        interest_category_id: {
-          type: "string",
-          description: "The unique ID for the interest category. Use the LIST_INTEREST_CATEGORIES action to find categories for a list.",
-        },
-      },
-      required: [
-        "list_id",
-        "interest_category_id",
-        "interest_id",
-        "name",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -12151,47 +3619,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_LANDING_PAGE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The internal name of this landing page used for organization.",
-        },
-        title: {
-          type: "string",
-          description: "The title of this landing page shown in the browser's title bar.",
-        },
-        list_id: {
-          type: "string",
-          description: "The ID of the audience/list associated with this landing page.",
-        },
-        page_id: {
-          type: "string",
-          description: "The unique ID of the landing page to update.",
-        },
-        store_id: {
-          type: "string",
-          description: "The ID of the e-commerce store associated with this landing page.",
-        },
-        description: {
-          type: "string",
-          description: "The description of this landing page.",
-        },
-        tracking__track__with__mailchimp: {
-          type: "boolean",
-          description: "Use cookies to track unique visitors and calculate overall conversion rate. Learn more at https://mailchimp.com/help/use-track-mailchimp/.",
-        },
-        tracking__enable__restricted__data__processing: {
-          type: "boolean",
-          description: "Enable Google's restricted data processing for CCPA compliance. Restricts how Google uses certain identifiers. Learn more at https://privacy.google.com/businesses/rdp/.",
-        },
-      },
-      required: [
-        "page_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -12208,96 +3635,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_LIST_MEMBER",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        vip: {
-          type: "boolean",
-          description: "[VIP status](https://mailchimp.com/help/designate-and-send-to-vip-contacts/) for subscriber. ",
-        },
-        ip_opt: {
-          type: "string",
-          description: "The IP address the subscriber used to confirm their opt-in status.",
-        },
-        status: {
-          type: "string",
-          description: "Subscriber's current status. Use 'subscribed', 'unsubscribed', 'cleaned', or 'pending'.",
-          enum: [
-            "subscribed",
-            "unsubscribed",
-            "cleaned",
-            "pending",
-          ],
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        language: {
-          type: "string",
-          description: "The subscriber's language code (e.g., 'en' for English, 'es' for Spanish, 'fr' for French).",
-        },
-        interests: {
-          type: "object",
-          additionalProperties: true,
-          description: "A dictionary mapping interest IDs to boolean values indicating if the subscriber is interested. Example: {'interest_id_123': true, 'interest_id_456': false}.",
-        },
-        ip_signup: {
-          type: "string",
-          description: "IP address the subscriber signed up from.",
-        },
-        email_type: {
-          type: "string",
-          description: "Type of email this member asked to get (\"html\" or \"text\").",
-        },
-        merge_fields: {
-          type: "object",
-          additionalProperties: true,
-          description: "A dictionary of merge fields where the keys are the merge tags. See the [Merge Fields documentation](https://mailchimp.com/developer/marketing/docs/merge-fields/#structure) for more about the structure. ",
-        },
-        email_address: {
-          type: "string",
-          description: "Email address for a subscriber.",
-        },
-        timestamp_opt: {
-          type: "string",
-          description: "The date and time the subscriber confirmed their opt-in status in ISO 8601 format. ",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. This endpoint also accepts a list member's email address or contact_id directly.",
-        },
-        timestamp_signup: {
-          type: "string",
-          description: "The date and time the subscriber signed up for the list in ISO 8601 format. ",
-        },
-        location__latitude: {
-          type: "number",
-          description: "The location latitude (decimal degrees, e.g., 40.7128 for New York).",
-        },
-        location__longitude: {
-          type: "number",
-          description: "The location longitude (decimal degrees, e.g., -74.0060 for New York).",
-        },
-        marketing_permissions: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "The marketing permissions for the subscriber.",
-        },
-        skip_merge_validation: {
-          type: "boolean",
-          description: "If skip_merge_validation is true, member data will be accepted without merge field values, even if the merge field is usually required. This defaults to false. ",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -12314,99 +3651,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_LISTS",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The name of the list/audience.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        contact__zip: {
-          type: "string",
-          description: "The postal or zip code for the list contact.",
-        },
-        double_optin: {
-          type: "boolean",
-          description: "Whether or not to require the subscriber to confirm subscription via email. ",
-        },
-        contact__city: {
-          type: "string",
-          description: "The city for the list contact.",
-        },
-        contact__phone: {
-          type: "string",
-          description: "The phone number for the list contact.",
-        },
-        contact__state: {
-          type: "string",
-          description: "The state for the list contact.",
-        },
-        use_archive_bar: {
-          type: "boolean",
-          description: "Whether campaigns for this list use the [Archive Bar](https://mailchimp.com/help/about-email-campaign-archives-and-pages/) in archives by default. ",
-        },
-        contact__company: {
-          type: "string",
-          description: "The company name for the list contact.",
-        },
-        contact__country: {
-          type: "string",
-          description: "A two-character ISO 3166 country code (e.g., 'US', 'GB').",
-        },
-        contact__address1: {
-          type: "string",
-          description: "The street address for the list contact (line 1).",
-        },
-        contact__address2: {
-          type: "string",
-          description: "The street address for the list contact (line 2).",
-        },
-        email_type_option: {
-          type: "boolean",
-          description: "Whether the list supports multiple formats for emails. When true, subscribers can choose between HTML or plain-text. When false, all subscribers receive HTML with plain-text backup.",
-        },
-        notify_on_subscribe: {
-          type: "string",
-          description: "The email address to send subscribe notifications to. Leave empty or omit to disable notifications.",
-        },
-        permission_reminder: {
-          type: "string",
-          description: "The permission reminder for the list - text that reminds subscribers how they got on the mailing list.",
-        },
-        marketing_permissions: {
-          type: "boolean",
-          description: "Whether or not the list has marketing permissions (eg. GDPR) enabled.",
-        },
-        notify_on_unsubscribe: {
-          type: "string",
-          description: "The email address to send unsubscribe notifications to. Leave empty or omit to disable notifications.",
-        },
-        campaign__defaults__subject: {
-          type: "string",
-          description: "The default subject line for campaigns sent to this list.",
-        },
-        campaign__defaults__language: {
-          type: "string",
-          description: "The default language for this list's forms (e.g., 'en').",
-        },
-        campaign__defaults__from__name: {
-          type: "string",
-          description: "The default 'From' name for campaigns sent to this list.",
-        },
-        campaign__defaults__from__email: {
-          type: "string",
-          description: "The default 'From' email for campaigns sent to this list.",
-        },
-      },
-      required: [
-        "list_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -12423,52 +3667,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_LISTS_SEGMENTS",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The name of the segment.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        segment_id: {
-          type: "string",
-          description: "The unique id for the segment.",
-        },
-        options__match: {
-          type: "string",
-          description: "Match type for segment conditions.",
-          enum: [
-            "any",
-            "all",
-          ],
-        },
-        static_segment: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "An array of emails to be used for a static segment. Any emails provided that are not present on the list will be ignored. Passing an empty array for an existing static segment will reset that segment and remove all members. This field cannot be provided with the options field.",
-        },
-        options__conditions: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "An array of segment conditions. Each condition should have: 'condition_type' (e.g., 'EmailAddress', 'Merge'), 'field' (e.g., 'EMAIL'), 'op' (e.g., 'contains', 'is'), and 'value'. This field cannot be provided with the static_segment field.",
-        },
-      },
-      required: [
-        "list_id",
-        "segment_id",
-        "name",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -12485,71 +3683,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_MERGE_FIELD",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        tag: {
-          type: "string",
-          description: "The merge tag used in Mailchimp campaigns (e.g., *|FNAME|*). Must be uppercase, alphanumeric, and max 10 characters.",
-        },
-        name: {
-          type: "string",
-          description: "The display name of the merge field shown to users (e.g., 'First Name').",
-        },
-        public: {
-          type: "boolean",
-          description: "Whether the merge field is visible on the signup form.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the Mailchimp audience (list) containing the merge field.",
-        },
-        merge_id: {
-          type: "string",
-          description: "The unique numeric ID for the merge field to update.",
-        },
-        required: {
-          type: "boolean",
-          description: "Whether the merge field is required when importing or adding contacts.",
-        },
-        help_text: {
-          type: "string",
-          description: "Help text shown to subscribers to assist them in filling out the form.",
-        },
-        default_value: {
-          type: "string",
-          description: "The default value for the merge field when no value is provided.",
-        },
-        display_order: {
-          type: "integer",
-          description: "The display order position of this field on the signup form (lower numbers appear first).",
-        },
-        options__choices: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "For radio or dropdown fields only: the list of options users can select from.",
-        },
-        options__date__format: {
-          type: "string",
-          description: "For date or birthday fields only: the date format (e.g., 'MM/DD/YYYY', 'DD/MM/YYYY').",
-        },
-        options__phone__format: {
-          type: "string",
-          description: "For phone fields only: the phone number format. Use 'US' or 'International'.",
-        },
-        options__default__country: {
-          type: "integer",
-          description: "For address fields only: the default country code if none is provided.",
-        },
-      },
-      required: [
-        "list_id",
-        "merge_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -12566,33 +3699,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_NOTE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        note: {
-          type: "string",
-          description: "The content of the note. Note length is limited to 1,000 characters.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        note_id: {
-          type: "string",
-          description: "The id for the note.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member's email address. This endpoint also accepts the member's email address or contact_id.",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-        "note_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -12609,267 +3715,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_ORDER",
     mode: "write",
     risk: "high_impact",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        lines: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "An array of the order\"s line items.",
-        },
-        promos: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "The promo codes applied on the order. Note: Patch will completely replace the value of promos with the new one provided. ",
-        },
-        order_id: {
-          type: "string",
-          description: "The id for the order in a store.",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        order_url: {
-          type: "string",
-          description: "The URL for the order.",
-        },
-        tax_total: {
-          type: "integer",
-          description: "The tax total associated with an order.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "A string that uniquely identifies the campaign associated with an order.",
-        },
-        order_total: {
-          type: "integer",
-          description: "The order total associated with an order.",
-        },
-        landing_site: {
-          type: "string",
-          description: "The URL for the page where the buyer landed when entering the shop.",
-        },
-        outreach__id: {
-          type: "string",
-          description: "A unique identifier for the outreach. Can be an email campaign ID.",
-        },
-        tracking_url: {
-          type: "string",
-          description: "The tracking URL associated with the order.",
-        },
-        currency_code: {
-          type: "string",
-          description: "The three-letter ISO 4217 code for the currency that the store accepts.",
-        },
-        tracking_code: {
-          type: "string",
-          description: "The Mailchimp tracking code for the order. Uses the \"mc_tc\" parameter in E-Commerce tracking URLs. ",
-          enum: [
-            "prec",
-          ],
-        },
-        discount_total: {
-          type: "integer",
-          description: "The total amount of the discounts to be applied to the price of the order. ",
-        },
-        shipping_total: {
-          type: "integer",
-          description: "The shipping total for the order.",
-        },
-        tracking_number: {
-          type: "string",
-          description: "The tracking number associated with the order.",
-        },
-        financial_status: {
-          type: "string",
-          description: "The order status. Use this parameter to trigger [Order Notifications](https://mailchimp.com/developer/marketing/docs/e-commerce/#order-notifications). ",
-        },
-        tracking_carrier: {
-          type: "string",
-          description: "The tracking carrier associated with the order.",
-        },
-        customer__company: {
-          type: "string",
-          description: "The customer\"s company.",
-        },
-        fulfillment_status: {
-          type: "string",
-          description: "The fulfillment status for the order. Use this parameter to trigger [Order Notifications](https://mailchimp.com/developer/marketing/docs/e-commerce/#order-notifications). ",
-        },
-        updated_at_foreign: {
-          type: "string",
-          description: "The date and time the order was updated in ISO 8601 format.",
-        },
-        cancelled_at_foreign: {
-          type: "string",
-          description: "The date and time the order was cancelled in ISO 8601 format. Note: passing a value for this parameter will cancel the order being edited. ",
-        },
-        customer__last__name: {
-          type: "string",
-          description: "The customer\"s last name.",
-        },
-        processed_at_foreign: {
-          type: "string",
-          description: "The date and time the order was processed in ISO 8601 format.",
-        },
-        customer__first__name: {
-          type: "string",
-          description: "The customer\"s first name.",
-        },
-        billing__address__city: {
-          type: "string",
-          description: "The city in the billing address.",
-        },
-        billing__address__name: {
-          type: "string",
-          description: "The name associated with an order\"s billing address.",
-        },
-        billing__address__phone: {
-          type: "string",
-          description: "The phone number for the billing address.",
-        },
-        customer__address__city: {
-          type: "string",
-          description: "The city the customer is located in.",
-        },
-        shipping__address__city: {
-          type: "string",
-          description: "The city in the order\"s shipping address.",
-        },
-        shipping__address__name: {
-          type: "string",
-          description: "The name associated with an order\"s shipping address.",
-        },
-        shipping__address__phone: {
-          type: "string",
-          description: "The phone number for the order\"s shipping address",
-        },
-        billing__address__company: {
-          type: "string",
-          description: "The company associated with the billing address.",
-        },
-        billing__address__country: {
-          type: "string",
-          description: "The country in the billing address.",
-        },
-        customer__opt__in__status: {
-          type: "boolean",
-          description: "The customer\"s opt-in status. This value will never overwrite the opt-in status of a pre-existing Mailchimp list member, but will apply to list members that are added through the e-commerce API endpoints. Customers who don\"t opt in to your Mailchimp list [will be added as `Transactional` members](https://mailchimp.com/developer/marketing/docs/e-commerce/#customers). ",
-        },
-        billing__address__address1: {
-          type: "string",
-          description: "The billing address for the order.",
-        },
-        billing__address__address2: {
-          type: "string",
-          description: "An additional field for the billing address.",
-        },
-        billing__address__latitude: {
-          type: "integer",
-          description: "The latitude for the billing address location.",
-        },
-        billing__address__province: {
-          type: "string",
-          description: "The state or normalized province in the billing address.",
-        },
-        customer__address__country: {
-          type: "string",
-          description: "The customer\"s country.",
-        },
-        shipping__address__company: {
-          type: "string",
-          description: "The company associated with an order\"s shipping address.",
-        },
-        shipping__address__country: {
-          type: "string",
-          description: "The country in the order\"s shipping address.",
-        },
-        billing__address__longitude: {
-          type: "integer",
-          description: "The longitude for the billing address location.",
-        },
-        customer__address__address1: {
-          type: "string",
-          description: "The mailing address of the customer.",
-        },
-        customer__address__address2: {
-          type: "string",
-          description: "An additional field for the customer\"s mailing address.",
-        },
-        customer__address__province: {
-          type: "string",
-          description: "The customer\"s state name or normalized province.",
-        },
-        shipping__address__address1: {
-          type: "string",
-          description: "The shipping address for the order.",
-        },
-        shipping__address__address2: {
-          type: "string",
-          description: "An additional field for the shipping address.",
-        },
-        shipping__address__latitude: {
-          type: "integer",
-          description: "The latitude for the shipping address location.",
-        },
-        shipping__address__province: {
-          type: "string",
-          description: "The state or normalized province in the order\"s shipping address.",
-        },
-        shipping__address__longitude: {
-          type: "integer",
-          description: "The longitude for the shipping address location.",
-        },
-        billing__address__postal__code: {
-          type: "string",
-          description: "The postal or zip code in the billing address.",
-        },
-        billing__address__country__code: {
-          type: "string",
-          description: "The two-letter code for the country in the billing address.",
-        },
-        customer__address__postal__code: {
-          type: "string",
-          description: "The customer\"s postal or zip code.",
-        },
-        shipping__address__postal__code: {
-          type: "string",
-          description: "The postal or zip code in the order\"s shipping address.",
-        },
-        billing__address__province__code: {
-          type: "string",
-          description: "The two-letter code for the province or state in the billing address.",
-        },
-        customer__address__country__code: {
-          type: "string",
-          description: "The two-letter code for the customer\"s country.",
-        },
-        shipping__address__country__code: {
-          type: "string",
-          description: "The two-letter code for the country in the shipping address.",
-        },
-        customer__address__province__code: {
-          type: "string",
-          description: "The two-letter code for the customer\"s province or state.",
-        },
-        shipping__address__province__code: {
-          type: "string",
-          description: "The two-letter code for the province or state the order\"s shipping address is located in. ",
-        },
-      },
-      required: [
-        "store_id",
-        "order_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -12886,49 +3731,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_ORDER_LINE_ITEM",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        price: {
-          type: "number",
-          description: "The price of an order line item.",
-        },
-        line_id: {
-          type: "string",
-          description: "The id for the line item of an order.",
-        },
-        discount: {
-          type: "number",
-          description: "The total discount amount applied to this line item.",
-        },
-        order_id: {
-          type: "string",
-          description: "The id for the order in a store.",
-        },
-        quantity: {
-          type: "integer",
-          description: "The quantity of an order line item.",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        product_id: {
-          type: "string",
-          description: "A unique identifier for the product associated with the order line item.",
-        },
-        product_variant_id: {
-          type: "string",
-          description: "A unique identifier for the product variant associated with the order line item. ",
-        },
-      },
-      required: [
-        "store_id",
-        "order_id",
-        "line_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -12945,72 +3747,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_PRODUCT",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        url: {
-          type: "string",
-          description: "The URL for a product.",
-        },
-        type: {
-          type: "string",
-          description: "The type of product.",
-        },
-        title: {
-          type: "string",
-          description: "The title of a product.",
-        },
-        handle: {
-          type: "string",
-          description: "The handle of a product.",
-        },
-        images: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "An array of the product\"s images.",
-        },
-        vendor: {
-          type: "string",
-          description: "The vendor for a product.",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        variants: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "An array of the product\"s variants. At least one variant is required for each product. A variant can use the same `id` and `title` as the parent product. ",
-        },
-        image_url: {
-          type: "string",
-          description: "The image URL for a product.",
-        },
-        product_id: {
-          type: "string",
-          description: "The id for the product of a store.",
-        },
-        description: {
-          type: "string",
-          description: "The description of a product.",
-        },
-        published_at_foreign: {
-          type: "string",
-          description: "The date and time the product was published in ISO 8601 format.",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -13027,44 +3763,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_PRODUCT_IMAGE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "A new unique identifier for the product image. Optional - only provide if you want to change the image ID.",
-        },
-        url: {
-          type: "string",
-          description: "The new URL for the product image. Must be a valid image URL. At least one of 'url' or 'variant_ids' should be provided.",
-        },
-        image_id: {
-          type: "string",
-          description: "The unique identifier for the product image to update. Required.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store. Required.",
-        },
-        product_id: {
-          type: "string",
-          description: "The unique identifier for the product within the store. Required.",
-        },
-        variant_ids: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of product variant IDs to associate with this image. Use to link the image to specific product variants (e.g., color/size variations).",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-        "image_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -13081,61 +3779,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_PRODUCT_VARIANT",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        sku: {
-          type: "string",
-          description: "The stock keeping unit (SKU) of a product variant.",
-        },
-        url: {
-          type: "string",
-          description: "The URL for a product variant.",
-        },
-        price: {
-          type: "number",
-          description: "The price of a product variant.",
-        },
-        title: {
-          type: "string",
-          description: "The title of a product variant.",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        image_url: {
-          type: "string",
-          description: "The image URL for a product variant.",
-        },
-        backorders: {
-          type: "string",
-          description: "The backorders of a product variant.",
-        },
-        product_id: {
-          type: "string",
-          description: "The id for the product of a store.",
-        },
-        variant_id: {
-          type: "string",
-          description: "The id for the product variant.",
-        },
-        visibility: {
-          type: "string",
-          description: "The visibility of a product variant.",
-        },
-        inventory_quantity: {
-          type: "integer",
-          description: "The inventory quantity of a product variant.",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-        "variant_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -13152,53 +3795,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_PROMO_CODE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        code: {
-          type: "string",
-          description: "The discount code. Restricted to UTF-8 characters with max length 50.",
-        },
-        enabled: {
-          type: "boolean",
-          description: "Whether the promo code is currently enabled.",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        usage_count: {
-          type: "integer",
-          description: "Number of times promo code has been used.",
-        },
-        promo_code_id: {
-          type: "string",
-          description: "The id for the promo code of a store.",
-        },
-        promo_rule_id: {
-          type: "string",
-          description: "The id for the promo rule of a store.",
-        },
-        redemption_url: {
-          type: "string",
-          description: "The url that should be used in the promotion campaign restricted to UTF-8 characters with max length 2000. ",
-        },
-        created_at_foreign: {
-          type: "string",
-          description: "The date and time the promotion was created in ISO 8601 format.",
-        },
-        updated_at_foreign: {
-          type: "string",
-          description: "The date and time the promotion was updated in ISO 8601 format.",
-        },
-      },
-      required: [
-        "store_id",
-        "promo_rule_id",
-        "promo_code_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -13215,73 +3811,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_PROMO_RULE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        type: {
-          type: "string",
-          description: "Type of discount. For free shipping set type to fixed.",
-          enum: [
-            "fixed",
-            "percentage",
-          ],
-        },
-        title: {
-          type: "string",
-          description: "The title that will show up in promotion campaign. Restricted to UTF-8 characters with max length of 100 bytes. ",
-        },
-        amount: {
-          type: "number",
-          description: "The amount of the promo code discount. If \"type\" is \"fixed\", the amount is treated as a monetary value. If \"type\" is \"percentage\", amount must be a decimal value between 0.0 and 1.0, inclusive. ",
-        },
-        target: {
-          type: "string",
-          description: "The target that the discount applies to.",
-          enum: [
-            "per_item",
-            "total",
-            "shipping",
-          ],
-        },
-        enabled: {
-          type: "boolean",
-          description: "Whether the promo rule is currently enabled.",
-        },
-        ends_at: {
-          type: "string",
-          description: "The date and time when the promotion ends. Must be after starts_at and in ISO 8601 format. ",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store.",
-        },
-        starts_at: {
-          type: "string",
-          description: "The date and time when the promotion is in effect in ISO 8601 format.",
-        },
-        description: {
-          type: "string",
-          description: "The description of a promotion restricted to UTF-8 characters with max length 255. ",
-        },
-        promo_rule_id: {
-          type: "string",
-          description: "The unique identifier for the promo rule to update.",
-        },
-        created_at_foreign: {
-          type: "string",
-          description: "The date and time the promotion was created in ISO 8601 format.",
-        },
-        updated_at_foreign: {
-          type: "string",
-          description: "The date and time the promotion was updated in ISO 8601 format.",
-        },
-      },
-      required: [
-        "store_id",
-        "promo_rule_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -13298,99 +3827,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_STORE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The name of the store.",
-        },
-        phone: {
-          type: "string",
-          description: "The store phone number.",
-        },
-        domain: {
-          type: "string",
-          description: "The store domain.",
-        },
-        platform: {
-          type: "string",
-          description: "The e-commerce platform of the store.",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        timezone: {
-          type: "string",
-          description: "The timezone for the store.",
-        },
-        is_syncing: {
-          type: "boolean",
-          description: "Whether to disable automations because the store is currently [syncing](https://mailchimp.com/developer/marketing/docs/e-commerce/#pausing-store-automations). ",
-        },
-        money_format: {
-          type: "string",
-          description: "The currency format for the store. For example: `$`, `£`, etc.",
-        },
-        address__city: {
-          type: "string",
-          description: "The city the store is located in.",
-        },
-        currency_code: {
-          type: "string",
-          description: "The three-letter ISO 4217 code for the currency that the store accepts.",
-        },
-        email_address: {
-          type: "string",
-          description: "The email address for the store.",
-        },
-        primary_locale: {
-          type: "string",
-          description: "The primary locale for the store. For example: `en`, `de`, etc.",
-        },
-        address__country: {
-          type: "string",
-          description: "The store\"s country.",
-        },
-        address__address1: {
-          type: "string",
-          description: "The store\"s mailing address.",
-        },
-        address__address2: {
-          type: "string",
-          description: "An additional field for the store\"s mailing address.",
-        },
-        address__latitude: {
-          type: "integer",
-          description: "The latitude of the store location.",
-        },
-        address__province: {
-          type: "string",
-          description: "The store\"s state name or normalized province.",
-        },
-        address__longitude: {
-          type: "integer",
-          description: "The longitude of the store location.",
-        },
-        address__postal__code: {
-          type: "string",
-          description: "The store\"s postal or zip code.",
-        },
-        address__country__code: {
-          type: "string",
-          description: "The two-letter code for to the store\"s country.",
-        },
-        address__province__code: {
-          type: "string",
-          description: "The two-letter code for the store\"s province or state.",
-        },
-      },
-      required: [
-        "store_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -13407,33 +3843,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_TEMPLATE",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        html: {
-          type: "string",
-          description: "The raw HTML for the template. Supports the Mailchimp Template Language (e.g., *|FNAME|*, *|LNAME|*) for personalization. See: https://mailchimp.com/help/getting-started-with-mailchimps-template-language/",
-        },
-        name: {
-          type: "string",
-          description: "The name of the template.",
-        },
-        folder_id: {
-          type: "string",
-          description: "The id of the folder to assign the template to. Pass an empty string to remove from folder.",
-        },
-        template_id: {
-          type: "string",
-          description: "The unique id for the template.",
-        },
-      },
-      required: [
-        "template_id",
-        "name",
-        "html",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -13450,24 +3859,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_TEMPLATE_FOLDER",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        name: {
-          type: "string",
-          description: "The new name for the template folder. This will replace the existing folder name.",
-        },
-        folder_id: {
-          type: "string",
-          description: "The unique ID of the template folder to update. Obtain this ID from the response of add_template_folder or list_template_folders actions.",
-        },
-      },
-      required: [
-        "folder_id",
-        "name",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -13484,64 +3875,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_WEBHOOK",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        url: {
-          type: "string",
-          description: "A valid, publicly accessible URL for the webhook endpoint. Mailchimp will verify this URL is reachable before updating.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list (audience). Use MAILCHIMP_GET_LISTS_INFO to retrieve available list IDs.",
-        },
-        webhook_id: {
-          type: "string",
-          description: "The unique ID of the webhook to update. Use MAILCHIMP_LIST_WEBHOOKS to retrieve available webhook IDs for a list.",
-        },
-        sources__api: {
-          type: "boolean",
-          description: "Whether the webhook is triggered by actions initiated via the API.",
-        },
-        sources__user: {
-          type: "boolean",
-          description: "Whether the webhook is triggered by subscriber-initiated actions.",
-        },
-        sources__admin: {
-          type: "boolean",
-          description: "Whether the webhook is triggered by admin-initiated actions in the web interface.",
-        },
-        events__cleaned: {
-          type: "boolean",
-          description: "Whether the webhook is triggered when a subscriber's email address is cleaned from the list.",
-        },
-        events__profile: {
-          type: "boolean",
-          description: "Whether the webhook is triggered when a subscriber's profile is updated.",
-        },
-        events__upemail: {
-          type: "boolean",
-          description: "Whether the webhook is triggered when a subscriber's email address is changed.",
-        },
-        events__campaign: {
-          type: "boolean",
-          description: "Whether the webhook is triggered when a campaign is sent or cancelled.",
-        },
-        events__subscribe: {
-          type: "boolean",
-          description: "Whether the webhook is triggered when a list subscriber is added.",
-        },
-        events__unsubscribe: {
-          type: "boolean",
-          description: "Whether the webhook is triggered when a list member unsubscribes.",
-        },
-      },
-      required: [
-        "list_id",
-        "webhook_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -13559,74 +3892,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPDATE_WORKFLOW_EMAIL",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        delay__type: {
-          type: "string",
-          description: "The type of delay for an automation email.",
-          enum: [
-            "now",
-            "day",
-            "hour",
-            "week",
-          ],
-        },
-        workflow_id: {
-          type: "string",
-          description: "The unique id for the Automation workflow.",
-        },
-        delay__action: {
-          type: "string",
-          description: "The action that triggers the delay of an automation emails.",
-          enum: [
-            "signup",
-            "ecomm_abandoned_browse",
-            "ecomm_abandoned_cart",
-          ],
-        },
-        delay__amount: {
-          type: "integer",
-          description: "The delay amount for an automation email.",
-        },
-        settings__title: {
-          type: "string",
-          description: "The title of the Automation.",
-        },
-        delay__direction: {
-          type: "string",
-          description: "Whether the delay settings describe before or after the delay action of an automation email. ",
-          enum: [
-            "after",
-          ],
-        },
-        workflow_email_id: {
-          type: "string",
-          description: "The unique id for the Automation workflow email.",
-        },
-        settings__reply__to: {
-          type: "string",
-          description: "The reply-to email address for the Automation.",
-        },
-        settings__from__name: {
-          type: "string",
-          description: "The \"from\" name for the Automation (not an email address).",
-        },
-        settings__preview__text: {
-          type: "string",
-          description: "The preview text for the campaign.",
-        },
-        settings__subject__line: {
-          type: "string",
-          description: "The subject line for the campaign.",
-        },
-      },
-      required: [
-        "workflow_id",
-        "workflow_email_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -13643,285 +3908,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPSERT_ECOMMERCE_STORES_ORDERS",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "A unique identifier for the order. This should match the order_id path parameter.",
-        },
-        lines: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "An array of the order's line items. Each line item must include: 'id' (string, required - unique identifier for the line item), 'product_id' (string - unique identifier for the product), 'product_variant_id' (string - unique identifier for the product variant), 'quantity' (integer - quantity of the line item), 'price' (number - price of the line item). Optional: 'product_title', 'product_variant_title', 'discount', 'product' (object with product details).",
-        },
-        promos: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-          },
-          description: "The promo codes applied on the order. Each promo object should contain 'code' (string, required), 'amount_discounted' (number, required), and 'type' (string, required).",
-        },
-        cart_id: {
-          type: "string",
-          description: "A cart id that the order was placed for.",
-        },
-        order_id: {
-          type: "string",
-          description: "The unique identifier for the order in the store. This is used in the URL path and should match the 'id' field in the request body.",
-        },
-        store_id: {
-          type: "string",
-          description: "The unique identifier for the e-commerce store.",
-        },
-        order_url: {
-          type: "string",
-          description: "The URL for the order.",
-        },
-        tax_total: {
-          type: "number",
-          description: "The tax total for the order.",
-        },
-        campaign_id: {
-          type: "string",
-          description: "A string that uniquely identifies the campaign for an order.",
-        },
-        order_total: {
-          type: "number",
-          description: "The total for the order.",
-        },
-        customer__id: {
-          type: "string",
-          description: "A unique identifier for the customer associated with this order. Required. Limited to 50 characters.",
-        },
-        landing_site: {
-          type: "string",
-          description: "The URL for the page where the buyer landed when entering the shop.",
-        },
-        outreach__id: {
-          type: "string",
-          description: "A unique identifier for the outreach. Can be an email campaign ID.",
-        },
-        tracking_url: {
-          type: "string",
-          description: "The tracking URL associated with the order.",
-        },
-        currency_code: {
-          type: "string",
-          description: "The three-letter ISO 4217 code for the currency that the store accepts.",
-        },
-        tracking_code: {
-          type: "string",
-          description: "The Mailchimp tracking code for the order. Uses the 'mc_tc' parameter in E-Commerce tracking URLs.",
-          enum: [
-            "prec",
-          ],
-        },
-        discount_total: {
-          type: "number",
-          description: "The total amount of the discounts to be applied to the price of the order.",
-        },
-        shipping_total: {
-          type: "number",
-          description: "The shipping total for the order.",
-        },
-        tracking_number: {
-          type: "string",
-          description: "The tracking number associated with the order.",
-        },
-        financial_status: {
-          type: "string",
-          description: "The order status. Use this parameter to trigger Order Notifications.",
-        },
-        tracking_carrier: {
-          type: "string",
-          description: "The tracking carrier associated with the order.",
-        },
-        customer__company: {
-          type: "string",
-          description: "The customer's company.",
-        },
-        fulfillment_status: {
-          type: "string",
-          description: "The fulfillment status for the order. Use this parameter to trigger Order Notifications.",
-        },
-        updated_at_foreign: {
-          type: "string",
-          description: "The date and time the order was updated in ISO 8601 format.",
-        },
-        cancelled_at_foreign: {
-          type: "string",
-          description: "The date and time the order was cancelled in ISO 8601 format. Note: passing a value for this parameter will cancel the order being created.",
-        },
-        customer__last__name: {
-          type: "string",
-          description: "The customer's last name.",
-        },
-        processed_at_foreign: {
-          type: "string",
-          description: "The date and time the order was processed in ISO 8601 format.",
-        },
-        customer__first__name: {
-          type: "string",
-          description: "The customer's first name.",
-        },
-        billing__address__city: {
-          type: "string",
-          description: "The city in the billing address.",
-        },
-        billing__address__name: {
-          type: "string",
-          description: "The name associated with the billing address.",
-        },
-        billing__address__phone: {
-          type: "string",
-          description: "The phone number for the billing address.",
-        },
-        customer__address__city: {
-          type: "string",
-          description: "The city the customer is located in.",
-        },
-        shipping__address__city: {
-          type: "string",
-          description: "The city in the order's shipping address.",
-        },
-        shipping__address__name: {
-          type: "string",
-          description: "The name associated with an order's shipping address.",
-        },
-        customer__email__address: {
-          type: "string",
-          description: "The customer's email address.",
-        },
-        shipping__address__phone: {
-          type: "string",
-          description: "The phone number for the order's shipping address.",
-        },
-        billing__address__company: {
-          type: "string",
-          description: "The company associated with the billing address.",
-        },
-        billing__address__country: {
-          type: "string",
-          description: "The country in the billing address.",
-        },
-        customer__opt__in__status: {
-          type: "boolean",
-          description: "The customer's opt-in status. This value will never overwrite the opt-in status of a pre-existing Mailchimp list member, but will apply to list members that are added through the e-commerce API endpoints. Customers who don't opt in to your Mailchimp list will be added as Transactional members.",
-        },
-        billing__address__address1: {
-          type: "string",
-          description: "The billing address for the order.",
-        },
-        billing__address__address2: {
-          type: "string",
-          description: "An additional field for the billing address.",
-        },
-        billing__address__latitude: {
-          type: "number",
-          description: "The latitude for the billing address location.",
-        },
-        billing__address__province: {
-          type: "string",
-          description: "The state or normalized province in the billing address.",
-        },
-        customer__address__country: {
-          type: "string",
-          description: "The customer's country.",
-        },
-        shipping__address__company: {
-          type: "string",
-          description: "The company associated with the shipping address.",
-        },
-        shipping__address__country: {
-          type: "string",
-          description: "The country in the shipping address.",
-        },
-        billing__address__longitude: {
-          type: "number",
-          description: "The longitude for the billing address location.",
-        },
-        customer__address__address1: {
-          type: "string",
-          description: "The mailing address of the customer.",
-        },
-        customer__address__address2: {
-          type: "string",
-          description: "An additional field for the customer's mailing address.",
-        },
-        customer__address__province: {
-          type: "string",
-          description: "The customer's state name or normalized province.",
-        },
-        shipping__address__address1: {
-          type: "string",
-          description: "The shipping address for the order.",
-        },
-        shipping__address__address2: {
-          type: "string",
-          description: "An additional field for the shipping address.",
-        },
-        shipping__address__latitude: {
-          type: "number",
-          description: "The latitude for the shipping address location.",
-        },
-        shipping__address__province: {
-          type: "string",
-          description: "The state or normalized province in the order's shipping address.",
-        },
-        shipping__address__longitude: {
-          type: "number",
-          description: "The longitude for the shipping address location.",
-        },
-        billing__address__postal__code: {
-          type: "string",
-          description: "The postal or zip code in the billing address.",
-        },
-        billing__address__country__code: {
-          type: "string",
-          description: "The two-letter code for the country in the billing address.",
-        },
-        customer__address__postal__code: {
-          type: "string",
-          description: "The customer's postal or zip code.",
-        },
-        shipping__address__postal__code: {
-          type: "string",
-          description: "The postal or zip code in the shipping address.",
-        },
-        billing__address__province__code: {
-          type: "string",
-          description: "The two-letter code for the province in the billing address.",
-        },
-        customer__address__country__code: {
-          type: "string",
-          description: "The two-letter code for the customer's country.",
-        },
-        shipping__address__country__code: {
-          type: "string",
-          description: "The two-letter code for the country in the shipping address.",
-        },
-        customer__address__province__code: {
-          type: "string",
-          description: "The two-letter code for the customer's province or state.",
-        },
-        shipping__address__province__code: {
-          type: "string",
-          description: "The two-letter code for the province or state in the shipping address.",
-        },
-      },
-      required: [
-        "store_id",
-        "order_id",
-        "id",
-        "customer__id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -13939,136 +3925,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_UPSERT_ECOMMERCE_STORES_PRODUCTS",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: {
-          type: "string",
-          description: "A unique identifier for the product.",
-        },
-        url: {
-          type: "string",
-          description: "The URL for a product.",
-        },
-        type: {
-          type: "string",
-          description: "The type of product.",
-        },
-        title: {
-          type: "string",
-          description: "The title of a product.",
-        },
-        handle: {
-          type: "string",
-          description: "The handle of a product.",
-        },
-        images: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-            properties: {
-              id: {
-                type: "string",
-                description: "A unique identifier for the product image.",
-              },
-              url: {
-                type: "string",
-                description: "The URL for a product image.",
-              },
-              variant_ids: {
-                type: "array",
-                items: {
-                  type: "string",
-                },
-                description: "The list of product variants using the image.",
-              },
-            },
-            description: "Input schema for a product image.",
-          },
-          description: "An array of the product's images.",
-        },
-        vendor: {
-          type: "string",
-          description: "The vendor for a product.",
-        },
-        store_id: {
-          type: "string",
-          description: "The store id.",
-        },
-        variants: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: true,
-            properties: {
-              id: {
-                type: "string",
-                description: "A unique identifier for the product variant.",
-              },
-              sku: {
-                type: "string",
-                description: "The stock keeping unit (SKU) of a product variant.",
-              },
-              url: {
-                type: "string",
-                description: "The URL for a product variant.",
-              },
-              price: {
-                type: "number",
-                description: "The price of a product variant.",
-              },
-              title: {
-                type: "string",
-                description: "The title of a product variant.",
-              },
-              image_url: {
-                type: "string",
-                description: "The image URL for a product variant.",
-              },
-              backorders: {
-                type: "string",
-                description: "The backorders of a product variant.",
-              },
-              visibility: {
-                type: "string",
-                description: "The visibility of a product variant.",
-              },
-              inventory_quantity: {
-                type: "integer",
-                description: "The inventory quantity of a product variant.",
-              },
-            },
-            description: "Input schema for a product variant.",
-          },
-          description: "An array of the product's variants. At least one variant is required for each product. A variant can use the same `id` and `title` as the parent product.",
-        },
-        image_url: {
-          type: "string",
-          description: "The image URL for a product.",
-        },
-        product_id: {
-          type: "string",
-          description: "The id for the product of a store.",
-        },
-        description: {
-          type: "string",
-          description: "The description of a product.",
-        },
-        published_at_foreign: {
-          type: "string",
-          description: "The date and time the product was published.",
-        },
-      },
-      required: [
-        "store_id",
-        "product_id",
-        "id",
-        "title",
-        "variants",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -14086,19 +3942,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_VERIFY_CONNECTED_SITE_SCRIPT",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        connected_site_id: {
-          type: "string",
-          description: "The unique identifier for the connected site (foreign_id). Obtain this from LIST_CONNECTED_SITES or ADD_CONNECTED_SITE actions.",
-        },
-      },
-      required: [
-        "connected_site_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -14112,24 +3955,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_VERIFY_DOMAIN",
     mode: "write",
     risk: "confirm",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        code: {
-          type: "string",
-          description: "The verification code from the email sent to the verification_email address when the domain was added via 'add_domain_to_account'. This is a unique code used to confirm ownership of the domain.",
-        },
-        domain_name: {
-          type: "string",
-          description: "The domain name to verify (e.g., 'yourdomain.com'). This must be a domain that was previously added via 'add_domain_to_account' and is in VERIFICATION_IN_PROGRESS status.",
-        },
-      },
-      required: [
-        "domain_name",
-        "code",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -14146,33 +3971,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_VIEW_DEFAULT_CONTENT",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return in the response. Use dot notation to reference nested fields (e.g., ['sections', '_links']). If not specified, all fields are returned.",
-        },
-        template_id: {
-          type: "string",
-          description: "The unique ID of the template to retrieve default content for.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation to reference nested fields (e.g., ['_links']). Cannot be used together with 'fields'.",
-        },
-      },
-      required: [
-        "template_id",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -14186,53 +3984,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_VIEW_RECENT_ACTIVITY",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        count: {
-          type: "integer",
-          description: "The number of records to return. Default value is 10. Maximum value is 1000 ",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to return in the response. Use dot notation for nested fields (e.g., 'activity.activity_type'). Example: ['activity', 'email_id', 'list_id'].",
-        },
-        offset: {
-          type: "integer",
-          description: "Used for [pagination](https://mailchimp.com/developer/marketing/docs/methods-parameters/#pagination), this it the number of records from a collection to skip. Default value is 0. ",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of fields to exclude from the response. Use dot notation for nested fields (e.g., 'activity.avatar_url'). Example: ['_links'].",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member\"s email address. This endpoint also accepts a list member\"s email address or contact_id. ",
-        },
-        activity_filters: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "A list of activity type filters. Valid values include: 'open', 'click', 'bounce', 'unsub', 'sent', 'note', 'abuse', 'ecomm'. Example: ['open', 'click'].",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",
@@ -14246,45 +3997,6 @@ export const mailchimpComposioTools: IntegrationTool[] = [
     toolSlug: "MAILCHIMP_VIEW_RECENT_ACTIVITY50",
     mode: "read",
     risk: "safe",
-    inputSchema: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        action: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of activity types to filter by (e.g., ['open', 'click', 'bounce', 'unsub', 'sent', 'ecomm', 'abuse']).",
-        },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to return (e.g., ['activity.action', 'activity.timestamp']). Use dot notation to reference sub-object parameters.",
-        },
-        list_id: {
-          type: "string",
-          description: "The unique ID for the list.",
-        },
-        exclude_fields: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-          description: "List of fields to exclude from response (e.g., ['_links']). Use dot notation to reference sub-object parameters.",
-        },
-        subscriber_hash: {
-          type: "string",
-          description: "The MD5 hash of the lowercase version of the list member\"s email address. This endpoint also accepts a list member\"s email address or contact_id. ",
-        },
-      },
-      required: [
-        "list_id",
-        "subscriber_hash",
-      ],
-    },
     tags: [
       "composio",
       "mailchimp",

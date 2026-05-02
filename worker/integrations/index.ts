@@ -21,7 +21,7 @@ import {
 import { getAllHandlers, getIntegrationHandler } from "./base";
 import type { IntegrationTool } from "./base";
 
-const disabledPipedreamManifestIntegrations = new Set(["instantly", "outlook", "apollo", "postiz", "gmail", "google-search-console", "google-docs", "google-analytics", "onedrive", "google-ads", "hubspot", "google-calendar", "klaviyo", "airtable", "calendly", "clickup", "mailchimp", "notion", "salesforce", "xero", "twilio"]);
+const disabledPipedreamManifestIntegrations = new Set(["instantly", "outlook", "apollo", "postiz", "gmail", "google-search-console", "google-docs", "google-analytics", "onedrive", "google-ads", "hubspot", "google-calendar", "klaviyo", "airtable", "calendly", "clickup", "mailchimp", "notion", "salesforce", "xero", "twilio", "facebook", "linkedin", "youtube", "shopify", "sendgrid", "resend", "instagram"]);
 
 export {
   classifyIntegrationError,

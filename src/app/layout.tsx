@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono, Caveat } from "next/font/google";
+import { Inter, Geist_Mono, Caveat, Plus_Jakarta_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -19,8 +19,14 @@ const caveat = Caveat({
   subsets: ["latin"],
 });
 
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
 export const metadata: Metadata = {
-  title: "ClawLink — Plug Anything into OpenClaw",
+  title: "ClawLink: Plug Anything into OpenClaw",
   description:
     "Install ClawLink in OpenClaw once, then connect apps with one click. Hosted auth, encrypted credentials, and headless-friendly setup links.",
   icons: {
@@ -28,7 +34,7 @@ export const metadata: Metadata = {
     apple: "/images/logo/link.png",
   },
   openGraph: {
-    title: "ClawLink — Plug Anything into OpenClaw",
+    title: "ClawLink:Plug Anything into OpenClaw",
     description: "Install ClawLink in OpenClaw once, then connect apps with one click. Hosted auth, encrypted credentials, and headless-friendly setup links.",
     type: "website",
     url: "https://claw-link.dev",
@@ -36,7 +42,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ClawLink — Plug Anything into OpenClaw",
+    title: "ClawLink: Plug Anything into OpenClaw",
     description: "Install ClawLink in OpenClaw once, then connect apps with one click. Hosted auth, encrypted credentials, and headless-friendly setup links.",
     images: ["https://docs.claw-link.dev/images/logo/social-card.png"],
   },
@@ -62,7 +68,7 @@ export default function RootLayout({
     >
       <html
         lang="en"
-        className={`${inter.variable} ${geistMono.variable} ${caveat.variable} h-full antialiased`}
+        className={`${inter.variable} ${geistMono.variable} ${caveat.variable} ${plusJakartaSans.variable} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col">
           <TooltipProvider>

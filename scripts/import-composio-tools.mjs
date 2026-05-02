@@ -380,11 +380,8 @@ function renderToolCall(tool, depth = 1) {
   obj.mode = tool.mode;
   obj.risk = tool.risk;
 
-  if (Object.keys(tool.inputSchema.properties ?? {}).length > 0 || (tool.inputSchema.required ?? []).length > 0) {
-    obj.inputSchema = tool.inputSchema;
-  } else {
-    obj.inputSchema = { type: "object", properties: {} };
-  }
+  // inputSchema is intentionally omitted. It is fetched at runtime from
+  // Composio's API and cached in KV. See src/lib/composio/schema-cache.ts.
 
   if (tool.tags && tool.tags.length > 0) {
     obj.tags = tool.tags;
@@ -432,7 +429,7 @@ function generateManifestSource(integration, composioToolkit, version, tools) {
   return `import type { IntegrationTool } from "../../../worker/integrations/base";
 
 function composioTool(
-  partial: Omit<IntegrationTool, "integration" | "accessLevel" | "tags" | "whenToUse" | "askBefore" | "safeDefaults" | "examples" | "followups" | "requiresScopes" | "idempotent" | "supportsBatch" | "supportsDryRun" | "execution"> & {
+  partial: Omit<IntegrationTool, "integration" | "inputSchema" | "accessLevel" | "tags" | "whenToUse" | "askBefore" | "safeDefaults" | "examples" | "followups" | "requiresScopes" | "idempotent" | "supportsBatch" | "supportsDryRun" | "execution"> & {
     accessLevel?: IntegrationTool["accessLevel"];
     tags?: string[];
     whenToUse?: string[];
@@ -450,7 +447,7 @@ function composioTool(
     integration: ${JSON.stringify(integration)},
     name: partial.name,
     description: partial.description,
-    inputSchema: partial.inputSchema,
+    inputSchema: { type: "object", properties: {} },
     outputSchema: partial.outputSchema,
     accessLevel: partial.accessLevel ?? partial.mode,
     mode: partial.mode,
@@ -579,6 +576,9 @@ async function main() {
   }
 
   // Build manifest entries.
+  // inputSchema is intentionally omitted from static manifests to keep bundle
+  // size small (~80-90% reduction). Schemas are fetched at runtime from
+  // Composio's API and cached in KV. See src/lib/composio/schema-cache.ts.
   const tools = activeTools
     .map((item) => {
       const { mode, risk } = classifyTool(item);
@@ -586,7 +586,6 @@ async function main() {
       const tags = buildTags(integration, mode, item.tags);
       const humanName = humanizeToolName(item.name);
       const askBefore = buildAskBefore(mode, risk, humanName);
-      const inputSchema = convertInputSchema(item.input_parameters);
       const idempotent = (item.tags ?? []).includes(HINT_TAG_IDEMPOTENT) ? true : undefined;
 
       return {
@@ -597,7 +596,6 @@ async function main() {
         risk,
         tags,
         askBefore,
-        inputSchema,
         idempotent,
       };
     })

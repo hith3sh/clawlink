@@ -29,7 +29,10 @@ function arrowPath(
   const dx = toX - fromX;
   const cp1x = fromX + dx * 0.4;
   const cp2x = fromX + dx * 0.65;
-  return `M ${fromX} ${fromY} C ${cp1x} ${fromY}, ${cp2x} ${toY}, ${toX} ${toY}`;
+  // Perturb cp1y when the path is perfectly horizontal: a zero-height bbox
+  // makes the Gaussian-blur glow filter render nothing in WebKit/Chromium.
+  const cp1y = fromY === toY ? fromY + 0.5 : fromY;
+  return `M ${fromX} ${fromY} C ${cp1x} ${cp1y}, ${cp2x} ${toY}, ${toX} ${toY}`;
 }
 
 const openClawToClawLink = arrowPath(

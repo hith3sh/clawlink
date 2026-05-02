@@ -87,15 +87,32 @@ body {
   --sidebar-ring: oklch(0.708 0 0);
 
   /* Marketing brand palette — change these to re-skin the public site */
-  --brand: #E01C24;
-  --brand-hover: #ee333a;
-  --brand-hover-alt: #dc804a;
+  --brand: #E0352B;
+  --brand-hover: #FF4438;
+  --brand-hover-alt: #FF7A4A;
   --brand-tint: #ffe4cc;
   --brand-bg: #fff4ec;
   --brand-border: #efc7ab;
-  --brand-dark: #a85d2e;
+  --brand-dark: #A8221A;
   --brand-darkest: #8d4c24;
-  --brand-rgb: 232 145 90;
+  --brand-rgb: 224 53 43;
+
+  /* Dark marketing surfaces */
+  --mk-bg: #212121;
+  --mk-elev: #2A2A2D;
+  --mk-elev-2: #303035;
+  --mk-tile: #353540;
+  --mk-fg: #FFFFFF;
+  --mk-fg-muted: rgba(255,255,255,0.72);
+  --mk-fg-dim: rgba(255,255,255,0.55);
+  --mk-fg-faint: rgba(255,255,255,0.35);
+  --mk-border: rgba(255,255,255,0.08);
+  --mk-border-strong: rgba(255,255,255,0.16);
+  --mk-border-card: rgba(255,255,255,0.06);
+  --mk-shadow-card: 0 12px 40px rgba(0,0,0,0.45);
+  --mk-shadow-pop: 0 24px 60px rgba(0,0,0,0.55);
+  --mk-ember: #FF7A4A;
+  --mk-amber: #FFB347;
 }
 
 .dark {
@@ -153,6 +170,81 @@ body {
 .public-site ::-moz-selection {
   background-color: var(--brand);
   color: #ffffff;
+}
+
+/* ─── Dark marketing site base ─── */
+.public-site {
+  background: var(--mk-bg);
+  color: var(--mk-fg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Marketing display headings */
+.mk-display {
+  font-family: var(--font-display), var(--font-inter), system-ui, -apple-system, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--mk-fg);
+}
+
+/* Hand-drawn sketch underline — wobbly double-pass stroke */
+.mk-marked {
+  position: relative;
+  display: inline-block;
+}
+.mk-marked::after {
+  content: "";
+  position: absolute;
+  left: -5%;
+  right: -5%;
+  bottom: -0.22em;
+  height: 0.5em;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 22' preserveAspectRatio='none'><g fill='none' stroke='%23E0352B' stroke-linecap='round' stroke-linejoin='round'><path d='M4 13 Q 22 9 41 11 T 78 10 Q 98 9 118 12 T 158 11 Q 182 10 205 13 T 234 12' stroke-width='2.6'/><path d='M9 16 Q 30 13 52 14 Q 78 15 102 14 Q 132 13 158 15 Q 188 17 228 15' stroke-width='1.6' opacity='0.5'/></g></svg>");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  pointer-events: none;
+}
+.mk-marked--ember::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 22' preserveAspectRatio='none'><g fill='none' stroke='%23FF7A4A' stroke-linecap='round' stroke-linejoin='round'><path d='M4 13 Q 22 9 41 11 T 78 10 Q 98 9 118 12 T 158 11 Q 182 10 205 13 T 234 12' stroke-width='2.6'/><path d='M9 16 Q 30 13 52 14 Q 78 15 102 14 Q 132 13 158 15 Q 188 17 228 15' stroke-width='1.6' opacity='0.5'/></g></svg>");
+}
+
+/* Marketing pill button base */
+.mk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 13.5px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+.mk-btn:active {
+  transform: translateY(1px);
+}
+
+/* Inline code in dark marketing context */
+.mk-code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 13px;
+  background: rgba(224,53,43,0.10);
+  border: 1px solid rgba(224,53,43,0.22);
+  padding: 1px 6px;
+  border-radius: 5px;
+  color: #FFC8B6;
+}
+
+/* Integration app tile hover — subtle red glow + lift */
+.public-site .group:hover {
+  transform: translateY(-2px);
+  border-color: rgba(224,53,43,0.45) !important;
+  background: rgba(224,53,43,0.06) !important;
 }
 
 /* Entrance animation utility */

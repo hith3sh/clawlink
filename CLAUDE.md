@@ -33,6 +33,7 @@ Important: frontend and backend are separate deploy targets. Changes to hosted r
 - `src/data/integrations.ts`: integration catalog and setup metadata
 - `src/lib/server/**`: server-side connection sessions, billing, routing, execution, and provider helpers
 - `src/lib/runtime/**`: runtime-facing tool execution types and policies
+- `src/lib/composio/**`: Composio backend client, tool executor, manifest registry, and KV schema cache
 - `worker/**`: MCP worker, credential bridge, integration handlers, logging, and worker-only helpers
 - `migrations/*.sql`: D1 schema migrations
 
@@ -70,6 +71,7 @@ The catalog setup modes are:
    - hosted ClawLink page collects the Instantly API key directly, then creates a Composio connected account server-side
    - stores only the Composio connected account id and related metadata on the ClawLink connection row
    - tool execution uses generated Composio manifests and `kind: "composio_tool"`
+   - generated manifests do **not** contain `inputSchema` — schemas are fetched lazily from Composio's API at runtime and cached in KV (see "Composio Lazy Schema Architecture" below)
 
 The credential bridge still has some legacy manual-credential support, but new integrations should not use that as their primary setup mode.
 
@@ -104,6 +106,32 @@ The worker uses the connection id plus stored auth backend metadata to load cred
 - `src/lib/server/executor.ts`
   - shared server-side tool execution path
   - uses the same credential bridge logic as the worker runtime
+
+## Composio Lazy Schema Architecture
+
+Composio tool manifests are generated **without `inputSchema`** to keep the worker bundle small. The generated manifests contain only metadata (name, description, mode, risk, tags, execution spec). Schemas are fetched at runtime from Composio's API and cached in KV.
+
+Key files:
+
+- `src/lib/composio/schema-cache.ts` — KV-backed cache layer with 24h TTL and in-memory per-request cache
+- `src/lib/composio/manifest-registry.ts` — `hydrateComposioToolSchemas()` patches stub schemas in-place before returning tools
+- `src/lib/composio/backend-client.ts` — `fetchComposioToolSchemas()` calls Composio's `GET /tools` API and converts `input_parameters` to ClawLink's simplified JSON Schema format
+
+How it works:
+
+1. Static manifests set `inputSchema: { type: "object", properties: {} }` (empty stub)
+2. When `tools/list` is called (MCP worker), the worker queries D1 for the user's Composio-backed connections, identifies which integration slugs are connected, and hydrates schemas for just those toolkits
+3. Schema resolution: in-memory cache → KV cache (`composio-schema:<slug>`, 24h TTL) → Composio API fetch
+4. Unconnected integrations keep the stub schema — the user cannot invoke those tools anyway
+5. The dashboard (`tool-registry.ts`) uses the same hydration path via `hydrateSchemas()` before building tool catalog/description responses
+6. Tool execution (`tool-executor.ts`) never reads `inputSchema` — args pass directly to Composio's `POST /tools/execute/<slug>`
+
+Rules:
+
+- Do not reintroduce `inputSchema` in generated Composio manifests. The import script intentionally omits it.
+- If Composio updates their tool schemas, ClawLink picks up the changes automatically when the KV cache expires (24h)
+- Adding a new Composio integration only requires committing a small (~10-20 KB) manifest file. No schema data in the repo.
+- The `convertInputSchema()` logic in `backend-client.ts` mirrors what the import script previously used, so runtime schemas are identical to what was previously statically generated.
 
 ## Manifest-Backed Pipedream Tools
 
@@ -187,7 +215,7 @@ If running deploys manually in a shell without the package script environment, m
 
 - first integration free
 - lightweight paid plan after that
-- roadmap toward 40+ integrations
+- roadmap toward 100+ integrations
 - keep the primary UX hosted, guided, and simple for OpenClaw users
 
 ## Plugin Releases

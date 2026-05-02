@@ -425,3 +425,182 @@ export async function executeComposioToolRequest(
       undefined,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Runtime schema fetching
+// ---------------------------------------------------------------------------
+
+interface ComposioToolItem {
+  slug?: string;
+  input_parameters?: Record<string, unknown>;
+}
+
+interface ComposioToolsResponse {
+  items?: ComposioToolItem[];
+  total_items?: number;
+}
+
+function simplifySchemaNode(node: unknown): Record<string, unknown> {
+  if (!node || typeof node !== "object") {
+    return { type: "string" };
+  }
+
+  const record = node as Record<string, unknown>;
+
+  if (record.$ref) {
+    return { type: "object", additionalProperties: true };
+  }
+
+  const result: Record<string, unknown> = {};
+
+  if (record.type === "array") {
+    result.type = "array";
+    result.items = record.items
+      ? simplifySchemaNode(record.items)
+      : { type: "object", additionalProperties: true };
+  } else if (record.type === "object") {
+    result.type = "object";
+    result.additionalProperties = true;
+    if (record.properties && typeof record.properties === "object") {
+      const simplified: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(record.properties as Record<string, unknown>)) {
+        simplified[key] = simplifySchemaNode(value);
+      }
+      result.properties = simplified;
+    }
+  } else if (record.type) {
+    result.type = record.type;
+  } else {
+    result.type = "string";
+  }
+
+  if (record.description) result.description = record.description;
+  if (record.enum) result.enum = record.enum;
+
+  return result;
+}
+
+function convertInputSchema(
+  inputParams: Record<string, unknown> | null | undefined,
+): Record<string, unknown> {
+  if (!inputParams || typeof inputParams !== "object") {
+    return { type: "object", additionalProperties: true, properties: {} };
+  }
+
+  const properties: Record<string, unknown> = {};
+  const required: string[] = [];
+  const rawProps = (inputParams.properties ?? {}) as Record<string, Record<string, unknown>>;
+
+  for (const [name, prop] of Object.entries(rawProps)) {
+    const schema: Record<string, unknown> = {};
+    const propType = prop.type;
+
+    if (propType === "array") {
+      schema.type = "array";
+      schema.items = prop.items
+        ? simplifySchemaNode(prop.items)
+        : { type: "object", additionalProperties: true };
+    } else if (propType === "object") {
+      schema.type = "object";
+      schema.additionalProperties = true;
+      if (prop.properties && typeof prop.properties === "object") {
+        const nested: Record<string, unknown> = {};
+        for (const [nestedName, nestedProp] of Object.entries(
+          prop.properties as Record<string, unknown>,
+        )) {
+          nested[nestedName] = simplifySchemaNode(nestedProp);
+        }
+        schema.properties = nested;
+      }
+    } else if (propType === "integer") {
+      schema.type = "integer";
+    } else if (propType === "number") {
+      schema.type = "number";
+    } else if (propType === "boolean") {
+      schema.type = "boolean";
+    } else {
+      schema.type = "string";
+    }
+
+    if (prop.description) schema.description = prop.description;
+    if (prop.enum) schema.enum = prop.enum;
+
+    properties[name] = schema;
+  }
+
+  if (Array.isArray(inputParams.required)) {
+    required.push(...(inputParams.required as string[]));
+  }
+
+  const result: Record<string, unknown> = {
+    type: "object",
+    additionalProperties: true,
+    properties,
+  };
+
+  if (required.length > 0) {
+    result.required = required;
+  }
+
+  return result;
+}
+
+/**
+ * Fetch input schemas for all tools in a Composio toolkit.
+ *
+ * Returns a map from uppercase tool slug (e.g. "GMAIL_SEND_EMAIL") to
+ * simplified JSON Schema objects suitable for MCP inputSchema.
+ *
+ * The response uses the same schema conversion logic as the import script
+ * so the runtime schemas are identical to what was previously statically
+ * generated.
+ */
+export async function fetchComposioToolSchemas(
+  env: Record<string, unknown> | undefined,
+  integrationSlug: string,
+): Promise<Map<string, Record<string, unknown>>> {
+  const apiKey = getEnvValue(env, "COMPOSIO_API_KEY");
+  const baseUrl = normalizeBaseUrl(getEnvValue(env, "COMPOSIO_BASE_URL"));
+
+  if (!apiKey) {
+    throw new Error("COMPOSIO_API_KEY is not configured.");
+  }
+
+  const toolkitMap = parseMap(getEnvValue(env, "COMPOSIO_TOOLKIT_MAP"));
+  const versionMap = parseMap(getEnvValue(env, "COMPOSIO_TOOLKIT_VERSION_MAP"));
+  const toolkit =
+    toolkitMap.get(integrationSlug) ??
+    getEnvValue(env, getSlugEnvKey("COMPOSIO", integrationSlug, "TOOLKIT")) ??
+    integrationSlug.replace(/-/g, "_");
+  const version =
+    versionMap.get(integrationSlug) ??
+    getEnvValue(env, getSlugEnvKey("COMPOSIO", integrationSlug, "TOOLKIT_VERSION"));
+
+  const url = new URL(`${baseUrl}/tools`);
+  url.searchParams.set("toolkit_slug", toolkit);
+  if (version) {
+    url.searchParams.set("toolkit_versions", version);
+  } else {
+    url.searchParams.set("toolkit_versions", "latest");
+  }
+  url.searchParams.set("limit", "1000");
+  url.searchParams.set("include_deprecated", "false");
+
+  const response = await composioFetch<ComposioToolsResponse>(
+    { apiKey, baseUrl },
+    url.pathname + url.search,
+    { method: "GET" },
+  );
+
+  const schemas = new Map<string, Record<string, unknown>>();
+
+  for (const item of response.data.items ?? []) {
+    if (!item.slug) continue;
+    schemas.set(
+      item.slug,
+      convertInputSchema(item.input_parameters as Record<string, unknown> | null),
+    );
+  }
+
+  return schemas;
+}

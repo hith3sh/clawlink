@@ -18,6 +18,8 @@ Because tools are discovered dynamically, **skills do NOT need to list specific 
 2. Teach the agent the discovery/execution workflow
 3. Provide provider-specific context (what the integration can do, what OAuth flow to expect)
 
+Note: Composio-backed integrations use lazy schema loading — tool parameter schemas are fetched from Composio's API at runtime and cached, rather than being bundled statically. This is transparent to skills; the plugin handles schema resolution automatically when the user calls `clawlink_list_tools` or `clawlink_describe_tool`.
+
 ## File structure
 
 Each skill is a folder with this layout:

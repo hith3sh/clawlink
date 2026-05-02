@@ -23,73 +23,116 @@ export function PricingCard({
   highlighted?: boolean;
   ctaAsAnchor?: boolean;
 }) {
-  const ctaClass = `inline-flex w-full items-center justify-center rounded-lg px-5 py-2.5 text-sm font-medium transition ${
-    highlighted
-      ? "bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)]"
-      : "bg-gray-100 text-gray-900 hover:bg-gray-200"
-  }`;
+  const ctaClass = highlighted
+    ? "mk-btn w-full justify-center text-sm"
+    : "mk-btn w-full justify-center text-sm";
+
+  const ctaStyle = highlighted
+    ? { background: "var(--brand)", color: "#fff" }
+    : {
+        background: "rgba(255,255,255,0.04)",
+        borderColor: "rgba(255,255,255,0.18)",
+        color: "#fff",
+      };
 
   return (
     <div
-      className={`flex w-full flex-col rounded-2xl border bg-white p-8 sm:p-10 ${
-        highlighted ? "border-[var(--brand)]/40" : "border-gray-200"
-      }`}
+      className="relative flex w-full flex-col rounded-3xl p-8 sm:p-10"
+      style={{
+        background: highlighted ? "#2A2A2D" : "var(--mk-elev)",
+        border: highlighted
+          ? "1.5px solid var(--brand)"
+          : "1px solid var(--mk-border)",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.45)",
+      }}
     >
-      <div className="flex items-center gap-3">
-        <h3 className="text-2xl font-semibold tracking-tight text-gray-900">
-          {title}
-        </h3>
-        {highlighted && (
-          <span className="rounded-full bg-[var(--brand)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--brand-hover)]">
-            {eyebrow}
-          </span>
-        )}
+      {/* "Most popular" floating ribbon */}
+      {highlighted && (
+        <span
+          className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em]"
+          style={{
+            background: "var(--brand)",
+            color: "#fff",
+            fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+            border: "2px solid var(--mk-bg)",
+          }}
+        >
+          Most popular
+        </span>
+      )}
+
+      <div
+        className="text-[11px] font-bold uppercase tracking-[0.10em]"
+        style={{ color: highlighted ? "#FFB347" : "var(--brand)" }}
+      >
+        {eyebrow}
       </div>
-      <p className="mt-1.5 text-sm text-gray-500">
+
+      <h3
+        className="mt-2 text-2xl font-bold tracking-tight"
+        style={{
+          fontFamily: "var(--font-display), var(--font-inter), system-ui, sans-serif",
+          color: "var(--mk-fg)",
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {title}
+      </h3>
+
+      <div className="mt-3 flex items-baseline gap-1">
+        <span
+          className="text-5xl font-extrabold tracking-tight"
+          style={{
+            fontFamily: "var(--font-display), var(--font-inter), system-ui, sans-serif",
+            color: "var(--mk-fg)",
+            letterSpacing: "-0.03em",
+          }}
+        >
+          ${price}
+        </span>
+        <span className="text-sm" style={{ color: "var(--mk-fg-dim)" }}>/mo</span>
+      </div>
+
+      <p className="mt-1 text-sm" style={{ color: "var(--mk-fg-muted)" }}>
         {tagline}
       </p>
 
-      <div className="mt-8 flex items-baseline gap-1">
-        <span className="text-5xl font-bold tracking-tight text-gray-900">${price}</span>
-        <span className="text-sm text-gray-400">/mo</span>
-      </div>
-
-      <div className="mt-8 flex flex-col gap-2">
-        {ctaAsAnchor ? (
-          <a href={ctaHref} className={ctaClass}>
-            {ctaLabel}
-          </a>
-        ) : (
-          <Link href={ctaHref} className={ctaClass}>
-            {ctaLabel}
-          </Link>
-        )}
-        {footnote ? (
-          <p className="text-center text-xs text-gray-400">
-            {footnote}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="mt-8 border-t border-gray-100" />
-
-      <p className="mt-8 text-sm font-medium text-gray-900">
-        {highlighted ? "Everything in Free, plus:" : "Includes:"}
-      </p>
-      <ul className="mt-4 space-y-3">
+      <ul className="mt-6 space-y-2.5">
         {features.map((f) => (
-          <li key={f} className="flex items-start gap-3 text-[15px] leading-6 text-gray-600">
-            <svg className="mt-0.5 h-5 w-5 shrink-0 text-[var(--brand)]" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path
-                fillRule="evenodd"
-                d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                clipRule="evenodd"
-              />
-            </svg>
+          <li
+            key={f}
+            className="flex items-center gap-2.5 text-sm"
+            style={{ color: "rgba(255,255,255,0.82)" }}
+          >
+            <span
+              className="font-extrabold"
+              style={{ color: highlighted ? "#FFB347" : "var(--brand)" }}
+            >
+              &#10003;
+            </span>
             <span>{f}</span>
           </li>
         ))}
       </ul>
+
+      <div className="mt-auto pt-6">
+        {ctaAsAnchor ? (
+          <a href={ctaHref} className={ctaClass} style={ctaStyle}>
+            {ctaLabel}
+            {highlighted && <span className="text-sm opacity-85">&raquo;</span>}
+          </a>
+        ) : (
+          <Link href={ctaHref} className={ctaClass} style={ctaStyle}>
+            {ctaLabel}
+            {highlighted && <span className="text-sm opacity-85">&raquo;</span>}
+          </Link>
+        )}
+        {footnote && (
+          <p className="mt-2.5 text-center text-xs" style={{ color: "var(--mk-fg-faint)" }}>
+            {footnote}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

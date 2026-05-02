@@ -140,10 +140,11 @@ npm run import:composio-tools -- --toolkit apollo --integration apollo --dry-run
 2. Calls `GET /api/v3.1/tools?toolkit_slug=<slug>&toolkit_versions=latest&limit=1000`
 3. Skips deprecated tools (`is_deprecated === true`)
 4. Classifies each tool's `mode` and `risk` using Composio hint tags (primary) with slug-pattern fallback
-5. Converts `input_parameters` JSON Schema to the ClawLink `inputSchema` format
-6. Generates `askBefore` prompts for write/destructive tools
-7. Writes `src/generated/composio-manifests/<integration>.generated.ts`
-8. Updates the barrel file `src/generated/composio-manifests/index.ts`
+5. Generates `askBefore` prompts for write/destructive tools
+6. Writes `src/generated/composio-manifests/<integration>.generated.ts`
+7. Updates the barrel file `src/generated/composio-manifests/index.ts`
+
+**Important:** The script intentionally does **not** include `inputSchema` in the generated manifests. Schemas are fetched lazily at runtime from Composio's API and cached in KV. This keeps the worker bundle small (~75% reduction in manifest size) and means schema updates from Composio are picked up automatically without re-importing. See "Runtime Schema Hydration" below for details.
 
 ### How it classifies tools
 
@@ -168,7 +169,7 @@ If no hint tag is present, the script falls back to slug pattern matching:
 
 ### What the output looks like
 
-The script generates a TypeScript file with one `composioTool({...})` call per tool:
+The script generates a TypeScript file with one `composioTool({...})` call per tool. Note that `inputSchema` is **not** included — the factory function sets an empty stub, and real schemas are hydrated at runtime:
 
 ```typescript
 composioTool({
@@ -177,19 +178,29 @@ composioTool({
   toolSlug: "APOLLO_SEARCH_PEOPLE",
   mode: "read",
   risk: "safe",
-  inputSchema: {
-    type: "object",
-    additionalProperties: true,
-    properties: {
-      q: { type: "string", description: "Search query" },
-      limit: { type: "integer", description: "Max results" },
-    },
-  },
   tags: ["composio", "apollo", "read", "people"],
 }),
 ```
 
+The `composioTool()` factory inside each generated file fills in defaults including `inputSchema: { type: "object", properties: {} }` (the empty stub), `execution: { kind: "composio_tool", toolkit, toolSlug, version }`, and other fields like `integration`, `accessLevel`, `idempotent`, etc.
+
 The barrel file at `src/generated/composio-manifests/index.ts` is automatically rewritten to import and re-export all `*.generated.ts` files in the directory.
+
+### Runtime Schema Hydration
+
+ClawLink resolves real Composio schemas lazily at runtime instead of bundling them into the generated manifest files:
+
+1. `scripts/import-composio-tools.mjs` generates lean static manifests with metadata, `execution`, and a stub `inputSchema: { type: "object", properties: {} }`.
+2. `src/lib/composio/manifest-registry.ts` loads those static manifests and exposes `hydrateComposioToolSchemas()` to patch stub schemas in place.
+3. `src/lib/composio/schema-cache.ts` resolves schemas in this order:
+   - in-memory cache for the current worker instance
+   - Cloudflare KV in the shared `CREDENTIALS` namespace under `composio-schema:<integrationSlug>`
+   - Composio API fetch as fallback
+4. `src/lib/composio/backend-client.ts` fetches `GET /api/v3.1/tools?...` and converts each tool's `input_parameters` into the same simplified JSON Schema shape ClawLink exposes to MCP clients.
+5. `worker/index.ts` hydrates schemas during `tools/list`, but only for Composio integrations the authenticated user has actually connected.
+6. `src/lib/server/tool-registry.ts` uses the same hydration path for dashboard/API tool descriptions.
+
+This means schema fetches are paid only when they are actually needed, and most requests reuse memory or KV cache. If hydration fails, the tool keeps the stub schema, but the manifest metadata and execution wiring still remain intact.
 
 ### Verify
 
@@ -536,10 +547,11 @@ npm run smoke:openclaw-plugin -- --preset <slug>
 
 These are fully generic and handle any Composio integration automatically:
 
-- `scripts/import-composio-tools.mjs` — Already built, works for any toolkit
-- `src/lib/composio/backend-client.ts` — Composio API client (connection + execution)
+- `scripts/import-composio-tools.mjs` — Already built, works for any toolkit unless you are changing manifest generation behavior itself
+- `src/lib/composio/backend-client.ts` — Composio API client for connection setup, tool execution, and runtime schema fetches
+- `src/lib/composio/schema-cache.ts` — Generic lazy-schema cache layer (memory + KV + Composio fallback)
 - `src/lib/composio/tool-executor.ts` — Tool execution adapter
-- `src/lib/composio/manifest-registry.ts` — Indexes whatever `composioToolManifests` exports
+- `src/lib/composio/manifest-registry.ts` — Indexes generated manifests and hydrates stub schemas in place
 - `worker/index.ts` — Worker dispatch (handles any `composio_tool` execution kind)
 - `worker/credentials.ts` — Credential loading for Composio connections
 - `worker/integrations/index.ts` — Auto-includes all Composio manifests (no per-integration wiring needed)
@@ -547,6 +559,7 @@ These are fully generic and handle any Composio integration automatically:
 - `src/app/api/connect/sessions/[token]/composio/route.ts` — Creates connect link for any Composio integration
 - `src/app/api/connect/sessions/[token]/composio/complete/route.ts` — Handles OAuth callback for any Composio integration
 - `src/app/api/connect/start/route.ts` — Handles `"composio"` setup mode generically
+- `src/lib/server/tool-registry.ts` — Dashboard/API tool listing already hydrates Composio schemas generically
 - `src/lib/server/integration-store.ts` — Saves Composio connections generically
 - `src/lib/server/connection-sessions.ts` — Completes Composio sessions generically
 - Database schema — No changes needed (Composio columns already exist from migration 012)
