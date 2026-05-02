@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 const PLUGIN_ID = "clawlink-plugin";
 const LEGACY_PLUGIN_IDS = ["clawlink", "openclaw-plugin"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.32";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.33";
 
 function safeTrim(value) {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : "";
