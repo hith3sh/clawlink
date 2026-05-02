@@ -1,10 +1,9 @@
 ---
 name: clawlink
-version: 0.1.23
+version: 0.1.24
 description: Third-party integration hub for OpenClaw. Connect 100+ apps (email, calendars, CRMs, docs) through a single plugin with hosted OAuth.
 homepage: https://claw-link.dev
 clawhub: clawlink-plugin
-package: "@useclawlink/openclaw-plugin"
 docs: https://docs.claw-link.dev/openclaw
 source: https://github.com/hith3sh/clawlink
 ---
@@ -16,24 +15,15 @@ ClawLink is a third-party integration hub for OpenClaw. It is not affiliated wit
 Canonical references:
 - Website: https://claw-link.dev
 - Docs: https://docs.claw-link.dev/openclaw
-- ClawHub package: clawlink-plugin (preferred install source — verified by OpenClaw)
-- npm package: @useclawlink/openclaw-plugin (alternate install source)
-- npm page: https://www.npmjs.com/package/@useclawlink/openclaw-plugin
 - Source: https://github.com/hith3sh/clawlink
 - Verification: https://claw-link.dev/verify
 
 ## Install
 
-Install ClawLink from ClawHub. ClawHub is OpenClaw's verified plugin registry — prefer it over npm so the OpenClaw client can verify the publisher.
+Install ClawLink from ClawHub — OpenClaw's official plugin registry.
 
 ```bash
 openclaw plugins install clawhub:clawlink-plugin
-```
-
-Alternate (npm, unverified):
-
-```bash
-openclaw plugins install @useclawlink/openclaw-plugin
 ```
 
 ## When to use ClawLink
@@ -79,7 +69,7 @@ When the user wants to connect a new app, do not start a hosted session from cha
 
 If ClawLink reports that the plugin is not configured, the plugin has not been paired with the user's ClawLink account yet.
 
-1. Install the plugin if needed using the commands in the Install section above. Prefer the ClawHub install path.
+1. Install the plugin using the command in the Install section above.
 2. If the ClawLink tools are available, call `clawlink_begin_pairing`. Tell the user to open the returned pairing URL, sign in to ClawLink if needed, and approve the device in the browser.
 3. After the user confirms approval, call `clawlink_get_pairing_status` to finish storing the local credential and verify the pairing result.
 4. If the current OpenClaw session started before the plugin was installed and the tools are not visible yet, tell the user to start a fresh chat so OpenClaw reloads the tool catalog, then retry pairing there.

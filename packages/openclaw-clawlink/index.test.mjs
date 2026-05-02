@@ -109,7 +109,7 @@ test("clawlink_call_tool forwards nested arguments unchanged", async () => {
     headers: {
       "X-ClawLink-API-Key": "cllk_test_123",
       "Content-Type": "application/json",
-      "User-Agent": "@useclawlink/openclaw-plugin/0.1.23",
+      "User-Agent": "@useclawlink/openclaw-plugin/0.1.24",
     },
     body: {
       arguments: {
@@ -388,7 +388,7 @@ test("clawlink_get_pairing_status exchanges the approved session and clears pend
           approvedAt: "2026-05-01T01:02:00.000Z",
           pairedAt: null,
         },
-        apiKey: "cllk_live_paired_123",
+        apiKey: "cllk_test_paired_123",
         apiKeyId: 41,
       });
     }
@@ -439,13 +439,13 @@ test("clawlink_get_pairing_status exchanges the approved session and clears pend
   });
 
   assert.deepEqual(api.getPluginConfig(), {
-    apiKey: "cllk_live_paired_123",
+    apiKey: "cllk_test_paired_123",
   });
 
   const integrationRequest = requests.find(
     (request) => request.url === "https://claw-link.dev/api/integrations",
   );
-  assert.equal(integrationRequest?.headers["X-ClawLink-API-Key"], "cllk_live_paired_123");
+  assert.equal(integrationRequest?.headers["X-ClawLink-API-Key"], "cllk_test_paired_123");
 });
 
 test("clawlink_get_pairing_status preserves pending pairing when finalize fails", async () => {
@@ -492,7 +492,7 @@ test("clawlink_get_pairing_status preserves pending pairing when finalize fails"
           approvedAt: "2026-05-01T01:04:00.000Z",
           pairedAt: null,
         },
-        apiKey: "cllk_live_paired_124",
+        apiKey: "cllk_test_paired_124",
         apiKeyId: 42,
       });
     }
@@ -519,7 +519,7 @@ test("clawlink_get_pairing_status preserves pending pairing when finalize fails"
   });
 
   assert.deepEqual(api.getPluginConfig(), {
-    apiKey: "cllk_live_paired_124",
+    apiKey: "cllk_test_paired_124",
     pendingPairing: {
       sessionToken: "pair_sess_124",
       verifier: "pair_verifier_124",

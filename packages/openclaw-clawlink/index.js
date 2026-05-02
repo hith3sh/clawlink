@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 const PLUGIN_ID = "clawlink-plugin";
 const LEGACY_PLUGIN_IDS = ["clawlink", "openclaw-plugin"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.23";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.24";
 
 function safeTrim(value) {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : "";
@@ -64,9 +64,13 @@ function getDynamicPluginConfig(api) {
   return api.pluginConfig ?? {};
 }
 
+function readApiKey(config) {
+  return isNonEmptyString(config.apiKey) ? config.apiKey.trim() : "";
+}
+
 function getPluginConfig(api) {
   const rawConfig = getDynamicPluginConfig(api);
-  const apiKey = isNonEmptyString(rawConfig.apiKey) ? rawConfig.apiKey.trim() : "";
+  const apiKey = readApiKey(rawConfig);
   const pendingPairing = isPlainObject(rawConfig.pendingPairing)
     ? {
         sessionToken: safeTrim(rawConfig.pendingPairing.sessionToken),
