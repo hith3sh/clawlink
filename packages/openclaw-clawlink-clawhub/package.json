@@ -1,5 +1,5 @@
 {
-  "name": "@useclawlink/openclaw-plugin",
+  "name": "clawlink-plugin",
   "version": "0.1.38",
   "description": "Trusted SaaS integrations for OpenClaw agents through the ClawLink plugin",
   "type": "module",

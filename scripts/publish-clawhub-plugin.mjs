@@ -1,5 +1,9 @@
 #!/usr/bin/env node
-// Publish the OpenClaw plugin to ClawHub under the name "clawlink-plugin".
+// Manual recovery publisher for the OpenClaw plugin on ClawHub.
+// Normal provenance releases use the official ClawHub reusable workflow and
+// the committed packages/openclaw-clawlink-clawhub mirror.
+//
+// Publishes under the name "clawlink-plugin".
 //
 // ClawHub requires `package.json` `name` to equal the published name. We keep
 // the npm name as "@useclawlink/openclaw-plugin" but publish to ClawHub as
@@ -96,71 +100,6 @@ if (manualOverrideReason) {
   publishArgs.push("--manual-override-reason", manualOverrideReason);
 }
 publishArgs.push("--json");
-
-const hasOidc = !!(
-  process.env.ACTIONS_ID_TOKEN_REQUEST_URL && process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN
-);
-console.log(
-  `OIDC env available: ${hasOidc} (URL set: ${!!process.env.ACTIONS_ID_TOKEN_REQUEST_URL}, TOKEN set: ${!!process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN})`,
-);
-
-function decodeJwtPayload(jwt) {
-  const [, payload] = jwt.split(".");
-  if (!payload) return null;
-  return JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
-}
-
-function summarizeOidcClaims(claims) {
-  if (!claims || typeof claims !== "object") return null;
-  return {
-    aud: claims.aud,
-    event_name: claims.event_name,
-    ref: claims.ref,
-    ref_type: claims.ref_type,
-    repository: claims.repository,
-    repository_id: claims.repository_id,
-    repository_owner: claims.repository_owner,
-    repository_owner_id: claims.repository_owner_id,
-    workflow_ref: claims.workflow_ref,
-    job_workflow_ref: claims.job_workflow_ref,
-    runner_environment: claims.runner_environment,
-    sha: claims.sha,
-    run_id: claims.run_id,
-    run_attempt: claims.run_attempt,
-  };
-}
-
-// Debug: attempt OIDC mint directly so we can see the real error
-if (hasOidc && !manualOverrideReason) {
-  try {
-    const url = new URL(process.env.ACTIONS_ID_TOKEN_REQUEST_URL);
-    url.searchParams.set("audience", "clawhub");
-    const resp = await fetch(url, {
-      headers: { Authorization: `Bearer ${process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}` },
-    });
-    const data = await resp.json();
-    const oidcJwt = data.value;
-    console.log(`OIDC JWT obtained: ${!!oidcJwt} (length: ${oidcJwt?.length ?? 0})`);
-    console.log(`OIDC claims: ${JSON.stringify(summarizeOidcClaims(decodeJwtPayload(oidcJwt)))}`);
-
-    const mintResp = await fetch("https://clawhub.ai/api/v1/publish/token/mint", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ packageName: CLAWHUB_NAME, version, githubOidcToken: oidcJwt }),
-    });
-    const mintText = await mintResp.text();
-    if (mintResp.ok) {
-      const mintJson = JSON.parse(mintText);
-      console.log(
-        `Mint response: ${mintResp.status} token returned: ${typeof mintJson.token === "string"} expiresAt: ${mintJson.expiresAt}`,
-      );
-    } else {
-      console.log(`Mint response: ${mintResp.status} ${mintText.substring(0, 500)}`);
-    }
-  } catch (e) {
-    console.log(`OIDC debug error: ${e.message}`);
-  }
-}
 
 console.log(`Args: npx ${publishArgs.join(" ")}`);
 

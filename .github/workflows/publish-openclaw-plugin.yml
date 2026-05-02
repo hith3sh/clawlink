@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   publish:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -57,11 +58,6 @@ jobs:
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         run: npx --yes npm@11.6.2 publish --provenance --access public
 
-      - name: Publish to ClawHub
-        if: github.event_name == 'workflow_dispatch'
-        working-directory: ${{ github.workspace }}
-        run: node scripts/publish-clawhub-plugin.mjs --commit "$GITHUB_SHA"
-
       - name: Create GitHub Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         working-directory: ${{ github.workspace }}
@@ -73,3 +69,16 @@ jobs:
             --title "$GITHUB_REF_NAME" \
             --generate-notes \
             --verify-tag
+
+  publish-clawhub:
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      id-token: write
+    uses: openclaw/clawhub/.github/workflows/package-publish.yml@v0.12.0
+    with:
+      dry_run: false
+      source: "https://github.com/hith3sh/clawlink/tree/${{ github.ref_name }}/packages/openclaw-clawlink-clawhub"
+      source_repo: hith3sh/clawlink
+      source_commit: ${{ github.sha }}
+      source_ref: ${{ github.ref }}
