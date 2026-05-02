@@ -35,6 +35,10 @@ const commit =
         .toString()
         .trim();
 
+const manualOverrideFlagIndex = args.indexOf("--manual-override-reason");
+const manualOverrideReason =
+  manualOverrideFlagIndex >= 0 ? args[manualOverrideFlagIndex + 1] : null;
+
 if (!commit || !/^[0-9a-f]{40}$/i.test(commit)) {
   console.error(`Invalid commit sha: ${commit}`);
   process.exit(1);
@@ -88,6 +92,9 @@ const publishArgs = [
   "packages/openclaw-clawlink",
 ];
 if (dryRun) publishArgs.push("--dry-run");
+if (manualOverrideReason) {
+  publishArgs.push("--manual-override-reason", manualOverrideReason);
+}
 
 let exitCode = 0;
 try {
