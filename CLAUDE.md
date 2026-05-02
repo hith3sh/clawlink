@@ -221,3 +221,7 @@ If running deploys manually in a shell without the package script environment, m
 ## Plugin Releases
 
 For OpenClaw plugin releases, follow the tag-based npm publish workflow documented in `AGENTS.md` and `.github/workflows/publish-openclaw-plugin.yml`.
+
+**Every plugin version must be published to BOTH npm AND ClawHub.** The plugin uses two different names by design: npm publishes as `@useclawlink/openclaw-plugin` (existing scope) and ClawHub publishes as `clawlink-plugin` (so OpenClaw users can install via `clawhub:clawlink-plugin`). The plugin id in `openclaw.plugin.json` is `clawlink-plugin` to match the ClawHub name.
+
+The two registries do not sync — pushing a git tag only publishes to npm. After the npm tag publish, run `npm run publish:clawhub-plugin` to publish to ClawHub. The helper script handles the `package.json` name swap that ClawHub requires. Full rules are in `AGENTS.md` under "ClawHub Publishing".

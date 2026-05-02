@@ -16,6 +16,7 @@
     "audit:manifests": "node scripts/audit-pipedream-manifests.mjs",
     "test:openclaw-plugin-contract": "node --test packages/openclaw-clawlink/index.test.mjs",
     "smoke:openclaw-plugin": "node scripts/smoke-openclaw-plugin-live.mjs",
+    "publish:clawhub-plugin": "node scripts/publish-clawhub-plugin.mjs",
     "start": "next start",
     "lint": "eslint",
     "version:worker": "wrangler versions upload --config worker/wrangler.worker.toml",
