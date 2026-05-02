@@ -3,15 +3,15 @@
 import { useState } from "react";
 import { Bot, User, Check, Copy } from "lucide-react";
 import {
-  CLAWLINK_API_SETTINGS_URL,
   CLAWLINK_SKILL_URL,
   CLAWLINK_VERIFY_URL,
-  OPENCLAW_PLUGIN_INSTALL_COMMAND,
 } from "@/lib/openclaw-plugin";
 
 type Audience = "human" | "agent";
 
 const AGENT_PROMPT = `Read ${CLAWLINK_SKILL_URL} and follow the instructions to use ClawLink for third-party integrations.`;
+const CLAWHUB_PLUGIN_INSTALL_COMMAND = "openclaw plugins install clawhub:clawlink-plugin";
+const CLAWLINK_DASHBOARD_URL = "https://claw-link.dev/dashboard";
 
 export default function AudienceTabs() {
   const [audience, setAudience] = useState<Audience>("agent");
@@ -111,7 +111,7 @@ function HumanPanel() {
           color: "var(--mk-fg)",
         }}
       >
-        Connect what you need in three clicks
+        Pair once, then connect apps from the dashboard
       </h2>
 
       {/* Three setup cards */}
@@ -119,30 +119,30 @@ function HumanPanel() {
         <SetupCard
           num="01"
           title="Install the plugin"
-          desc="Copy and paste this into your terminal or OpenClaw."
-          codeSnippet={OPENCLAW_PLUGIN_INSTALL_COMMAND}
+          desc="Install ClawLink from ClawHub in OpenClaw."
+          codeSnippet={CLAWHUB_PLUGIN_INSTALL_COMMAND}
         />
         <SetupCard
           num="02"
           title="Start browser pairing"
-          desc="In OpenClaw, ask the assistant to pair ClawLink for this device."
+          desc="Ask OpenClaw to pair ClawLink for this device."
         />
         <SetupCard
           num="03"
-          title="Approve in browser"
-          desc="Open the ClawLink pairing page, sign in if needed, and approve."
+          title="Connect apps"
+          desc="Open the dashboard, click Connect, and complete OAuth."
         />
       </div>
 
       <ol className="mt-5 space-y-2.5">
         <Step num={1}>
-          Sign in at <code className="mk-code">claw-link.dev</code> and copy your API key.
+          Approve the browser pairing page after OpenClaw opens it.
         </Step>
         <Step num={2}>
-          Click <strong className="text-white">Connect</strong> on any integration. We handle OAuth.
+          Click <strong className="text-white">Connect</strong> on any dashboard integration. We handle OAuth.
         </Step>
         <Step num={3}>
-          Send your agent a request. It calls the right tool.
+          Send your agent a request. No API key copy-paste is needed for normal setup.
         </Step>
       </ol>
 
@@ -157,12 +157,12 @@ function HumanPanel() {
         </a>
         {" · "}
         <a
-          href={CLAWLINK_API_SETTINGS_URL}
+          href={CLAWLINK_DASHBOARD_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="underline hover:text-white transition-colors"
         >
-          Manual API key setup
+          Open dashboard
         </a>
       </p>
     </div>
