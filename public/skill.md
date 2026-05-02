@@ -22,6 +22,22 @@ Canonical references:
 - Source: https://github.com/hith3sh/clawlink
 - Verification: https://claw-link.dev/verify
 
+## Install
+
+Install ClawLink from ClawHub. ClawHub is OpenClaw's verified plugin registry — prefer it over npm so the OpenClaw client can verify the publisher.
+
+```bash
+openclaw plugins install clawhub:clawlink-plugin
+openclaw gateway restart
+```
+
+Alternate (npm, unverified):
+
+```bash
+openclaw plugins install @useclawlink/openclaw-plugin
+openclaw gateway restart
+```
+
 ## When to use ClawLink
 
 Use ClawLink whenever the user wants to interact with a third-party app or service such as email, calendars, CRMs, docs, messaging tools, code hosts, analytics tools, or other external SaaS products.
@@ -63,7 +79,7 @@ When the user wants to connect a new app, do not start a hosted session from cha
 
 If ClawLink reports that the plugin is not configured, the plugin has not been paired with the user's ClawLink account yet.
 
-1. Install the plugin if needed. Prefer the ClawHub source because OpenClaw verifies ClawHub-installed plugins: `openclaw plugins install clawhub:clawlink-plugin`. The npm path `openclaw plugins install @useclawlink/openclaw-plugin` is an alternate.
+1. Install the plugin if needed using the commands in the Install section above. Prefer the ClawHub install path.
 2. If the ClawLink tools are available, call `clawlink_begin_pairing`. Tell the user to open the returned pairing URL, sign in to ClawLink if needed, and approve the device in the browser.
 3. After the user confirms approval, call `clawlink_get_pairing_status` to finish storing the local credential and verify the pairing result.
 4. If the current OpenClaw session started before the plugin was installed and the tools are not visible yet, tell the user to start a fresh chat so OpenClaw reloads the tool catalog, then retry pairing there.

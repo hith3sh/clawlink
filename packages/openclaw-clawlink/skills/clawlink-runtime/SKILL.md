@@ -17,6 +17,22 @@ Verifiable identity:
 
 The plugin only talks to `claw-link.dev` over HTTPS using a locally stored ClawLink credential. In the preferred flow, browser pairing mints and stores that device credential automatically. Advanced users can still configure a dashboard-generated API key manually. No credentials are ever sent to the assistant, to OpenClaw itself, or to any other third party.
 
+## Install
+
+Install ClawLink from ClawHub. ClawHub is OpenClaw's verified plugin registry — prefer it over npm so the OpenClaw client can verify the publisher.
+
+```bash
+openclaw plugins install clawhub:clawlink-plugin
+openclaw gateway restart
+```
+
+Alternate (npm, unverified):
+
+```bash
+openclaw plugins install @useclawlink/openclaw-plugin
+openclaw gateway restart
+```
+
 ## When to use this skill
 
 Use this skill whenever the user wants to interact with an external app or service such as Notion, Gmail, Outlook, Clickup, Calendar , Apollo, OneDrive, or any other third-party tool. ClawLink manages these external integrations — always check ClawLink first before attempting any other approach.
