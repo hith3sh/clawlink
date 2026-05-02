@@ -115,7 +115,7 @@ export default function HostedConnectPage({
       } else if (nextStatus === "expired") {
         connectUiRef.current?.close();
         connectUiRef.current = null;
-        setError("This link expired. Start a new connection from OpenClaw and try again.");
+        setError("This link expired. Start a new connection and try again.");
       }
     }, 3000);
 
@@ -445,7 +445,7 @@ export default function HostedConnectPage({
               Connect {integration.name}
             </h1>
             <p className="mt-3 max-w-xl text-lg leading-8 text-gray-500">
-              Finish this once, then go back to OpenClaw. We will pick it up automatically.
+              Finish this once. ClawLink will update automatically.
             </p>
           </div>
         </div>
@@ -471,17 +471,17 @@ export default function HostedConnectPage({
               <p className="font-medium">Connected</p>
             </div>
             <p className="mt-3 text-base leading-7 text-emerald-900">
-              {integration.name} is ready. Go back to OpenClaw and continue.
+              {integration.name} is ready. You can close this tab and continue.
             </p>
           </div>
         ) : status === "expired" ? (
           <div className="rounded-3xl border border-amber-200 bg-amber-50 p-7 text-base leading-7 text-amber-900">
-            This link expired. Start a new connection from OpenClaw and try again.
+            This link expired. Start a new connection and try again.
           </div>
         ) : showPipedreamOAuth ? (
           <div className="rounded-3xl border border-gray-200 bg-gray-50 p-7">
             <p className="text-base leading-7 text-gray-700">
-              You can close this tab and retry the connection from your dashboard.
+              You can close this tab and start the connection again.
             </p>
           </div>
         ) : showNangoOAuth ? (
@@ -539,7 +539,7 @@ export default function HostedConnectPage({
           <div className="rounded-3xl border border-gray-200 bg-gray-50 p-7">
             <p className="text-lg font-medium text-gray-900">This connection is not ready yet.</p>
             <p className="mt-2 text-base leading-7 text-gray-600">
-              {integration.name} no longer supports manual credential entry. Start again from OpenClaw once a hosted provider flow is available.
+              {integration.name} no longer supports manual credential entry. Start again once a hosted provider flow is available.
             </p>
           </div>
         )}

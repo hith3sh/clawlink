@@ -16,7 +16,9 @@ import { googleAdsComposioTools } from "./google-ads.generated";
 import { googleAnalyticsComposioTools } from "./google-analytics.generated";
 import { googleCalendarComposioTools } from "./google-calendar.generated";
 import { googleDocsComposioTools } from "./google-docs.generated";
+import { googleDriveComposioTools } from "./google-drive.generated";
 import { googleSearchConsoleComposioTools } from "./google-search-console.generated";
+import { googleSheetsComposioTools } from "./google-sheets.generated";
 import { highlevelComposioTools } from "./highlevel.generated";
 import { hubspotComposioTools } from "./hubspot.generated";
 import { instagramComposioTools } from "./instagram.generated";
@@ -41,6 +43,7 @@ import { salesforceComposioTools } from "./salesforce.generated";
 import { semrushComposioTools } from "./semrush.generated";
 import { sendgridComposioTools } from "./sendgrid.generated";
 import { shopifyComposioTools } from "./shopify.generated";
+import { slackComposioTools } from "./slack.generated";
 import { snapchatComposioTools } from "./snapchat.generated";
 import { stripeComposioTools } from "./stripe.generated";
 import { twilioComposioTools } from "./twilio.generated";
@@ -66,7 +69,9 @@ export const composioToolManifests: IntegrationTool[] = [
   ...googleAnalyticsComposioTools,
   ...googleCalendarComposioTools,
   ...googleDocsComposioTools,
+  ...googleDriveComposioTools,
   ...googleSearchConsoleComposioTools,
+  ...googleSheetsComposioTools,
   ...highlevelComposioTools,
   ...hubspotComposioTools,
   ...instagramComposioTools,
@@ -91,6 +96,7 @@ export const composioToolManifests: IntegrationTool[] = [
   ...semrushComposioTools,
   ...sendgridComposioTools,
   ...shopifyComposioTools,
+  ...slackComposioTools,
   ...snapchatComposioTools,
   ...stripeComposioTools,
   ...twilioComposioTools,

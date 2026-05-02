@@ -16,7 +16,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div id="dashboard-theme-root" className="min-h-svh bg-background text-foreground">
+    <div id="dashboard-theme-root" className="dark min-h-svh bg-background text-foreground">
       <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       <DashboardThemeProvider>
         <DashboardConnectionsProvider>
@@ -24,7 +24,7 @@ export default function DashboardLayout({
             <AppSidebar />
             <SidebarInset>
               <DashboardTopbar />
-              <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
+              <div className="mx-auto w-full max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
                 {children}
               </div>
             </SidebarInset>

@@ -1,10 +1,14 @@
 export const OPENCLAW_PLUGIN_PACKAGE = "@useclawlink/openclaw-plugin";
-export const OPENCLAW_PLUGIN_INSTALL_COMMAND = `openclaw plugins install ${OPENCLAW_PLUGIN_PACKAGE}`;
+export const OPENCLAW_PLUGIN_ID = "clawlink-plugin";
+export const CLAWHUB_PACKAGE_NAME = "clawlink-plugin";
+export const OPENCLAW_PLUGIN_INSTALL_COMMAND = `openclaw plugins install clawhub:${CLAWHUB_PACKAGE_NAME}`;
 export const CLAWLINK_API_SETTINGS_URL = "https://claw-link.dev/dashboard/settings?tab=api";
 export const CLAWLINK_OPENCLAW_DOCS_URL = "https://docs.claw-link.dev/openclaw";
 export const CLAWLINK_NPM_URL = `https://www.npmjs.com/package/${OPENCLAW_PLUGIN_PACKAGE}`;
+export const CLAWLINK_CLAWHUB_URL = `https://clawhub.ai/packages/${CLAWHUB_PACKAGE_NAME}`;
 export const CLAWLINK_GITHUB_URL = "https://github.com/hith3sh/clawlink";
 export const CLAWLINK_VERIFY_URL = "https://claw-link.dev/verify";
+export const CLAWLINK_VERIFY_JSON_URL = "https://claw-link.dev/api/verify";
 export const CLAWLINK_SKILL_URL = "https://claw-link.dev/skill.md";
 export const OPENCLAW_PLUGIN_SETUP_PROMPT = `ClawLink setup for OpenClaw — third-party plugin, not affiliated with OpenClaw.
 

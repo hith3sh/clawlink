@@ -29,6 +29,9 @@ export type ConnectionSessionStatus =
   | "failed"
   | "expired";
 
+const CONNECTION_SESSION_TTL_MS = 15 * 60 * 1000;
+const MIN_REUSABLE_CONNECTION_SESSION_TTL_MS = 60 * 1000;
+
 interface StoredConnectionSessionRow {
   id: string;
   public_token: string;
@@ -199,6 +202,15 @@ async function expireIfNeeded(
     status: "expired",
     updated_at: new Date().toISOString(),
   };
+}
+
+function hasReusableSessionTtl(session: StoredConnectionSessionRow): boolean {
+  const expiresAt = new Date(session.expires_at).getTime();
+
+  return (
+    Number.isFinite(expiresAt) &&
+    expiresAt - Date.now() > MIN_REUSABLE_CONNECTION_SESSION_TTL_MS
+  );
 }
 
 function safeTrim(value: unknown): string | null {
@@ -374,7 +386,7 @@ export async function createConnectionSession(
   const id = crypto.randomUUID();
   const token = randomToken(24);
   const displayCode = generateDisplayCode();
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+  const expiresAt = new Date(Date.now() + CONNECTION_SESSION_TTL_MS).toISOString();
 
   await db
     .prepare(
@@ -516,6 +528,11 @@ export async function getLatestActiveConnectionSessionForUser(
     db,
     await expireIfNeeded(db, session),
   );
+
+  if (normalized.status !== "awaiting_user_action" || !hasReusableSessionTtl(normalized)) {
+    return null;
+  }
+
   const connection = await loadConnectionForSession(db, normalized);
 
   return mapSession(normalized, connection);

@@ -31,9 +31,9 @@ export default function MarketingLayout({
       </div>
 
       {/* Floating pill nav */}
-      <div className="sticky top-4 z-50 flex justify-center px-6 pt-4">
+      <div className="sticky top-4 z-50 flex justify-center px-4 pt-4 sm:px-6">
         <nav
-          className="flex w-full max-w-[1080px] items-center justify-between gap-6 rounded-full px-6 py-2"
+          className="flex w-full max-w-[1080px] items-center justify-between gap-3 rounded-full px-3 py-2 sm:gap-6 sm:px-6"
           style={{
             background: "rgba(33, 33, 33, 0.75)",
             backdropFilter: "blur(20px)",
@@ -52,7 +52,7 @@ export default function MarketingLayout({
                 className="h-7 w-7 rounded-lg"
               />
               <span
-                className="text-lg font-extrabold tracking-tight"
+                className="whitespace-nowrap text-lg font-extrabold tracking-tight"
                 style={{
                   fontFamily:
                     "var(--font-display), var(--font-inter), system-ui, sans-serif",
@@ -60,7 +60,7 @@ export default function MarketingLayout({
                   letterSpacing: "-0.02em",
                 }}
               >
-                claw-link
+                ClawLink
               </span>
             </Link>
             <div className="hidden items-center gap-5 text-[13.5px] font-medium md:flex" style={{ color: "rgba(255,255,255,0.78)" }}>
@@ -68,18 +68,18 @@ export default function MarketingLayout({
               <Link href="/#pricing" className="hover:text-white transition-colors">Pricing</Link>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <Link
               href="/sign-in"
-              className="mk-btn border border-white/20 bg-white/[0.04] text-white transition-all hover:border-white/30 hover:bg-white/[0.10]"
+              className="mk-btn !px-3 !py-1.5 !text-[12px] border border-white/20 bg-white/[0.04] text-white transition-all hover:border-white/30 hover:bg-white/[0.10] sm:!px-5 sm:!py-2.5 sm:!text-[13.5px]"
             >
               Log in
             </Link>
             <Link
               href="/sign-up"
-              className="mk-btn bg-[var(--brand)] text-white transition-all hover:bg-[var(--brand-hover)]"
+              className="mk-btn !px-3 !py-1.5 !text-[12px] bg-[var(--brand)] text-white transition-all hover:bg-[var(--brand-hover)] sm:!px-5 sm:!py-2.5 sm:!text-[13.5px]"
             >
-              Start free <span className="text-sm opacity-85">&raquo;</span>
+              Start free <span className="text-xs opacity-85 sm:text-sm">&raquo;</span>
             </Link>
           </div>
         </nav>
@@ -108,7 +108,7 @@ export default function MarketingLayout({
                   letterSpacing: "-0.02em",
                 }}
               >
-                claw-link
+                ClawLink
               </span>
             </Link>
             <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--mk-fg-muted)" }}>

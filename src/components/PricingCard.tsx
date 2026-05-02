@@ -11,6 +11,7 @@ export function PricingCard({
   ctaHref,
   highlighted = false,
   ctaAsAnchor = false,
+  dark = false,
 }: {
   eyebrow: string;
   title: string;
@@ -22,29 +23,30 @@ export function PricingCard({
   ctaHref: string;
   highlighted?: boolean;
   ctaAsAnchor?: boolean;
+  dark?: boolean;
 }) {
-  const ctaClass = highlighted
+  const ctaClass = dark
     ? "mk-btn w-full justify-center text-sm"
-    : "mk-btn w-full justify-center text-sm";
-
-  const ctaStyle = highlighted
-    ? { background: "var(--brand)", color: "#fff" }
-    : {
-        background: "rgba(255,255,255,0.04)",
-        borderColor: "rgba(255,255,255,0.18)",
-        color: "#fff",
-      };
+    : "inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition";
 
   return (
     <div
-      className="relative flex w-full flex-col rounded-3xl p-8 sm:p-10"
-      style={{
-        background: highlighted ? "#2A2A2D" : "var(--mk-elev)",
-        border: highlighted
-          ? "1.5px solid var(--brand)"
-          : "1px solid var(--mk-border)",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.45)",
-      }}
+      className={`relative flex w-full flex-col rounded-3xl p-8 sm:p-10 ${
+        dark
+          ? ""
+          : "bg-card text-card-foreground border border-border shadow-sm"
+      }`}
+      style={
+        dark
+          ? {
+              background: highlighted ? "#2A2A2D" : "var(--mk-elev)",
+              border: highlighted
+                ? "1.5px solid var(--brand)"
+                : "1px solid var(--mk-border)",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.45)",
+            }
+          : undefined
+      }
     >
       {/* "Most popular" floating ribbon */}
       {highlighted && (
@@ -54,7 +56,7 @@ export function PricingCard({
             background: "var(--brand)",
             color: "#fff",
             fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-            border: "2px solid var(--mk-bg)",
+            border: dark ? "2px solid var(--mk-bg)" : "2px solid #fff",
           }}
         >
           Most popular
@@ -72,7 +74,7 @@ export function PricingCard({
         className="mt-2 text-2xl font-bold tracking-tight"
         style={{
           fontFamily: "var(--font-display), var(--font-inter), system-ui, sans-serif",
-          color: "var(--mk-fg)",
+          color: dark ? "var(--mk-fg)" : undefined,
           letterSpacing: "-0.02em",
         }}
       >
@@ -84,16 +86,16 @@ export function PricingCard({
           className="text-5xl font-extrabold tracking-tight"
           style={{
             fontFamily: "var(--font-display), var(--font-inter), system-ui, sans-serif",
-            color: "var(--mk-fg)",
+            color: dark ? "var(--mk-fg)" : undefined,
             letterSpacing: "-0.03em",
           }}
         >
           ${price}
         </span>
-        <span className="text-sm" style={{ color: "var(--mk-fg-dim)" }}>/mo</span>
+        <span className="text-sm" style={{ color: dark ? "var(--mk-fg-dim)" : undefined }}>/mo</span>
       </div>
 
-      <p className="mt-1 text-sm" style={{ color: "var(--mk-fg-muted)" }}>
+      <p className="mt-1 text-sm" style={{ color: dark ? "var(--mk-fg-muted)" : undefined }}>
         {tagline}
       </p>
 
@@ -102,7 +104,7 @@ export function PricingCard({
           <li
             key={f}
             className="flex items-center gap-2.5 text-sm"
-            style={{ color: "rgba(255,255,255,0.82)" }}
+            style={{ color: dark ? "rgba(255,255,255,0.82)" : undefined }}
           >
             <span
               className="font-extrabold"
@@ -117,18 +119,61 @@ export function PricingCard({
 
       <div className="mt-auto pt-6">
         {ctaAsAnchor ? (
-          <a href={ctaHref} className={ctaClass} style={ctaStyle}>
+          <a
+            href={ctaHref}
+            className={ctaClass}
+            style={
+              dark
+                ? highlighted
+                  ? { background: "var(--brand)", color: "#fff" }
+                  : {
+                      background: "rgba(255,255,255,0.04)",
+                      borderColor: "rgba(255,255,255,0.18)",
+                      color: "#fff",
+                    }
+                : highlighted
+                  ? { background: "var(--brand)", color: "#fff" }
+                  : {
+                      background: "transparent",
+                      border: "1px solid var(--border)",
+                      color: "var(--foreground)",
+                    }
+            }
+          >
             {ctaLabel}
             {highlighted && <span className="text-sm opacity-85">&raquo;</span>}
           </a>
         ) : (
-          <Link href={ctaHref} className={ctaClass} style={ctaStyle}>
+          <Link
+            href={ctaHref}
+            className={ctaClass}
+            style={
+              dark
+                ? highlighted
+                  ? { background: "var(--brand)", color: "#fff" }
+                  : {
+                      background: "rgba(255,255,255,0.04)",
+                      borderColor: "rgba(255,255,255,0.18)",
+                      color: "#fff",
+                    }
+                : highlighted
+                  ? { background: "var(--brand)", color: "#fff" }
+                  : {
+                      background: "transparent",
+                      border: "1px solid var(--border)",
+                      color: "var(--foreground)",
+                    }
+            }
+          >
             {ctaLabel}
             {highlighted && <span className="text-sm opacity-85">&raquo;</span>}
           </Link>
         )}
         {footnote && (
-          <p className="mt-2.5 text-center text-xs" style={{ color: "var(--mk-fg-faint)" }}>
+          <p
+            className="mt-2.5 text-center text-xs"
+            style={{ color: dark ? "var(--mk-fg-faint)" : undefined }}
+          >
             {footnote}
           </p>
         )}

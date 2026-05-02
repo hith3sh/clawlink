@@ -179,7 +179,7 @@ export default function IntegrationDetails({ integration }: Props) {
               {hasBrandLogo(integration.slug) ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={getBrandLogoSrc(integration.slug)}
+                  src={getBrandLogoSrc(integration.slug, "light")}
                   alt=""
                   aria-hidden="true"
                   className="h-12 w-12 object-contain"

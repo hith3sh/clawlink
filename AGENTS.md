@@ -203,19 +203,22 @@ ClawHub and npm are **separate registries** — publishing to one does NOT push 
 
 ClawHub enforces that `package.json` `name` equals the published name. Since our npm name and ClawHub name differ, the publish helper at `scripts/publish-clawhub-plugin.mjs` swaps the name to `clawlink-plugin` in place, runs the ClawHub publish, then restores `@useclawlink/openclaw-plugin` regardless of outcome (try/finally). Do NOT commit the swapped name.
 
+**Tag pushes now publish to BOTH registries automatically** via `.github/workflows/publish-openclaw-plugin.yml`. The workflow runs npm publish (with provenance) followed by `node scripts/publish-clawhub-plugin.mjs`, both attested through GitHub Actions Trusted Publishing (OIDC). ClawHub trusted publisher is registered for `hith3sh/clawlink` + `publish-openclaw-plugin.yml`.
+
 Rules for agents:
 
-- Every plugin version bump must be published to BOTH npm AND ClawHub. Do not consider a release done until both surfaces have the new version.
+- Every plugin version bump must be published to BOTH npm AND ClawHub. The CI workflow handles this on tag push — do not run manual publish steps after tagging.
 - Use the helper script — do not hand-roll `clawhub package publish` calls. Hand-rolled calls will fail with `package.json name must match published package name` because of the npm/ClawHub naming split.
 - Required release sequence for plugin changes:
   1. bump version in `packages/openclaw-clawlink/package.json`, `packages/openclaw-clawlink/openclaw.plugin.json`, `public/skill.md`, and the `USER_AGENT` constant in `packages/openclaw-clawlink/index.js`
   2. update the `User-Agent` assertion in `packages/openclaw-clawlink/index.test.mjs` to match
   3. run `npm run test:openclaw-plugin-contract`
   4. commit and push to `main`
-  5. create and push the `openclaw-plugin-v<version>` tag (publishes to npm via GitHub Actions Trusted Publishing)
-  6. run `npm run publish:clawhub-plugin` (publishes to ClawHub; the script reads `git rev-parse HEAD` for the source-commit reference, so push first)
-- Before a real publish, the user can dry-run with `npm run publish:clawhub-plugin -- --dry-run` to preview the file list.
-- ClawHub does NOT respect npm's `package.json` `files` allowlist — it uploads everything in the plugin folder. Keep stale tarballs (`*.tgz`), local build artifacts, and unwanted files out of `packages/openclaw-clawlink/`.
+  5. create and push the `openclaw-plugin-v<version>` tag — CI publishes to BOTH npm and ClawHub automatically
+  6. confirm both registries received the new version with `npx clawhub package inspect clawlink-plugin --json` and `npm view @useclawlink/openclaw-plugin@<version>`
+- **Do NOT run `npm run publish:clawhub-plugin` after a tag push.** CI publishes to ClawHub automatically. Running it manually after the tag push will fail with "version already exists" because ClawHub releases are immutable. The npm script is reserved for recovery cases only — for example, if the CI ClawHub step fails for an infrastructure reason and you need to retry from a developer machine before bumping the version.
+- Before a real publish, you can still dry-run locally with `npm run publish:clawhub-plugin -- --dry-run` to preview the file list. Dry runs do not push and are safe.
+- ClawHub does NOT respect npm's `package.json` `files` allowlist — it uploads everything in the plugin folder. Keep stale tarballs (`*.tgz`), local build artifacts, and unwanted files out of `packages/openclaw-clawlink/`. The publish helper already stashes test files (`*.test.mjs`, `*.test.js`, `*.spec.*`) before publishing so the static scanner does not flag fixture strings.
 - ClawHub releases are immutable per version, same as npm. Fixing a bad ClawHub release requires a new version bump.
 - Never edit the `name` field in `packages/openclaw-clawlink/package.json` to `clawlink-plugin` and commit it — that breaks npm publishing under the `@useclawlink` scope. The swap only lives inside the publish script's runtime.
-- If the user asks "how do I release the plugin," cover BOTH npm tag publish and `npm run publish:clawhub-plugin` — never just one.
+- If the user asks "how do I release the plugin," the answer is: bump versions, commit, push, tag, and CI handles both registries. There is no manual ClawHub publish step in the normal flow.

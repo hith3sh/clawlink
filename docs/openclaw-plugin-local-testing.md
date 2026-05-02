@@ -22,7 +22,6 @@ From this repo:
 
 ```bash
 openclaw plugins install -l /Users/hithesh/clawlink/packages/openclaw-clawlink
-openclaw gateway restart
 ```
 
 You can also pack the package first and install the tarball:
@@ -30,8 +29,9 @@ You can also pack the package first and install the tarball:
 ```bash
 (cd packages/openclaw-clawlink && npm pack)
 openclaw plugins install ./packages/openclaw-clawlink/useclawlink-openclaw-plugin-0.1.1.tgz
-openclaw gateway restart
 ```
+
+If a fresh chat doesn't pick up the local plugin, run `openclaw gateway restart`.
 
 If you previously linked an older prerelease build, remove that local load path before testing the published npm package. Otherwise OpenClaw will load both copies and warn about duplicate plugin ids.
 
@@ -65,7 +65,7 @@ You can still configure the plugin manually if needed by adding the ClawLink API
 Inside OpenClaw:
 
 1. Install or link the plugin.
-2. Restart the OpenClaw gateway.
+2. Start a fresh chat (run `openclaw gateway restart` if the tools still don't appear).
 3. Paste `/clawlink login cllk_live_...` into OpenClaw.
 4. Confirm `/clawlink status` shows the key as configured.
 5. Ask OpenClaw to connect an integration, for example: `connect my slack`.

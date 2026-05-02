@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 
@@ -25,11 +26,11 @@ type SessionState = Pick<
 function describeStatus(status: SessionState["status"]): string {
   switch (status) {
     case "awaiting_browser":
-      return "Waiting for approval";
+      return "Waiting";
     case "ready_for_device":
       return "Approved";
     case "awaiting_local_save":
-      return "Finishing pairing";
+      return "Finishing";
     case "paired":
       return "Paired";
     case "expired":
@@ -38,6 +39,21 @@ function describeStatus(status: SessionState["status"]): string {
       return "Failed";
     default:
       return status;
+  }
+}
+
+function statusBadgeClass(status: SessionState["status"]): string {
+  switch (status) {
+    case "paired":
+    case "ready_for_device":
+    case "awaiting_local_save":
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+    case "expired":
+      return "border-amber-200 bg-amber-50 text-amber-700";
+    case "failed":
+      return "border-red-200 bg-red-50 text-red-700";
+    default:
+      return "border-border bg-muted text-muted-foreground";
   }
 }
 
@@ -82,10 +98,15 @@ export default function OpenClawPairingPage({ initialSession }: Props) {
     return () => window.clearInterval(interval);
   }, [session.status, session.token]);
 
-  const expiresAtText = useMemo(
-    () => new Date(session.expiresAt).toLocaleString(),
-    [session.expiresAt],
-  );
+  const expiresInText = useMemo(() => {
+    const ms = new Date(session.expiresAt).getTime() - Date.now();
+    if (ms <= 0) return "expired";
+    const minutes = Math.round(ms / 60000);
+    if (minutes < 1) return "<1 min";
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.round(minutes / 60);
+    return `${hours} hr`;
+  }, [session.expiresAt]);
 
   async function handleApprove() {
     setApproving(true);
@@ -121,118 +142,107 @@ export default function OpenClawPairingPage({ initialSession }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#f3f4f6,white_55%)] px-6 py-12 text-gray-900">
-      <div className="mx-auto max-w-xl">
-        <div className="rounded-[28px] border border-gray-200 bg-white p-8 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gray-400">
-            ClawLink for OpenClaw
-          </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-            Pair this OpenClaw device
-          </h1>
-          <p className="mt-3 text-base leading-7 text-gray-600">
-            Approve this device once, then OpenClaw can call your ClawLink integrations without
-            asking you to paste an API key into chat.
-          </p>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-12 text-foreground">
+      <div className="mx-auto w-full max-w-md">
+        <Link href="/" className="mb-8 flex items-center justify-center gap-2.5">
+          <Image
+            src="/images/logo/clawlink.svg"
+            alt="ClawLink"
+            width={32}
+            height={32}
+            className="h-8 w-8"
+            priority
+          />
+          <span className="text-lg font-semibold tracking-[-0.02em]">ClawLink</span>
+        </Link>
 
-          <div className="mt-8 rounded-2xl border border-gray-200 bg-gray-50 p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Device</p>
-                <p className="mt-1 text-lg font-semibold text-gray-900">{session.deviceLabel}</p>
-              </div>
-              <div className="rounded-full border border-gray-200 bg-white px-3 py-1 text-sm font-medium text-gray-700">
-                {describeStatus(session.status)}
-              </div>
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight">Pair device</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {session.deviceLabel}
+              </p>
             </div>
+            <span
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${statusBadgeClass(session.status)}`}
+            >
+              {describeStatus(session.status)}
+            </span>
+          </div>
 
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-gray-200 bg-white p-4">
-                <p className="text-sm font-medium text-gray-500">Pairing code</p>
-                <p className="mt-2 font-mono text-2xl font-semibold tracking-[0.24em] text-gray-900">
-                  {session.displayCode}
-                </p>
-              </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-4">
-                <p className="text-sm font-medium text-gray-500">Expires</p>
-                <p className="mt-2 text-sm font-medium text-gray-900">{expiresAtText}</p>
-              </div>
-            </div>
+          <div className="mt-6 rounded-xl border border-border bg-muted/40 px-4 py-4">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Pairing code
+            </p>
+            <p className="mt-1.5 font-mono text-2xl font-semibold tracking-[0.2em] text-foreground">
+              {session.displayCode}
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Expires in {expiresInText}
+            </p>
           </div>
 
           {error ? (
-            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700">
               {error}
             </div>
           ) : null}
 
           {session.status === "awaiting_browser" ? (
-            <div className="mt-8 space-y-4">
+            <div className="mt-6">
               {isLoaded && isSignedIn ? (
-                <>
-                  <p className="text-sm text-gray-600">
-                    Signed in as <span className="font-medium text-gray-900">{user?.primaryEmailAddress?.emailAddress ?? user?.username ?? "your ClawLink account"}</span>.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleApprove}
-                    disabled={approving}
-                    className="inline-flex items-center justify-center rounded-full bg-gray-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {approving ? "Approving..." : "Approve this device"}
-                  </button>
-                </>
+                <button
+                  type="button"
+                  onClick={handleApprove}
+                  disabled={approving}
+                  className="inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {approving ? "Approving…" : "Approve"}
+                </button>
               ) : (
-                <>
-                  <p className="text-sm text-gray-600">
-                    Sign in to your ClawLink account first, then approve this device.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleSignIn}
-                    className="inline-flex items-center justify-center rounded-full bg-gray-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-gray-800"
-                  >
-                    Sign in to ClawLink
-                  </button>
-                </>
+                <button
+                  type="button"
+                  onClick={handleSignIn}
+                  className="inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+                >
+                  Sign in to approve
+                </button>
               )}
+              {isLoaded && isSignedIn ? (
+                <p className="mt-3 text-center text-xs text-muted-foreground">
+                  {user?.primaryEmailAddress?.emailAddress ?? user?.username ?? "Signed in"}
+                </p>
+              ) : null}
             </div>
           ) : null}
 
           {session.status === "ready_for_device" || session.status === "awaiting_local_save" ? (
-            <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm leading-7 text-emerald-900">
-              <p className="font-medium">
-                Approved{session.approvedUserHint ? ` by ${session.approvedUserHint}` : ""}.
-              </p>
-              <p className="mt-1">
-                Return to OpenClaw and let the ClawLink plugin finish the local pairing check. You
-                can keep this tab open or close it after OpenClaw confirms pairing.
-              </p>
-            </div>
+            <p className="mt-6 text-sm text-muted-foreground">
+              Approved{session.approvedUserHint ? ` by ${session.approvedUserHint}` : ""}. Return to OpenClaw.
+            </p>
           ) : null}
 
           {session.status === "paired" ? (
-            <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm leading-7 text-emerald-900">
-              <p className="font-medium">This OpenClaw device is paired.</p>
-              <p className="mt-1">
-                Return to OpenClaw and use your connected apps. You can also manage integrations in your{" "}
-                <Link href="/dashboard" className="underline underline-offset-4">
-                  ClawLink dashboard
-                </Link>.
-              </p>
-            </div>
+            <p className="mt-6 text-sm text-muted-foreground">
+              Done. Return to OpenClaw, or open your{" "}
+              <Link href="/dashboard" className="text-foreground underline underline-offset-4">
+                dashboard
+              </Link>
+              .
+            </p>
           ) : null}
 
           {session.status === "expired" ? (
-            <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-7 text-amber-900">
-              This pairing link expired. Start a new pairing flow from OpenClaw.
-            </div>
+            <p className="mt-6 text-sm text-muted-foreground">
+              Link expired. Start a new pairing from OpenClaw.
+            </p>
           ) : null}
 
           {session.status === "failed" ? (
-            <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm leading-7 text-red-700">
-              Pairing failed. Start a new pairing flow from OpenClaw.
-            </div>
+            <p className="mt-6 text-sm text-red-700">
+              Pairing failed. Start a new pairing from OpenClaw.
+            </p>
           ) : null}
         </div>
       </div>

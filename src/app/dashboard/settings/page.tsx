@@ -38,7 +38,7 @@ interface ApiKeyRecord {
 
 type SettingsTab = "profile" | "api" | "security";
 
-const settingsTabs: Array<{
+const visibleSettingsTabs: Array<{
   value: SettingsTab;
   label: string;
   description: string;
@@ -51,18 +51,21 @@ const settingsTabs: Array<{
     icon: User,
   },
   {
-    value: "api",
-    label: "API Keys",
-    description: "Advanced manual credentials for debugging, plugin settings UIs, or non-pairing setups.",
-    icon: Key,
-  },
-  {
     value: "security",
     label: "Security",
     description: "Review the basic account protections tied to this workspace.",
     icon: Shield,
   },
 ];
+
+const apiSettingsTab = {
+  value: "api" as const,
+  label: "Advanced API Keys",
+  description: "Legacy manual credentials for debugging or non-pairing setup paths.",
+  icon: Key,
+};
+
+const settingsTabs = [...visibleSettingsTabs, apiSettingsTab];
 
 function formatTimestamp(value: string | null): string | null {
   if (!value) {
@@ -105,6 +108,13 @@ export default function SettingsPage() {
     let active = true;
 
     async function loadApiKeys() {
+      if (activeTab !== "api") {
+        if (active) {
+          setLoadingApiKeys(false);
+        }
+        return;
+      }
+
       if (!isLoaded) {
         return;
       }
@@ -149,7 +159,7 @@ export default function SettingsPage() {
     return () => {
       active = false;
     };
-  }, [isLoaded, user]);
+  }, [activeTab, isLoaded, user]);
 
   function copyApiKey() {
     if (!apiKeyValue) {
@@ -243,10 +253,10 @@ export default function SettingsPage() {
     <Tabs
       value={activeTab}
       onValueChange={(value) => setActiveTab(value as SettingsTab)}
-      className="w-full max-w-3xl space-y-6"
+      className="mx-auto w-full max-w-3xl space-y-6"
     >
-      <TabsList className="grid w-full grid-cols-3 gap-2 rounded-2xl bg-card/70 p-1 ring-1 ring-border/60">
-        {settingsTabs.map((tab) => {
+      <TabsList className="grid w-full grid-cols-2 gap-2 rounded-2xl bg-transparent p-1 ring-0">
+        {visibleSettingsTabs.map((tab) => {
           const Icon = tab.icon;
 
           return (

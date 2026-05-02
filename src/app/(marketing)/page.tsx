@@ -19,7 +19,7 @@ export default function Home() {
           }}
         >
           <Image src="/brand/bento/openclaw.png" alt="OpenClaw" width={18} height={18} priority className="rounded-full" />
-          Built for OpenClaw — works with any MCP-aware agent
+          Built for OpenClaw
         </span>
 
         {/* Heading */}
@@ -34,7 +34,7 @@ export default function Home() {
             color: "var(--mk-fg)",
           }}
         >
-          Plug your AI assistant into the{" "}
+          Plug your Openclaw into the{" "}
           <span className="mk-marked">rest of your stack</span>
         </h1>
 
@@ -43,15 +43,15 @@ export default function Home() {
           style={{ color: "var(--mk-fg-muted)" }}
         >
           ClawLink connects Gmail, Slack, Notion, GitHub, and 100+ apps to your
-          AI agent — hosted OAuth, encrypted credentials, no per-app setup code.
+          Openclaw Bot
         </p>
 
         {/* Tabs + panels */}
         <div className="mt-10">
           {/* Hand-drawn annotation (desktop only, shown next to AI panel) */}
-          <div className="pointer-events-none absolute -left-4 top-[420px] hidden w-[200px] text-left xl:block">
+          <div className="pointer-events-none absolute -left-8 top-[400px] hidden w-[260px] text-left xl:block">
             <span
-              className="block max-w-[140px] text-[19px] leading-tight"
+              className="block max-w-[200px] text-[26px] leading-tight"
               style={{
                 fontFamily: "var(--font-caveat), cursive",
                 fontWeight: 600,
@@ -68,7 +68,7 @@ export default function Home() {
               strokeLinecap="round"
               strokeLinejoin="round"
               aria-hidden="true"
-              className="mt-1 ml-14 h-[60px] w-[110px]"
+              className="mt-2 ml-16 h-[84px] w-[154px]"
             >
               <path d="M6 6 Q 18 12 26 26 Q 32 38 50 42 Q 70 46 92 38" />
               <path d="M84 30 Q 90 35 94 38 Q 89 42 84 47" />
@@ -217,6 +217,7 @@ export default function Home() {
 
         <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2">
           <PricingCard
+            dark
             eyebrow="Starter"
             title="Free"
             price="0"
@@ -231,10 +232,11 @@ export default function Home() {
             ctaHref="/sign-up"
           />
           <PricingCard
+            dark
             eyebrow="Pro"
             title="Pro"
             price="4.99"
-            tagline="All 100+ integrations unlocked"
+            tagline="All 40+ integrations unlocked"
             features={[
               "Every integration, unlimited",
               "Priority email support",
@@ -245,6 +247,7 @@ export default function Home() {
             ctaHref="/sign-up"
             highlighted
           />
+
         </div>
       </section>
 

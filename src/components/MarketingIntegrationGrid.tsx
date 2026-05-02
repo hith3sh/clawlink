@@ -39,11 +39,13 @@ export function MarketingIntegrationGrid() {
   return (
     <div className="w-full">
       <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-5 md:grid-cols-8">
-        {showcase.map((integration) => (
+        {showcase.map((integration, index) => (
           <Link
             key={integration.slug}
             href="/sign-up"
-            className="group flex aspect-square items-center justify-center rounded-[14px] transition-all duration-200"
+            className={`group aspect-square items-center justify-center rounded-[14px] transition-all duration-200 ${
+              index >= 20 ? "hidden sm:flex" : "flex"
+            }`}
             style={{
               background: "var(--mk-tile)",
               border: "1px solid var(--mk-border-card)",

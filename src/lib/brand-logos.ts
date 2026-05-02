@@ -57,6 +57,7 @@ const BRAND_LOGO_SLUGS = new Set<string>([
   "facebook",
   "airtable",
   "clickup",
+  "docusign",
   "dropbox",
 ]);
 

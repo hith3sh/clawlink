@@ -1,5 +1,5 @@
 import { SignIn } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
+import { dark } from "@clerk/ui/themes";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +32,7 @@ export default async function SignInPage({
       <SignIn
         fallbackRedirectUrl={redirectUrl ?? "/dashboard"}
         forceRedirectUrl={redirectUrl}
-        appearance={{ baseTheme: dark }}
+        appearance={{ theme: dark }}
       />
     </div>
   );

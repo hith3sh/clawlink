@@ -60,7 +60,7 @@ function IntegrationMark({ integration }: { integration: Integration }) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={getBrandLogoSrc(integration.slug)}
+        src={getBrandLogoSrc(integration.slug, "light")}
         alt=""
         aria-hidden="true"
         className="h-8 w-8 object-contain"

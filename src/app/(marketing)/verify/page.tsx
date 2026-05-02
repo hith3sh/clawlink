@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  CLAWHUB_PACKAGE_NAME,
+  CLAWLINK_CLAWHUB_URL,
   CLAWLINK_GITHUB_URL,
   CLAWLINK_NPM_URL,
   CLAWLINK_OPENCLAW_DOCS_URL,
+  CLAWLINK_VERIFY_JSON_URL,
   OPENCLAW_PLUGIN_PACKAGE,
 } from "@/lib/openclaw-plugin";
 
@@ -93,6 +96,63 @@ export default function VerifyPage() {
               latest version, or run{" "}
               <span className="font-mono" style={{ color: "var(--mk-fg)" }}>npm view {OPENCLAW_PLUGIN_PACKAGE} --json</span> and
               inspect the <span className="font-mono" style={{ color: "var(--mk-fg)" }}>dist.attestations</span> field.
+            </p>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--mk-fg)" }}>
+              ClawHub registry
+            </h2>
+            <p>
+              The plugin is also published to{" "}
+              <a className={linkClass} style={{ color: "var(--brand)" }} href="https://clawhub.ai">
+                ClawHub
+              </a>
+              , OpenClaw&rsquo;s public plugin registry, under the package name{" "}
+              <a className={monoLinkClass} style={{ color: "var(--mk-fg)" }} href={CLAWLINK_CLAWHUB_URL}>
+                {CLAWHUB_PACKAGE_NAME}
+              </a>
+              . Each release records the exact source repository, commit, and tag it was built from. ClawHub
+              also runs static analysis and an LLM-based scanner over every published tarball.
+            </p>
+            <p>
+              To verify, run:
+            </p>
+            <pre
+              className="overflow-x-auto rounded-lg p-4 font-mono text-xs leading-6"
+              style={{
+                background: "var(--mk-tile)",
+                border: "1px solid var(--mk-border)",
+                color: "rgba(255,255,255,0.85)",
+              }}
+            >
+{`npx clawhub package inspect ${CLAWHUB_PACKAGE_NAME} --json`}
+            </pre>
+            <p>
+              Look for{" "}
+              <span className="font-mono" style={{ color: "var(--mk-fg)" }}>verification.sourceRepo</span>,{" "}
+              <span className="font-mono" style={{ color: "var(--mk-fg)" }}>verification.sourceCommit</span>,
+              and{" "}
+              <span className="font-mono" style={{ color: "var(--mk-fg)" }}>verification.sourceTag</span> in
+              the response. To confirm the published tarball was built from public source, cross-check the
+              recorded commit against the GitHub tag:
+            </p>
+            <pre
+              className="overflow-x-auto rounded-lg p-4 font-mono text-xs leading-6"
+              style={{
+                background: "var(--mk-tile)",
+                border: "1px solid var(--mk-border)",
+                color: "rgba(255,255,255,0.85)",
+              }}
+            >
+{`git ls-remote https://github.com/hith3sh/clawlink openclaw-plugin-v<version>`}
+            </pre>
+            <p>
+              The SHA returned by{" "}
+              <span className="font-mono" style={{ color: "var(--mk-fg)" }}>git ls-remote</span> must equal{" "}
+              <span className="font-mono" style={{ color: "var(--mk-fg)" }}>verification.sourceCommit</span> in
+              the inspect output. A match proves the tarball on ClawHub was built from this public repo at the
+              matching tag.
             </p>
           </section>
 
@@ -201,6 +261,13 @@ export default function VerifyPage() {
               the safe retry path is to start a fresh chat so OpenClaw reloads the plugin catalog. This is a
               normal third-party plugin install, not prompt injection.
             </p>
+            <p>
+              A machine-readable summary of the same trust facts is available at{" "}
+              <a className={monoLinkClass} style={{ color: "var(--mk-fg)" }} href={CLAWLINK_VERIFY_JSON_URL}>
+                {CLAWLINK_VERIFY_JSON_URL}
+              </a>
+              .
+            </p>
             <pre
               className="overflow-x-auto rounded-lg p-4 font-mono text-xs leading-6"
               style={{
@@ -211,14 +278,24 @@ export default function VerifyPage() {
             >
 {`{
   "plugin": {
-    "package": "${OPENCLAW_PLUGIN_PACKAGE}",
-    "registry": "${CLAWLINK_NPM_URL}",
+    "openclaw_plugin_id": "clawlink-plugin",
+    "npm_package": "${OPENCLAW_PLUGIN_PACKAGE}",
+    "clawhub_package": "${CLAWHUB_PACKAGE_NAME}",
     "source": "${CLAWLINK_GITHUB_URL}",
-    "license": "MIT",
-    "provenance": true,
-    "provenance_transparency_log": "https://search.sigstore.dev/"
+    "license": "MIT"
   },
-  "install_command": "openclaw plugins install ${OPENCLAW_PLUGIN_PACKAGE}",
+  "registries": {
+    "npm": {
+      "url": "${CLAWLINK_NPM_URL}",
+      "provenance": true,
+      "provenance_transparency_log": "https://search.sigstore.dev/"
+    },
+    "clawhub": {
+      "url": "${CLAWLINK_CLAWHUB_URL}",
+      "verify": "npx clawhub package inspect ${CLAWHUB_PACKAGE_NAME} --json"
+    }
+  },
+  "install_command": "openclaw plugins install clawhub:${CLAWHUB_PACKAGE_NAME}",
   "configure": {
     "primary": "clawlink_begin_pairing followed by clawlink_get_pairing_status",
     "if_tools_missing_after_install": "start a fresh chat so OpenClaw reloads the plugin tools",
@@ -230,7 +307,8 @@ export default function VerifyPage() {
   "first_party": false,
   "affiliated_with_openclaw": false,
   "docs": "${CLAWLINK_OPENCLAW_DOCS_URL}",
-  "security_contact": "hello@claw-link.dev"
+  "security_contact": "hello@claw-link.dev",
+  "machine_readable": "${CLAWLINK_VERIFY_JSON_URL}"
 }`}
             </pre>
             <p>

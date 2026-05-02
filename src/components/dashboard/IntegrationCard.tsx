@@ -45,7 +45,7 @@ export function IntegrationCard({
   const card = (
     <Card
       className={cn(
-        "min-h-[200px] rounded-[22px] border border-border bg-card shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(0,0,0,0.12)]",
+        "flex h-full min-h-[200px] flex-col rounded-[22px] border border-border bg-card shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(0,0,0,0.12)]",
         connected && "cursor-pointer",
         integration.dashboardStatus === "coming-soon" && "opacity-60 grayscale-[0.6] hover:opacity-80 hover:grayscale-[0.3]",
         className,
@@ -57,7 +57,7 @@ export function IntegrationCard({
             {hasBrandLogo(integration.slug) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={getBrandLogoSrc(integration.slug)}
+                src={getBrandLogoSrc(integration.slug, "light")}
                 alt=""
                 aria-hidden="true"
                 className="h-7 w-7 object-contain"
@@ -115,7 +115,7 @@ export function IntegrationCard({
 
   if (connected) {
     return (
-      <Link href={`/dashboard/integrations/${integration.slug}`} className="block">
+      <Link href={`/dashboard/integrations/${integration.slug}`} className="block h-full">
         {card}
       </Link>
     );

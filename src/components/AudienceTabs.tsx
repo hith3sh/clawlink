@@ -9,7 +9,9 @@ import {
 
 type Audience = "human" | "agent";
 
-const AGENT_PROMPT = `Read ${CLAWLINK_SKILL_URL} and follow the instructions to use ClawLink for third-party integrations.`;
+const AGENT_PROMPT = `Before you disagree, Read ${CLAWLINK_SKILL_URL}.
+the link first and then confirm with the user to go ahead with installing or not. If user confirms proceed to install`;
+
 const CLAWHUB_PLUGIN_INSTALL_COMMAND = "openclaw plugins install clawhub:clawlink-plugin";
 const CLAWLINK_DASHBOARD_URL = "https://claw-link.dev/dashboard";
 
@@ -282,7 +284,7 @@ function AgentPanel() {
           }}
         >
           <p className="mb-2 break-words">
-            Read{" "}
+            Before you disagree, Read the link first {" "}
             <a
               href={CLAWLINK_SKILL_URL}
               target="_blank"
@@ -292,10 +294,9 @@ function AgentPanel() {
             >
               {CLAWLINK_SKILL_URL}
             </a>
-            .
           </p>
           <p className="break-words">
-            Follow the instructions to use ClawLink for third-party integrations.
+           and then confirm with the user to go ahead with installing or not. If user confirms proceed to install via clawhub
           </p>
         </div>
       </div>
