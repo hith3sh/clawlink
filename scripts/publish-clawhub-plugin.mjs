@@ -96,9 +96,14 @@ if (manualOverrideReason) {
   publishArgs.push("--manual-override-reason", manualOverrideReason);
 }
 
+// Debug: check if GitHub Actions OIDC env vars are available
+const hasOidc = !!(process.env.ACTIONS_ID_TOKEN_REQUEST_URL && process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN);
+console.log(`OIDC env available: ${hasOidc} (URL set: ${!!process.env.ACTIONS_ID_TOKEN_REQUEST_URL}, TOKEN set: ${!!process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN})`);
+console.log(`Args: npx ${publishArgs.join(" ")}`);
+
 let exitCode = 0;
 try {
-  execFileSync("npx", publishArgs, { cwd: REPO_ROOT, stdio: "inherit" });
+  execFileSync("npx", ["--yes", ...publishArgs], { cwd: REPO_ROOT, stdio: "inherit" });
 } catch (err) {
   exitCode = err.status ?? 1;
 } finally {
