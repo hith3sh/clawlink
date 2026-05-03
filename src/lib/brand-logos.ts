@@ -59,6 +59,9 @@ const BRAND_LOGO_SLUGS = new Set<string>([
   "clickup",
   "docusign",
   "dropbox",
+  "freshbooks",
+  "freeagent",
+  "freshdesk",
 ]);
 
 // Brands whose logo is monochrome and therefore needs a theme-specific variant
@@ -79,6 +82,8 @@ const RASTER_SLUGS: Record<string, string> = {
   motion: ".jpg",
   postiz: ".png",
   instantly: ".png",
+  freshbooks: ".png",
+  freeagent: ".png",
 };
 
 export type BrandLogoTheme = "light" | "dark";
