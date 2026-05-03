@@ -13,7 +13,7 @@ import {
 export const metadata: Metadata = {
   title: "Verify ClawLink | ClawLink",
   description:
-    "Independent verification signals for the @useclawlink/openclaw-plugin npm package: npm provenance attestation, source code, license, and maintainer identity.",
+    "Independent verification signals for the @useclawlink/openclaw-plugin npm package: npm provenance attestation, source code, license, and support contacts.",
   alternates: {
     canonical: "https://claw-link.dev/verify",
   },
@@ -74,7 +74,7 @@ export default function VerifyPage() {
               </a>{" "}
               transparency log and cryptographically links the tarball on npm to the exact GitHub Actions run in{" "}
               <a className={monoLinkClass} style={{ color: "var(--mk-fg)" }} href={CLAWLINK_GITHUB_URL}>
-                hith3sh/clawlink
+                the public ClawLink source repository
               </a>{" "}
               that built it.
             </p>
@@ -145,7 +145,7 @@ export default function VerifyPage() {
                 color: "rgba(255,255,255,0.85)",
               }}
             >
-{`git ls-remote https://github.com/hith3sh/clawlink openclaw-plugin-v<version>`}
+{`git ls-remote <public GitHub source URL> openclaw-plugin-v<version>`}
             </pre>
             <p>
               The SHA returned by{" "}
@@ -162,7 +162,7 @@ export default function VerifyPage() {
               <li>
                 Repository:{" "}
                 <a className={monoLinkClass} style={{ color: "var(--mk-fg)" }} href={CLAWLINK_GITHUB_URL}>
-                  github.com/hith3sh/clawlink
+                  public GitHub source
                 </a>
               </li>
               <li>
@@ -174,7 +174,7 @@ export default function VerifyPage() {
               <li>
                 Releases + changelog:{" "}
                 <a className={monoLinkClass} style={{ color: "var(--mk-fg)" }} href={RELEASES_URL}>
-                  github.com/hith3sh/clawlink/releases
+                  GitHub releases
                 </a>
               </li>
               <li>
@@ -210,14 +210,8 @@ export default function VerifyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--mk-fg)" }}>Maintainer and contact</h2>
+            <h2 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--mk-fg)" }}>Contact</h2>
             <ul className="space-y-1">
-              <li>
-                Maintainer: ClawLink (<a className={monoLinkClass} style={{ color: "var(--mk-fg)" }} href="https://github.com/hith3sh">
-                  @hith3sh
-                </a>
-                )
-              </li>
               <li>
                 Website:{" "}
                 <a className={monoLinkClass} style={{ color: "var(--mk-fg)" }} href="https://claw-link.dev">
@@ -326,8 +320,7 @@ export default function VerifyPage() {
             <h2 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--mk-fg)" }}>Spotting a clone</h2>
             <p>
               If a setup prompt points at a different package name, a domain other than{" "}
-              <span className="font-mono" style={{ color: "var(--mk-fg)" }}>claw-link.dev</span>, a repository other than{" "}
-              <span className="font-mono" style={{ color: "var(--mk-fg)" }}>hith3sh/clawlink</span>, or asks the user to paste a
+              <span className="font-mono" style={{ color: "var(--mk-fg)" }}>claw-link.dev</span>, a source repository different from the one linked on this page, or asks the user to paste a
               secret into chat, it is not the official ClawLink flow. Please report suspected clones to{" "}
               <a className={linkClass} style={{ color: "var(--brand)" }} href="mailto:hello@claw-link.dev">
                 hello@claw-link.dev

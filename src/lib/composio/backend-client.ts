@@ -174,12 +174,79 @@ export function getComposioConfig(
   };
 }
 
+interface ParsedComposioValidationError {
+  isValidation: boolean;
+  missingFields: string[];
+  invalidFields: string[];
+}
+
+function parseComposioValidationError(message: string): ParsedComposioValidationError {
+  const lower = message.toLowerCase();
+  const isValidation =
+    lower.includes("invalid request data") ||
+    lower.includes("validation error") ||
+    lower.includes("following fields are missing") ||
+    /\bfield required\b/.test(lower) ||
+    /\bvalue is not a valid\b/.test(lower);
+
+  const missingFields: string[] = [];
+  const invalidFields: string[] = [];
+
+  const missingMatch = message.match(/[Ff]ollowing fields are missing:\s*\{([^}]+)\}/);
+  if (missingMatch) {
+    for (const raw of missingMatch[1].split(",")) {
+      const field = raw.trim().replace(/^['"]|['"]$/g, "");
+      if (field && !missingFields.includes(field)) {
+        missingFields.push(field);
+      }
+    }
+  }
+
+  for (const match of message.matchAll(/(^|\n)([A-Za-z_][A-Za-z0-9_.]*)\s*\n\s*Field required/g)) {
+    const field = match[2];
+    if (field && !missingFields.includes(field)) {
+      missingFields.push(field);
+    }
+  }
+
+  for (const match of message.matchAll(/(^|\n)([A-Za-z_][A-Za-z0-9_.]*)\s*\n\s*[Vv]alue is not a valid/g)) {
+    const field = match[2];
+    if (field && !invalidFields.includes(field)) {
+      invalidFields.push(field);
+    }
+  }
+
+  for (const match of message.matchAll(/on parameter\s+`([A-Za-z_][A-Za-z0-9_.]*)`/g)) {
+    const field = match[1];
+    if (field && !invalidFields.includes(field)) {
+      invalidFields.push(field);
+    }
+  }
+
+  for (const match of message.matchAll(/parameter\s+'([A-Za-z_][A-Za-z0-9_.]*)'/g)) {
+    const field = match[1];
+    if (field && !invalidFields.includes(field)) {
+      invalidFields.push(field);
+    }
+  }
+
+  return { isValidation, missingFields, invalidFields };
+}
+
 function stringifyComposioError(payload: unknown, fallback: string): string {
+  if (typeof payload === "string" && payload.trim()) {
+    return payload.trim();
+  }
+
   if (!payload || typeof payload !== "object") {
     return fallback;
   }
 
   const error = (payload as { error?: unknown }).error;
+
+  if (typeof error === "string" && error.trim()) {
+    return error.trim();
+  }
 
   if (error && typeof error === "object") {
     const message = (error as { message?: unknown }).message;
@@ -204,6 +271,27 @@ function stringifyComposioError(payload: unknown, fallback: string): string {
   }
 }
 
+function toComposioRequestError(
+  payload: unknown,
+  fallback: string,
+  status: number,
+): IntegrationRequestError {
+  const message = stringifyComposioError(payload, fallback);
+  const parsed = parseComposioValidationError(message);
+
+  if (parsed.isValidation || status === 400) {
+    return new IntegrationRequestError(message, {
+      status: 400,
+      kind: "validation",
+      code: "invalid_arguments",
+      missingFields: parsed.missingFields,
+      invalidFields: parsed.invalidFields,
+    });
+  }
+
+  return new IntegrationRequestError(message, { status });
+}
+
 async function composioFetch<T>(
   config: Pick<ComposioConfig, "apiKey" | "baseUrl">,
   path: string,
@@ -221,11 +309,10 @@ async function composioFetch<T>(
   const payload = (await response.json().catch(() => null)) as T;
 
   if (!response.ok) {
-    throw new IntegrationRequestError(
-      stringifyComposioError(payload, `${response.status} ${response.statusText}`),
-      {
-        status: response.status,
-      },
+    throw toComposioRequestError(
+      payload,
+      `${response.status} ${response.statusText}`,
+      response.status,
     );
   }
 
@@ -409,11 +496,10 @@ export async function executeComposioToolRequest(
   );
 
   if (response.data.successful === false) {
-    throw new IntegrationRequestError(
-      stringifyComposioError(response.data.error, `${params.toolSlug} failed in Composio.`),
-      {
-        status: 502,
-      },
+    throw toComposioRequestError(
+      response.data,
+      `${params.toolSlug} failed in Composio.`,
+      502,
     );
   }
 

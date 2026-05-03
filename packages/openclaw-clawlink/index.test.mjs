@@ -109,7 +109,7 @@ test("clawlink_call_tool forwards nested arguments unchanged", async () => {
     headers: {
       "X-ClawLink-API-Key": "cllk_test_123",
       "Content-Type": "application/json",
-      "User-Agent": "@useclawlink/openclaw-plugin/0.1.38",
+      "User-Agent": "@useclawlink/openclaw-plugin/0.1.39",
     },
     body: {
       arguments: {
@@ -247,6 +247,12 @@ test("clawlink_list_tools lists compact tools for one integration", async () => 
           integration: "youtube",
           name: "youtube_list_user_playlists",
           description: "List playlists owned by the authenticated YouTube user.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              pageToken: { type: "string" },
+            },
+          },
           mode: "read",
           accessLevel: "read",
           risk: "low",
@@ -265,8 +271,9 @@ test("clawlink_list_tools lists compact tools for one integration", async () => 
 
     assert.match(result.content[0].text, /Available ClawLink tools for youtube:/);
     assert.match(result.content[0].text, /youtube_list_user_playlists/);
+    assert.match(result.content[0].text, /inputSchema/);
+    assert.match(result.content[0].text, /pageToken/);
     assert.match(result.content[0].text, /clawlink_describe_tool/);
-    assert.doesNotMatch(result.content[0].text, /inputSchema/);
   });
 
   assert.deepEqual(capturedRequest, {
@@ -293,6 +300,12 @@ test("clawlink_search_tools searches compact tools with integration and limit", 
           integration: "youtube",
           name: "youtube_list_user_playlists",
           description: "List playlists owned by the authenticated YouTube user.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              pageToken: { type: "string" },
+            },
+          },
           mode: "read",
           accessLevel: "read",
           risk: "low",
@@ -316,7 +329,8 @@ test("clawlink_search_tools searches compact tools with integration and limit", 
 
     assert.match(result.content[0].text, /Matching ClawLink tools for youtube and "playlist":/);
     assert.match(result.content[0].text, /youtube_list_user_playlists/);
-    assert.doesNotMatch(result.content[0].text, /inputSchema/);
+    assert.match(result.content[0].text, /inputSchema/);
+    assert.match(result.content[0].text, /pageToken/);
   });
 
   assert.deepEqual(capturedRequest, {
@@ -334,6 +348,55 @@ test("clawlink_search_tools requires a query", async () => {
     () => tool.execute("test", { integration: "youtube" }),
     /query is required/,
   );
+});
+
+test("clawlink_call_tool surfaces structured validation errors", async () => {
+  const api = createFakeApi();
+  clawlinkPlugin.register(api);
+  const tool = api.getTool("clawlink_call_tool");
+
+  await withFetchMock(async () => new Response(JSON.stringify({
+    ok: false,
+    error: {
+      type: "validation",
+      code: "invalid_arguments",
+      message: "arguments.author is required",
+      retryable: false,
+    },
+    missingFields: ["author", "commentary"],
+    invalidFields: [],
+    hint: "Retry linkedin_create_linked_in_post with arguments that match the inputSchema.",
+    inputSchema: {
+      type: "object",
+      required: ["author", "commentary"],
+      properties: {
+        author: { type: "string" },
+        commentary: { type: "string" },
+      },
+    },
+    details: [
+      "arguments.author is required",
+      "arguments.commentary is required",
+    ],
+  }), {
+    status: 400,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }), async () => {
+    const result = await tool.execute("test", {
+      tool: "linkedin_create_linked_in_post",
+      arguments: {
+        content: "Greetings from ClawLink!",
+      },
+    });
+
+    assert.match(result.content[0].text, /ClawLink tool failed: linkedin_create_linked_in_post/);
+    assert.match(result.content[0].text, /Missing fields: author, commentary/);
+    assert.match(result.content[0].text, /Input schema:/);
+    assert.equal(result.details.missingFields[0], "author");
+    assert.equal(result.details.missingFields[1], "commentary");
+  });
 });
 
 test("clawlink_get_pairing_status exchanges the approved session and clears pending pairing after finalize", async () => {

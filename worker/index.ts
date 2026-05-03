@@ -13,6 +13,10 @@ import "./integrations";
 import { executeComposioTool } from "../src/lib/composio/tool-executor";
 import { hydrateComposioToolSchemas } from "../src/lib/composio/manifest-registry";
 import { executePipedreamActionTool } from "../src/lib/pipedream/action-executor";
+import {
+  buildValidationHint,
+  prepareToolArguments,
+} from "../src/lib/tool-arguments";
 import { verifyAuth } from "./auth";
 import {
   loadConnectionCredentialsForIntegration,
@@ -30,7 +34,11 @@ import {
   getRegisteredToolByName,
   type IntegrationTool,
 } from "./integrations";
-import { classifyIntegrationError, isAuthenticationFailure } from "./integrations/base";
+import {
+  classifyIntegrationError,
+  IntegrationRequestError,
+  isAuthenticationFailure,
+} from "./integrations/base";
 
 export interface Env {
   DB: D1Database;
@@ -76,6 +84,29 @@ interface MCPResponse {
     message: string;
     data?: unknown;
   };
+}
+
+class MCPRequestError extends Error {
+  readonly code: number;
+  readonly data?: unknown;
+
+  constructor(message: string, options: { code: number; data?: unknown }) {
+    super(message);
+    this.name = "MCPRequestError";
+    this.code = options.code;
+    this.data = options.data;
+  }
+}
+
+function getMCPErrorStatus(error: MCPRequestError): number {
+  switch (error.code) {
+    case -32602:
+      return 400;
+    case -32001:
+      return 401;
+    default:
+      return 500;
+  }
 }
 
 function safeJsonStringify(value: unknown): string {
@@ -332,6 +363,69 @@ async function handleToolCall(
   let resolvedConnectionId = connectionId ?? null;
   let providerRequestId: string | undefined;
 
+  if (tool.execution.kind === "composio_tool") {
+    await hydrateComposioToolSchemas([tool], env.CREDENTIALS, env as Record<string, unknown>);
+  }
+
+  const preparedArgs = prepareToolArguments({
+    toolName: tool.name,
+    schema: tool.inputSchema,
+    defaults: tool.safeDefaults,
+    args,
+  });
+  const toolArgs = preparedArgs.args;
+
+  if (preparedArgs.errors.length > 0) {
+    const latencyMs = Date.now() - startedAt;
+    const message = preparedArgs.errors[0] ?? "Invalid tool arguments";
+
+    await logRequest(env.DB, {
+      userId: internalUserId,
+      integration,
+      action,
+      success: false,
+      latencyMs,
+      errorMessage: message,
+      requestBody: safeJsonStringify(toolArgs),
+    });
+
+    await logToolExecution(env.DB, {
+      id: requestId,
+      userId: internalUserId,
+      integration,
+      toolName: name,
+      connectionId: resolvedConnectionId,
+      executionMode: "direct",
+      status: "error",
+      error: {
+        type: "validation",
+        code: "invalid_arguments",
+        message,
+        retryable: false,
+      },
+      requestJson: safeJsonStringify({
+        arguments: toolArgs,
+        connectionId: resolvedConnectionId,
+        inlineCredentials: hasInlineCredentials,
+      }),
+      latencyMs,
+    });
+
+    throw new MCPRequestError(message, {
+      code: -32602,
+      data: {
+        error: "Invalid tool arguments",
+        toolName: tool.name,
+        integration: tool.integration,
+        missingFields: preparedArgs.missingFields,
+        invalidFields: preparedArgs.invalidFields,
+        inputSchema: tool.inputSchema,
+        hint: preparedArgs.hint,
+        details: preparedArgs.errors,
+      },
+    });
+  }
+
   try {
     if (params?.credentials) {
       // Credentials passed in request (already encrypted per-session)
@@ -377,7 +471,7 @@ async function handleToolCall(
       current: Record<string, string>,
     ): Promise<unknown> => {
       if (tool.execution.kind === "pipedream_action") {
-        const execution = await executePipedreamActionTool(tool, args, {
+        const execution = await executePipedreamActionTool(tool, toolArgs, {
           requestId,
           externalUserId: internalUserId,
           credentials: current,
@@ -388,7 +482,7 @@ async function handleToolCall(
       }
 
       if (tool.execution.kind === "composio_tool") {
-        const execution = await executeComposioTool(tool, args, {
+        const execution = await executeComposioTool(tool, toolArgs, {
           requestId,
           externalUserId: internalUserId,
           credentials: current,
@@ -398,7 +492,7 @@ async function handleToolCall(
         return execution.data;
       }
 
-      return handler!.execute(action, args, current, {
+      return handler!.execute(action, toolArgs, current, {
         requestId,
         connectionId: resolvedConnectionId ?? undefined,
         userId: internalUserId,
@@ -428,7 +522,7 @@ async function handleToolCall(
         action,
         success: true,
         latencyMs,
-        requestBody: safeJsonStringify(args),
+        requestBody: safeJsonStringify(toolArgs),
         responseBody: safeJsonStringify(result),
       });
 
@@ -441,7 +535,7 @@ async function handleToolCall(
         executionMode: "direct",
         status: "success",
         requestJson: safeJsonStringify({
-          arguments: args,
+          arguments: toolArgs,
           connectionId: resolvedConnectionId,
           inlineCredentials: hasInlineCredentials,
         }),
@@ -484,7 +578,7 @@ async function handleToolCall(
           action,
           success: true,
           latencyMs,
-          requestBody: safeJsonStringify(args),
+          requestBody: safeJsonStringify(toolArgs),
           responseBody: safeJsonStringify(result),
         });
 
@@ -497,7 +591,7 @@ async function handleToolCall(
           executionMode: "direct",
           status: "success",
           requestJson: safeJsonStringify({
-            arguments: args,
+            arguments: toolArgs,
             connectionId: resolvedConnectionId,
             inlineCredentials: hasInlineCredentials,
           }),
@@ -528,6 +622,7 @@ async function handleToolCall(
   } catch (error) {
     const latencyMs = Date.now() - startedAt;
     const classified = classifyIntegrationError(error);
+    const requestErr = error instanceof IntegrationRequestError ? error : null;
 
     if (resolvedConnectionId) {
       await recordConnectionExecutionFailure(env, resolvedConnectionId, classified);
@@ -540,7 +635,7 @@ async function handleToolCall(
       success: false,
       latencyMs,
       errorMessage: classified.message,
-      requestBody: safeJsonStringify(args),
+      requestBody: safeJsonStringify(toolArgs),
     });
 
     await logToolExecution(env.DB, {
@@ -553,13 +648,33 @@ async function handleToolCall(
       status: "error",
       error: classified,
       requestJson: safeJsonStringify({
-        arguments: args,
+        arguments: toolArgs,
         connectionId: resolvedConnectionId,
         inlineCredentials: hasInlineCredentials,
       }),
       latencyMs,
       providerRequestId,
     });
+
+    if (classified.type === "validation") {
+      throw new MCPRequestError(classified.message, {
+        code: -32602,
+        data: {
+          error: "Invalid tool arguments",
+          toolName: tool.name,
+          integration: tool.integration,
+          missingFields: requestErr?.missingFields,
+          invalidFields: requestErr?.invalidFields,
+          inputSchema: tool.inputSchema,
+          hint: buildValidationHint(
+            tool.name,
+            requestErr?.missingFields ?? [],
+            requestErr?.invalidFields ?? [],
+          ),
+          details: [classified.message],
+        },
+      });
+    }
 
     throw error;
   }
@@ -607,6 +722,8 @@ async function handleListTools(env: Env, userId: string): Promise<IntegrationToo
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    let mcpRequest: MCPRequest | null = null;
+
     // Handle CORS
     const origin = request.headers.get("Origin") || "https://claw-link.dev";
     const corsHeaders = {
@@ -649,11 +766,12 @@ export default {
       }
 
       // Parse MCP request
-      const mcpRequest: MCPRequest = await request.json();
+      const parsedRequest: MCPRequest = await request.json();
+      mcpRequest = parsedRequest;
       
       let result: unknown;
       
-      switch (mcpRequest.method) {
+      switch (parsedRequest.method) {
         case "tools/list":
           result = { tools: await handleListTools(env, userId) };
           break;
@@ -662,17 +780,17 @@ export default {
           result = await handleToolCall(
             env,
             userId,
-            mcpRequest.params
+            parsedRequest.params
           );
           break;
           
         default:
-          throw new Error(`Unknown method: ${mcpRequest.method}`);
+          throw new Error(`Unknown method: ${parsedRequest.method}`);
       }
 
       const response: MCPResponse = {
         jsonrpc: "2.0",
-        id: mcpRequest.id,
+        id: parsedRequest.id,
         result
       };
 
@@ -685,19 +803,22 @@ export default {
       });
 
     } catch (error) {
-      console.error("Worker error:", error);
+      if (!(error instanceof MCPRequestError)) {
+        console.error("Worker error:", error);
+      }
       
       const response: MCPResponse = {
         jsonrpc: "2.0",
-        id: 0,
+        id: mcpRequest?.id ?? 0,
         error: {
-          code: -32000,
-          message: error instanceof Error ? error.message : "Internal error"
+          code: error instanceof MCPRequestError ? error.code : -32000,
+          message: error instanceof Error ? error.message : "Internal error",
+          ...(error instanceof MCPRequestError ? { data: error.data } : {}),
         }
       };
 
       return new Response(JSON.stringify(response), {
-        status: 500,
+        status: error instanceof MCPRequestError ? getMCPErrorStatus(error) : 500,
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": origin,

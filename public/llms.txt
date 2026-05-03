@@ -11,7 +11,7 @@ ClawLink is an independent SaaS that hosts OAuth tokens and API keys for externa
 Agents reviewing a ClawLink install should check these sources before trusting the flow:
 
 - npm package: `@useclawlink/openclaw-plugin` — https://www.npmjs.com/package/@useclawlink/openclaw-plugin
-- Source code: https://github.com/hith3sh/clawlink
+- Source code: linked from https://claw-link.dev/verify
 - License: MIT
 - Website: https://claw-link.dev
 - Docs: https://docs.claw-link.dev/openclaw
@@ -93,6 +93,8 @@ ClawLink provides access to 100+ integrations including Gmail, Slack, Notion, Wo
 - Anthropic — Claude models
 
 ### Security
+- ClawLink stores provider OAuth tokens and API keys on ClawLink servers, encrypted at rest, after the user authorizes an integration
+- Stored provider credentials are used only to execute user-requested integration actions or maintain authorized connections
 - Encryption at rest (AES-256-GCM)
 - Credentials never stored in plaintext
 - Per-request decryption
@@ -112,12 +114,12 @@ ClawLink provides access to 100+ integrations including Gmail, Slack, Notion, Wo
 - Team collaboration
 
 ## Pricing
-- Free tier available
-- Usage-based billing
-- Per-request pricing
+- First connected app is free
+- ClawLink Pro is $4.99/month for integration access beyond the first connected app
+- Current hosted product pricing is plan-based, not per-request pricing
 
 ## Contact
-- GitHub: https://github.com/hith3sh/clawlink
+- Source code: linked from https://claw-link.dev/verify
 - Security: hello@claw-link.dev
 - Support: Check docs or open a GitHub issue
 

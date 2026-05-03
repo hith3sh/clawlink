@@ -10,6 +10,10 @@ import {
   routeToolRequest,
   type RouteDecision,
 } from "@/lib/server/router";
+import {
+  buildValidationHint,
+  prepareToolArguments,
+} from "@/lib/tool-arguments";
 import { evaluateToolPolicy } from "@/lib/server/policy";
 import type { ToolDescription } from "@/lib/server/tool-registry";
 import { logToolExecution } from "@/lib/server/tool-execution-log";
@@ -25,6 +29,7 @@ import {
   getAllHandlers,
   isAuthenticationFailure,
 } from "../../../worker/integrations";
+import { IntegrationRequestError } from "../../../worker/integrations/base";
 import {
   loadConnectionCredentialsForIntegration,
   markConnectionNeedsReauthForIntegration,
@@ -34,14 +39,6 @@ import {
   updateConnectionExecutionMetadata,
   type CredentialBridgeEnv,
 } from "../../../worker/credentials";
-
-interface ToolSchema {
-  type?: string;
-  properties?: Record<string, ToolSchema>;
-  required?: string[];
-  items?: ToolSchema;
-  enum?: unknown[];
-}
 
 export interface ExecuteToolRequest {
   userId: string;
@@ -61,10 +58,10 @@ export interface ToolExecutionPayload<T = unknown> extends ToolExecutionResult<T
   details?: string[];
   requiresConfirmation?: boolean;
   policyReason?: string;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+  missingFields?: string[];
+  invalidFields?: string[];
+  inputSchema?: Record<string, unknown>;
+  hint?: string;
 }
 
 function getCredentialBridgeEnv(): CredentialBridgeEnv | null {
@@ -92,138 +89,6 @@ function getCredentialBridgeEnv(): CredentialBridgeEnv | null {
     COMPOSIO_AUTH_CONFIG_MAP: getEnvBinding<string>("COMPOSIO_AUTH_CONFIG_MAP"),
     COMPOSIO_TOOLKIT_VERSION_MAP: getEnvBinding<string>("COMPOSIO_TOOLKIT_VERSION_MAP"),
   };
-}
-
-function mergeWithDefaults(
-  defaults: Record<string, unknown>,
-  input: Record<string, unknown>,
-): Record<string, unknown> {
-  const result: Record<string, unknown> = { ...defaults };
-
-  for (const [key, value] of Object.entries(input)) {
-    if (isPlainObject(value) && isPlainObject(result[key])) {
-      result[key] = mergeWithDefaults(
-        result[key] as Record<string, unknown>,
-        value,
-      );
-      continue;
-    }
-
-    result[key] = value;
-  }
-
-  return result;
-}
-
-function coerceArgsToSchema(
-  value: unknown,
-  schema: ToolSchema | undefined,
-): unknown {
-  if (!schema) {
-    return value;
-  }
-
-  if (schema.type === "array") {
-    if (value === undefined || value === null) {
-      return value;
-    }
-
-    if (!Array.isArray(value)) {
-      const wrapped = [value];
-      return wrapped.map((item) => coerceArgsToSchema(item, schema.items));
-    }
-
-    return value.map((item) => coerceArgsToSchema(item, schema.items));
-  }
-
-  if (schema.type === "object" && isPlainObject(value)) {
-    const properties = schema.properties ?? {};
-    const result: Record<string, unknown> = { ...value };
-    for (const [key, propertySchema] of Object.entries(properties)) {
-      if (result[key] !== undefined) {
-        result[key] = coerceArgsToSchema(result[key], propertySchema);
-      }
-    }
-    return result;
-  }
-
-  return value;
-}
-
-function validateValue(
-  value: unknown,
-  schema: ToolSchema | undefined,
-  path: string,
-  errors: string[],
-): void {
-  if (!schema) {
-    return;
-  }
-
-  if (schema.enum && !schema.enum.some((option) => option === value)) {
-    errors.push(`${path} must be one of: ${schema.enum.join(", ")}`);
-    return;
-  }
-
-  switch (schema.type) {
-    case "string":
-      if (typeof value !== "string") {
-        errors.push(`${path} must be a string`);
-      }
-      return;
-    case "number":
-      if (typeof value !== "number" || !Number.isFinite(value)) {
-        errors.push(`${path} must be a finite number`);
-      }
-      return;
-    case "boolean":
-      if (typeof value !== "boolean") {
-        errors.push(`${path} must be a boolean`);
-      }
-      return;
-    case "array":
-      if (!Array.isArray(value)) {
-        errors.push(`${path} must be an array`);
-        return;
-      }
-
-      value.forEach((item, index) => validateValue(item, schema.items, `${path}[${index}]`, errors));
-      return;
-    case "object": {
-      if (!isPlainObject(value)) {
-        errors.push(`${path} must be an object`);
-        return;
-      }
-
-      const properties = schema.properties ?? {};
-      const required = schema.required ?? [];
-
-      for (const requiredKey of required) {
-        if (value[requiredKey] === undefined) {
-          errors.push(`${path}.${requiredKey} is required`);
-        }
-      }
-
-      for (const [property, propertySchema] of Object.entries(properties)) {
-        if (value[property] !== undefined) {
-          validateValue(value[property], propertySchema, `${path}.${property}`, errors);
-        }
-      }
-
-      return;
-    }
-    default:
-      return;
-  }
-}
-
-function validateToolArguments(
-  schema: Record<string, unknown>,
-  args: Record<string, unknown>,
-): string[] {
-  const errors: string[] = [];
-  validateValue(args, schema as ToolSchema, "arguments", errors);
-  return errors;
 }
 
 function toMeta(startedAt: number, requestId: string, providerRequestId?: string): ToolExecutionMeta {
@@ -414,13 +279,15 @@ export async function executeToolForUser(
     confirmed: request.confirmed,
     executionMode: mode,
   });
-  const mergedArgs = coerceArgsToSchema(
-    mergeWithDefaults(decision.tool.safeDefaults, request.args),
-    decision.tool.inputSchema as ToolSchema,
-  ) as Record<string, unknown>;
-  const validationErrors = validateToolArguments(decision.tool.inputSchema, mergedArgs);
+  const preparedArgs = prepareToolArguments({
+    toolName: decision.tool.name,
+    schema: decision.tool.inputSchema,
+    defaults: decision.tool.safeDefaults,
+    args: request.args,
+  });
+  const mergedArgs = preparedArgs.args;
 
-  if (validationErrors.length > 0) {
+  if (preparedArgs.errors.length > 0) {
     const payload: ToolExecutionPayload = {
       ok: false,
       toolName: decision.tool.name,
@@ -434,10 +301,14 @@ export async function executeToolForUser(
       error: {
         type: "validation",
         code: "invalid_arguments",
-        message: validationErrors[0] ?? "Invalid tool arguments",
+        message: preparedArgs.errors[0] ?? "Invalid tool arguments",
         retryable: false,
       },
-      details: validationErrors,
+      details: preparedArgs.errors,
+      missingFields: preparedArgs.missingFields,
+      invalidFields: preparedArgs.invalidFields,
+      inputSchema: decision.tool.inputSchema,
+      hint: preparedArgs.hint,
       meta: toMeta(startedAt, requestId),
     };
     await logExecutionResult(db, request, payload);
@@ -635,6 +506,17 @@ export async function executeToolForUser(
       await recordConnectionExecutionFailure(env, resolvedConnectionId, classified);
     }
 
+    const requestErr = error instanceof IntegrationRequestError ? error : null;
+    const isValidationError = classified.type === "validation";
+    const validationDetails = isValidationError ? [classified.message] : undefined;
+    const validationHint = isValidationError
+      ? buildValidationHint(
+          decision.tool.name,
+          requestErr?.missingFields ?? [],
+          requestErr?.invalidFields ?? [],
+        )
+      : undefined;
+
     const payload: ToolExecutionPayload = {
       ok: false,
       toolName: decision.tool.name,
@@ -646,6 +528,13 @@ export async function executeToolForUser(
       requiresConfirmation: policy.requiresConfirmation,
       policyReason: policy.reason,
       error: classified,
+      ...(isValidationError && {
+        details: validationDetails,
+        missingFields: requestErr?.missingFields,
+        invalidFields: requestErr?.invalidFields,
+        inputSchema: decision.tool.inputSchema,
+        hint: validationHint,
+      }),
       meta: toMeta(startedAt, requestId),
     };
     await logExecutionResult(db, request, payload);

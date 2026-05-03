@@ -132,15 +132,32 @@ export interface IntegrationHandler {
 
 }
 
+export type IntegrationRequestErrorKind = "validation" | "provider" | "auth";
+
 export class IntegrationRequestError extends Error {
   readonly status: number;
   readonly code?: string;
+  readonly kind?: IntegrationRequestErrorKind;
+  readonly missingFields?: string[];
+  readonly invalidFields?: string[];
 
-  constructor(message: string, options: { status: number; code?: string }) {
+  constructor(
+    message: string,
+    options: {
+      status: number;
+      code?: string;
+      kind?: IntegrationRequestErrorKind;
+      missingFields?: string[];
+      invalidFields?: string[];
+    },
+  ) {
     super(message);
     this.name = "IntegrationRequestError";
     this.status = options.status;
     this.code = options.code;
+    this.kind = options.kind;
+    this.missingFields = options.missingFields;
+    this.invalidFields = options.invalidFields;
   }
 }
 
@@ -196,6 +213,15 @@ function isNetworkFailure(error: unknown): boolean {
 
 export function classifyIntegrationError(error: unknown): NormalizedToolError {
   if (error instanceof IntegrationRequestError) {
+    if (error.kind === "validation" || error.status === 400) {
+      return {
+        type: "validation",
+        code: error.code ?? "invalid_arguments",
+        message: error.message,
+        retryable: false,
+      };
+    }
+
     if (error.status === 401) {
       return {
         type: "reauth_required",

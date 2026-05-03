@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Image from "next/image";
 import AudienceTabs from "@/components/AudienceTabs";
 import { PricingCard } from "@/components/PricingCard";
@@ -132,8 +131,8 @@ export default function Home() {
       <section className="mx-auto grid max-w-[1080px] grid-cols-1 gap-4 px-6 md:grid-cols-3">
         <PillarCard
           icon={<BoltIcon />}
-          title="Hosted OAuth"
-          desc='Click "Connect Slack." We do the rest — provider config, scopes, token refresh — encrypted on our edge, never on your machine.'
+          title="Managed OAuth"
+          desc='Click "Connect Slack." After you approve access, ClawLink stores the provider tokens encrypted at rest and refreshes them when needed.'
         />
         <PillarCard
           icon={<SparkleIcon />}
@@ -184,8 +183,9 @@ export default function Home() {
           Privacy first
         </h2>
         <p className="mt-3 text-[14.5px]" style={{ color: "var(--mk-fg-muted)" }}>
-          Nobody other than you should access your data. We encrypt credentials at rest and in
-          transit, and we never store the contents of your API responses.
+          You choose which apps to connect. ClawLink stores provider credentials encrypted at
+          rest, uses them only for requests you trigger through OpenClaw, and does not store API
+          response contents.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-8">
           <Soc2Badge />
@@ -211,7 +211,7 @@ export default function Home() {
             Simple pricing. No surprises.
           </h2>
           <p className="mt-3.5 text-[15px]" style={{ color: "var(--mk-fg-muted)" }}>
-            Start free with your first app. Upgrade when you&apos;re ready for the full set.
+            Your first connected app is free. Pro is $4.99/month for the full integration catalog.
           </p>
         </div>
 
@@ -224,7 +224,7 @@ export default function Home() {
             tagline="Try your first integration"
             features={[
               "1 integration included",
-              "Hosted OAuth connect flow",
+              "Managed OAuth connect flow",
               "Community support",
             ]}
             footnote="No card required."
@@ -236,13 +236,13 @@ export default function Home() {
             eyebrow="Pro"
             title="Pro"
             price="4.99"
-            tagline="All 40+ integrations unlocked"
+            tagline="All integrations for $4.99/month"
             features={[
               "Every integration, unlimited",
               "Priority email support",
               "New integrations as they ship",
             ]}
-            footnote="Cancel anytime."
+            footnote="$4.99/month. Cancel anytime."
             ctaLabel="Get Pro"
             ctaHref="/sign-up"
             highlighted

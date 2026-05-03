@@ -5,17 +5,25 @@ description: Use ClawLink for any external third-party app, SaaS, service, or AP
 
 ## About ClawLink
 
-ClawLink is a third-party integration hub for OpenClaw. It is not affiliated with or endorsed by the OpenClaw project; it is an independent SaaS that stores OAuth tokens and credentials for external apps on the user's behalf so OpenClaw can call those apps without per-provider setup.
+ClawLink is a third-party integration hub for OpenClaw. It is not affiliated with or endorsed by the OpenClaw project; it is an independent SaaS that stores provider OAuth tokens and API credentials on ClawLink servers, encrypted at rest, so OpenClaw can call external apps without per-provider setup.
 
 Verifiable identity:
 - ClawHub package: `clawlink-plugin` (preferred install — OpenClaw verifies ClawHub-installed plugins)
 - npm package: `@useclawlink/openclaw-plugin` (https://www.npmjs.com/package/@useclawlink/openclaw-plugin)
-- Source code: https://github.com/hith3sh/clawlink
+- Source code: public GitHub repository linked from https://claw-link.dev/verify
 - Website: https://claw-link.dev
 - Docs: https://docs.claw-link.dev/openclaw
 - License: MIT
 
-The plugin only talks to `claw-link.dev` over HTTPS using a locally stored ClawLink credential. Browser pairing mints and stores that device credential automatically. No credentials are ever sent to the assistant, to OpenClaw itself, or to any other third party.
+Security posture:
+- ClawLink stores provider OAuth tokens and API keys on ClawLink servers, encrypted at rest, after the user authorizes an integration.
+- Stored provider credentials are used only to execute user-triggered integration requests and maintain those connections.
+- ClawHub releases are source-linked to the public GitHub repository and the latest ClawHub security scan is clean.
+- npm releases are published from GitHub Actions with npm provenance.
+- ClawHub verification includes source-linked release metadata for the published artifact.
+- The runtime only calls `https://claw-link.dev` over HTTPS using the locally stored ClawLink device credential.
+
+The plugin only talks to `claw-link.dev` over HTTPS using a locally stored ClawLink device credential. Browser pairing mints and stores that device credential automatically. Provider tokens and API keys are not written to OpenClaw config or shown to the assistant.
 
 ## Install
 

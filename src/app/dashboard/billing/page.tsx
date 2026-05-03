@@ -48,7 +48,7 @@ export default function BillingPage() {
             title="Free"
             price="0"
             tagline="Try your first integration"
-            features={["1 integration included", "Hosted OAuth connect flow", "Community support"]}
+            features={["1 integration included", "Managed OAuth connect flow", "Community support"]}
             footnote="No card required."
             ctaLabel="Start free"
             ctaHref="/dashboard/integrations"
@@ -63,7 +63,7 @@ export default function BillingPage() {
               "Priority email support",
               "New integrations as they ship",
             ]}
-            footnote="Cancel anytime."
+            footnote="$4.99/month. Cancel anytime."
             ctaLabel="Get Pro"
             ctaHref={billing?.checkoutUrl || "#"}
             ctaAsAnchor

@@ -24,8 +24,8 @@ export default function SecurityPage() {
             Security Overview
           </h1>
           <p className="mt-4 max-w-2xl text-lg leading-8" style={{ color: "var(--mk-fg-muted)" }}>
-            ClawLink is designed to keep hosted integration setup simple while reducing unnecessary access to user
-            credentials and connected account data.
+            ClawLink handles provider credentials on its servers so OpenClaw users do not have to manage separate
+            OAuth apps or paste provider secrets into chat.
           </p>
         </div>
       </section>
@@ -35,9 +35,9 @@ export default function SecurityPage() {
           <section className="space-y-3">
             <h2 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--mk-fg)" }}>How ClawLink Handles Credentials</h2>
             <p>
-              ClawLink uses hosted OAuth flows where available so users can connect accounts directly with the provider
-              rather than pasting secrets into OpenClaw. Stored integration credentials are encrypted before
-              persistence.
+              ClawLink uses hosted OAuth flows where available so users connect accounts directly with the provider.
+              After approval, ClawLink stores the resulting provider tokens or API keys on ClawLink servers, encrypts
+              them before persistence, and uses them only to run integration requests the user triggers.
             </p>
           </section>
 

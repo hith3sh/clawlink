@@ -2,11 +2,11 @@
 
 Third-party OpenClaw plugin that lets OpenClaw talk to external SaaS apps through [ClawLink](https://claw-link.dev)'s hosted integration layer.
 
-> **Not affiliated with OpenClaw.** ClawLink is an independent service. This package is published by the ClawLink team under the npm scope [`@useclawlink`](https://www.npmjs.com/package/@useclawlink/openclaw-plugin). Source: [github.com/hith3sh/clawlink](https://github.com/hith3sh/clawlink). License: MIT.
+> **Not affiliated with OpenClaw.** ClawLink is an independent service. This package is published by the ClawLink team under the npm scope [`@useclawlink`](https://www.npmjs.com/package/@useclawlink/openclaw-plugin). Source: [public GitHub repository](https://github.com/hith3sh/clawlink). License: MIT.
 
 ## What it does
 
-ClawLink stores OAuth tokens and credentials for a growing catalog of business apps on your behalf, then exposes a uniform set of tools so OpenClaw can read from and write to those apps without per-provider setup. Today that includes integrations like Google Docs, Google Sheets, Google Calendar, Google Drive, Twilio, and Google Search Console. Setup is browser pairing: OpenClaw opens a ClawLink approval page, you approve the device once, and the plugin stores its local credential automatically.
+ClawLink stores provider OAuth tokens and API credentials on ClawLink servers, encrypted at rest, for a growing catalog of business apps on your behalf. It then exposes a uniform set of tools so OpenClaw can read from and write to those apps without per-provider setup. Today that includes integrations like Google Docs, Google Sheets, Google Calendar, Google Drive, Twilio, and Google Search Console. Setup is browser pairing: OpenClaw opens a ClawLink approval page, you approve the device once, and the plugin stores its local ClawLink device credential automatically.
 
 ## Install
 
@@ -59,7 +59,13 @@ Normal onboarding should happen through tools and browser pairing. These command
 
 ## Security
 
+- ClawHub package: `clawlink-plugin`
+- npm package: `@useclawlink/openclaw-plugin`
+- ClawHub publishes are source-linked to the public GitHub repository and the latest ClawHub security scan is clean.
+- npm releases are published from GitHub Actions with npm provenance.
+- ClawHub verification includes source-linked release metadata for the published artifact.
 - The plugin only makes outbound HTTPS requests to `https://claw-link.dev`.
-- Browser pairing stores a local device credential under `~/.openclaw/openclaw.json`.
-- The stored credential is sent only as the `X-ClawLink-API-Key` header to ClawLink.
+- Browser pairing stores only a local ClawLink device credential under `~/.openclaw/openclaw.json`.
+- Provider tokens and API keys are not written to OpenClaw config or shown to the assistant; they stay on ClawLink servers encrypted at rest.
+- The local device credential is sent only as the `X-ClawLink-API-Key` header to ClawLink.
 - Report security issues to security@claw-link.dev.

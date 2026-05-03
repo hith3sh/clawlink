@@ -25,6 +25,7 @@ export function PricingCard({
   ctaAsAnchor?: boolean;
   dark?: boolean;
 }) {
+  const priceLabel = price === "0" ? "$0/month" : `$${price}/month`;
   const ctaClass = dark
     ? "mk-btn w-full justify-center text-sm"
     : "inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition";
@@ -81,8 +82,13 @@ export function PricingCard({
         {title}
       </h3>
 
-      <div className="mt-3 flex items-baseline gap-1">
+      <div
+        className="mt-3 flex items-baseline gap-1"
+        aria-label={`${title} plan price ${priceLabel}`}
+        title={`${title} plan price ${priceLabel}`}
+      >
         <span
+          aria-hidden="true"
           className="text-5xl font-extrabold tracking-tight"
           style={{
             fontFamily: "var(--font-display), var(--font-inter), system-ui, sans-serif",
@@ -92,7 +98,8 @@ export function PricingCard({
         >
           ${price}
         </span>
-        <span className="text-sm" style={{ color: dark ? "var(--mk-fg-dim)" : undefined }}>/mo</span>
+        <span aria-hidden="true" className="text-sm" style={{ color: dark ? "var(--mk-fg-dim)" : undefined }}>/mo</span>
+        <span className="sr-only">{`${title} plan price ${priceLabel}`}</span>
       </div>
 
       <p className="mt-1 text-sm" style={{ color: dark ? "var(--mk-fg-muted)" : undefined }}>

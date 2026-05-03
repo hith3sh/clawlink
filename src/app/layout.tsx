@@ -26,17 +26,19 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+const siteDescription =
+  "Install ClawLink in OpenClaw once, then connect apps with one click. Provider credentials are managed by ClawLink, encrypted at rest, and Pro is $4.99/month after your first free app.";
+
 export const metadata: Metadata = {
   title: "ClawLink: Plug Anything into OpenClaw",
-  description:
-    "Install ClawLink in OpenClaw once, then connect apps with one click. Hosted auth, encrypted credentials, and headless-friendly setup links.",
+  description: siteDescription,
   icons: {
     icon: "/images/logo/link.png",
     apple: "/images/logo/link.png",
   },
   openGraph: {
-    title: "ClawLink:Plug Anything into OpenClaw",
-    description: "Install ClawLink in OpenClaw once, then connect apps with one click. Hosted auth, encrypted credentials, and headless-friendly setup links.",
+    title: "ClawLink: Plug Anything into OpenClaw",
+    description: siteDescription,
     type: "website",
     url: "https://claw-link.dev",
     siteName: "ClawLink",
@@ -44,7 +46,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "ClawLink: Plug Anything into OpenClaw",
-    description: "Install ClawLink in OpenClaw once, then connect apps with one click. Hosted auth, encrypted credentials, and headless-friendly setup links.",
+    description: siteDescription,
     images: ["https://docs.claw-link.dev/images/logo/social-card.png"],
   },
   alternates: {

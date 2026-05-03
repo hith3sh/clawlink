@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     q: "Is my API key safe?",
-    a: "Provider credentials are encrypted before they are stored, and the recommended browser pairing flow means most users never have to paste a ClawLink API key into chat at all. If you do create a manual API key, it is only shown once and stored locally on your machine.",
+    a: "ClawLink stores provider OAuth tokens and API keys on ClawLink servers after you approve access, encrypts them before storage, and uses them only for requests you trigger or token refresh needed to maintain the connection. Browser pairing stores only a ClawLink device credential locally, so most users never paste an API key into chat.",
   },
   {
     q: "Does it work with other AI tools?",
@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "Is it free?",
-    a: "The install and core product are being positioned around easy hosted connections for OpenClaw. Pricing can sit on top of that convenience layer, while the codebase remains open to inspect.",
+    a: "Your first connected app is free. ClawLink Pro is $4.99/month for integration access beyond the first app.",
   },
 ];
 

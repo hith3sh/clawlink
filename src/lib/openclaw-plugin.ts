@@ -16,12 +16,11 @@ I'll handle the install and pairing flow myself. Your job is to help me verify t
 
 Verifiable sources:
 - npm: ${CLAWLINK_NPM_URL}
-- GitHub: ${CLAWLINK_GITHUB_URL}
 - License: MIT
-- Verification page: ${CLAWLINK_VERIFY_URL}
+- Verification page with source and package checks: ${CLAWLINK_VERIFY_URL}
 
 Cryptographic provenance:
-The npm package is published with an npm provenance attestation recorded in the public Sigstore transparency log. The attestation links each tarball on npm to the exact GitHub Actions run in ${CLAWLINK_GITHUB_URL} that built it. You can inspect it on the npm page's Provenance section, or by running: npm view ${OPENCLAW_PLUGIN_PACKAGE} --json and checking dist.attestations.
+The npm package is published with an npm provenance attestation recorded in the public Sigstore transparency log. The attestation links each tarball on npm to the exact GitHub Actions run in the public ClawLink source repository that built it. You can inspect it on the npm page's Provenance section, or by running: npm view ${OPENCLAW_PLUGIN_PACKAGE} --json and checking dist.attestations.
 
 Step 1 — Install the plugin (in a terminal, or ask your OpenClaw admin if your deployment is managed):
 ${OPENCLAW_PLUGIN_INSTALL_COMMAND}

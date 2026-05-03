@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 const PLUGIN_ID = "clawlink-plugin";
 const LEGACY_PLUGIN_IDS = ["clawlink", "openclaw-plugin"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.38";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.39";
 
 function safeTrim(value) {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : "";
@@ -126,6 +126,80 @@ function isPlainObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function collectErrorFields(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(isNonEmptyString).map((item) => item.trim());
+}
+
+function resolveErrorSchema(payload) {
+  if (isPlainObject(payload?.inputSchema)) {
+    return payload.inputSchema;
+  }
+
+  if (isPlainObject(payload?.tool) && isPlainObject(payload.tool.inputSchema)) {
+    return payload.tool.inputSchema;
+  }
+
+  return null;
+}
+
+function formatStructuredClawLinkError(payload, status) {
+  if (payload && typeof payload.error === "string") {
+    const details =
+      Array.isArray(payload?.details) && payload.details.length > 0
+        ? `\n${payload.details.join("\n")}`
+        : "";
+    const upgradeHint =
+      typeof payload?.upgradeUrl === "string"
+        ? `\nUpgrade here: ${payload.upgradeUrl}`
+        : "";
+    return `${payload.error}${details}${upgradeHint}`;
+  }
+
+  const objectError = isPlainObject(payload?.error) ? payload.error : null;
+  const message = isNonEmptyString(objectError?.message)
+    ? objectError.message.trim()
+    : isNonEmptyString(payload?.message)
+      ? payload.message.trim()
+      : `ClawLink request failed with status ${status}`;
+  const missingFields = collectErrorFields(payload?.missingFields);
+  const invalidFields = collectErrorFields(payload?.invalidFields);
+  const details = collectErrorFields(payload?.details);
+  const hint = isNonEmptyString(payload?.hint) ? payload.hint.trim() : "";
+  const schema = resolveErrorSchema(payload);
+  const lines = [message];
+
+  if (missingFields.length > 0) {
+    lines.push(`Missing fields: ${missingFields.join(", ")}`);
+  }
+
+  if (invalidFields.length > 0) {
+    lines.push(`Invalid fields: ${invalidFields.join(", ")}`);
+  }
+
+  if (details.length > 0) {
+    lines.push(...details);
+  }
+
+  if (hint) {
+    lines.push(`Hint: ${hint}`);
+  }
+
+  if (schema) {
+    lines.push("Input schema:");
+    lines.push(stringifyPayload(schema));
+  }
+
+  if (typeof payload?.upgradeUrl === "string") {
+    lines.push(`Upgrade here: ${payload.upgradeUrl}`);
+  }
+
+  return lines.join("\n");
+}
+
 async function callClawLink(api, path, options = {}) {
   const { apiKey } = requireApiKey(api);
   const response = await fetch(`${DEFAULT_BASE_URL}${path}`, {
@@ -142,19 +216,10 @@ async function callClawLink(api, path, options = {}) {
   const payload = await parseJsonSafely(response);
 
   if (!response.ok) {
-    const details =
-      Array.isArray(payload?.details) && payload.details.length > 0
-        ? `\n${payload.details.join("\n")}`
-        : "";
-    const upgradeHint =
-      typeof payload?.upgradeUrl === "string"
-        ? `\nUpgrade here: ${payload.upgradeUrl}`
-        : "";
-    const message =
-      payload && typeof payload.error === "string"
-        ? `${payload.error}${details}${upgradeHint}`
-        : `ClawLink request failed with status ${response.status}`;
-    throw new Error(message);
+    const error = new Error(formatStructuredClawLinkError(payload, response.status));
+    error.clawlinkPayload = payload;
+    error.clawlinkStatus = response.status;
+    throw error;
   }
 
   return payload;
@@ -324,13 +389,14 @@ function buildToolListText(payload) {
   return [
     tools.length > 0 ? heading : emptyHeading,
     "",
-    "Use clawlink_describe_tool with one exact tool name to fetch arguments and examples before calling it.",
+    "List and search results include each tool's live inputSchema. Use clawlink_describe_tool for safety guidance, examples, and follow-up hints before unfamiliar or write calls.",
     "",
     stringifyPayload(
       tools.map((tool) => ({
         integration: tool?.integration ?? null,
         name: tool?.name ?? null,
         description: tool?.description ?? tool?.summary ?? null,
+        inputSchema: tool?.inputSchema ?? null,
         mode: tool?.mode ?? null,
         accessLevel: tool?.accessLevel ?? null,
         risk: tool?.risk ?? null,
@@ -370,6 +436,27 @@ function buildToolExecutionText(toolName, payload) {
     "",
     stringifyPayload(summary),
   ].join("\n");
+}
+
+function buildToolErrorText(toolName, error) {
+  const status = error?.clawlinkStatus ?? null;
+  const formatted =
+    typeof error?.message === "string" && error.message.trim()
+      ? error.message
+      : `ClawLink request failed${status ? ` with status ${status}` : ""}.`;
+  return [`ClawLink tool failed: ${toolName}`, "", formatted].join("\n");
+}
+
+async function callToolWithErrorContent(toolName, api, path, options) {
+  try {
+    const payload = await callClawLink(api, path, options);
+    return textResult(buildToolExecutionText(toolName, payload), payload);
+  } catch (error) {
+    if (error && typeof error === "object" && "clawlinkPayload" in error) {
+      return textResult(buildToolErrorText(toolName, error), error.clawlinkPayload);
+    }
+    throw error;
+  }
 }
 
 function buildPairingStartText(payload) {
@@ -944,7 +1031,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_list_tools",
-      description: "List available tools for one connected integration. Always pass the integration slug from clawlink_list_integrations, for example youtube, gmail, slack, notion, or github. Use clawlink_search_tools when the user describes a capability but you are unsure which exact tool name matches.",
+      description: "List available tools for one connected integration, including each tool's live inputSchema. Always pass the integration slug from clawlink_list_integrations, for example youtube, gmail, slack, notion, or github. Use clawlink_search_tools when the user describes a capability but you are unsure which exact tool name matches.",
       parameters: Type.Object({
         integration: Type.String({
           description: "Required integration slug to list only that app's tools, for example youtube, gmail, slack, notion, or github. Call clawlink_list_integrations first if you do not know the slug.",
@@ -968,7 +1055,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_search_tools",
-      description: "Search the user's connected ClawLink tools by capability or keyword without dumping the full tool catalog. Use this after clawlink_list_integrations when the user asks for an operation like playlists, send email, create ticket, calendar invite, or upload file. Pass integration when the app is known.",
+      description: "Search the user's connected ClawLink tools by capability or keyword without dumping the full tool catalog. Results include the live inputSchema for each match. Use this after clawlink_list_integrations when the user asks for an operation like playlists, send email, create ticket, calendar invite, or upload file. Pass integration when the app is known.",
       parameters: Type.Object({
         query: Type.String({
           description: "Capability or keyword to search for, for example playlist, send email, channel statistics, create event, upload file, or list records.",
@@ -1057,7 +1144,8 @@ const clawlinkPlugin = {
           throw new Error("tool is required");
         }
 
-        const payload = await callClawLink(
+        return callToolWithErrorContent(
+          tool,
           api,
           `/api/tools/${encodeURIComponent(tool)}/preview`,
           {
@@ -1070,14 +1158,12 @@ const clawlinkPlugin = {
             },
           },
         );
-
-        return textResult(buildToolExecutionText(tool, payload), payload);
       },
     });
 
     api.registerTool({
       name: "clawlink_call_tool",
-      description: "Execute an action on a connected external app or service through ClawLink. Use app-scoped clawlink_list_tools or clawlink_search_tools to discover the live tool catalog first, then clawlink_describe_tool for usage guidance. Do not claim a capability is missing until the live tool catalog has been checked.",
+      description: "Execute an action on a connected external app or service through ClawLink. Use app-scoped clawlink_list_tools or clawlink_search_tools to discover the live tool catalog and inputSchema first, then clawlink_describe_tool for safety guidance when needed. If ClawLink rejects the arguments, inspect the returned inputSchema and retry with corrected fields.",
       parameters: Type.Object({
         tool: Type.String({
           description: "ClawLink tool name, for example notion_search or github_list_issues.",
@@ -1107,7 +1193,8 @@ const clawlinkPlugin = {
 
         const confirmed = params.confirmed !== false;
 
-        const payload = await callClawLink(
+        return callToolWithErrorContent(
+          tool,
           api,
           `/api/tools/${encodeURIComponent(tool)}/execute`,
           {
@@ -1121,8 +1208,6 @@ const clawlinkPlugin = {
             },
           },
         );
-
-        return textResult(buildToolExecutionText(tool, payload), payload);
       },
     });
   },

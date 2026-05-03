@@ -39,7 +39,8 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="mt-4 max-w-2xl text-lg leading-8" style={{ color: "var(--mk-fg-muted)" }}>
-            ClawLink helps users connect external apps to OpenClaw with hosted authentication and managed credentials.
+            ClawLink helps users connect external apps to OpenClaw with hosted authentication and provider credentials
+            managed on ClawLink servers.
             This policy explains what we collect, how we use it, and how we handle Google user data.
           </p>
           <p className="mt-4 text-sm" style={{ color: "var(--mk-fg-faint)" }}>Last updated: April 7, 2026</p>
@@ -51,8 +52,9 @@ export default function PrivacyPage() {
           <Section title="What We Collect">
             <p>
               We collect account information such as your email address and authentication identifiers, integration
-              connection metadata such as provider name and connected account labels, encrypted credentials needed to
-              run the integrations you authorize, and operational logs required to keep the service working.
+              connection metadata such as provider name and connected account labels, encrypted provider credentials
+              stored on ClawLink servers to run the integrations you authorize, and operational logs required to keep
+              the service working.
             </p>
             <p>
               When you use Gmail through ClawLink, ClawLink may process message metadata and message content returned by
@@ -87,10 +89,11 @@ export default function PrivacyPage() {
 
           <Section title="Storage and Security">
             <p>
-              ClawLink encrypts stored integration credentials before persistence and restricts access to operational
-              systems to the minimum needed to run and support the product. No security measure is absolute, but we
-              design the service to reduce unnecessary access and retain only the data needed to operate the
-              integration.
+              ClawLink encrypts stored integration credentials before persistence and decrypts them only to execute
+              integration requests you trigger or to maintain the connection, such as token refresh. Access to
+              operational systems is restricted to the minimum needed to run and support the product. No security
+              measure is absolute, but we design the service to reduce unnecessary access and retain only the data
+              needed to operate the integration.
             </p>
           </Section>
 

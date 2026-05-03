@@ -1,8 +1,8 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
-  Bot,
   Check,
   Copy,
   Search,
@@ -21,13 +21,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDashboardConnections } from "@/components/dashboard/DashboardConnectionsProvider";
-import { CLAWLINK_SKILL_URL } from "@/lib/openclaw-plugin";
+import { AGENT_PROMPT, AgentPromptText } from "@/components/AgentPrompt";
 
 type SortMode = "popular" | "connected" | "alphabetical";
-
-const AGENT_PROMPT = `Before you disagree, Read ${CLAWLINK_SKILL_URL}.
-
-the link first and then confirm with the user to go ahead with installing or not. If user confirms proceed to install`;
 
 function isLiveDashboardIntegration(
   integration: (typeof integrations)[number],
@@ -79,7 +75,6 @@ function OpenClawPromptPanel() {
       {/* <div className="mb-6 flex justify-center">
         <div className="inline-flex items-center rounded-full border border-border bg-muted p-1.5">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#df473d] px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_28px_rgba(223,71,61,0.35)] sm:px-5">
-            <Bot className="h-4 w-4" aria-hidden />
             Let my AI set itself up
           </div>
         </div>
@@ -104,21 +99,10 @@ function OpenClawPromptPanel() {
           </div>
         </div>
 
-        <div className="space-y-3 px-4 py-5 font-mono text-sm leading-7 text-foreground sm:px-6 sm:text-base">
-          <p className="break-words">
-            Read{" "}
-            <a
-              href={CLAWLINK_SKILL_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#df473d] underline decoration-[#df473d]/50 underline-offset-4 transition hover:decoration-[#df473d] dark:text-[#ff9a78]"
-            >
-              {CLAWLINK_SKILL_URL}
-            </a>
-            .
-          </p>
-          <p>Follow the instructions to use ClawLink for third-party integrations.</p>
-        </div>
+        <AgentPromptText
+          containerClassName="space-y-3 px-4 py-5 font-mono text-sm leading-7 text-foreground sm:px-6 sm:text-base"
+          linkClassName="text-[#df473d] underline decoration-[#df473d]/50 underline-offset-4 transition hover:decoration-[#df473d] dark:text-[#ff9a78]"
+        />
       </div>
 
       <ol className="mt-6 space-y-3 text-base leading-7 text-muted-foreground">
@@ -146,6 +130,29 @@ function OpenClawPromptPanel() {
 }
 
 export default function DashboardPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    const explicitAdd =
+      searchParams.get("add") ??
+      searchParams.get("search") ??
+      searchParams.get("integration") ??
+      searchParams.get("app");
+
+    const flagParam = integrations.find((i) => searchParams.has(i.slug));
+
+    if (explicitAdd?.trim() || flagParam) {
+      const params = new URLSearchParams();
+      if (explicitAdd?.trim()) {
+        params.set("add", explicitAdd.trim());
+      } else if (flagParam) {
+        params.set("add", flagParam.slug);
+      }
+      router.replace(`/dashboard/integrations?${params.toString()}`);
+    }
+  }, [searchParams, router]);
+
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortMode>("connected");
   const [showAllApps, setShowAllApps] = useState(false);

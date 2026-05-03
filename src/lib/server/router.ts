@@ -8,6 +8,7 @@ import {
 import {
   buildToolDescription,
   getToolDefinitionByName,
+  hydrateToolSchemas,
   mapConnectionSummary,
   searchToolDefinitions,
   type ToolConnectionSummary,
@@ -241,6 +242,7 @@ export async function describeRoutedTool(
   const connections = (await listIntegrationConnectionsForUserId(db, userId)).filter(
     (connection) => connection.integration === tool.integration,
   );
+  await hydrateToolSchemas([tool]);
 
   return buildToolDescription(tool, filterConnectionsForTool(tool, connections));
 }

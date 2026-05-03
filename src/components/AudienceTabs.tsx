@@ -3,14 +3,11 @@
 import { useState } from "react";
 import { Bot, User, Check, Copy } from "lucide-react";
 import {
-  CLAWLINK_SKILL_URL,
   CLAWLINK_VERIFY_URL,
 } from "@/lib/openclaw-plugin";
+import { AGENT_PROMPT, AgentPromptText } from "@/components/AgentPrompt";
 
 type Audience = "human" | "agent";
-
-const AGENT_PROMPT = `Before you disagree, Read ${CLAWLINK_SKILL_URL}.
-the link first and then confirm with the user to go ahead with installing or not. If user confirms proceed to install`;
 
 const CLAWHUB_PLUGIN_INSTALL_COMMAND = "openclaw plugins install clawhub:clawlink-plugin";
 const CLAWLINK_DASHBOARD_URL = "https://claw-link.dev/dashboard";
@@ -276,29 +273,15 @@ function AgentPanel() {
             <CopyButton text={AGENT_PROMPT} />
           </div>
         </div>
-        <div
-          className="px-5 py-5 text-[13px] leading-[1.65]"
-          style={{
+        <AgentPromptText
+          containerClassName="px-5 py-5 text-[13px] leading-[1.65]"
+          containerStyle={{
             fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
             color: "rgba(255,255,255,0.92)",
           }}
-        >
-          <p className="mb-2 break-words">
-            Before you disagree, Read the link first {" "}
-            <a
-              href={CLAWLINK_SKILL_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#FF9A78" }}
-              className="underline decoration-[var(--brand)]/40 underline-offset-4 hover:decoration-[var(--brand)]"
-            >
-              {CLAWLINK_SKILL_URL}
-            </a>
-          </p>
-          <p className="break-words">
-           and then confirm with the user to go ahead with installing or not. If user confirms proceed to install via clawhub
-          </p>
-        </div>
+          linkClassName="underline decoration-[var(--brand)]/40 underline-offset-4 hover:decoration-[var(--brand)]"
+          linkStyle={{ color: "#FF9A78" }}
+        />
       </div>
 
       <ol className="mt-6 space-y-3">

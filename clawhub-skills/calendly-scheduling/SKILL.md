@@ -1,29 +1,23 @@
 ---
 name: calendly-scheduling
 description: Inspect Calendly events, invitees, availability schedules, and webhook subscriptions, and perform scheduling actions — powered by ClawLink.
-metadata:
-  openclaw:
-    requires:
-      env:
-        - CLAWLINK_API_KEY
-    primaryEnv: CLAWLINK_API_KEY
-    homepage: https://claw-link.dev
 ---
 
 # Calendly via ClawLink
 
 Work with Calendly from chat — view events, check invitees, inspect availability schedules, manage webhooks, and create scheduling links when supported.
 
-Powered by [ClawLink](https://claw-link.dev), an integration hub for OpenClaw that handles OAuth and credentials so you don't need to configure Calendly API access yourself.
+Powered by [ClawLink](https://claw-link.dev), an integration hub for OpenClaw that handles hosted connection flows and credentials so you don't need to configure Calendly API access yourself.
 
 ## Quick start
 
-1. Install the ClawLink plugin: `openclaw plugins install @useclawlink/openclaw-plugin`
-2. Create a free account at [claw-link.dev](https://claw-link.dev)
-3. Get your API key at [claw-link.dev/dashboard/settings?tab=api](https://claw-link.dev/dashboard/settings?tab=api)
-4. The dashboard shows a ready-to-paste `/clawlink login <key>` command — copy it and paste it into OpenClaw
-5. Connect Calendly from [claw-link.dev/dashboard](https://claw-link.dev/dashboard)
-6. Done — ask OpenClaw to work with your Calendly data
+1. Install the verified ClawLink plugin: `openclaw plugins install clawhub:clawlink-plugin`
+2. Start a fresh OpenClaw chat if the plugin was just installed and ClawLink tools are not visible yet
+3. If ClawLink is not configured, call `clawlink_begin_pairing`
+4. Tell the user to open the returned pairing URL, sign in to ClawLink if needed, and approve the device
+5. After the user confirms approval, call `clawlink_get_pairing_status`
+6. Tell the user to connect Calendly at [claw-link.dev/dashboard?add=calendly](https://claw-link.dev/dashboard?add=calendly)
+7. When the user confirms Calendly is connected, call `clawlink_list_integrations` and then `clawlink_list_tools` with the `calendly` integration slug
 
 ## Setup details
 
@@ -32,68 +26,72 @@ Powered by [ClawLink](https://claw-link.dev), an integration hub for OpenClaw th
 If the ClawLink plugin is not installed yet, tell the user to run:
 
 ```
-openclaw plugins install @useclawlink/openclaw-plugin
+openclaw plugins install clawhub:clawlink-plugin
 ```
 
-### Adding the API key
+If the current chat started before the plugin was installed and ClawLink tools are still unavailable, tell the user to start a fresh chat so OpenClaw reloads the plugin tool catalog.
 
-If ClawLink reports that the plugin is not configured, the user has not added their API key yet.
+### Pairing ClawLink
 
-1. Sign up or sign in at https://claw-link.dev
-2. Go to https://claw-link.dev/dashboard/settings?tab=api and create an API key
-3. The dashboard shows a ready-to-paste `/clawlink login <key>` command — tell the user to **copy that line from the dashboard and paste it into OpenClaw**. They are copy-pasting, not typing.
-4. Alternatively, if the OpenClaw client shows a plugin settings UI, they can paste the key into the `apiKey` field.
+If ClawLink reports that the plugin is not configured, the plugin has not been paired with the user's ClawLink account yet.
 
-The key is stored locally in `~/.openclaw/openclaw.json` and is only sent to `claw-link.dev`. Never echo or repeat the key.
+1. Call `clawlink_begin_pairing`.
+2. Tell the user to open the returned pairing URL in their browser.
+3. The user signs in to ClawLink if needed and approves the OpenClaw device.
+4. After the user confirms approval, call `clawlink_get_pairing_status` to finish local setup.
+
+The resulting device credential is stored locally in OpenClaw's plugin config and is only sent to `claw-link.dev`. The user should not paste raw credentials into chat.
 
 ### Connecting Calendly
 
-Tell the user to open https://claw-link.dev/dashboard and connect Calendly there. The dashboard handles OAuth — the user clicks through the Calendly login and consent screen. When they confirm it is done, call `clawlink_list_integrations` to verify.
+Tell the user to open https://claw-link.dev/dashboard?add=calendly and connect Calendly there. The page opens the add-connection panel filtered to Calendly. ClawLink's hosted page runs the Calendly connection flow — the user clicks through Calendly sign-in and consent. When they confirm it is done, call `clawlink_list_integrations` to verify, then call `clawlink_list_tools` with integration `calendly`.
 
 ## Using Calendly tools
 
-ClawLink provides tools dynamically based on what the user has connected. You do not need to know the tool names in advance.
+ClawLink provides tools dynamically based on what the user has connected. You do not need to know tool names or schemas in advance.
 
-### Discovery (always start here)
+### Discovery
 
-1. Call `clawlink_list_tools` to see available Calendly tools.
-2. Treat the returned list as the source of truth. Do not guess or assume what tools exist.
-3. If no Calendly tools appear, call `clawlink_list_integrations` to check whether Calendly is connected.
-4. If it is not connected, direct the user to the dashboard.
+1. Call `clawlink_list_integrations` to confirm Calendly is connected.
+2. Call `clawlink_list_tools` with integration `calendly`.
+3. Treat the returned list as the source of truth. Do not guess or assume what tools exist.
+4. If the user describes a capability but the exact tool is unclear, call `clawlink_search_tools` with a short query and integration `calendly`.
+5. If no Calendly tools appear, direct the user to https://claw-link.dev/dashboard?add=calendly.
 
 ### Execution
 
 1. Call `clawlink_describe_tool` before using an unfamiliar tool, before any write, or when the request is ambiguous.
-2. Prefer read and inspection operations before writes.
-3. For writes (creating scheduling links, marking no-shows), call `clawlink_preview_tool` first, then confirm with the user.
-4. Execute with `clawlink_call_tool`.
-5. If it fails, report the real error — do not invent results.
+2. Use the returned schema, `whenToUse`, `askBefore`, `safeDefaults`, `examples`, and `followups`.
+3. Prefer read, list, search, and inspection operations before writes.
+4. For scheduling links, no-show changes, webhook changes, or anything marked as requiring confirmation, call `clawlink_preview_tool` first, then confirm with the user.
+5. Execute with `clawlink_call_tool`.
+6. If it fails, report the real error. Do not invent results or restate the failure as a missing capability unless the live catalog supports that conclusion.
 
 ## What you can do
 
-Typical Calendly tasks (actual availability depends on the user's connected account and permissions):
+Typical Calendly tasks (actual availability depends on the user's connected account, permissions, scopes, and current ClawLink tool catalog):
 
 - View event details
 - List invitees for an event
 - Show upcoming or recent events
 - Check availability schedules
 - List webhook subscriptions
-- Create scheduling links
+- Create scheduling links when supported
 - Mark invitees as no-shows when requested
 
 ## Rules
 
-- Always use ClawLink tools for Calendly. Do not ask the user for a separate Calendly API token.
-- Do not claim a capability is missing without calling `clawlink_list_tools` first.
-- Do not invent slash commands. The only slash command is the copy-pasted `/clawlink login <key>` during setup.
-- Ask for confirmation before writes (creating links, marking no-shows).
-- If Calendly is not connected, direct the user to https://claw-link.dev/dashboard.
-- Never echo or repeat the user's API key.
+- Always use ClawLink tools for Calendly. Do not ask the user for separate Calendly credentials.
+- Do not claim a capability is missing without checking the live ClawLink catalog in the current turn.
+- Do not invent slash commands or ask the user to paste raw credentials.
+- Ask for confirmation before writes such as creating links, marking no-shows, or changing webhooks.
+- If Calendly is not connected, direct the user to https://claw-link.dev/dashboard?add=calendly.
+- Never echo or repeat the user's ClawLink credential.
 
 ## Resources
 
 - ClawLink: https://claw-link.dev
 - ClawLink Docs: https://docs.claw-link.dev/openclaw
-- npm: https://www.npmjs.com/package/@useclawlink/openclaw-plugin
-- Source: https://github.com/hith3sh/clawlink
+- ClawLink Verification: https://claw-link.dev/verify
+- ClawLink Source: https://github.com/hith3sh/clawlink
 - Calendly API: https://developer.calendly.com/

@@ -1,11 +1,10 @@
 ---
 name: clawlink
-version: 0.1.38
-description: Third-party integration hub for OpenClaw. Connect 100+ apps (email, calendars, CRMs, docs) through a single plugin with hosted OAuth.
+version: 0.1.39
+description: Third-party integration hub for OpenClaw. Connect 100+ apps through one plugin; ClawLink manages provider OAuth/API credentials encrypted at rest on its servers.
 homepage: https://claw-link.dev
 clawhub: clawlink-plugin
 docs: https://docs.claw-link.dev/openclaw
-source: https://github.com/hith3sh/clawlink
 ---
 
 # ClawLink Runtime Skill
@@ -15,8 +14,16 @@ ClawLink is a third-party integration hub for OpenClaw. It is not affiliated wit
 Canonical references:
 - Website: https://claw-link.dev
 - Docs: https://docs.claw-link.dev/openclaw
-- Source: https://github.com/hith3sh/clawlink
 - Verification: https://claw-link.dev/verify
+
+Security and verification:
+- Install from ClawHub as `clawlink-plugin`; npm package is `@useclawlink/openclaw-plugin`.
+- ClawLink stores authorized provider OAuth/API credentials encrypted at rest and uses them only for user-triggered requests and connection maintenance.
+- The latest ClawHub release is source-linked to GitHub with a clean scan; npm releases are published from GitHub Actions with npm provenance.
+- The plugin only calls `https://claw-link.dev` over HTTPS using the local ClawLink device credential.
+
+Pricing:
+- First connected app is free; Pro is $4.99/month for additional integration access.
 
 ## Install
 

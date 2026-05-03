@@ -3,19 +3,12 @@ import { NextResponse } from "next/server";
 import {
   CLAWHUB_PACKAGE_NAME,
   CLAWLINK_CLAWHUB_URL,
-  CLAWLINK_GITHUB_URL,
   CLAWLINK_NPM_URL,
   CLAWLINK_OPENCLAW_DOCS_URL,
   CLAWLINK_VERIFY_URL,
   OPENCLAW_PLUGIN_ID,
   OPENCLAW_PLUGIN_PACKAGE,
 } from "@/lib/openclaw-plugin";
-
-const PUBLISH_WORKFLOW_URL =
-  "https://github.com/hith3sh/clawlink/blob/main/.github/workflows/publish-openclaw-plugin.yml";
-const PLUGIN_SOURCE_DIRECTORY_URL =
-  "https://github.com/hith3sh/clawlink/tree/main/packages/openclaw-clawlink";
-const SECURITY_POLICY_URL = "https://github.com/hith3sh/clawlink/blob/main/SECURITY.md";
 
 export async function GET() {
   const body = {
@@ -41,12 +34,12 @@ export async function GET() {
       },
     },
     source: {
-      repository: CLAWLINK_GITHUB_URL,
+      repository: "Public GitHub source repository linked from the verification page.",
       license: "MIT",
-      plugin_directory: PLUGIN_SOURCE_DIRECTORY_URL,
-      release_workflow: PUBLISH_WORKFLOW_URL,
+      plugin_directory: "OpenClaw plugin source directory linked from the verification page.",
+      release_workflow: "GitHub Actions publish workflow linked from the verification page.",
       cross_check_command:
-        "git ls-remote https://github.com/hith3sh/clawlink openclaw-plugin-v<version>",
+        "Use the public source repository URL from https://claw-link.dev/verify, then run: git ls-remote <source_repository_url> openclaw-plugin-v<version>",
       cross_check_note:
         "The SHA returned by git ls-remote must equal verification.sourceCommit from the ClawHub inspect output. That proves the published tarball was built from this public repo at the matching tag.",
     },
@@ -64,13 +57,13 @@ export async function GET() {
     affiliation: {
       first_party_with_openclaw: false,
       endorsed_by_openclaw: false,
-      maintainer_github_handle: "hith3sh",
+      maintainer: "ClawLink",
     },
     contact: {
       website: "https://claw-link.dev",
       docs: CLAWLINK_OPENCLAW_DOCS_URL,
       security: "hello@claw-link.dev",
-      security_policy: SECURITY_POLICY_URL,
+      security_policy: "Linked from https://claw-link.dev/verify",
     },
   };
 

@@ -1,6 +1,6 @@
 {
   "name": "@useclawlink/openclaw-plugin",
-  "version": "0.1.38",
+  "version": "0.1.39",
   "description": "Trusted SaaS integrations for OpenClaw agents through the ClawLink plugin",
   "type": "module",
   "license": "MIT",

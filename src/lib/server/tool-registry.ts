@@ -68,6 +68,7 @@ export interface ToolListItem {
   integrationName: string;
   name: string;
   description: string;
+  inputSchema: Record<string, unknown>;
   accessLevel: ToolAccessLevel;
   mode: ToolMode;
   risk: ToolRisk;
@@ -132,7 +133,7 @@ function isComposioBackedConnection(connection: IntegrationConnectionRecord): bo
  * Hydrate inputSchema for Composio-backed tools using the frontend's
  * Cloudflare bindings (CREDENTIALS KV + process.env for API keys).
  */
-async function hydrateSchemas(tools: IntegrationTool[]): Promise<void> {
+export async function hydrateToolSchemas(tools: IntegrationTool[]): Promise<void> {
   const composioTools = tools.filter((tool) => tool.execution.kind === "composio_tool");
   if (composioTools.length === 0) return;
 
@@ -186,6 +187,7 @@ export function buildToolListItem(
     integrationName: integrationMeta?.name ?? tool.integration,
     name: tool.name,
     description: tool.description,
+    inputSchema: tool.inputSchema,
     accessLevel: tool.accessLevel,
     mode: tool.mode,
     risk: tool.risk,
@@ -414,6 +416,7 @@ export async function listToolsForUser(
   const entries = await listConnectedToolEntries(userId, {
     integration: options.integration,
   });
+  await hydrateToolSchemas(entries.map(({ tool }) => tool));
 
   return entries.map(({ tool, connections }) => buildToolListItem(tool, connections));
 }
@@ -432,6 +435,7 @@ export async function searchToolsForUser(
   const limit = Math.min(Math.max(options.limit ?? 10, 1), 25);
   const integration = options.integration?.trim().toLowerCase();
   const entries = await listConnectedToolEntries(userId, { integration });
+  await hydrateToolSchemas(entries.map(({ tool }) => tool));
 
   return entries
     .map((entry) => ({
@@ -458,7 +462,7 @@ export async function describeToolForUser(
     return null;
   }
 
-  await hydrateSchemas([match.tool]);
+  await hydrateToolSchemas([match.tool]);
   return buildToolDescription(match.tool, match.connections);
 }
 
@@ -497,7 +501,7 @@ export async function listToolDescriptionsForIntegration(
     .sort((left, right) => left.name.localeCompare(right.name));
 
   // Hydrate Composio tool schemas from KV / API before building descriptions.
-  await hydrateSchemas(sortedTools);
+  await hydrateToolSchemas(sortedTools);
 
   return sortedTools.map((tool) =>
     buildToolDescription(

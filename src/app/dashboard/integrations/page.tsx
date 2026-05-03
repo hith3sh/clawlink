@@ -1,6 +1,7 @@
 "use client";
 
-import { createElement, useDeferredValue, useMemo, useState } from "react";
+import { createElement, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronRight, Loader2, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 
 import { useOAuthConnect } from "@/components/dashboard/useOAuthConnect";
@@ -26,6 +27,40 @@ interface ConnectionRow {
   connection: IntegrationConnectionSummary;
   integration: Integration;
   needsReconnect: boolean;
+}
+
+interface SearchParamReader {
+  get(name: string): string | null;
+  has(name: string): boolean;
+}
+
+function getAddSearchFromParams(searchParams: SearchParamReader): string {
+  const explicitSearch =
+    searchParams.get("add") ??
+    searchParams.get("search") ??
+    searchParams.get("integration") ??
+    searchParams.get("app");
+
+  if (explicitSearch?.trim()) {
+    return explicitSearch.trim();
+  }
+
+  const flagParamIntegration = integrations.find((integration) =>
+    searchParams.has(integration.slug),
+  );
+
+  return flagParamIntegration?.slug ?? "";
+}
+
+function hasHostedConnect(integration: Integration): boolean {
+  return (
+    integration.dashboardStatus === "available" &&
+    (
+      integration.setupMode === "oauth" ||
+      integration.setupMode === "pipedream" ||
+      integration.setupMode === "composio"
+    )
+  );
 }
 
 function OAuthConnectButton({
@@ -75,15 +110,28 @@ function IntegrationMark({ integration }: { integration: Integration }) {
 }
 
 export default function IntegrationsPage() {
+  const searchParams = useSearchParams();
+  const initialAddSearch = getAddSearchFromParams(searchParams);
   const { connections, connectionsBySlug, loading, refetch } = useDashboardConnections();
   const [error, setError] = useState<string | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [addSearch, setAddSearch] = useState("");
+  const [sheetOpen, setSheetOpen] = useState(() => Boolean(initialAddSearch));
+  const [addSearch, setAddSearch] = useState(initialAddSearch);
   const [removingConnectionId, setRemovingConnectionId] = useState<number | null>(null);
   const [expandedConnectionId, setExpandedConnectionId] = useState<number | null>(null);
   const [toolsVisibleFor, setToolsVisibleFor] = useState<Set<number>>(new Set());
 
   const deferredAddSearch = useDeferredValue(addSearch);
+
+  useEffect(() => {
+    const nextAddSearch = getAddSearchFromParams(searchParams);
+
+    if (!nextAddSearch) {
+      return;
+    }
+
+    setAddSearch(nextAddSearch);
+    setSheetOpen(true);
+  }, [searchParams]);
 
   const connectionRows = useMemo<ConnectionRow[]>(() => {
     return connections
@@ -125,6 +173,7 @@ export default function IntegrationsPage() {
         }
 
         return (
+          integration.slug.toLowerCase().includes(query) ||
           integration.name.toLowerCase().includes(query) ||
           integration.description.toLowerCase().includes(query) ||
           integration.category.toLowerCase().includes(query)
@@ -393,7 +442,7 @@ export default function IntegrationsPage() {
                       <span className="shrink-0 rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground">
                         Coming soon
                       </span>
-                    ) : integration.setupMode === "oauth" || integration.setupMode === "pipedream" ? (
+                    ) : hasHostedConnect(integration) ? (
                       <OAuthConnectButton
                         integration={integration}
                         onConnected={() => {

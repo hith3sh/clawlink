@@ -27,10 +27,10 @@ Managing OAuth apps, refreshing tokens, and storing API credentials securely is 
 ClawLink handles the messy parts so you don't have to:
 
 - **One-click OAuth** — connect Gmail, Slack, Notion, and dozens more without writing provider-specific auth code
-- **Credentials stay in the cloud** — encrypted at rest, never touch your local machine
+- **Managed credentials** — ClawLink stores provider OAuth tokens and API keys encrypted at rest, then uses them only to execute and maintain the integrations you authorize
 - **Request logs** — see every API call, success, failure, and latency from the dashboard
 - **Built-in reliability** — rate limiting, retries, and edge caching included
-- **Usage-based pricing** — generous free tier, pay only when you scale
+- **Clear pricing** — your first connected app is free; ClawLink Pro is $4.99/month for the full integration catalog
 
 ## Get started in 30 seconds
 
@@ -57,8 +57,8 @@ Then just ask OpenClaw to do things:
 |---|---|---|
 | **Built for** | OpenClaw users first | Multi-agent frameworks (LangChain, CrewAI, AutoGen, etc.) |
 | **Experience** | Native plugin — install once, use everywhere in OpenClaw | Agent toolkit — wire actions into your agent code |
-| **Auth** | Hosted OAuth — click "Connect Slack," we handle the rest | Bring-your-own OAuth or self-managed connections |
-| **Where credentials live** | Encrypted on our edge — never on your machine | Agent-side or self-hosted infrastructure |
+| **Auth** | Hosted OAuth/connect flows — approve provider access in the browser; ClawLink manages token refresh | Bring-your-own OAuth or self-managed connections |
+| **Where credentials live** | Provider tokens/API keys are stored by ClawLink, encrypted at rest; OpenClaw stores only a ClawLink device credential locally | Agent-side or self-hosted infrastructure |
 | **How you use it** | Chat naturally: "send an email to sarah" | Programmatic: define tools and call them in code |
 | **Logs & debugging** | Dashboard with request history, latency, and errors | Developer-facing logging and tracing |
 | **Best for** | Non-technical users who want integrations working in OpenClaw without code | Developers building custom agents across multiple frameworks |
