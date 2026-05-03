@@ -1,6 +1,6 @@
 ---
 name: clawlink
-version: 0.1.39
+version: 0.1.40
 description: Third-party integration hub for OpenClaw. Connect 100+ apps through one plugin; ClawLink manages provider OAuth/API credentials encrypted at rest on its servers.
 homepage: https://claw-link.dev
 clawhub: clawlink-plugin
