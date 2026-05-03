@@ -188,6 +188,7 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "Box", slug: "box", description: "Store, share, and manage files and folders", category: "Storage & Databases", icon: "SiBox", color: "#0061D5" },
   { name: "Webflow", slug: "webflow", description: "Build and manage websites, CMS collections, and assets", category: "Developer Tools", icon: "SiWebflow", color: "#4353FF" },
   { name: "Replicate", slug: "replicate", description: "Run AI models, create predictions, and manage deployments", category: "AI & ML", icon: "SiReplicate", color: "#000000" },
+  { name: "Twilio", slug: "twilio", description: "Send SMS, make calls, and manage messaging", category: "Communication", icon: "SiTwilio", color: "#F22F46" },
 ];
 
 const integrationMetadata: Record<string, IntegrationMetadata> = {
@@ -217,7 +218,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   slack: {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect Slack through ClawLink's hosted setup to send messages, search conversations, manage channels, and automate workflows from your Slack workspace.",
     credentialFields: [],
@@ -799,7 +800,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   docusign: {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect DocuSign through ClawLink's hosted setup to send envelopes, manage documents, retrieve signing status, create templates, and handle agreements from your DocuSign account.",
     credentialFields: [],
@@ -883,7 +884,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   stripe: {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect Stripe through ClawLink's hosted setup to manage payments, customers, invoices, subscriptions, disputes, payouts, and more from your Stripe account.",
     credentialFields: [],
@@ -945,7 +946,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   xero: {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect Xero Accounting through ClawLink's hosted Composio setup to access invoices, contacts, payments, and accounting reports from ClawLink.",
     credentialFields: [],
@@ -1163,7 +1164,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   shopify: {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect Shopify through ClawLink's hosted Composio setup to manage products, orders, customers, inventory, collections, and fulfillments from your Shopify store.",
     credentialFields: [],
@@ -1325,7 +1326,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   highlevel: {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect HighLevel through ClawLink's hosted setup to manage contacts, pipelines, calendars, conversations, and more from your HighLevel sub-account.",
     credentialFields: [],
@@ -1445,7 +1446,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   twitter: {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect X (Twitter) through ClawLink's hosted setup to post tweets, search content, manage lists, follow users, and analyze engagement from your X account.",
     credentialFields: [],
@@ -1589,7 +1590,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   snapchat: {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect Snapchat through ClawLink's hosted Composio setup to manage ad accounts, campaigns, ad squads, creatives, audience segments, and product catalogs from your Snapchat Ads account.",
     credentialFields: [],
