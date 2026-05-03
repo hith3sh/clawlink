@@ -64,6 +64,7 @@ const BRAND_LOGO_SLUGS = new Set<string>([
   "freshdesk",
   "bamboohr",
   "pandadoc",
+  "monday",
 ]);
 
 // Brands whose logo is monochrome and therefore needs a theme-specific variant
