@@ -71,7 +71,8 @@ jobs:
             --verify-tag
 
   publish-clawhub:
-    if: github.event_name == 'workflow_dispatch'
+    needs: publish
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       id-token: write
