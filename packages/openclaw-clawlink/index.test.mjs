@@ -350,7 +350,7 @@ test("clawlink_search_tools requires a query", async () => {
   );
 });
 
-test("clawlink_call_tool surfaces structured validation errors", async () => {
+test("clawlink_call_tool surfaces generic structured validation errors", async () => {
   const api = createFakeApi();
   clawlinkPlugin.register(api);
   const tool = api.getTool("clawlink_call_tool");
@@ -360,23 +360,23 @@ test("clawlink_call_tool surfaces structured validation errors", async () => {
     error: {
       type: "validation",
       code: "invalid_arguments",
-      message: "arguments.author is required",
+      message: "arguments.required_field is required",
       retryable: false,
     },
-    missingFields: ["author", "commentary"],
+    missingFields: ["required_field", "message_body"],
     invalidFields: [],
-    hint: "Retry linkedin_create_linked_in_post with arguments that match the inputSchema.",
+    hint: "Retry example_create_item with arguments that match the inputSchema.",
     inputSchema: {
       type: "object",
-      required: ["author", "commentary"],
+      required: ["required_field", "message_body"],
       properties: {
-        author: { type: "string" },
-        commentary: { type: "string" },
+        required_field: { type: "string" },
+        message_body: { type: "string" },
       },
     },
     details: [
-      "arguments.author is required",
-      "arguments.commentary is required",
+      "arguments.required_field is required",
+      "arguments.message_body is required",
     ],
   }), {
     status: 400,
@@ -385,17 +385,17 @@ test("clawlink_call_tool surfaces structured validation errors", async () => {
     },
   }), async () => {
     const result = await tool.execute("test", {
-      tool: "linkedin_create_linked_in_post",
+      tool: "example_create_item",
       arguments: {
-        content: "Greetings from ClawLink!",
+        content: "Hello from ClawLink!",
       },
     });
 
-    assert.match(result.content[0].text, /ClawLink tool failed: linkedin_create_linked_in_post/);
-    assert.match(result.content[0].text, /Missing fields: author, commentary/);
+    assert.match(result.content[0].text, /ClawLink tool failed: example_create_item/);
+    assert.match(result.content[0].text, /Missing fields: required_field, message_body/);
     assert.match(result.content[0].text, /Input schema:/);
-    assert.equal(result.details.missingFields[0], "author");
-    assert.equal(result.details.missingFields[1], "commentary");
+    assert.equal(result.details.missingFields[0], "required_field");
+    assert.equal(result.details.missingFields[1], "message_body");
   });
 });
 
