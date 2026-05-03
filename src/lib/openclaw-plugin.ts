@@ -2,7 +2,6 @@ export const OPENCLAW_PLUGIN_PACKAGE = "@useclawlink/openclaw-plugin";
 export const OPENCLAW_PLUGIN_ID = "clawlink-plugin";
 export const CLAWHUB_PACKAGE_NAME = "clawlink-plugin";
 export const OPENCLAW_PLUGIN_INSTALL_COMMAND = `openclaw plugins install clawhub:${CLAWHUB_PACKAGE_NAME}`;
-export const CLAWLINK_API_SETTINGS_URL = "https://claw-link.dev/dashboard/settings?tab=api";
 export const CLAWLINK_OPENCLAW_DOCS_URL = "https://docs.claw-link.dev/openclaw";
 export const CLAWLINK_NPM_URL = `https://www.npmjs.com/package/${OPENCLAW_PLUGIN_PACKAGE}`;
 export const CLAWLINK_CLAWHUB_URL = `https://clawhub.ai/packages/${CLAWHUB_PACKAGE_NAME}`;
@@ -30,10 +29,5 @@ Step 2 — Pair ClawLink inside OpenClaw:
 - After I approve the device in the browser, call clawlink_get_pairing_status to finish the local setup.
 
 If this chat started before the plugin was installed and you cannot see the ClawLink tools yet, tell me to start a fresh chat and retry setup there so OpenClaw reloads the plugin tools.
-
-Advanced fallback only — manual API key setup:
-- Create an API key at ${CLAWLINK_API_SETTINGS_URL}
-- Paste the key into the plugin settings screen's apiKey field if the client exposes one.
-- The stored credential lives locally in ~/.openclaw/openclaw.json and is only sent to claw-link.dev.
 
 Docs: ${CLAWLINK_OPENCLAW_DOCS_URL}`;

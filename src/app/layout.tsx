@@ -42,12 +42,20 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://claw-link.dev",
     siteName: "ClawLink",
+    images: [
+      {
+        url: "https://claw-link.dev/images/logo/social-card.png",
+        width: 1200,
+        height: 630,
+        alt: "ClawLink — Plug Anything into OpenClaw",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "ClawLink: Plug Anything into OpenClaw",
     description: siteDescription,
-    images: ["https://docs.claw-link.dev/images/logo/social-card.png"],
+    images: ["https://claw-link.dev/images/logo/social-card.png"],
   },
   alternates: {
     canonical: "https://claw-link.dev",

@@ -103,7 +103,7 @@ function requireApiKey(api) {
 
   if (!apiKey) {
     throw new Error(
-      "ClawLink is not configured yet. Start browser pairing with clawlink_begin_pairing. If the plugin was just installed and this chat cannot see the tools yet, start a fresh chat and retry setup there. Advanced fallback: create an API key at https://claw-link.dev/dashboard/settings?tab=api and use the plugin settings UI if your client exposes one.",
+      "ClawLink is not configured yet. Start browser pairing with clawlink_begin_pairing. If the plugin was just installed and this chat cannot see the tools yet, start a fresh chat and retry setup there.",
     );
   }
 
@@ -753,7 +753,6 @@ function buildCommandHelp() {
     "/clawlink pair [deviceLabel]",
     "/clawlink pair-status",
     "/clawlink status",
-    "/clawlink login <apiKey>",
     "/clawlink logout",
   ].join("\n");
 }
@@ -765,7 +764,7 @@ const clawlinkPlugin = {
   register(api) {
     api.registerCommand({
       name: "clawlink",
-      description: "Configure ClawLink API access and inspect plugin status.",
+      description: "Configure ClawLink pairing and inspect plugin status.",
       acceptsArgs: true,
       handler: async (ctx) => {
         const tokens = tokenizeArgs(ctx.args);
@@ -781,8 +780,8 @@ const clawlinkPlugin = {
           return {
             text: [
               "ClawLink status:",
-              `- apiKey: ${maskSecret(apiKey)}`,
-              `- login: ${apiKey ? "configured" : "missing"}`,
+              `- credential: ${maskSecret(apiKey)}`,
+              `- configured: ${apiKey ? "yes" : "no"}`,
               `- pairing: ${
                 pendingPairing
                   ? isPendingPairingExpired(pendingPairing)
@@ -849,23 +848,8 @@ const clawlinkPlugin = {
         }
 
         if (action === "login") {
-          const apiKey = tokens[1]?.trim() ?? "";
-
-          if (!apiKey) {
-            return {
-              text: "Usage: /clawlink login <apiKey>\nCreate a key at https://claw-link.dev/dashboard/settings?tab=api",
-            };
-          }
-
-          await saveApiKeyToConfig(api, apiKey);
-
           return {
-            text: [
-              `ClawLink API key saved: ${maskSecret(apiKey)}`,
-              "ClawLink is configured on this OpenClaw install.",
-            ]
-              .filter(Boolean)
-              .join("\n"),
+            text: "Manual credential entry is no longer supported. Use /clawlink pair to start browser pairing.",
           };
         }
 
@@ -891,7 +875,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_begin_pairing",
-      description: "Start or resume browser pairing for this OpenClaw install. Use this when ClawLink is not configured yet so the user can approve the device in a browser without copy/pasting an API key.",
+      description: "Start or resume browser pairing for this OpenClaw install. Use this when ClawLink is not configured yet so the user can approve the device in a browser without manual credential entry.",
       parameters: Type.Object({
         deviceLabel: Type.Optional(Type.String({
           description: "Optional friendly label for this OpenClaw device, for example Steve's MacBook.",

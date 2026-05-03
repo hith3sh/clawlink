@@ -33,9 +33,9 @@
   },
   "uiHints": {
     "apiKey": {
-      "label": "ClawLink API key",
-      "help": "Paste the bearer token you generated at https://claw-link.dev/dashboard/settings?tab=api. Stored locally in OpenClaw's plugin config; never sent to the assistant.",
-      "placeholder": "cllk_live_...",
+      "label": "ClawLink local credential",
+      "help": "Managed automatically by browser pairing. You usually should not edit this manually. Stored locally in OpenClaw's plugin config; never sent to the assistant.",
+      "placeholder": "Managed automatically by pairing",
       "sensitive": true
     }
   },
