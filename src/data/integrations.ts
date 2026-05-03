@@ -188,7 +188,6 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "Box", slug: "box", description: "Store, share, and manage files and folders", category: "Storage & Databases", icon: "SiBox", color: "#0061D5" },
   { name: "Webflow", slug: "webflow", description: "Build and manage websites, CMS collections, and assets", category: "Developer Tools", icon: "SiWebflow", color: "#4353FF" },
   { name: "Replicate", slug: "replicate", description: "Run AI models, create predictions, and manage deployments", category: "AI & ML", icon: "SiReplicate", color: "#000000" },
-  { name: "Twilio", slug: "twilio", description: "Send SMS, make calls, and manage messaging", category: "Communication", icon: "SiTwilio", color: "#F22F46" },
 ];
 
 const integrationMetadata: Record<string, IntegrationMetadata> = {
