@@ -35,7 +35,6 @@ remote = true
 # Environment variables
 [vars]
 ENV = "production"
-NEXT_PUBLIC_API_URL = "https://api.claw-link.dev"
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuY2xhdy1saW5rLmRldiQ"
 NEXT_PUBLIC_CLERK_SIGN_IN_URL = "/sign-in"
 NEXT_PUBLIC_CLERK_SIGN_UP_URL = "/sign-up"

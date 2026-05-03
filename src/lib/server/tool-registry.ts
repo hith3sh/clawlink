@@ -7,6 +7,7 @@ import {
   listIntegrationConnectionsForUserId,
   type IntegrationConnectionRecord,
 } from "@/lib/server/integration-store";
+import type { KvNamespaceLike } from "@/lib/composio/schema-cache";
 import {
   getAllRegisteredTools,
   listComposioToolsForIntegration,
@@ -137,7 +138,7 @@ export async function hydrateToolSchemas(tools: IntegrationTool[]): Promise<void
   const composioTools = tools.filter((tool) => tool.execution.kind === "composio_tool");
   if (composioTools.length === 0) return;
 
-  const kv = getEnvBinding<KVNamespace>("CREDENTIALS");
+  const kv = getEnvBinding<KvNamespaceLike>("CREDENTIALS");
   await hydrateComposioToolSchemas(composioTools, kv, undefined);
 }
 

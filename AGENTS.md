@@ -46,38 +46,26 @@ Agent guidance:
 
 # Deployment Architecture
 
-ClawLink runs as two production Cloudflare Workers. Do not treat them as one deploy target.
+ClawLink now runs as a single production Cloudflare Worker.
 
-1. Frontend / hosted app / Next routes
+1. Hosted app / Next routes / tool execution
    - Cloudflare Worker: `clawlink-web`
    - Config file: `wrangler.toml`
    - Build/deploy commands: `npm run build:web` and `npm run deploy:web`
-   - This project serves `claw-link.dev`, including the Next.js app, dashboard, hosted connect flow, Polar billing routes, OAuth callbacks, and Next API routes under `src/app/api/**`.
-
-2. Worker / tool execution backend
-   - Cloudflare Worker: `clawlink`
-   - Config file: `worker/wrangler.worker.toml`
-   - Build/deploy commands: `npm run build:worker` and `npm run deploy:worker`
-   - This project serves `api.claw-link.dev` and runs the MCP/tool execution layer in `worker/**`.
+   - This project serves `claw-link.dev`, including the Next.js app, dashboard, hosted connect flow, Polar billing routes, OAuth callbacks, Next API routes under `src/app/api/**`, and the tool execution runtime used by the OpenClaw plugin.
 
 Shared infrastructure:
 
-- Both Workers use the same D1 database: `clawlink`
-- Both Workers use the same KV namespace: `CREDENTIALS`
-- The frontend points to the tool/API worker via `NEXT_PUBLIC_API_URL`, currently `https://api.claw-link.dev`
+- D1 database: `clawlink`
+- KV namespace: `CREDENTIALS`
 
 Important deployment rules:
 
-- A frontend/Next API change is not deployed by pushing only the `clawlink` worker.
-- A tool execution/backend change is not deployed by pushing only the `clawlink-web` worker.
-- If a change touches schema, credential lookup, OAuth contracts, billing state, or connection lifecycle behavior, expect to update database migrations and often deploy both Workers.
-- Do not assume a successful `clawlink` Worker deploy means dashboard routes or hosted API routes are live.
-- Do not assume a successful `clawlink-web` Worker deploy updates `api.claw-link.dev`.
+- A tool execution change and a hosted-route change now ship through the same `clawlink-web` deploy.
+- If a change touches schema, credential lookup, OAuth contracts, billing state, or connection lifecycle behavior, expect to update database migrations and redeploy `clawlink-web`.
 - `clawlink-web` uses OpenNext on Workers. Do not reintroduce the old Pages-specific `runtime = "edge"` requirement across App Router files unless the frontend is intentionally moved back to Pages.
-- The `clawlink` git-based Worker build runs from the repo root. Keep the worker deploy command isolated with `wrangler --cwd worker ... --experimental-autoconfig=false` so Wrangler does not auto-detect the root Next/OpenNext app.
-- The frontend custom domain is `claw-link.dev`.
-- The backend custom domain is `api.claw-link.dev`.
-- The Polar webhook endpoint for the frontend app is `https://claw-link.dev/api/billing/webhooks`.
+- The production custom domain is `claw-link.dev`.
+- The Polar webhook endpoint is `https://claw-link.dev/api/billing/webhooks`.
 - A `clawlink-web` Pages project may still exist for previews/history, but it is not the production frontend surface anymore.
 
 ## Clerk Redirect And Env Rules
@@ -89,7 +77,7 @@ Important deployment rules:
 - Do not rely on the old `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` or `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL` names for new changes. Treat them as obsolete.
 - Prefer setting the redirect defaults in `ClerkProvider` as well as env so the frontend keeps working even if a manual build misses one env binding.
 - If users sign in successfully but land on `/` instead of `/dashboard`, check Clerk redirect config before debugging secrets.
-- Frontend auth fixes require `npm run deploy:web`. Deploying only `npm run deploy:worker` will not update the hosted sign-in flow on `claw-link.dev`.
+- Frontend auth fixes require `npm run deploy:web`.
 - Manual frontend deploys must use the repo’s `npm run deploy:web` flow so the OpenNext build and Wrangler deploy use the intended production env values together.
 
 # Integration Data Model
@@ -100,7 +88,7 @@ Rules:
 
 - `user_integrations.id` is the stable connection id.
 - A user can have multiple rows for the same integration slug.
-- `is_default` determines the default connection for a provider when a worker call does not specify a `connectionId`.
+- `is_default` determines the default connection for a provider when a tool call does not specify a `connectionId`.
 - `external_account_id` is used to match/reuse the same upstream account on reconnect.
 - `connection_sessions.connection_id` links an OAuth/manual setup session to the exact connection row being created or updated.
 - Row deletion should happen by connection id, not by integration slug.
@@ -121,7 +109,7 @@ For any integration MVP, validate in two layers:
    - For manual providers, verify credential submission, validation, and stored credentials.
    - Typical check: start from the integration page, complete the connection flow, and verify the connection session ends in `connected`.
 
-2. Worker tool execution
+2. Hosted runtime tool execution
    - After connection succeeds, confirm the stored credentials work in the worker.
    - Preferred test order:
      1. read/list/get actions
@@ -131,7 +119,7 @@ For any integration MVP, validate in two layers:
 Troubleshooting guidance:
 
 - If the connect flow fails, check redirect URIs, provider app registration/config, callback handling, and credential storage first.
-- If connection succeeds but tools fail, check provider permissions/scopes, token handling/refresh, and worker request formatting.
+- If connection succeeds but tools fail, check provider permissions/scopes, token handling/refresh, and server request formatting.
 - Separate “connection flow works” from “tool execution works”; both layers must pass before treating an integration as working.
 
 # Pipedream Integration Validation

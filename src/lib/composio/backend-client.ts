@@ -65,6 +65,8 @@ export interface ExecuteComposioToolParams {
   env?: Record<string, unknown>;
   toolSlug: string;
   toolkit: string;
+  integrationSlug?: string;
+  authConfigId?: string;
   version?: string;
   userId: string;
   connectedAccountId: string;
@@ -140,6 +142,7 @@ function getSlugEnvKey(prefix: string, slug: string, suffix: string): string {
 export function getComposioConfig(
   env: Record<string, unknown> | undefined,
   integrationSlug: string,
+  authConfigIdOverride?: string,
 ): ComposioConfig {
   const apiKey = getEnvValue(env, "COMPOSIO_API_KEY");
 
@@ -151,6 +154,7 @@ export function getComposioConfig(
   const authConfigMap = parseMap(getEnvValue(env, "COMPOSIO_AUTH_CONFIG_MAP"));
   const versionMap = parseMap(getEnvValue(env, "COMPOSIO_TOOLKIT_VERSION_MAP"));
   const authConfigId =
+    authConfigIdOverride ??
     authConfigMap.get(integrationSlug) ??
     getEnvValue(env, getSlugEnvKey("COMPOSIO", integrationSlug, "AUTH_CONFIG_ID"));
   const toolkit =
@@ -475,7 +479,11 @@ export async function deleteComposioConnectedAccount(
 export async function executeComposioToolRequest(
   params: ExecuteComposioToolParams,
 ): Promise<ExecuteComposioToolResult> {
-  const config = getComposioConfig(params.env, params.toolkit.replace(/_/g, "-"));
+  const config = getComposioConfig(
+    params.env,
+    params.integrationSlug ?? params.toolkit.replace(/_/g, "-"),
+    params.authConfigId,
+  );
   const response = await composioFetch<{
     data?: unknown;
     error?: unknown;

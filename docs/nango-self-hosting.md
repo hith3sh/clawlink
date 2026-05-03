@@ -5,8 +5,7 @@ This repo now uses Nango as the OAuth backend for supported integrations.
 ## What lives where
 
 - VPS deployment scaffolding: `infra/nango/`
-- Frontend runtime config: `wrangler.toml`
-- Worker runtime config: `worker/wrangler.worker.toml`
+- Runtime config: `wrangler.toml`
 - D1 schema migration: `migrations/006_nango_connections.sql`
 
 ## VPS setup
@@ -14,7 +13,7 @@ This repo now uses Nango as the OAuth backend for supported integrations.
 1. Copy `infra/nango/.env.example` to `infra/nango/.env`.
 2. Set a real Postgres password plus long random values for `NANGO_ENCRYPTION_KEY` and `NANGO_JWT_SECRET`.
 3. Decide your public URLs:
-   - `NANGO_SERVER_URL` is the API origin that ClawLink server routes and the worker call.
+   - `NANGO_SERVER_URL` is the API origin that ClawLink server routes call.
    - `NANGO_PUBLIC_CONNECT_URL` is the public Connect UI origin that the hosted `/connect/[slug]` page opens.
 4. Start Nango:
 
@@ -27,12 +26,12 @@ docker compose up -d
 
 ## ClawLink runtime config
 
-The repo expects these values in both production deploy targets:
+The repo expects these values in the production runtime:
 
 - `NANGO_BASE_URL`
 - `NANGO_PROVIDER_CONFIG_KEYS`
 
-The frontend Worker also needs:
+The frontend also needs:
 
 - `NEXT_PUBLIC_NANGO_BASE_URL`
 
@@ -41,7 +40,7 @@ For the current production split-host setup, use:
 - `NANGO_BASE_URL=https://nango.claw-link.dev`
 - `NEXT_PUBLIC_NANGO_BASE_URL=https://connect.nango.claw-link.dev`
 
-And both deploy targets need the secret:
+The runtime also needs the secret:
 
 - `NANGO_SECRET_KEY`
 
@@ -55,11 +54,10 @@ If your Nango integration ids differ, change the JSON before deploying.
 
 ## Cloudflare secrets
 
-Set the Nango secret on both Workers:
+Set the Nango secret on `clawlink-web`:
 
 ```bash
 wrangler secret put NANGO_SECRET_KEY
-wrangler --cwd worker secret put NANGO_SECRET_KEY --config wrangler.worker.toml --experimental-autoconfig=false
 ```
 
 ## Current migration scope

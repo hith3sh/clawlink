@@ -88,8 +88,8 @@ Then just ask OpenClaw to do things:
 We welcome contributions — especially new integrations.
 
 1. Fork the repo
-2. Add your integration handler in `worker/integrations/`
-3. Add the integration to `src/data/integrations.ts`
+2. Add the integration to `src/data/integrations.ts`
+3. Import or generate its runtime manifests, and only add a custom handler for an approved exception like `postiz`
 4. Open a pull request
 
 Please read our [Contributing Guide](CONTRIBUTING.md) (if available) and ensure your changes pass the existing test suite.

@@ -5,16 +5,14 @@ ClawLink is a third-party integration hub for OpenClaw. It is not affiliated wit
 This policy covers the ClawLink code published in this repository:
 
 - the npm package `@useclawlink/openclaw-plugin` (source: `packages/openclaw-clawlink/`)
-- the ClawLink web app and dashboard hosted at `claw-link.dev`
-- the tool execution backend hosted at `api.claw-link.dev`
+- the ClawLink hosted app, dashboard, and API routes at `claw-link.dev`
 
 ## Supported versions
 
 | Component | Supported versions |
 |---|---|
 | `@useclawlink/openclaw-plugin` | Latest minor release (currently `0.1.x`) |
-| `claw-link.dev` web app | Current deployment |
-| `api.claw-link.dev` worker | Current deployment |
+| `claw-link.dev` hosted app | Current deployment |
 
 Older plugin versions are not patched in place. Please upgrade to the latest minor release before opening a report.
 
@@ -45,15 +43,14 @@ We aim to acknowledge reports within 3 business days and provide an initial tria
 In scope:
 
 - the plugin code in `packages/openclaw-clawlink/`
-- authentication, credential storage, and tool execution at `api.claw-link.dev`
-- the dashboard, billing, and hosted connect flows at `claw-link.dev`
+- authentication, credential storage, tool execution, billing, and hosted connect flows at `claw-link.dev`
 - OAuth callback handling and connection-session lifecycle
 
 Out of scope:
 
 - vulnerabilities in third-party provider APIs that ClawLink integrates with (report those to the provider)
 - user-specific misconfiguration, lost API keys, or compromised OpenClaw installs
-- denial-of-service via rate-limit exhaustion against `api.claw-link.dev`
+- denial-of-service via rate-limit exhaustion against `claw-link.dev`
 - social-engineering attacks against end users
 - issues in unmaintained or yanked plugin versions
 

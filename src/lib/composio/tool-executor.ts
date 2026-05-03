@@ -46,6 +46,8 @@ export async function executeComposioTool(
     env: context.env,
     toolSlug: execution.toolSlug,
     toolkit: execution.toolkit,
+    integrationSlug: tool.integration,
+    authConfigId: context.credentials.composioAuthConfigId ?? undefined,
     version: execution.version,
     userId: context.externalUserId,
     connectedAccountId,

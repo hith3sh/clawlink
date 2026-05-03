@@ -6,25 +6,19 @@ ClawLink is a SaaS for OpenClaw users that makes integrations dramatically easie
 
 ## Current Architecture
 
-ClawLink runs as two production Cloudflare Workers backed by a shared D1 database and KV namespace.
+ClawLink runs as one production Cloudflare Worker backed by a shared D1 database and KV namespace.
 
 1. `clawlink-web`
    - Config: `wrangler.toml`
    - Serves `claw-link.dev`
    - Runs the Next.js app via OpenNext on Workers
-   - Owns the dashboard, hosted connect pages, Clerk auth flows, Polar billing routes, and Next API routes under `src/app/api/**`
-
-2. `clawlink`
-   - Config: `worker/wrangler.worker.toml`
-   - Serves `api.claw-link.dev`
-   - Runs the MCP / tool execution backend in `worker/**`
-   - Owns integration execution, credential loading, request logging, and scheduled trigger execution
+   - Owns the dashboard, hosted connect pages, Clerk auth flows, Polar billing routes, Next API routes under `src/app/api/**`, and the tool execution runtime used by the OpenClaw plugin
 
 Shared infrastructure:
 - D1 database: `clawlink`
 - KV namespace: `CREDENTIALS`
 
-Important: frontend and backend are separate deploy targets. Changes to hosted routes or dashboard UI require a `clawlink-web` deploy. Changes to tool execution require a `clawlink` deploy. Schema and connection lifecycle changes often require both.
+Important: hosted routes and tool execution now ship together through `clawlink-web`. Schema and connection lifecycle changes still often require a deploy plus migrations, but there is no second runtime at `api.claw-link.dev`.
 
 ## Main Repo Areas
 
@@ -34,7 +28,7 @@ Important: frontend and backend are separate deploy targets. Changes to hosted r
 - `src/lib/server/**`: server-side connection sessions, billing, routing, execution, and provider helpers
 - `src/lib/runtime/**`: runtime-facing tool execution types and policies
 - `src/lib/composio/**`: Composio backend client, tool executor, manifest registry, and KV schema cache
-- `worker/**`: MCP worker, credential bridge, integration handlers, logging, and worker-only helpers
+- `worker/**`: shared credential bridge and integration handler helpers still imported by the web runtime; no separate deploy target
 - `migrations/*.sql`: D1 schema migrations
 
 ## Connection Architecture
@@ -75,22 +69,22 @@ The catalog setup modes are:
 
 The credential bridge still has some legacy manual-credential support, but new integrations should not use that as their primary setup mode.
 
-`pipedream` remains the strategic default for most new providers. `composio` should be used provider-by-provider only when it materially improves coverage or reliability. The slugs currently using Pipedream Connect are listed in `PIPEDREAM_CONNECT_SLUGS` in both `wrangler.toml` and `worker/wrangler.worker.toml`. Instantly is intentionally removed from that list and uses Composio instead. Nango-backed OAuth integrations still use the existing hosted OAuth path, but new providers should not be added to Nango unless there is a specific reason.
+`pipedream` remains the strategic default for most new providers. `composio` should be used provider-by-provider only when it materially improves coverage or reliability. The slugs currently using Pipedream Connect are listed in `PIPEDREAM_CONNECT_SLUGS` in `wrangler.toml`. Instantly is intentionally removed from that list and uses Composio instead. Nango-backed OAuth integrations still use the existing hosted OAuth path, but new providers should not be added to Nango unless there is a specific reason.
 
 ### Pipedream slug → app name mapping
 
-The integration slug we use internally (e.g. `google-calendar`) is not always the same as the Pipedream app name (e.g. `google_calendar`). When they differ, the slug **must** be added to `PIPEDREAM_APP_MAP` in both `wrangler.toml` and `worker/wrangler.worker.toml`, otherwise `getConfiguredAppForSlug()` falls back to the raw slug, Pipedream Connect rejects the token, and the hosted connect page fails with "This session has expired. Please refresh the page to try again."
+The integration slug we use internally (e.g. `google-calendar`) is not always the same as the Pipedream app name (e.g. `google_calendar`). When they differ, the slug **must** be added to `PIPEDREAM_APP_MAP` in `wrangler.toml`, otherwise `getConfiguredAppForSlug()` falls back to the raw slug, Pipedream Connect rejects the token, and the hosted connect page fails with "This session has expired. Please refresh the page to try again."
 
 Rules when adding a new Pipedream provider:
 
 - The Pipedream app name is the `execution.app` field in the generated manifest at `src/generated/pipedream-manifests/<slug>.generated.ts` — copy that value, not the slug.
 - Common mismatches: anything with a hyphen in the slug (Pipedream uses underscores), and providers whose Pipedream app has a suffix like `_oauth`, `_v2`, `_rest_api`, `_data_api`, or a vendor prefix like `microsoft_`.
 - If the slug equals the app name exactly (e.g. `slack`, `notion`, `gmail`), no `PIPEDREAM_APP_MAP` entry is needed.
-- Update both wrangler files in the same change and redeploy both workers (`npm run deploy:web` and `npm run deploy:worker`) — the var is read on both surfaces.
+- Update `wrangler.toml` in the same change and redeploy `clawlink-web` — the hosted connect flow and runtime execution both read the same env surface now.
 
-## Runtime / Worker Architecture
+## Runtime Architecture
 
-The worker uses the connection id plus stored auth backend metadata to load credentials and execute tools.
+The web runtime uses the connection id plus stored auth backend metadata to load credentials and execute tools.
 
 - `worker/credentials.ts`
   - loads manual credentials directly
@@ -105,11 +99,11 @@ The worker uses the connection id plus stored auth backend metadata to load cred
 
 - `src/lib/server/executor.ts`
   - shared server-side tool execution path
-  - uses the same credential bridge logic as the worker runtime
+  - uses the same credential bridge logic and shared handler registry the old worker used
 
 ## Composio Lazy Schema Architecture
 
-Composio tool manifests are generated **without `inputSchema`** to keep the worker bundle small. The generated manifests contain only metadata (name, description, mode, risk, tags, execution spec). Schemas are fetched at runtime from Composio's API and cached in KV.
+Composio tool manifests are generated **without `inputSchema`** to keep the runtime bundle small. The generated manifests contain only metadata (name, description, mode, risk, tags, execution spec). Schemas are fetched at runtime from Composio's API and cached in KV.
 
 Key files:
 
@@ -120,7 +114,7 @@ Key files:
 How it works:
 
 1. Static manifests set `inputSchema: { type: "object", properties: {} }` (empty stub)
-2. When `tools/list` is called (MCP worker), the worker queries D1 for the user's Composio-backed connections, identifies which integration slugs are connected, and hydrates schemas for just those toolkits
+2. When tool catalog or execution routes need schemas, the web runtime queries D1 for the user's Composio-backed connections, identifies which integration slugs are connected, and hydrates schemas for just those toolkits
 3. Schema resolution: in-memory cache → KV cache (`composio-schema:<slug>`, 24h TTL) → Composio API fetch
 4. Unconnected integrations keep the stub schema — the user cannot invoke those tools anyway
 5. The dashboard (`tool-registry.ts`) uses the same hydration path via `hydrateSchemas()` before building tool catalog/description responses
@@ -149,14 +143,11 @@ Current state:
 
 - the importer, manifest registry, and generic executor exist
 - generated manifests for `airtable`, `apollo`, `calendly`, `clickup`, `facebook`, `gmail`, `google-ads`, `google-analytics`, `google-calendar`, `google-docs`, `google-drive`, `google-search-console`, `hubspot`, `instantly`, `klaviyo`, `linkedin`, `mailchimp`, `notion`, `onedrive`, `outlook`, `postiz`, `salesforce`, `xero`, and `youtube` are on disk
-- the manifest path is wired end to end on both surfaces:
-  - server (Next API used by the OpenClaw plugin):
-    - `src/lib/server/tool-registry.ts` merges manifest tools with the remaining Postiz custom-handler tools and only emits manifest tools when the user has a Pipedream-backed connection
-    - `src/lib/server/router.ts` narrows connection selection to Pipedream-backed rows when `tool.execution.kind === "pipedream_action"`
-    - `src/lib/server/executor.ts` falls through to `executePipedreamActionTool()` instead of requiring a custom handler
-  - worker (`api.claw-link.dev`):
-    - `worker/index.ts` resolves a Pipedream-backed connection then dispatches `pipedream_action` tools to `executePipedreamActionTool()`
-    - `worker/integrations/index.ts` imports from `manifest-registry` plus `postiz`
+- the manifest path is wired end to end in the web runtime:
+  - `src/lib/server/tool-registry.ts` merges manifest tools with the remaining Postiz custom-handler tools and only emits manifest tools when the user has a Pipedream-backed connection
+  - `src/lib/server/router.ts` narrows connection selection to Pipedream-backed rows when `tool.execution.kind === "pipedream_action"`
+  - `src/lib/server/executor.ts` falls through to `executePipedreamActionTool()` instead of requiring a custom handler
+  - `worker/integrations/index.ts` remains the shared registry module imported by the web runtime
 
 Custom worker handler status:
 
@@ -207,7 +198,6 @@ Related schema migrations:
 
 - Frontend build: `npm run build:web`
 - Frontend deploy: `npm run deploy:web`
-- Worker deploy: `npm run deploy:worker`
 
 If running deploys manually in a shell without the package script environment, make sure the Cloudflare token and production env values are loaded first.
 

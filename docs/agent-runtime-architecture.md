@@ -71,7 +71,7 @@ That means ClawLink already has the beginnings of a resumable auth system.
 
 ### 4. Runtime execution exists
 
-`worker/index.ts` already supports:
+`src/lib/server/executor.ts` plus the `/api/tools/**` routes already support:
 
 - `tools/list`
 - `tools/call`
@@ -328,7 +328,7 @@ Actually run one tool safely.
 
 ### Existing code
 - `src/lib/server/tooling.ts`
-- `worker/index.ts`
+- `src/lib/server/executor.ts`
 
 ### Proposed execution modes
 

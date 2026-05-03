@@ -197,7 +197,7 @@ ClawLink resolves real Composio schemas lazily at runtime instead of bundling th
    - Cloudflare KV in the shared `CREDENTIALS` namespace under `composio-schema:<integrationSlug>`
    - Composio API fetch as fallback
 4. `src/lib/composio/backend-client.ts` fetches `GET /api/v3.1/tools?...` and converts each tool's `input_parameters` into the same simplified JSON Schema shape ClawLink exposes to MCP clients.
-5. `worker/index.ts` hydrates schemas during `tools/list`, but only for Composio integrations the authenticated user has actually connected.
+5. `src/lib/server/tool-registry.ts` hydrates schemas for Composio integrations the authenticated user has actually connected.
 6. `src/lib/server/tool-registry.ts` uses the same hydration path for dashboard/API tool descriptions.
 
 This means schema fetches are paid only when they are actually needed, and most requests reuse memory or KV cache. If hydration fails, the tool keeps the stub schema, but the manifest metadata and execution wiring still remain intact.
@@ -297,35 +297,21 @@ COMPOSIO_TOOLKIT_MAP = "instantly=instantly,apollo=apollo"
 COMPOSIO_TOOLKIT_VERSION_MAP = "instantly=20260429_00,apollo=<VERSION>"
 ```
 
-### `worker/wrangler.worker.toml` (backend worker `clawlink`)
+### Secrets: Push from `.env.local` to Cloudflare
 
-Same changes:
-
-```toml
-COMPOSIO_ENABLED_SLUGS = "instantly,apollo"
-COMPOSIO_TOOLKIT_MAP = "instantly=instantly,apollo=apollo"
-COMPOSIO_TOOLKIT_VERSION_MAP = "instantly=20260429_00,apollo=<VERSION>"
-```
-
-### Secrets: Push from `.env.local` to Cloudflare Workers
-
-All Composio secrets must be set on **both** workers. The values are already in `.env.local` -- read them from there and push via wrangler.
+All Composio secrets must be set on `clawlink-web`. The values are already in `.env.local` -- read them from there and push via wrangler.
 
 **Important:** `wrangler secret put` reads from stdin in non-interactive mode. Use `echo` to pipe the value.
 
 #### Push the per-integration auth config ID
 
-Read the value from `.env.local` and set it on both workers:
+Read the value from `.env.local` and set it on `clawlink-web`:
 
 ```bash
 # Extract the value (strip quotes)
 AUTH_CONFIG_ID=$(grep COMPOSIO_<SLUG>_AUTH_CONFIG_ID .env.local | cut -d= -f2 | tr -d '"')
 
-# Push to frontend worker (clawlink-web, uses wrangler.toml)
 echo "$AUTH_CONFIG_ID" | wrangler secret put COMPOSIO_<SLUG>_AUTH_CONFIG_ID
-
-# Push to backend worker (clawlink, uses worker/wrangler.worker.toml)
-echo "$AUTH_CONFIG_ID" | wrangler secret put COMPOSIO_<SLUG>_AUTH_CONFIG_ID --config worker/wrangler.worker.toml
 ```
 
 Concrete example for Apollo:
@@ -333,7 +319,6 @@ Concrete example for Apollo:
 ```bash
 AUTH_CONFIG_ID=$(grep COMPOSIO_APOLLO_AUTH_CONFIG_ID .env.local | cut -d= -f2 | tr -d '"')
 echo "$AUTH_CONFIG_ID" | wrangler secret put COMPOSIO_APOLLO_AUTH_CONFIG_ID
-echo "$AUTH_CONFIG_ID" | wrangler secret put COMPOSIO_APOLLO_AUTH_CONFIG_ID --config worker/wrangler.worker.toml
 ```
 
 #### Push `COMPOSIO_API_KEY` (only needed once, not per-integration)
@@ -343,17 +328,12 @@ If this is the first Composio integration being set up and the API key hasn't be
 ```bash
 API_KEY=$(grep COMPOSIO_API_KEY .env.local | cut -d= -f2 | tr -d '"')
 echo "$API_KEY" | wrangler secret put COMPOSIO_API_KEY
-echo "$API_KEY" | wrangler secret put COMPOSIO_API_KEY --config worker/wrangler.worker.toml
 ```
 
 #### Verify secrets are set
 
 ```bash
-# List secrets on frontend worker
 wrangler secret list
-
-# List secrets on backend worker
-wrangler secret list --config worker/wrangler.worker.toml
 ```
 
 Both should show `COMPOSIO_API_KEY` and `COMPOSIO_<SLUG>_AUTH_CONFIG_ID` in the list.
@@ -485,14 +465,9 @@ Focus on:
 Both workers need redeployment:
 
 ```bash
-# Build and deploy frontend (serves dashboard, connect flow, API routes)
+# Build and deploy the hosted app and execution runtime
 npm run build:web && npm run deploy:web
-
-# Build and deploy worker (serves tool execution at api.claw-link.dev)
-npm run build:worker && npm run deploy:worker
 ```
-
-**Important:** If you only deploy one worker, the other won't have the new integration. Deploy both.
 
 ---
 
@@ -510,7 +485,7 @@ Follow the standard integration MVP testing layers from `AGENTS.md`:
 
 ### Layer 2: Tool execution
 
-1. Use the OpenClaw plugin or the worker API directly
+1. Use the OpenClaw plugin or the hosted API directly
 2. Test read tools first (list, get)
 3. Then test write tools (create, update)
 4. Verify Composio returns valid data
@@ -535,7 +510,6 @@ npm run smoke:openclaw-plugin -- --preset <slug>
 | `src/generated/composio-manifests/index.ts` | Auto-updated by the script | Yes (automatic) |
 | `src/data/integrations.ts` | Add/update integration entry with `setupMode: "composio"` and curated tools | Yes |
 | `wrangler.toml` | Add to `COMPOSIO_ENABLED_SLUGS`, `COMPOSIO_TOOLKIT_MAP`, `COMPOSIO_TOOLKIT_VERSION_MAP` | Yes |
-| `worker/wrangler.worker.toml` | Same as above | Yes |
 | Cloudflare secrets | Set `COMPOSIO_<SLUG>_AUTH_CONFIG_ID` (or update `COMPOSIO_AUTH_CONFIG_MAP`) | Yes |
 | `worker/integrations/index.ts` | Add to `disabledPipedreamManifestIntegrations` if migrating from Pipedream | Only if migrating |
 | `migrations/0XX_composio_<slug>.sql` | Invalidate old Pipedream connections | Only if you have real users with Pipedream connections |
@@ -552,7 +526,6 @@ These are fully generic and handle any Composio integration automatically:
 - `src/lib/composio/schema-cache.ts` — Generic lazy-schema cache layer (memory + KV + Composio fallback)
 - `src/lib/composio/tool-executor.ts` — Tool execution adapter
 - `src/lib/composio/manifest-registry.ts` — Indexes generated manifests and hydrates stub schemas in place
-- `worker/index.ts` — Worker dispatch (handles any `composio_tool` execution kind)
 - `worker/credentials.ts` — Credential loading for Composio connections
 - `worker/integrations/index.ts` — Auto-includes all Composio manifests (no per-integration wiring needed)
 - `src/components/connect/HostedConnectPage.tsx` — Already handles `setupMode === "composio"` generically
@@ -583,21 +556,19 @@ npm run import:composio-tools -- --toolkit apollo --integration apollo
 #    - If apollo already exists: change setupMode to "composio", update tools list
 #    - If new: add base entry + metadata entry
 
-# 5. Edit wrangler.toml + worker/wrangler.worker.toml
+# 5. Edit wrangler.toml
 #    Add apollo to COMPOSIO_ENABLED_SLUGS, COMPOSIO_TOOLKIT_MAP, COMPOSIO_TOOLKIT_VERSION_MAP
 
-# 6. Push secrets from .env.local to both workers
+# 6. Push secrets from .env.local
 AUTH_CONFIG_ID=$(grep COMPOSIO_APOLLO_AUTH_CONFIG_ID .env.local | cut -d= -f2 | tr -d '"')
 echo "$AUTH_CONFIG_ID" | wrangler secret put COMPOSIO_APOLLO_AUTH_CONFIG_ID
-echo "$AUTH_CONFIG_ID" | wrangler secret put COMPOSIO_APOLLO_AUTH_CONFIG_ID --config worker/wrangler.worker.toml
 
 # 7. If migrating from Pipedream:
 #    - Add "apollo" to disabledPipedreamManifestIntegrations in worker/integrations/index.ts
 #    - Only create a migration file if you have real users with Pipedream connections
 
-# 8. Deploy both workers
+# 8. Deploy
 npm run build:web && npm run deploy:web
-npm run build:worker && npm run deploy:worker
 
 # 9. Test
 #    Connect Apollo through the dashboard

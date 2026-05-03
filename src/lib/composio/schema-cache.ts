@@ -14,6 +14,11 @@ import { fetchComposioToolSchemas } from "./backend-client";
 const CACHE_TTL_SECONDS = 86_400; // 24 hours
 const CACHE_KEY_PREFIX = "composio-schema:";
 
+export interface KvNamespaceLike {
+  get(key: string, type?: "text"): Promise<string | null>;
+  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
+}
+
 /** In-memory per-request cache so we don't hit KV multiple times in one request. */
 const memoryCache = new Map<string, Map<string, Record<string, unknown>>>();
 
@@ -32,7 +37,7 @@ function cacheKey(integrationSlug: string): string {
  *   3. Composio API (result is written back to KV + memory)
  */
 export async function resolveToolSchemas(
-  kv: KVNamespace | null | undefined,
+  kv: KvNamespaceLike | null | undefined,
   env: Record<string, unknown> | undefined,
   integrationSlug: string,
 ): Promise<Map<string, Record<string, unknown>>> {

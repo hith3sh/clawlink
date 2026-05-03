@@ -1,6 +1,10 @@
 import type { IntegrationTool } from "../../../worker/integrations/base";
 import { composioToolManifests } from "@/generated/composio-manifests";
-import { resolveToolSchemas, isStubSchema } from "./schema-cache";
+import {
+  type KvNamespaceLike,
+  resolveToolSchemas,
+  isStubSchema,
+} from "./schema-cache";
 
 let cachedTools: IntegrationTool[] | null = null;
 let cachedByName: Map<string, IntegrationTool> | null = null;
@@ -57,7 +61,7 @@ export function listComposioManifestToolsForIntegration(
  */
 export async function hydrateComposioToolSchemas(
   tools: IntegrationTool[],
-  kv: KVNamespace | null | undefined,
+  kv: KvNamespaceLike | null | undefined,
   env: Record<string, unknown> | undefined,
 ): Promise<void> {
   // Collect the set of integration slugs that need hydration.

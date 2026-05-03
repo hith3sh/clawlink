@@ -274,17 +274,11 @@ For each provider, validate:
    - then run a write if the provider supports writes in MVP
    - verify auth failure correctly marks `needs_reauth`
 
-### 9. Deploy both workers
+### 9. Deploy
 
-For migrated providers, expect to deploy both:
+For migrated providers, deploy `clawlink-web`:
 
 - `npm run deploy:web`
-- `npm run deploy:worker`
-
-Reason:
-
-- hosted connect flow lives in `clawlink-web`
-- execution path lives in `clawlink`
 
 ## Definition Of Done For One Provider
 
@@ -329,7 +323,6 @@ Only in the final cleanup PR:
 - [src/app/api/connect/sessions/[token]/nango/route.ts](/Users/hithesh/clawlink/src/app/api/connect/sessions/%5Btoken%5D/nango/route.ts:1)
 - [src/lib/nango/credentials.ts](/Users/hithesh/clawlink/src/lib/nango/credentials.ts:1)
 - Nango env/config in [wrangler.toml](/Users/hithesh/clawlink/wrangler.toml:1)
-- Nango env/config in [worker/wrangler.worker.toml](/Users/hithesh/clawlink/worker/wrangler.worker.toml:1)
 - Nango-specific save/reconcile/delete paths in:
   - [src/lib/server/integration-store.ts](/Users/hithesh/clawlink/src/lib/server/integration-store.ts:1)
   - [src/lib/server/connection-sessions.ts](/Users/hithesh/clawlink/src/lib/server/connection-sessions.ts:1)

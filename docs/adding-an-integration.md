@@ -22,18 +22,17 @@ Keep `tools[]` aligned with the generated manifest tools you intend to expose. D
 
 ## Step 2 - Configure Pipedream Connect
 
-Add the slug to `PIPEDREAM_CONNECT_SLUGS` in both deploy targets:
+Add the slug to `PIPEDREAM_CONNECT_SLUGS` in:
 
 - `wrangler.toml`
-- `worker/wrangler.worker.toml`
 
-If the Pipedream app name is not exactly the same as the slug, add a mapping to `PIPEDREAM_APP_MAP` in both files:
+If the Pipedream app name is not exactly the same as the slug, add a mapping to `PIPEDREAM_APP_MAP` there too:
 
 ```toml
 PIPEDREAM_APP_MAP = "...,<slug>=<pipedream_app_name>"
 ```
 
-Both workers read these values. A frontend-only or backend-only config change leaves the hosted connect flow half-broken.
+The hosted connect flow and runtime execution both read these values from the same deploy surface now.
 
 ## Step 3 - Import the Pipedream actions
 
@@ -80,23 +79,22 @@ From the integration page or `claw-link.dev/connect/<slug>`:
 4. Confirm the row is stored with Pipedream account metadata.
 5. Run the smoke preset with the ClawLink API key for that test account.
 
-## Step 7 - Deploy the right workers
+## Step 7 - Deploy the runtime
 
-Most new integrations touch both surfaces:
+Most new integrations require a fresh `clawlink-web` deploy:
 
 ```bash
 npm run deploy:web
-npm run deploy:worker
 ```
 
-`clawlink-web` serves hosted connect and dashboard routes. `clawlink` serves tool execution.
+`clawlink-web` serves hosted connect, dashboard routes, and tool execution.
 
 ## Per-integration checklist
 
 - [ ] Catalog entry in `src/data/integrations.ts`
 - [ ] Metadata entry uses `setupMode: "pipedream"`
-- [ ] Slug added to `PIPEDREAM_CONNECT_SLUGS` in both wrangler files
-- [ ] App-name mapping added to `PIPEDREAM_APP_MAP` in both wrangler files when needed
+- [ ] Slug added to `PIPEDREAM_CONNECT_SLUGS` in `wrangler.toml`
+- [ ] App-name mapping added to `PIPEDREAM_APP_MAP` in `wrangler.toml` when needed
 - [ ] Manifest imported at `src/generated/pipedream-manifests/<slug>.generated.ts`
 - [ ] Overrides added for hidden/internal props and safe validation args
 - [ ] `npm run audit:manifests -- --strict`
@@ -112,5 +110,5 @@ npm run deploy:worker
 - Do not add a new `worker/integrations/<slug>.ts` handler or a new `registerHandler()` call for normal integrations.
 - Do not use the old Nango/manual setup path for new providers unless the product direction explicitly changes.
 - Do not list tools in the dashboard metadata before the generated manifest exposes them.
-- Do not update only one wrangler file. Pipedream connect config must match on both workers.
+- Do not forget `wrangler.toml`. Hosted connect and execution now share the same config surface.
 - Do not mark the integration ready until static audit, runtime validation, plugin contract tests, hosted connect, and live smoke all pass.

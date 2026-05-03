@@ -33,8 +33,7 @@ The platform pieces already exist:
 - manifest registry: [src/lib/pipedream/manifest-registry.ts](/Users/hithesh/clawlink/src/lib/pipedream/manifest-registry.ts:1)
 - generic executor: [src/lib/pipedream/action-executor.ts](/Users/hithesh/clawlink/src/lib/pipedream/action-executor.ts:1)
 
-Server and worker runtime are already wired to use generated manifest-backed
-tools.
+The web runtime is already wired to use generated manifest-backed tools.
 
 ## Important Rules
 
@@ -133,7 +132,6 @@ Do not rename the integration slug casually.
 If the provider should be connectable from the dashboard now:
 
 - add it to `PIPEDREAM_CONNECT_SLUGS` in [wrangler.toml](/Users/hithesh/clawlink/wrangler.toml:1)
-- add it to `PIPEDREAM_CONNECT_SLUGS` in [worker/wrangler.worker.toml](/Users/hithesh/clawlink/worker/wrangler.worker.toml:1) if that env is also mirrored there
 
 If the project uses explicit app mapping, update that env/config too.
 

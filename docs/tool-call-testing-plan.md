@@ -104,7 +104,7 @@ Exit non-zero if any step fails so it can gate a deploy.
 | When | Command |
 |---|---|
 | Adding a new integration (per-integration validation) | `--integration <slug> --preview` |
-| Before any release that changes worker / executor / credentials code | `--connected` on the connected test account |
+| Before any release that changes runtime / executor / credentials code | `--connected` on the connected test account |
 | Fully connected release sweep | `--all` |
 | Weekly / scheduled regression | `--connected --preview` |
 | Manual deep test (rare, gated) | `--integration <slug> --write` |
@@ -115,8 +115,8 @@ When adding a new integration, do these in order. Don't skip steps.
 
 1. **Connect flow works manually.**
    - Catalog entry exists in `src/data/integrations.ts` with the right `setupMode`.
-   - For Pipedream: slug is in `PIPEDREAM_CONNECT_SLUGS` in *both* `wrangler.toml` and `worker/wrangler.worker.toml`.
-   - For Pipedream with a hyphen in the slug, or a non-matching app name: slug is in `PIPEDREAM_APP_MAP` in both wrangler files (see CLAUDE.md "Pipedream slug → app name mapping").
+   - For Pipedream: slug is in `PIPEDREAM_CONNECT_SLUGS` in `wrangler.toml`.
+   - For Pipedream with a hyphen in the slug, or a non-matching app name: slug is in `PIPEDREAM_APP_MAP` in `wrangler.toml` (see CLAUDE.md "Pipedream slug → app name mapping").
    - Open `claw-link.dev/connect/<slug>` and finish the flow as a test user.
 2. **Manifest is wired in.**
    - Pipedream manifest path: `src/generated/pipedream-manifests/<slug>.generated.ts` exists, `index.ts` exports it, `npm run audit:manifests -- --strict` passes, `npm run validate:pipedream-actions -- --integration <slug> --strict` passes.
