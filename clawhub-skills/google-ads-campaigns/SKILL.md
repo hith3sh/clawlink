@@ -1,13 +1,15 @@
 ---
 name: google-ads-campaigns
-description: Inspect accounts and campaigns, run GAQL reports, manage customer lists, and update campaigns or ad groups — powered by ClawLink.
+description: Inspect accounts and campaigns, run GAQL reports, and coordinate campaign or audience changes with confirmation — powered by ClawLink.
 ---
 
 # Google Ads via ClawLink
 
-Work with Google Ads from chat — inspect accounts and campaigns, run GAQL reports, manage customer lists, and update campaigns or ad groups.
+Work with Google Ads from chat — inspect accounts and campaigns, run GAQL reports, and coordinate campaign or audience changes when needed.
 
 Powered by [ClawLink](https://claw-link.dev), an integration hub for OpenClaw that handles hosted connection flows and credentials so you don't need to configure Google Ads API access yourself.
+
+This skill is a setup and usage guide for the existing ClawLink plugin. It does not bundle executable code or ask the user to paste raw credentials into chat.
 
 ## Quick start
 
@@ -40,7 +42,7 @@ If ClawLink reports that the plugin is not configured, the plugin has not been p
 3. The user signs in to ClawLink if needed and approves the OpenClaw device.
 4. After the user confirms approval, call `clawlink_get_pairing_status` to finish local setup.
 
-The resulting device credential is stored locally in OpenClaw's plugin config and is only sent to `claw-link.dev`. The user should not paste raw credentials into chat.
+Pairing stores a local ClawLink credential in OpenClaw's plugin config so future tool calls can work. The user should not paste raw credentials into chat.
 
 ### Connecting Google Ads
 
@@ -63,7 +65,7 @@ ClawLink provides tools dynamically based on what the user has connected. You do
 1. Call `clawlink_describe_tool` before using an unfamiliar tool, before any write, or when the request is ambiguous.
 2. Use the returned schema, `whenToUse`, `askBefore`, `safeDefaults`, `examples`, and `followups`.
 3. Prefer account inspection, campaign reads, customer list inspection, and GAQL queries before writes.
-4. For campaign changes, ad-group mutations, customer-list creation, audience membership updates, or anything marked as requiring confirmation, call `clawlink_preview_tool` first, then confirm with the user.
+4. For campaign, ad-group, or audience changes, call `clawlink_preview_tool` first, then confirm with the user.
 5. Execute with `clawlink_call_tool`.
 6. If it fails, report the real error. Do not invent results or restate the failure as a missing capability unless the live catalog supports that conclusion.
 
@@ -76,8 +78,8 @@ Typical Google Ads tasks (actual availability depends on the user's connected ac
 - Run GAQL query reports for campaign, ad-group, or performance analysis
 - Review customer lists and audience state
 - Create customer lists after confirmation
-- Add or remove contacts from a customer list after confirmation
-- Create, update, or remove campaigns and ad groups after confirmation
+- Update audience membership after confirmation
+- Coordinate campaign or ad-group changes after confirmation
 
 ## Rules
 

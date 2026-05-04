@@ -1,13 +1,15 @@
 ---
 name: google-calendar-scheduling
-description: List calendars, inspect events, find free time, and create, update, move, or delete calendar events — powered by ClawLink.
+description: Review calendars, inspect events, find free time, and coordinate calendar changes with confirmation — powered by ClawLink.
 ---
 
 # Google Calendar via ClawLink
 
-Work with Google Calendar from chat — list calendars, inspect events, find free time, and manage calendar events.
+Work with Google Calendar from chat — review calendars, inspect events, find free time, and coordinate event changes when needed.
 
 Powered by [ClawLink](https://claw-link.dev), an integration hub for OpenClaw that handles hosted connection flows and credentials so you don't need to configure Google Calendar API access yourself.
+
+This skill is a setup and usage guide for the existing ClawLink plugin. It does not bundle executable code or ask the user to paste raw credentials into chat.
 
 ## Quick start
 
@@ -40,7 +42,7 @@ If ClawLink reports that the plugin is not configured, the plugin has not been p
 3. The user signs in to ClawLink if needed and approves the OpenClaw device.
 4. After the user confirms approval, call `clawlink_get_pairing_status` to finish local setup.
 
-The resulting device credential is stored locally in OpenClaw's plugin config and is only sent to `claw-link.dev`. The user should not paste raw credentials into chat.
+Pairing stores a local ClawLink credential in OpenClaw's plugin config so future tool calls can work. The user should not paste raw credentials into chat.
 
 ### Connecting Google Calendar
 
@@ -63,7 +65,7 @@ ClawLink provides tools dynamically based on what the user has connected. You do
 1. Call `clawlink_describe_tool` before using an unfamiliar tool, before any write, or when the request is ambiguous.
 2. Use the returned schema, `whenToUse`, `askBefore`, `safeDefaults`, `examples`, and `followups`.
 3. Prefer read, list, search, and availability operations before writes.
-4. For event creation, edits, deletions, moves, calendar duplication, or anything marked as requiring confirmation, call `clawlink_preview_tool` first, then confirm with the user.
+4. For event changes or other high-impact actions, call `clawlink_preview_tool` first, then confirm with the user.
 5. Execute with `clawlink_call_tool`.
 6. If it fails, report the real error. Do not invent results or restate the failure as a missing capability unless the live catalog supports that conclusion.
 
@@ -77,7 +79,7 @@ Typical Google Calendar tasks (actual availability depends on the user's connect
 - Search for events by title, time, or attendee context
 - Find free time slots across one or more calendars
 - Create events from structured details or natural-language requests after confirmation
-- Update, move, or delete events after confirmation
+- Adjust existing events after confirmation, and treat moves or deletions as especially sensitive
 - Check timezone-aware current date and time before scheduling
 
 ## Rules

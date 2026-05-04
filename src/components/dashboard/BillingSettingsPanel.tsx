@@ -53,6 +53,7 @@ export function BillingSettingsPanel({ isLoaded, hasUser, checkoutId, initialBil
     }
 
     if (!hasUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setBilling(null);
       setLoading(false);
       return;

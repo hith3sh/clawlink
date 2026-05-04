@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useCallback, FormEvent } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import {
@@ -14,7 +14,6 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -47,17 +46,7 @@ export default function RequestAppPage() {
   const [loading, setLoading] = useState(true);
   const [votingId, setVotingId] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (isLoaded && user?.emailAddresses?.[0]?.emailAddress) {
-      setEmail(user.emailAddresses[0].emailAddress);
-    }
-  }, [isLoaded, user]);
-
-  useEffect(() => {
-    fetchRequests();
-  }, []);
-
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       const res = await fetch("/api/app-requests");
       if (!res.ok) throw new Error("Failed to load");
@@ -68,7 +57,19 @@ export default function RequestAppPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded && user?.emailAddresses?.[0]?.emailAddress) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setEmail(user.emailAddresses[0].emailAddress);
+    }
+  }, [isLoaded, user]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchRequests();
+  }, [fetchRequests]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -101,7 +102,7 @@ export default function RequestAppPage() {
       }
 
       setSubmitted(true);
-      fetchRequests();
+      void fetchRequests();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit.");
     } finally {

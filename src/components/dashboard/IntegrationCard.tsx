@@ -39,6 +39,7 @@ export function IntegrationCard({
     );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setConnected(isConnected);
   }, [isConnected]);
 

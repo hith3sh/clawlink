@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Script from "next/script";
 import AudienceTabs from "@/components/AudienceTabs";
 import { PricingCard } from "@/components/PricingCard";
 import { MarketingIntegrationGrid } from "@/components/MarketingIntegrationGrid";
@@ -76,34 +77,28 @@ export default function Home() {
           <AudienceTabs />
         </div>
 
-        {/* 🎬 Video placeholder — replace with actual video component later */}
-        <div
-          className="mx-auto mt-14 flex aspect-video w-full max-w-[900px] items-center justify-center rounded-2xl"
-          style={{
-            background: "var(--mk-elev)",
-            border: "1.5px dashed var(--mk-border)",
-          }}
-        >
-          <div className="flex flex-col items-center gap-3 text-center">
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--mk-fg-faint)"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="2" y="2" width="20" height="20" rx="5" />
-              <path d="m10 8 6 4-6 4V8z" />
-            </svg>
-            <span className="text-sm" style={{ color: "var(--mk-fg-faint)" }}>
-              Demo video — coming soon
-            </span>
+        {/* 🎬 Demo video */}
+        <div className="mx-auto mt-14 w-full max-w-[900px]">
+          <div
+            className="relative overflow-hidden rounded-2xl"
+            style={{
+              background: "var(--mk-elev)",
+              border: "1.5px solid var(--mk-border)",
+              padding: "75% 0 0 0",
+            }}
+          >
+            <iframe
+              src="https://player.vimeo.com/video/1188813912?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1"
+              frameBorder="0"
+              allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+              title="clawlink beginning to end"
+            />
           </div>
+          <Script src="https://player.vimeo.com/api/player.js" strategy="afterInteractive" />
         </div>
-        {/* End video placeholder */}
+        {/* End demo video */}
       </section>
 
       {/* ───── Pillars ───── */}

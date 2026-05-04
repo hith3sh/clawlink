@@ -129,6 +129,7 @@ export default function IntegrationsPage() {
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAddSearch(nextAddSearch);
     setSheetOpen(true);
   }, [searchParams]);

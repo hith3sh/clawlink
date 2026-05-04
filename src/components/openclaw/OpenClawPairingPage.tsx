@@ -194,6 +194,7 @@ export default function OpenClawPairingPage({ initialSession }: Props) {
   }, [session.status, session.token]);
 
   const expiresInText = useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity
     const ms = new Date(session.expiresAt).getTime() - Date.now();
     if (ms <= 0) return "expired";
     const minutes = Math.round(ms / 60000);

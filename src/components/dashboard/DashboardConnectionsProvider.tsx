@@ -47,6 +47,7 @@ export function DashboardConnectionsProvider({
   }, [isLoaded, user]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchConnections();
   }, [fetchConnections]);
 

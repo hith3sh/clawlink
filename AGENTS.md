@@ -33,7 +33,7 @@ Business context:
 
 Roadmap context:
 
-- The near-term goal is to support at least 40 integrations.
+- ClawLink now supports 100+ integrations.
 - Future agents should favor reusable connection architecture that scales across many providers.
 - OpenClaw compatibility is a primary focus.
 - ClawLink should help users attach useful external skills/services to OpenClaw so they can do real work.

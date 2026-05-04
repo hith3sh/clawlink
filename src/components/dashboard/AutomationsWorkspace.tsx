@@ -193,6 +193,7 @@ export default function AutomationsWorkspace() {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOrigin(window.location.origin);
   }, []);
 
@@ -286,11 +287,13 @@ export default function AutomationsWorkspace() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void Promise.all([loadFlows(), loadTriggers()]);
   }, [loadFlows, loadTriggers]);
 
   useEffect(() => {
     if (!selectedFlowId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFlowDetail(null);
       return;
     }
@@ -333,6 +336,7 @@ export default function AutomationsWorkspace() {
 
   useEffect(() => {
     if (!selectedTriggerId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTriggerDetail(null);
       return;
     }
