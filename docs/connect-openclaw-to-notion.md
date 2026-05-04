@@ -1,26 +1,30 @@
-# How to Connect OpenClaw to Notion in Minutes
+# How to Connect OpenClaw to Notion Without Building Yet Another Glue Layer
 
 ![OpenClaw and Notion connection concept](../public/images/clawlink-notion-hero.png)
 
-*Stop building OAuth flows and custom glue code. Here’s the fastest way to give your OpenClaw assistant access to Notion.*
+*Your assistant should be able to read docs, pull context, and help create pages — not sit there looking smart while you manually shuttle information in and out of Notion.*
 
-If you’re using **OpenClaw** as your AI assistant, one of the first things you’ll want is access to the tools where your real work already lives.
+There’s a specific kind of disappointment that happens when an AI assistant feels clever in chat but useless the second real work begins.
 
-For a lot of people, that means **Notion**.
+Because the real work is usually not in the chat window.
 
-Your docs, specs, meeting notes, research, project plans, and half-finished ideas are probably already sitting there. The problem is that most AI assistants stay weirdly detached from that context unless you build a bunch of plumbing yourself.
+It’s in **Notion**.
 
-That’s the annoying part.
+Your specs. Your notes. Your research. Your half-organized plans. The internal knowledge your team keeps saying is “all in there somewhere.”
 
-Connecting an AI assistant to Notion usually turns into a side quest involving authentication, token handling, provider setup, and long-term maintenance. If you’re technical, you *can* wire it all up yourself — but it’s still tedious, and it’s usually not the thing you actually wanted to spend your afternoon doing.
+And if OpenClaw can’t work with that context, then a lot of its intelligence is stuck outside the room.
+
+That’s where the usual integration pain begins.
+
+Connecting an AI assistant to Notion the traditional way tends to become a side quest involving authentication, token handling, provider setup, and future maintenance that you absolutely did not volunteer for. If you’re technical, you *can* build it all yourself — but that doesn’t mean you should.
 
 That’s exactly the mess **ClawLink** is designed to remove.
 
-With ClawLink, you can connect **Notion to OpenClaw** in a few minutes and then use it from chat like a normal person — not like someone babysitting OAuth flows.
+With ClawLink, you can connect **Notion to OpenClaw** in minutes and use it from chat like a sane person — not like someone maintaining a growing pile of auth plumbing.
 
 ## Why connect OpenClaw to Notion?
 
-Notion is often where the useful context already lives:
+Because this is where a lot of the useful context is already hiding:
 
 - meeting notes
 - product specs
@@ -32,7 +36,7 @@ Notion is often where the useful context already lives:
 
 Once OpenClaw can work with that workspace, it becomes dramatically more useful.
 
-Instead of being a general chatbot with no memory of your operating reality, it can help with things like:
+Instead of being a generic chatbot floating above your actual work, it can help with things like:
 
 - “Search Notion for our onboarding notes”
 - “Find the page about the Q2 roadmap”
@@ -40,11 +44,11 @@ Instead of being a general chatbot with no memory of your operating reality, it 
 - “Pull together customer research notes into a summary”
 - “Use my Notion docs to help write a blog post”
 
-That’s the real upgrade: **your assistant starts working with your stack instead of orbiting around it.**
+That’s the real upgrade: **your assistant starts working with your stack instead of orbiting around it like a very articulate outsider.**
 
 ## The usual problem
 
-Connecting AI agents to business tools sounds simple right up until you actually do it.
+Connecting AI agents to business tools sounds wonderfully simple right up until you actually try to do it cleanly.
 
 Normally, you end up dealing with:
 
@@ -59,7 +63,7 @@ If your actual goal is just:
 
 > “I want OpenClaw to use Notion.”
 
-…then building all of that yourself is usually a very expensive detour.
+…then building all of that yourself is usually an expensive detour wearing a fake mustache labeled “flexibility.”
 
 ## The easier way: use ClawLink
 
@@ -122,7 +126,7 @@ That means you do **not** need to manually manage:
 - credential storage
 - provider-specific glue code
 
-You connect it once and move on with your life.
+You connect it once and move on with your life, which is how software should behave more often.
 
 ## Step 4: Use Notion from OpenClaw chat
 
@@ -136,13 +140,13 @@ Example prompts:
 - “Summarize my Notion notes about customer interviews”
 - “Pull the relevant notes from Notion and help me write a draft”
 
-That’s the nice part: you don’t need to think in API calls.
+That’s the nice part: you don’t need to think in API calls, request bodies, or auth edge cases.
 
 You just ask naturally.
 
 ## Why this setup is better than rolling your own
 
-There’s always a temptation to build direct integrations manually, especially if you’re technical.
+There’s always a temptation to build direct integrations manually, especially if you’re technical and one bad idea away from opening a new repo.
 
 Sometimes that’s the right call.
 
@@ -158,7 +162,7 @@ You can get from zero to working far faster than building a custom Notion integr
 
 ### 2. Less maintenance
 
-You’re not on the hook for babysitting provider auth logic and refresh behavior.
+You’re not on the hook for babysitting provider auth logic and refresh behavior like it’s now your emotional support infrastructure.
 
 ### 3. Better user experience
 
@@ -200,7 +204,7 @@ ClawLink’s model is straightforward:
 - OpenClaw uses ClawLink as the integration layer
 - the goal is to make real tool access easier without making the setup sketchy
 
-If you’re giving AI access to real work systems, trust matters. A lot.
+If you’re giving AI access to real work systems, trust matters a lot. This is not the place for sketchy glue code and crossed fingers.
 
 ## Final thoughts
 
@@ -215,7 +219,7 @@ If your goal is to make your assistant more useful inside the tools you already 
 
 That’s it.
 
-If you already use OpenClaw and want your assistant to work with real business tools instead of living in a vacuum, this is one of the easiest upgrades you can make.
+If you already use OpenClaw and want your assistant to work with real business tools instead of living in a vacuum, this is one of the highest-leverage upgrades you can make.
 
 ## Try it
 
