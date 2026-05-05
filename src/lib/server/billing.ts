@@ -107,7 +107,7 @@ type PolarPayloadLike =
   | undefined;
 
 const TRIAL_LENGTH_DAYS = 30;
-const PRO_MONTHLY_PRICE_LABEL = "$4.99/month";
+const PRO_MONTHLY_PRICE_LABEL = "$2.99/month";
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(["active", "trialing", "past_due"]);
 
 function mapBillingAccount(row: StoredBillingAccountRow): BillingAccountRecord {

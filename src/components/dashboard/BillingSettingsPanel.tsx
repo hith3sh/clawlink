@@ -175,7 +175,7 @@ export function BillingSettingsPanel({ isLoaded, hasUser, checkoutId, initialBil
                     aria-disabled={!billing.checkoutConfigured}
                   >
                     <ArrowUpRight className="h-5 w-5" />
-                    Activate — $4.99/mo
+                    Activate — $2.99/mo
                   </a>
                 )}
               </div>

@@ -27,7 +27,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 const siteDescription =
-  "Install ClawLink in OpenClaw once, then connect apps with one click. Provider credentials are managed by ClawLink, encrypted at rest, and Pro is $4.99/month after your first free app.";
+  "Install ClawLink in OpenClaw once, then connect apps with one click. Provider credentials are managed by ClawLink, encrypted at rest, and activation is $2.99/month once access becomes inactive.";
 
 export const metadata: Metadata = {
   title: "ClawLink: Plug Anything into OpenClaw",

@@ -206,7 +206,7 @@ export default function Home() {
             Simple pricing. No surprises.
           </h2>
           <p className="mt-3.5 text-[15px]" style={{ color: "var(--mk-fg-muted)" }}>
-            Use ClawLink with the full integration catalog, then activate access for $4.99/month when needed.
+            Use ClawLink with the full integration catalog, then activate access for $2.99/month when needed.
           </p>
         </div>
 
@@ -215,14 +215,14 @@ export default function Home() {
             dark
             eyebrow="ClawLink"
             title="Activate"
-            price="4.99"
-            tagline="Full integrations for $4.99/month"
+            price="2.99"
+            tagline="Full integrations for $2.99/month"
             features={[
               "Every integration, unlimited",
               "Managed OAuth connect flow",
               "Priority email support",
             ]}
-            footnote="$4.99/month. Cancel anytime."
+            footnote="$2.99/month. Cancel anytime."
             ctaLabel="Get started"
             ctaHref="/sign-up"
             highlighted

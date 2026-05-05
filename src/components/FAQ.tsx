@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "How billing works",
-    a: "ClawLink may ask you to activate access if your integrations are inactive. Once activated, you can use the full integration catalog for $4.99/month.",
+    a: "ClawLink may ask you to activate access if your integrations are inactive. Once activated, you can use the full integration catalog for $2.99/month.",
   },
 ];
 

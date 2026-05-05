@@ -46,14 +46,14 @@ export default function BillingPage() {
           <PricingCard
             eyebrow="ClawLink"
             title="Activate"
-            price="4.99"
+            price="2.99"
             tagline="Full integration access"
             features={[
               "Every integration, unlimited",
               "Managed OAuth connect flow",
               "New integrations as they ship",
             ]}
-            footnote="$4.99/month. Cancel anytime."
+            footnote="$2.99/month. Cancel anytime."
             ctaLabel={billing?.accessActive ? "Manage billing" : "Activate ClawLink"}
             ctaHref={billing?.subscribed ? (billing?.portalUrl || "#") : (billing?.checkoutUrl || "#")}
             ctaAsAnchor

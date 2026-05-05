@@ -23,7 +23,7 @@ Security and verification:
 - The plugin only calls `https://claw-link.dev` over HTTPS using the local ClawLink device credential.
 
 Pricing:
-- First connected app is free; Pro is $4.99/month for additional integration access.
+- ClawLink activation is $2.99/month once access becomes inactive.
 
 ## Install
 

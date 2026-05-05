@@ -116,7 +116,7 @@ ClawLink provides access to 100+ integrations including Gmail, Slack, Notion, Wo
 
 ## Pricing
 - First connected app is free
-- ClawLink Pro is $4.99/month for integration access beyond the first connected app
+- ClawLink activation is $2.99/month once access becomes inactive
 - Current hosted product pricing is plan-based, not per-request pricing
 
 ## Contact
