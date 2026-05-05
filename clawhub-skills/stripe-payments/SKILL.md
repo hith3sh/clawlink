@@ -1,9 +1,9 @@
 ---
-name: stripe-payments
+name: clawlink-stripe-payments
 description: Manage customers, payments, invoices, subscriptions, and payouts in Stripe — powered by ClawLink.
 ---
 
-# Stripe via ClawLink
+# Stripe Payments via ClawLink
 
 Work with Stripe from chat — manage customers, payments, invoices, subscriptions, and payouts.
 

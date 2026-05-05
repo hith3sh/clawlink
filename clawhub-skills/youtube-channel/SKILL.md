@@ -1,9 +1,9 @@
 ---
-name: youtube-channel
+name: clawlink-youtube-channel
 description: Inspect channels, videos, comments, playlists, and creator workflows on YouTube — powered by ClawLink.
 ---
 
-# YouTube via ClawLink
+# YouTube Channel via ClawLink
 
 Work with YouTube from chat — inspect channels, videos, comments, playlists, and creator workflows.
 
