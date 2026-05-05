@@ -24,8 +24,8 @@ const faqs = [
     a: "Yes! ClawLink has a plugin system. You can write your own integration in a single file and contribute it back to the community.",
   },
   {
-    q: "Is it free?",
-    a: "Your first connected app is free. ClawLink Pro is $4.99/month for integration access beyond the first app.",
+    q: "How billing works",
+    a: "ClawLink may ask you to activate access if your integrations are inactive. Once activated, you can use the full integration catalog for $4.99/month.",
   },
 ];
 

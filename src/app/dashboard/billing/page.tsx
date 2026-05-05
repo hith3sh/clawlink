@@ -38,34 +38,24 @@ export default function BillingPage() {
       <BillingSettingsPanel isLoaded={isLoaded} hasUser={Boolean(user)} />
 
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Compare plans</h2>
+        <h2 className="text-lg font-semibold text-foreground">Activation</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Upgrade when you&apos;re ready for the full set of integrations.
+          If access is inactive, activate ClawLink to keep using integrations.
         </p>
-        <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-1">
           <PricingCard
-            eyebrow="Starter"
-            title="Free"
-            price="0"
-            tagline="Try your first integration"
-            features={["1 integration included", "Managed OAuth connect flow", "Community support"]}
-            footnote="No card required."
-            ctaLabel="Start free"
-            ctaHref="/dashboard/integrations"
-          />
-          <PricingCard
-            eyebrow="Most popular"
-            title="Pro"
+            eyebrow="ClawLink"
+            title="Activate"
             price="4.99"
-            tagline="All 100+ integrations unlocked"
+            tagline="Full integration access"
             features={[
               "Every integration, unlimited",
-              "Priority email support",
+              "Managed OAuth connect flow",
               "New integrations as they ship",
             ]}
             footnote="$4.99/month. Cancel anytime."
-            ctaLabel="Get Pro"
-            ctaHref={billing?.checkoutUrl || "#"}
+            ctaLabel={billing?.accessActive ? "Manage billing" : "Activate ClawLink"}
+            ctaHref={billing?.subscribed ? (billing?.portalUrl || "#") : (billing?.checkoutUrl || "#")}
             ctaAsAnchor
             highlighted
           />

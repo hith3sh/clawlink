@@ -79,7 +79,7 @@ export default function MarketingLayout({
               href="/sign-up"
               className="mk-btn !px-3 !py-1.5 !text-[12px] bg-[var(--brand)] text-white transition-all hover:bg-[var(--brand-hover)] sm:!px-5 sm:!py-2.5 sm:!text-[13.5px]"
             >
-              Start free <span className="text-xs opacity-85 sm:text-sm">&raquo;</span>
+              Get started <span className="text-xs opacity-85 sm:text-sm">&raquo;</span>
             </Link>
           </div>
         </nav>

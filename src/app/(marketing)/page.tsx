@@ -206,39 +206,24 @@ export default function Home() {
             Simple pricing. No surprises.
           </h2>
           <p className="mt-3.5 text-[15px]" style={{ color: "var(--mk-fg-muted)" }}>
-            Your first connected app is free. Pro is $4.99/month for the full integration catalog.
+            Use ClawLink with the full integration catalog, then activate access for $4.99/month when needed.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2">
+        <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-1">
           <PricingCard
             dark
-            eyebrow="Starter"
-            title="Free"
-            price="0"
-            tagline="Try your first integration"
-            features={[
-              "1 integration included",
-              "Managed OAuth connect flow",
-              "Community support",
-            ]}
-            footnote="No card required."
-            ctaLabel="Start free"
-            ctaHref="/sign-up"
-          />
-          <PricingCard
-            dark
-            eyebrow="Pro"
-            title="Pro"
+            eyebrow="ClawLink"
+            title="Activate"
             price="4.99"
-            tagline="All integrations for $4.99/month"
+            tagline="Full integrations for $4.99/month"
             features={[
               "Every integration, unlimited",
+              "Managed OAuth connect flow",
               "Priority email support",
-              "New integrations as they ship",
             ]}
             footnote="$4.99/month. Cancel anytime."
-            ctaLabel="Get Pro"
+            ctaLabel="Get started"
             ctaHref="/sign-up"
             highlighted
           />

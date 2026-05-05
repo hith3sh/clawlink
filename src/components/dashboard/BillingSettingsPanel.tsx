@@ -19,6 +19,9 @@ export interface BillingState {
   priceLabel: string;
   statusLabel: string;
   subscribed: boolean;
+  accessActive: boolean;
+  inTrial: boolean;
+  trialEndsAt: string | null;
   distinctIntegrationCount: number;
   freeIntegrationLimit: number;
   canAddMoreIntegrations: boolean;
@@ -153,9 +156,9 @@ export function BillingSettingsPanel({ isLoaded, hasUser, checkoutId, initialBil
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {billing.planKey === "pro"
-                    ? `${billing.productName ?? "ClawLink Pro"} is active for ${billing.priceLabel}.`
-                    : `Your first connected app is free. Upgrade to ClawLink Pro for $4.99/month when you want more.`}
+                  {billing.accessActive
+                    ? `${billing.productName ?? "ClawLink"} access is active.`
+                    : `Your ClawLink access is inactive. Upgrade to activate integrations for ${billing.priceLabel}.`}
                 </p>
               </div>
 
@@ -172,7 +175,7 @@ export function BillingSettingsPanel({ isLoaded, hasUser, checkoutId, initialBil
                     aria-disabled={!billing.checkoutConfigured}
                   >
                     <ArrowUpRight className="h-5 w-5" />
-                    Upgrade to Pro — $4.99/mo
+                    Activate — $4.99/mo
                   </a>
                 )}
               </div>

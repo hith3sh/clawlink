@@ -25,6 +25,8 @@ export interface UserRow {
   id: string;
   clerk_id?: string;
   email?: string;
+  created_at?: string;
+  billing_access_started_at?: string | null;
 }
 
 interface StoredIntegrationRow {
@@ -455,7 +457,7 @@ export async function getAuthenticatedIdentity(): Promise<Identity | null> {
 
 export async function ensureUser(db: D1LikeDatabase, identity: Identity): Promise<UserRow> {
   const existingUser = await db
-    .prepare("SELECT id, clerk_id, email FROM users WHERE clerk_id = ?")
+    .prepare("SELECT id, clerk_id, email, created_at, billing_access_started_at FROM users WHERE clerk_id = ?")
     .bind(identity.clerkId)
     .first<UserRow>();
 
@@ -474,15 +476,22 @@ export async function ensureUser(db: D1LikeDatabase, identity: Identity): Promis
   await db
     .prepare(
       `
-        INSERT OR IGNORE INTO users (id, clerk_id, email, created_at, updated_at)
-        VALUES (?, ?, ?, datetime('now'), datetime('now'))
+        INSERT OR IGNORE INTO users (
+          id,
+          clerk_id,
+          email,
+          billing_access_started_at,
+          created_at,
+          updated_at
+        )
+        VALUES (?, ?, ?, datetime('now'), datetime('now'), datetime('now'))
       `,
     )
     .bind(userId, identity.clerkId, identity.email)
     .run();
 
   const user = await db
-    .prepare("SELECT id, clerk_id, email FROM users WHERE clerk_id = ?")
+    .prepare("SELECT id, clerk_id, email, created_at, billing_access_started_at FROM users WHERE clerk_id = ?")
     .bind(identity.clerkId)
     .first<UserRow>();
 

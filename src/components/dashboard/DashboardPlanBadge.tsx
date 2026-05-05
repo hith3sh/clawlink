@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 interface BillingSummary {
   planKey: "free" | "pro";
   planName: string;
+  accessActive?: boolean;
 }
 
 export function DashboardPlanBadge() {
@@ -55,10 +56,10 @@ export function DashboardPlanBadge() {
     );
   }
 
-  const planKey = billing?.planKey ?? "free";
-  const planLabel = planKey === "pro" ? "Pro" : "Free";
+  const accessActive = billing?.accessActive ?? ((billing?.planKey ?? "free") === "pro");
+  const planLabel = accessActive ? "Active" : "Inactive";
   const chipClasses =
-    planKey === "pro"
+    accessActive
       ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/15"
       : "border-amber-500/20 bg-amber-500/10 text-amber-400 hover:border-amber-500/30 hover:bg-amber-500/15";
 

@@ -45,6 +45,9 @@ export interface BillingOverview {
   priceLabel: string;
   statusLabel: string;
   subscribed: boolean;
+  accessActive: boolean;
+  inTrial: boolean;
+  trialEndsAt: string | null;
   distinctIntegrationCount: number;
   freeIntegrationLimit: number;
   canAddMoreIntegrations: boolean;
@@ -103,7 +106,7 @@ type PolarPayloadLike =
   | null
   | undefined;
 
-const FREE_INTEGRATION_LIMIT = 1;
+const TRIAL_LENGTH_DAYS = 30;
 const PRO_MONTHLY_PRICE_LABEL = "$4.99/month";
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(["active", "trialing", "past_due"]);
 
@@ -152,13 +155,38 @@ function getStatusLabel(status: string | null | undefined): string {
   const normalized = normalizeSubscriptionStatus(status);
 
   if (normalized === "free") {
-    return "Free tier";
+    return "Inactive";
   }
 
   return normalized
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function getTrialEndsAt(accessStartedAt: string | null | undefined): string | null {
+  if (!accessStartedAt) {
+    return null;
+  }
+
+  const startedAt = new Date(accessStartedAt);
+
+  if (Number.isNaN(startedAt.getTime())) {
+    return null;
+  }
+
+  startedAt.setUTCDate(startedAt.getUTCDate() + TRIAL_LENGTH_DAYS);
+  return startedAt.toISOString();
+}
+
+function isTrialActive(accessStartedAt: string | null | undefined): boolean {
+  const trialEndsAt = getTrialEndsAt(accessStartedAt);
+
+  if (!trialEndsAt) {
+    return false;
+  }
+
+  return Date.now() < new Date(trialEndsAt).getTime();
 }
 
 export function getPolarServer(): PolarServer {
@@ -265,21 +293,27 @@ export async function getBillingOverviewForUser(
   const account = await getBillingAccountForUserId(db, user.id);
   const distinctIntegrationCount = await countDistinctIntegrationsForUserId(db, user.id);
   const subscribed = isPaidSubscriptionStatus(account?.subscriptionStatus);
-  const needsUpgrade = !subscribed && distinctIntegrationCount >= FREE_INTEGRATION_LIMIT;
+  const accessStartedAt = user.billing_access_started_at ?? user.created_at;
+  const inTrial = !subscribed && isTrialActive(accessStartedAt);
+  const accessActive = subscribed || inTrial;
+  const trialEndsAt = getTrialEndsAt(accessStartedAt);
 
   return {
-    planKey: subscribed ? "pro" : "free",
-    planName: subscribed ? "ClawLink Pro" : "Free",
-    priceLabel: subscribed ? PRO_MONTHLY_PRICE_LABEL : "$0",
-    statusLabel: getStatusLabel(account?.subscriptionStatus),
+    planKey: accessActive ? "pro" : "free",
+    planName: "ClawLink",
+    priceLabel: PRO_MONTHLY_PRICE_LABEL,
+    statusLabel: accessActive ? (subscribed ? getStatusLabel(account?.subscriptionStatus) : "Active") : "Inactive",
     subscribed,
+    accessActive,
+    inTrial,
+    trialEndsAt,
     distinctIntegrationCount,
-    freeIntegrationLimit: FREE_INTEGRATION_LIMIT,
-    canAddMoreIntegrations: subscribed || distinctIntegrationCount < FREE_INTEGRATION_LIMIT,
-    needsUpgrade,
+    freeIntegrationLimit: 0,
+    canAddMoreIntegrations: accessActive,
+    needsUpgrade: !accessActive,
     currentPeriodEnd: account?.currentPeriodEnd ?? null,
     cancelAtPeriodEnd: account?.cancelAtPeriodEnd ?? false,
-    productName: account?.productName ?? "ClawLink Pro",
+    productName: account?.productName ?? "ClawLink",
     checkoutConfigured: getPolarCheckoutConfig().isConfigured,
     portalConfigured: Boolean(process.env.POLAR_ACCESS_TOKEN?.trim()),
     subscriptionStatus: account?.subscriptionStatus ?? null,
@@ -293,28 +327,20 @@ export async function getBillingAccessDecisionForUser(
   user: UserRow,
   integrationSlug: string,
 ): Promise<BillingAccessDecision> {
+  void integrationSlug;
+
   const account = await getBillingAccountForUserId(db, user.id);
   const subscribed = isPaidSubscriptionStatus(account?.subscriptionStatus);
+  const accessStartedAt = user.billing_access_started_at ?? user.created_at;
+  const inTrial = !subscribed && isTrialActive(accessStartedAt);
 
-  if (subscribed) {
-    return { allowed: true, reason: null };
-  }
-
-  const alreadyConnected = await hasConnectedIntegrationForUserId(db, user.id, integrationSlug);
-
-  if (alreadyConnected) {
-    return { allowed: true, reason: null };
-  }
-
-  const distinctIntegrationCount = await countDistinctIntegrationsForUserId(db, user.id);
-
-  if (distinctIntegrationCount < FREE_INTEGRATION_LIMIT) {
+  if (subscribed || inTrial) {
     return { allowed: true, reason: null };
   }
 
   return {
     allowed: false,
-    reason: "Your free plan includes one connected app. Upgrade to ClawLink Pro for $4.99/month to add more integrations.",
+    reason: "Your ClawLink access is inactive. Upgrade to activate integrations.",
   };
 }
 
