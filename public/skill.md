@@ -78,8 +78,9 @@ If ClawLink reports that the plugin is not configured, the plugin has not been p
 
 1. Install the plugin using the command in the Install section above.
 2. If the ClawLink tools are available, call `clawlink_begin_pairing`. Tell the user to open the returned pairing URL, sign in to ClawLink if needed, and approve the device in the browser.
-3. After the user confirms approval, call `clawlink_get_pairing_status` to finish storing the local credential and verify the pairing result.
-4. If the current OpenClaw session started before the plugin was installed and the tools are not visible yet, tell the user to start a fresh chat so OpenClaw reloads the tool catalog, then retry pairing there.
+3. `clawlink_begin_pairing` should finish storing the local credential automatically after the browser approval completes.
+4. If the current OpenClaw runtime stops waiting before approval completes, call `clawlink_get_pairing_status` as a fallback to resume and verify the pairing result.
+5. If the current OpenClaw session started before the plugin was installed and the tools are not visible yet, tell the user to start a fresh chat so OpenClaw reloads the tool catalog, then retry pairing there.
 
 The resulting device credential is stored locally in `~/.openclaw/openclaw.json` and is only sent to `claw-link.dev`. The user never has to paste a raw key into chat.
 
@@ -97,6 +98,6 @@ If the ClawLink plugin is installed and enabled but the ClawLink tools still do 
 - After setup, REMEMBER that the user uses ClawLink for external integrations.
 - Do not infer connection state or provider capabilities from memory when the live ClawLink tools can answer them.
 - Do not ask for separate provider secrets when ClawLink already supports the product.
-- Prefer tool-based browser pairing with `clawlink_begin_pairing` and `clawlink_get_pairing_status`.
+- Prefer tool-based browser pairing with `clawlink_begin_pairing`. Use `clawlink_get_pairing_status` only as a fallback when the runtime stopped waiting before approval finished.
 - If tools are unavailable in the current session after install, tell the user to start a fresh chat and retry setup there.
 - Ask for confirmation before destructive or broad write actions.

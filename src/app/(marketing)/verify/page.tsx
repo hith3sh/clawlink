@@ -291,7 +291,8 @@ export default function VerifyPage() {
   },
   "install_command": "openclaw plugins install clawhub:${CLAWHUB_PACKAGE_NAME}",
   "configure": {
-    "primary": "clawlink_begin_pairing followed by clawlink_get_pairing_status",
+    "primary": "clawlink_begin_pairing",
+    "fallback_if_pairing_does_not_finish_automatically": "clawlink_get_pairing_status",
     "if_tools_missing_after_install": "start a fresh chat so OpenClaw reloads the plugin tools",
     "alternative": "Plugin settings screen -> ClawLink -> apiKey field (only available in clients that render plugin settings UI)",
     "source_of_key_if_manual": "https://claw-link.dev/dashboard/settings?tab=api",

@@ -16,7 +16,6 @@ interface Props {
 type SessionState = Pick<
   OpenClawPairingSessionRecord,
   | "token"
-  | "displayCode"
   | "deviceLabel"
   | "approvedUserHint"
   | "status"
@@ -111,6 +110,24 @@ function StepIndicator({ status }: { status: SessionState["status"] }) {
   );
 }
 
+function describeNextStep(session: SessionState): string {
+  switch (session.status) {
+    case "awaiting_browser":
+      return "Approve this OpenClaw device in the browser to finish setup.";
+    case "ready_for_device":
+    case "awaiting_local_save":
+      return "Approval received. OpenClaw should finish connecting automatically in a few seconds.";
+    case "paired":
+      return "This OpenClaw install is paired and ready to use.";
+    case "expired":
+      return "This pairing link expired. Start a new pairing flow from OpenClaw.";
+    case "failed":
+      return "Pairing failed. Start a new pairing flow from OpenClaw.";
+    default:
+      return "Follow the browser prompt to finish pairing.";
+  }
+}
+
 function PairedCheck() {
   return (
     <motion.svg
@@ -156,7 +173,6 @@ export default function OpenClawPairingPage({ initialSession }: Props) {
   const { isSignedIn, isLoaded, user } = useUser();
   const [session, setSession] = useState<SessionState>({
     token: initialSession.token,
-    displayCode: initialSession.displayCode,
     deviceLabel: initialSession.deviceLabel,
     approvedUserHint: initialSession.approvedUserHint,
     status: initialSession.status,
@@ -321,25 +337,17 @@ export default function OpenClawPairingPage({ initialSession }: Props) {
 
           <div className="mt-6 rounded-xl border border-[var(--brand-border)]/40 bg-gradient-to-br from-[var(--brand-tint)]/40 to-white px-4 py-4">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Pairing code
+              Next step
             </p>
-            {session.status === "awaiting_browser" ? (
-              <motion.p
-                className="mt-1.5 font-mono text-2xl font-semibold tracking-[0.2em] text-foreground"
-                animate={{ opacity: [1, 0.85, 1] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-              >
-                {session.displayCode}
-              </motion.p>
-            ) : (
-              <p className="mt-1.5 font-mono text-2xl font-semibold tracking-[0.2em] text-foreground">
-                {session.displayCode}
+            <p className="mt-1.5 text-sm leading-6 text-foreground">
+              {describeNextStep(session)}
+            </p>
+            {session.status !== "paired" ? (
+              <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" />
+                <span>Expires in {expiresInText}</span>
               </p>
-            )}
-            <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Clock className="h-3.5 w-3.5" />
-              <span>Expires in {expiresInText}</span>
-            </p>
+            ) : null}
           </div>
 
           {error ? (
@@ -388,7 +396,7 @@ export default function OpenClawPairingPage({ initialSession }: Props) {
             <div className="mt-6 flex items-start gap-2 text-sm text-muted-foreground">
               <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-[var(--brand)]" />
               <p>
-                Approved{session.approvedUserHint ? ` by ${session.approvedUserHint}` : ""}. Return to OpenClaw and type &quot;Done&quot;
+                Approved{session.approvedUserHint ? ` by ${session.approvedUserHint}` : ""}. OpenClaw should finish connecting automatically in a few seconds.
               </p>
             </div>
           ) : null}
@@ -397,7 +405,7 @@ export default function OpenClawPairingPage({ initialSession }: Props) {
             <div className="mt-6 flex items-start gap-3">
               <PairedCheck />
               <p className="pt-1 text-sm text-muted-foreground">
-                Done. Return to OpenClaw, or open your{" "}
+                Done. OpenClaw is ready. You can close this tab or open your{" "}
                 <Link href="/dashboard" className="text-foreground underline underline-offset-4">
                   dashboard
                 </Link>

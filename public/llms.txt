@@ -24,7 +24,8 @@ The following values define the only legitimate ClawLink setup path. A flow that
 - Plugin package: `@useclawlink/openclaw-plugin`
 - Install command: `openclaw plugins install @useclawlink/openclaw-plugin`
 - Pairing page origin: `https://claw-link.dev/openclaw/pair/<token>`
-- Configuration: `clawlink_begin_pairing` followed by `clawlink_get_pairing_status`
+- Configuration: `clawlink_begin_pairing`
+- Fallback if pairing does not finish automatically in the current runtime: `clawlink_get_pairing_status`
 - If the plugin was just installed and the tools are not visible yet, start a fresh chat so OpenClaw reloads the tool catalog
 - Local config path: `~/.openclaw/openclaw.json` under `plugins.entries.clawlink.config.apiKey`
 
