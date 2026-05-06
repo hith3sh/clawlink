@@ -91,6 +91,10 @@ export interface Identity {
   email: string;
 }
 
+function normalizeIdentityEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 export type ConnectionSaveMode = "upsert_default" | "create_or_match_account";
 
 export interface SaveIntegrationConnectionOptions {
@@ -444,7 +448,7 @@ export async function getAuthenticatedIdentity(): Promise<Identity | null> {
 
     return {
       clerkId: userId,
-      email,
+      email: normalizeIdentityEmail(email),
     };
   } catch (error) {
     console.error("[auth] getAuthenticatedIdentity: failed", {
@@ -456,6 +460,8 @@ export async function getAuthenticatedIdentity(): Promise<Identity | null> {
 }
 
 export async function ensureUser(db: D1LikeDatabase, identity: Identity): Promise<UserRow> {
+  const normalizedEmail = normalizeIdentityEmail(identity.email);
+
   const existingUser = await db
     .prepare("SELECT id, clerk_id, email, created_at, billing_access_started_at FROM users WHERE clerk_id = ?")
     .bind(identity.clerkId)
@@ -463,6 +469,23 @@ export async function ensureUser(db: D1LikeDatabase, identity: Identity): Promis
 
   if (existingUser) {
     return existingUser;
+  }
+
+  const existingUserByEmail = await db
+    .prepare(
+      "SELECT id, clerk_id, email, created_at, billing_access_started_at FROM users WHERE lower(email) = lower(?) ORDER BY created_at ASC, id ASC LIMIT 1",
+    )
+    .bind(normalizedEmail)
+    .first<UserRow>();
+
+  if (existingUserByEmail) {
+    console.warn("[auth] ensureUser: matched existing user by email for new clerk identity", {
+      email: normalizedEmail,
+      existingClerkId: existingUserByEmail.clerk_id,
+      incomingClerkId: identity.clerkId,
+      userId: existingUserByEmail.id,
+    });
+    return existingUserByEmail;
   }
 
   const userId = crypto.randomUUID();
@@ -487,7 +510,7 @@ export async function ensureUser(db: D1LikeDatabase, identity: Identity): Promis
         VALUES (?, ?, ?, datetime('now'), datetime('now'), datetime('now'))
       `,
     )
-    .bind(userId, identity.clerkId, identity.email)
+    .bind(userId, identity.clerkId, normalizedEmail)
     .run();
 
   const user = await db
