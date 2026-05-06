@@ -34,8 +34,8 @@ export async function GET(request: NextRequest) {
 
   const checkoutHandler = Checkout({
     accessToken,
-    successUrl: new URL("/dashboard/settings?tab=billing", request.nextUrl.origin).toString(),
-    returnUrl: new URL("/dashboard/settings?tab=billing", request.nextUrl.origin).toString(),
+    successUrl: new URL("/dashboard/billing", request.nextUrl.origin).toString(),
+    returnUrl: new URL("/dashboard/billing", request.nextUrl.origin).toString(),
     server,
     theme: "light",
   });

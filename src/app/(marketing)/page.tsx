@@ -88,7 +88,7 @@ export default function Home() {
             }}
           >
             <iframe
-              src="https://player.vimeo.com/video/1188813912?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1"
+              src="https://player.vimeo.com/video/1188813912?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&muted=1"
               frameBorder="0"
               allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
               referrerPolicy="strict-origin-when-cross-origin"
@@ -190,7 +190,7 @@ export default function Home() {
       </section>
 
       {/* ───── Pricing ───── */}
-      <section id="pricing" className="mx-auto max-w-[920px] px-6 pt-16 pb-24">
+      <section id="pricing" className="mx-auto max-w-[560px] px-6 pt-16 pb-24">
         <div className="mb-8 text-center">
           <h2
             style={{

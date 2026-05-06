@@ -27,8 +27,10 @@ import { googleCalendarComposioTools } from "./google-calendar.generated";
 import { googleDocsComposioTools } from "./google-docs.generated";
 import { googleDriveComposioTools } from "./google-drive.generated";
 import { googleFormsComposioTools } from "./google-forms.generated";
+import { googleMeetComposioTools } from "./google-meet.generated";
 import { googleSearchConsoleComposioTools } from "./google-search-console.generated";
 import { googleSheetsComposioTools } from "./google-sheets.generated";
+import { googleSlidesComposioTools } from "./google-slides.generated";
 import { gumroadComposioTools } from "./gumroad.generated";
 import { highlevelComposioTools } from "./highlevel.generated";
 import { hubspotComposioTools } from "./hubspot.generated";
@@ -103,8 +105,10 @@ export const composioToolManifests: IntegrationTool[] = [
   ...googleDocsComposioTools,
   ...googleDriveComposioTools,
   ...googleFormsComposioTools,
+  ...googleMeetComposioTools,
   ...googleSearchConsoleComposioTools,
   ...googleSheetsComposioTools,
+  ...googleSlidesComposioTools,
   ...gumroadComposioTools,
   ...highlevelComposioTools,
   ...hubspotComposioTools,

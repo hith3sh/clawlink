@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   const portalHandler = CustomerPortal({
     accessToken,
     server,
-    returnUrl: new URL("/dashboard/settings?tab=billing", request.nextUrl.origin).toString(),
+    returnUrl: new URL("/dashboard/billing", request.nextUrl.origin).toString(),
     getExternalCustomerId: async () => user.id,
   });
 

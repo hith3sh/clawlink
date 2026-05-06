@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: billingAccess.reason,
-          upgradeUrl: `${request.nextUrl.origin}/dashboard/settings?tab=billing`,
+          upgradeUrl: `${request.nextUrl.origin}/dashboard/billing`,
         },
         { status: 402 },
       );

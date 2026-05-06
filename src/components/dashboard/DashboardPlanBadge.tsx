@@ -65,7 +65,7 @@ export function DashboardPlanBadge() {
 
   return (
     <Link
-      href="/dashboard/settings?tab=billing"
+      href="/dashboard/billing"
       className={`inline-flex h-8 items-center gap-2 rounded-full border px-3 text-xs font-medium transition-colors ${chipClasses}`}
     >
       <Sparkles className="h-3.5 w-3.5" />
