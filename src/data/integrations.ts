@@ -1468,9 +1468,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   twitter: {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect X (Twitter) through ClawLink's hosted setup to post tweets, search content, manage lists, follow users, and analyze engagement from your X account.",
     credentialFields: [],
     tools: [
