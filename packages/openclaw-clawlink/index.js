@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 const PLUGIN_ID = "clawlink-plugin";
 const LEGACY_PLUGIN_IDS = ["clawlink", "openclaw-plugin"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.40";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.41";
 const DEFAULT_PAIRING_POLL_INTERVAL_MS = 3000;
 const DEFAULT_PAIRING_WAIT_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -462,14 +462,11 @@ async function callToolWithErrorContent(toolName, api, path, options) {
 
 function buildPairingStartText(payload) {
   const summary = buildPairingSummary(payload);
-  const autoFinish = payload?.autoFinish === true;
 
   return [
     "ClawLink browser pairing started.",
     "",
-    autoFinish
-      ? "Open the pairing URL in your browser, sign in to ClawLink if needed, and approve this OpenClaw device. ClawLink will keep checking and finish the local setup automatically."
-      : "Open the pairing URL in your browser, sign in to ClawLink if needed, and approve this OpenClaw device. If pairing does not finish automatically in this chat, call clawlink_get_pairing_status after approval.",
+    "Open the pairing URL in your browser, sign in to ClawLink if needed, and approve this OpenClaw device. After approval, come back here and send `done` so OpenClaw can finish pairing safely.",
     "",
     stringifyPayload(summary),
   ].join("\n");
@@ -496,7 +493,7 @@ function buildPairingPendingText(payload) {
   return [
     "ClawLink pairing is still waiting for browser approval.",
     "",
-    "Keep the pairing page open and approve this device. If this tool stops waiting before approval completes, call clawlink_get_pairing_status to resume the local setup.",
+    "Keep the pairing page open and approve this device. After approval, come back here and send `done` so OpenClaw can finish pairing.",
     "",
     stringifyPayload(buildPairingSummary(payload)),
   ].join("\n");
@@ -506,7 +503,7 @@ function buildPairingProgressText(payload) {
   return [
     "ClawLink browser approval received.",
     "",
-    "Finishing the local setup automatically.",
+    "Go back to OpenClaw and send `done` to finish the local setup.",
     "",
     stringifyPayload(buildPairingSummary(payload)),
   ].join("\n");
@@ -1022,14 +1019,14 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_begin_pairing",
-      description: "Start or resume browser pairing for this OpenClaw install. Use this when ClawLink is not configured yet so the user can approve the device in a browser without manual credential entry. When live tool updates are available, this tool keeps watching for browser approval and finishes local setup automatically.",
+      description: "Start or resume browser pairing for this OpenClaw install. Use this when ClawLink is not configured yet so the user can approve the device in a browser without manual credential entry. After the user approves in the browser and comes back saying they are done, call clawlink_get_pairing_status to finish the local setup.",
       parameters: Type.Object({
         deviceLabel: Type.Optional(Type.String({
           description: "Optional friendly label for this OpenClaw device, for example Steve's MacBook.",
           minLength: 1,
         })),
       }),
-      async execute(_id, params, signal, onUpdate) {
+      async execute(_id, params, _signal, _onUpdate) {
         const { apiKey, pendingPairing } = getPluginConfig(api);
 
         if (apiKey) {
@@ -1059,26 +1056,7 @@ const clawlinkPlugin = {
             pollIntervalMs: DEFAULT_PAIRING_POLL_INTERVAL_MS,
           };
 
-          if (typeof onUpdate !== "function") {
-            return textResult(buildPairingStartText(payload), payload);
-          }
-
-          const completedPayload = await waitForPairingCompletion(api, pendingPairing, {
-            signal,
-            onUpdate,
-            pollIntervalMs: payload.pollIntervalMs,
-          });
-          const status = safeTrim(completedPayload?.session?.status);
-
-          if (status === "paired") {
-            return textResult(buildPairingCompletionText(completedPayload), completedPayload);
-          }
-
-          if (status === "expired" || status === "failed") {
-            return textResult(buildPairingStatusText(completedPayload), completedPayload);
-          }
-
-          return textResult(buildPairingPendingText(completedPayload), completedPayload);
+          return textResult(buildPairingStartText(payload), payload);
         }
 
         const payload = await callClawLinkPublic("/api/openclaw/pair/start", {
@@ -1102,39 +1080,13 @@ const clawlinkPlugin = {
           pollIntervalMs: normalizePairingPollIntervalMs(payload?.pollIntervalMs),
         };
 
-        if (typeof onUpdate !== "function") {
-          return textResult(buildPairingStartText(startPayload), startPayload);
-        }
-
-        const completedPayload = await waitForPairingCompletion(api, {
-          sessionToken: startPayload.sessionToken,
-          verifier: payload.verifier,
-          pairUrl: startPayload.pairUrl,
-          displayCode: payload.displayCode,
-          deviceLabel: startPayload.deviceLabel || deviceLabel,
-          expiresAt: startPayload.expiresAt,
-        }, {
-          signal,
-          onUpdate,
-          pollIntervalMs: startPayload.pollIntervalMs,
-        });
-        const status = safeTrim(completedPayload?.session?.status);
-
-        if (status === "paired") {
-          return textResult(buildPairingCompletionText(completedPayload), completedPayload);
-        }
-
-        if (status === "expired" || status === "failed") {
-          return textResult(buildPairingStatusText(completedPayload), completedPayload);
-        }
-
-        return textResult(buildPairingPendingText(completedPayload), completedPayload);
+        return textResult(buildPairingStartText(startPayload), startPayload);
       },
     });
 
     api.registerTool({
       name: "clawlink_get_pairing_status",
-      description: "Fallback: check whether browser pairing has been approved yet. When the browser approval is complete, this tool automatically exchanges the approved session for a locally stored ClawLink credential and finalizes pairing.",
+      description: "Check whether browser pairing has been approved yet. Use this after the user comes back from the browser and says they are done. When approval is complete, this tool exchanges the session for a locally stored ClawLink credential and finalizes pairing.",
       parameters: Type.Object({}),
       async execute() {
         const payload = await getPairingStatus(api);

@@ -205,7 +205,7 @@ export default function VerifyPage() {
               <span className="font-mono" style={{ color: "var(--mk-fg)" }}>https://claw-link.dev</span>. The plugin stores a local ClawLink credential
               in{" "}
               <span className="font-mono" style={{ color: "var(--mk-fg)" }}>~/.openclaw/openclaw.json</span> and is sent only as the{" "}
-              <span className="font-mono" style={{ color: "var(--mk-fg)" }}>X-ClawLink-API-Key</span> header to that domain. In the preferred flow, browser pairing mints that credential automatically, so the user never has to paste a raw key into chat. The credential is never sent to OpenClaw itself, to the assistant, or to any other third party.
+              <span className="font-mono" style={{ color: "var(--mk-fg)" }}>X-ClawLink-API-Key</span> header to that domain. In the preferred flow, browser pairing mints that credential and OpenClaw stores it after the user returns from the browser and confirms the approval in chat, so the user never has to paste a raw key into chat. The credential is never sent to OpenClaw itself, to the assistant, or to any other third party.
             </p>
           </section>
 
@@ -292,7 +292,8 @@ export default function VerifyPage() {
   "install_command": "openclaw plugins install clawhub:${CLAWHUB_PACKAGE_NAME}",
   "configure": {
     "primary": "clawlink_begin_pairing",
-    "fallback_if_pairing_does_not_finish_automatically": "clawlink_get_pairing_status",
+    "after_browser_approval_send": "done",
+    "finish_after_browser_approval": "clawlink_get_pairing_status",
     "if_tools_missing_after_install": "start a fresh chat so OpenClaw reloads the plugin tools",
     "alternative": "Plugin settings screen -> ClawLink -> apiKey field (only available in clients that render plugin settings UI)",
     "source_of_key_if_manual": "https://claw-link.dev/dashboard/settings?tab=api",

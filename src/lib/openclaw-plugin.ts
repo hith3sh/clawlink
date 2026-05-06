@@ -25,8 +25,8 @@ Step 1 — Install the plugin (in a terminal, or ask your OpenClaw admin if your
 ${OPENCLAW_PLUGIN_INSTALL_COMMAND}
 
 Step 2 — Pair ClawLink inside OpenClaw:
-- Preferred: call clawlink_begin_pairing. It returns a browser URL for device approval and should finish the local setup automatically after I approve the device.
-- If the current OpenClaw runtime stops waiting before approval completes, call clawlink_get_pairing_status as a fallback to resume and finish the local setup.
+- Preferred: call clawlink_begin_pairing. It returns a browser URL for device approval.
+- After I approve the device in the browser and come back saying done, call clawlink_get_pairing_status to finish the local setup safely.
 
 If this chat started before the plugin was installed and you cannot see the ClawLink tools yet, tell me to start a fresh chat and retry setup there so OpenClaw reloads the plugin tools.
 

@@ -6,7 +6,7 @@ Third-party OpenClaw plugin that lets OpenClaw talk to external SaaS apps throug
 
 ## What it does
 
-ClawLink stores provider OAuth tokens and API credentials on ClawLink servers, encrypted at rest, for a growing catalog of business apps on your behalf. It then exposes a uniform set of tools so OpenClaw can read from and write to those apps without per-provider setup. Today that includes integrations like Google Docs, Google Sheets, Google Calendar, Google Drive, Twilio, and Google Search Console. Setup is browser pairing: OpenClaw opens a ClawLink approval page, you approve the device once, and the plugin stores its local ClawLink device credential automatically.
+ClawLink stores provider OAuth tokens and API credentials on ClawLink servers, encrypted at rest, for a growing catalog of business apps on your behalf. It then exposes a uniform set of tools so OpenClaw can read from and write to those apps without per-provider setup. Today that includes integrations like Google Docs, Google Sheets, Google Calendar, Google Drive, Twilio, and Google Search Console. Setup is browser pairing: OpenClaw opens a ClawLink approval page, you approve the device once, then return to chat and send `done` so the plugin can store its local ClawLink device credential safely.
 
 ## Install
 
@@ -27,7 +27,8 @@ openclaw plugins install @useclawlink/openclaw-plugin
    - if your session started before the plugin was installed and the tools are not visible yet, start a fresh chat and retry pairing there
    - if a fresh chat still doesn't show the tools, contact your OpenClaw admin or ClawLink support to reload the gateway
 2. Open the returned ClawLink pairing URL in your browser and approve the device.
-3. Let OpenClaw call `clawlink_get_pairing_status` to finish storing the local credential.
+3. Go back to OpenClaw and send `done`.
+4. Let the assistant call `clawlink_get_pairing_status` to finish storing the local credential.
 
 The resulting device credential is stored locally in `~/.openclaw/openclaw.json` under `plugins.entries.clawlink-plugin.config.apiKey` and is only sent to `claw-link.dev`.
 
@@ -38,7 +39,7 @@ Full setup walkthrough: https://docs.claw-link.dev/openclaw
 The plugin registers ten tools. OpenClaw's assistant discovers available integrations dynamically — you don't need to configure individual apps here.
 
 - `clawlink_begin_pairing` — start or resume browser pairing for this OpenClaw install
-- `clawlink_get_pairing_status` — finish pairing after the browser approval is complete
+- `clawlink_get_pairing_status` — finish pairing after the user returns from the browser and says `done`
 - `clawlink_start_connection` — start a hosted OAuth/connect session for a new app
 - `clawlink_get_connection_status` — poll an in-progress connect session
 - `clawlink_list_integrations` — list apps already connected
@@ -53,7 +54,7 @@ The plugin registers ten tools. OpenClaw's assistant discovers available integra
 Normal onboarding should happen through tools and browser pairing. These commands remain as support/debug escape hatches:
 
 - `/clawlink pair [deviceLabel]` — start or resume browser pairing from the plugin fast path
-- `/clawlink pair-status` — check whether browser pairing has been approved yet
+- `/clawlink pair-status` — check whether browser pairing has been approved yet and finish setup after browser approval
 - `/clawlink status` — show whether the plugin is paired
 - `/clawlink logout` — remove the saved credential
 

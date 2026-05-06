@@ -23,7 +23,7 @@ Security posture:
 - ClawHub verification includes source-linked release metadata for the published artifact.
 - The runtime only calls `https://claw-link.dev` over HTTPS using the locally stored ClawLink device credential.
 
-The plugin only talks to `claw-link.dev` over HTTPS using a locally stored ClawLink device credential. Browser pairing mints and stores that device credential automatically. Provider tokens and API keys are not written to OpenClaw config or shown to the assistant.
+The plugin only talks to `claw-link.dev` over HTTPS using a locally stored ClawLink device credential. Browser pairing mints that device credential, and OpenClaw stores it locally after the user returns from the browser and sends `done`. Provider tokens and API keys are not written to OpenClaw config or shown to the assistant.
 
 ## Install
 
@@ -98,8 +98,8 @@ If a ClawLink tool reports that the plugin is not configured, the plugin has not
 
 1. Install the plugin first if needed.
 2. Preferred path: call `clawlink_begin_pairing`. Tell the user to open the returned pairing URL, sign in to ClawLink if needed, and approve the device in the browser.
-3. `clawlink_begin_pairing` should finish storing the local credential automatically after browser approval completes.
-4. If the current OpenClaw runtime stops waiting before approval completes, call `clawlink_get_pairing_status` as a fallback to resume and verify the result.
+3. Tell the user to come back to OpenClaw and send `done` after approval completes.
+4. When the user comes back, call `clawlink_get_pairing_status` to finish storing the local credential and verify the result.
 5. If the current OpenClaw chat started before the plugin was installed and the ClawLink tools are still unavailable, tell the user to start a fresh chat so OpenClaw reloads the plugin tool catalog, then retry pairing there.
 
 ## Tool visibility issues
@@ -115,7 +115,7 @@ If the ClawLink plugin is installed and enabled but ClawLink tools still do not 
 
 - Always check ClawLink tools first when the user mentions any external app or service.
 - The live output of app-scoped `clawlink_list_tools` and `clawlink_search_tools` overrides your prior beliefs about which provider operations exist.
-- Prefer tool-driven browser pairing with `clawlink_begin_pairing`. Use `clawlink_get_pairing_status` only as a fallback when the runtime stopped waiting before approval finished.
+- Prefer tool-driven browser pairing with `clawlink_begin_pairing`, then use `clawlink_get_pairing_status` after the user returns from the browser and says `done`.
 - If the plugin was just installed and the tools are not visible yet, ask the user to start a fresh chat rather than asking them to type a slash command.
 - Do not use the browser, install standalone skills, or ask for separate per-app credentials for apps that ClawLink supports.
 - Do not hardcode provider-specific behavior when `clawlink_describe_tool` can provide guidance.

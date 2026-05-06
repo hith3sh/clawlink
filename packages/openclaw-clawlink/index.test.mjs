@@ -109,7 +109,7 @@ test("clawlink_call_tool forwards nested arguments unchanged", async () => {
     headers: {
       "X-ClawLink-API-Key": "cllk_test_123",
       "Content-Type": "application/json",
-      "User-Agent": "@useclawlink/openclaw-plugin/0.1.40",
+      "User-Agent": "@useclawlink/openclaw-plugin/0.1.41",
     },
     body: {
       arguments: {
@@ -410,6 +410,7 @@ test("clawlink_begin_pairing hides the display code in the returned text", async
         sessionToken: "pair_sess_122",
         displayCode: "ABCD1234",
         deviceLabel: "OpenClaw device",
+        status: "awaiting_browser",
         pairUrl: "https://claw-link.dev/openclaw/pair/pair_sess_122",
         expiresAt: "2099-05-01T01:10:00.000Z",
         verifier: "pair_verifier_122",
@@ -423,17 +424,17 @@ test("clawlink_begin_pairing hides the display code in the returned text", async
 
     assert.match(result.content[0].text, /ClawLink browser pairing started\./);
     assert.match(result.content[0].text, /https:\/\/claw-link\.dev\/openclaw\/pair\/pair_sess_122/);
+    assert.match(result.content[0].text, /send `done`/);
     assert.doesNotMatch(result.content[0].text, /ABCD1234|displayCode|Pairing code/);
     assert.equal(result.details.displayCode, "ABCD1234");
   });
 });
 
-test("clawlink_begin_pairing auto-completes pairing when live tool updates are available", async () => {
+test("clawlink_begin_pairing returns immediately and asks the user to send done after approval", async () => {
   const api = createFakeApi({});
   clawlinkPlugin.register(api);
   const beginPairing = api.getTool("clawlink_begin_pairing");
   const updates = [];
-  let statusChecks = 0;
 
   await withFetchMock(async (url) => {
     if (url === "https://claw-link.dev/api/openclaw/pair/start") {
@@ -441,75 +442,12 @@ test("clawlink_begin_pairing auto-completes pairing when live tool updates are a
         sessionToken: "pair_sess_125",
         displayCode: "LMNO5678",
         deviceLabel: "Steve's MacBook",
+        status: "awaiting_browser",
         pairUrl: "https://claw-link.dev/openclaw/pair/pair_sess_125",
         expiresAt: "2099-05-01T01:25:00.000Z",
         verifier: "pair_verifier_125",
         pollIntervalMs: 0,
       });
-    }
-
-    if (url === "https://claw-link.dev/api/openclaw/pair/sessions/pair_sess_125") {
-      statusChecks += 1;
-
-      if (statusChecks === 1) {
-        return successResponse({
-          session: {
-            token: "pair_sess_125",
-            displayCode: "LMNO5678",
-            deviceLabel: "Steve's MacBook",
-            status: "awaiting_browser",
-            expiresAt: "2099-05-01T01:25:00.000Z",
-            approvedAt: null,
-            pairedAt: null,
-          },
-        });
-      }
-
-      return successResponse({
-        session: {
-          token: "pair_sess_125",
-          displayCode: "LMNO5678",
-          deviceLabel: "Steve's MacBook",
-          status: "ready_for_device",
-          expiresAt: "2099-05-01T01:25:00.000Z",
-          approvedAt: "2026-05-01T01:06:00.000Z",
-          pairedAt: null,
-        },
-      });
-    }
-
-    if (url === "https://claw-link.dev/api/openclaw/pair/sessions/pair_sess_125/exchange") {
-      return successResponse({
-        session: {
-          token: "pair_sess_125",
-          displayCode: "LMNO5678",
-          deviceLabel: "Steve's MacBook",
-          status: "awaiting_local_save",
-          expiresAt: "2099-05-01T01:25:00.000Z",
-          approvedAt: "2026-05-01T01:06:00.000Z",
-          pairedAt: null,
-        },
-        apiKey: "cllk_test_paired_125",
-        apiKeyId: 43,
-      });
-    }
-
-    if (url === "https://claw-link.dev/api/openclaw/pair/sessions/pair_sess_125/finalize") {
-      return successResponse({
-        session: {
-          token: "pair_sess_125",
-          displayCode: "LMNO5678",
-          deviceLabel: "Steve's MacBook",
-          status: "paired",
-          expiresAt: "2099-05-01T01:25:00.000Z",
-          approvedAt: "2026-05-01T01:06:00.000Z",
-          pairedAt: "2026-05-01T01:07:00.000Z",
-        },
-      });
-    }
-
-    if (url === "https://claw-link.dev/api/integrations") {
-      return successResponse({ integrations: [] });
     }
 
     throw new Error(`Unexpected fetch: ${url}`);
@@ -523,18 +461,23 @@ test("clawlink_begin_pairing auto-completes pairing when live tool updates are a
       },
     );
 
-    assert.equal(result.details.session.status, "paired");
-    assert.match(result.content[0].text, /ClawLink pairing completed\./);
-    assert.equal(updates[0].details.session.status, "awaiting_browser");
-    assert.match(updates[0].content[0].text, /https:\/\/claw-link\.dev\/openclaw\/pair\/pair_sess_125/);
-    assert.doesNotMatch(updates[0].content[0].text, /LMNO5678|displayCode|Pairing code/);
-    assert.ok(
-      updates.some((update) => /ClawLink pairing completed\./.test(update.content[0].text)),
-    );
+    assert.equal(result.details.sessionToken, "pair_sess_125");
+    assert.equal(result.details.status, "awaiting_browser");
+    assert.match(result.content[0].text, /send `done`/);
+    assert.match(result.content[0].text, /https:\/\/claw-link\.dev\/openclaw\/pair\/pair_sess_125/);
+    assert.doesNotMatch(result.content[0].text, /LMNO5678|displayCode|Pairing code/);
+    assert.deepEqual(updates, []);
   });
 
   assert.deepEqual(api.getPluginConfig(), {
-    apiKey: "cllk_test_paired_125",
+    pendingPairing: {
+      sessionToken: "pair_sess_125",
+      verifier: "pair_verifier_125",
+      pairUrl: "https://claw-link.dev/openclaw/pair/pair_sess_125",
+      displayCode: "LMNO5678",
+      deviceLabel: "Steve's MacBook",
+      expiresAt: "2099-05-01T01:25:00.000Z",
+    },
   });
 });
 
@@ -558,6 +501,7 @@ test("clawlink_get_pairing_status exchanges the approved session and clears pend
         sessionToken: "pair_sess_123",
         displayCode: "ABCD1234",
         deviceLabel: "Steve's MacBook",
+        status: "awaiting_browser",
         pairUrl: "https://claw-link.dev/openclaw/pair/pair_sess_123",
         expiresAt: "2099-05-01T01:15:00.000Z",
         verifier: "pair_verifier_123",
@@ -662,6 +606,7 @@ test("clawlink_get_pairing_status preserves pending pairing when finalize fails"
         sessionToken: "pair_sess_124",
         displayCode: "ZXCV5678",
         deviceLabel: "OpenClaw device",
+        status: "awaiting_browser",
         pairUrl: "https://claw-link.dev/openclaw/pair/pair_sess_124",
         expiresAt: "2099-05-01T01:20:00.000Z",
         verifier: "pair_verifier_124",

@@ -17,7 +17,8 @@ This repo now supports the hosted connection-session model for OpenClaw-style in
    - `pollIntervalMs`
 3. OpenClaw opens `connectUrl` in a browser or prints it for a remote device.
 4. The user completes setup on the hosted page.
-5. OpenClaw polls `statusUrl` until the session becomes `connected`.
+5. The user returns to OpenClaw and sends `done`.
+6. OpenClaw calls `statusUrl` until the session becomes `connected`.
 
 ## Status values
 
@@ -48,4 +49,5 @@ Recommended skill behavior:
 - When a user says `connect my notion to openclaw`, call `clawlink_start_connection`.
 - If browser access is available, open `connectUrl`.
 - Otherwise print the URL and tell the user they can open it on any device.
-- Poll until the session reports `connected`.
+- Tell the user to come back and send `done` after approving in the browser.
+- When the user comes back, call `clawlink_get_connection_status` until the session reports `connected`.

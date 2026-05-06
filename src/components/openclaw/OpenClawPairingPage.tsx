@@ -116,7 +116,7 @@ function describeNextStep(session: SessionState): string {
       return "Approve this OpenClaw device in the browser to finish setup.";
     case "ready_for_device":
     case "awaiting_local_save":
-      return "Approval received. OpenClaw should finish connecting automatically in a few seconds.";
+      return "Approval received. Go back to OpenClaw and send `done` so it can finish pairing.";
     case "paired":
       return "This OpenClaw install is paired and ready to use.";
     case "expired":
@@ -394,9 +394,9 @@ export default function OpenClawPairingPage({ initialSession }: Props) {
 
           {session.status === "ready_for_device" || session.status === "awaiting_local_save" ? (
             <div className="mt-6 flex items-start gap-2 text-sm text-muted-foreground">
-              <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-[var(--brand)]" />
+              <Loader2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand)]" />
               <p>
-                Approved{session.approvedUserHint ? ` by ${session.approvedUserHint}` : ""}. OpenClaw should finish connecting automatically in a few seconds.
+                Approved{session.approvedUserHint ? ` by ${session.approvedUserHint}` : ""}. Go back to OpenClaw and send <span className="font-medium text-foreground">done</span> to finish pairing.
               </p>
             </div>
           ) : null}
