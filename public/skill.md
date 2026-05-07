@@ -22,8 +22,6 @@ Security and verification:
 - The latest ClawHub release is source-linked to GitHub with a clean scan; npm releases are published from GitHub Actions with npm provenance.
 - The plugin only calls `https://claw-link.dev` over HTTPS using the local ClawLink device credential.
 
-Pricing:
-- ClawLink activation is $2.99/month once access becomes inactive.
 
 ## Install
 
