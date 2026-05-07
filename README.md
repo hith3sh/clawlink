@@ -1,4 +1,7 @@
-# ClawLink
+# ClawLink 
+
+<img width="160" height="160" alt="link logo" src="https://github.com/user-attachments/assets/f2dc1101-eac8-4953-a84f-d27d6addd4f2" />
+
 
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/hith3sh/clawlink/badge)](https://scorecard.dev/viewer/?uri=github.com/hith3sh/clawlink)
 [![npm](https://img.shields.io/npm/v/%40useclawlink%2Fopenclaw-plugin?label=npm%20%40useclawlink%2Fopenclaw-plugin)](https://www.npmjs.com/package/@useclawlink/openclaw-plugin)
@@ -51,19 +54,6 @@ Then just ask OpenClaw to do things:
 - "Add a row to my Google Sheet"
 - "Create a new GitHub issue"
 
-## ClawLink vs Composio
-
-| | **ClawLink** | **Composio** |
-|---|---|---|
-| **Built for** | OpenClaw users first | Multi-agent frameworks (LangChain, CrewAI, AutoGen, etc.) |
-| **Experience** | Native plugin — install once, use everywhere in OpenClaw | Agent toolkit — wire actions into your agent code |
-| **Auth** | Hosted OAuth/connect flows — approve provider access in the browser; ClawLink manages token refresh | Bring-your-own OAuth or self-managed connections |
-| **Where credentials live** | Provider tokens/API keys are stored by ClawLink, encrypted at rest; OpenClaw stores only a ClawLink device credential locally | Agent-side or self-hosted infrastructure |
-| **How you use it** | Chat naturally: "send an email to sarah" | Programmatic: define tools and call them in code |
-| **Logs & debugging** | Dashboard with request history, latency, and errors | Developer-facing logging and tracing |
-| **Best for** | Non-technical users who want integrations working in OpenClaw without code | Developers building custom agents across multiple frameworks |
-
-**Bottom line:** If you use OpenClaw and want 100+ integrations to "just work" through chat, ClawLink is purpose-built for that. If you are writing Python agents across multiple frameworks, Composio is the broader toolkit.
 
 ## Supported integrations
 
