@@ -1187,7 +1187,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   shopify: {
     setupMode: "composio",
-    dashboardStatus: "coming-soon",
+    dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect Shopify through ClawLink's hosted Composio setup to manage products, orders, customers, inventory, collections, and fulfillments from your Shopify store.",
     credentialFields: [],
