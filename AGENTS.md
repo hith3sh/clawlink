@@ -122,38 +122,35 @@ Troubleshooting guidance:
 - If connection succeeds but tools fail, check provider permissions/scopes, token handling/refresh, and server request formatting.
 - Separate “connection flow works” from “tool execution works”; both layers must pass before treating an integration as working.
 
-# Pipedream Integration Validation
+# Integration MVP Testing
 
-For every newly imported Pipedream integration, do not stop at static manifest import. The required validation flow is:
+For any integration MVP, validate in two layers:
 
-1. Import the provider actions with `npm run import:pipedream-actions -- --app <app> [--integration <slug>]`
-2. Run the static manifest audit with `npm run audit:manifests -- --strict`
-3. Run the runtime validator with `npm run validate:pipedream-actions -- --integration <slug> --strict`
-4. Run the OpenClaw plugin contract tests with `npm run test:openclaw-plugin-contract`
-5. Run the live OpenClaw-plugin smoke test with `npm run smoke:openclaw-plugin -- --preset <preset>`
+1. Hosted connect / OAuth / credential capture flow
+   - Confirm the user can complete the dashboard connection flow end to end.
+   - For OAuth providers, verify login, consent, callback, session completion, and stored credentials.
+   - For manual providers, verify credential submission, validation, and stored credentials.
+   - Typical check: start from the integration page, complete the connection flow, and verify the connection session ends in `connected`.
 
-Validation rules:
+2. Hosted runtime tool execution
+   - After connection succeeds, confirm the stored credentials work in the worker.
+   - Preferred test order:
+     1. read/list/get actions
+     2. then write/create/send/update actions
+   - For MVP verification, prioritize simple low-risk reads first, then higher-impact writes.
 
-- The runtime validator must build action args from only the exposed LLM-facing schema plus `safeDefaults`
-- Hidden or Pipedream-internal props must not be passed from validation samples
-- If Pipedream returns a 400 because a hidden/internal prop is still required, treat that as a blocking failure and fix it in `config/pipedream-action-overrides.mjs`
-- Fixes should generally use `hiddenProps` plus `safeDefaults`
-- If a tool still needs exposed required business args to run, add `validationArgs` under that action override so the runtime validator can exercise it without OpenClaw in the loop
-- The plugin contract test must verify how `clawlink_call_tool` and `clawlink_preview_tool` serialize and forward arguments to ClawLink
-- The live smoke test must exercise the local OpenClaw plugin entrypoint against production ClawLink using a real API key and a safe preset
+Troubleshooting guidance:
 
-Environment for runtime validation:
+- If the connect flow fails, check redirect URIs, provider app registration/config, callback handling, and credential storage first.
+- If connection succeeds but tools fail, check provider permissions/scopes, token handling/refresh, and server request formatting.
+- Separate "connection flow works" from "tool execution works"; both layers must pass before treating an integration as working.
 
-- Provide a test account binding per integration via `PIPEDREAM_TEST_ACCOUNTS_JSON` or per-integration env vars such as `PIPEDREAM_TEST_GMAIL_ACCOUNT_ID`
-- The runtime validator defaults to read tools only; use `--all` only when write-path validation is intentional and safe
-- The live smoke test reads the ClawLink API key from `CLAWLINK_API_KEY` or `~/.openclaw/openclaw.json`
-- For each integration, keep at least one safe read smoke preset. Add preview or sandboxed write presets only when they are low-risk and repeatable.
+Automated validation:
 
-Do not mark a new Pipedream integration as ready until all four validation layers pass:
-- static manifest audit
-- Pipedream runtime validation
-- OpenClaw plugin contract tests
-- live OpenClaw-plugin smoke test
+```bash
+npm run test:openclaw-plugin-contract
+npm run smoke:openclaw-plugin -- --preset <preset>
+```
 
 # OpenClaw Plugin Release Workflow
 

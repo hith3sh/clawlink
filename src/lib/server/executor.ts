@@ -22,7 +22,6 @@ import type {
   ToolExecutionMeta,
   ToolExecutionResult,
 } from "@/lib/runtime/tool-runtime";
-import { executePipedreamActionTool } from "@/lib/pipedream/action-executor";
 import { executeComposioTool } from "@/lib/composio/tool-executor";
 import {
   classifyIntegrationError,
@@ -75,14 +74,6 @@ function getCredentialBridgeEnv(): CredentialBridgeEnv | null {
     DB: db,
     CREDENTIALS: getEnvBinding("CREDENTIALS") as CredentialBridgeEnv["CREDENTIALS"],
     CREDENTIAL_ENCRYPTION_KEY: getEnvBinding<string>("CREDENTIAL_ENCRYPTION_KEY"),
-    NANGO_BASE_URL: getEnvBinding<string>("NANGO_BASE_URL"),
-    NANGO_SECRET_KEY: getEnvBinding<string>("NANGO_SECRET_KEY"),
-    NANGO_PROVIDER_CONFIG_KEYS: getEnvBinding<string>("NANGO_PROVIDER_CONFIG_KEYS"),
-    PIPEDREAM_BASE_URL: getEnvBinding<string>("PIPEDREAM_BASE_URL"),
-    PIPEDREAM_CLIENT_ID: getEnvBinding<string>("PIPEDREAM_CLIENT_ID"),
-    PIPEDREAM_CLIENT_SECRET: getEnvBinding<string>("PIPEDREAM_CLIENT_SECRET"),
-    PIPEDREAM_PROJECT_ID: getEnvBinding<string>("PIPEDREAM_PROJECT_ID"),
-    PIPEDREAM_ENVIRONMENT: getEnvBinding<string>("PIPEDREAM_ENVIRONMENT"),
     COMPOSIO_API_KEY: getEnvBinding<string>("COMPOSIO_API_KEY"),
     COMPOSIO_BASE_URL: getEnvBinding<string>("COMPOSIO_BASE_URL"),
     COMPOSIO_TOOLKIT_MAP: getEnvBinding<string>("COMPOSIO_TOOLKIT_MAP"),
@@ -109,6 +100,32 @@ function safeJsonStringify(value: unknown): string {
   } catch {
     return JSON.stringify({ error: "unserializable_payload" });
   }
+}
+
+const MAX_TRANSIENT_RETRIES = 2;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function shouldRetryTransientExecution(error: unknown): boolean {
+  const classified = classifyIntegrationError(error);
+
+  if (!classified.retryable) {
+    return false;
+  }
+
+  return (
+    classified.type === "rate_limit" ||
+    classified.type === "provider" ||
+    classified.type === "network"
+  );
+}
+
+function getTransientRetryDelayMs(attempt: number, error: unknown): number {
+  const classified = classifyIntegrationError(error);
+  const baseDelayMs = classified.type === "rate_limit" ? 1000 : 500;
+  return baseDelayMs * 2 ** (attempt - 1);
 }
 
 async function describeDecisionTool(
@@ -371,21 +388,6 @@ export async function executeToolForUser(
     const runTool = async (
       credentials: Record<string, string>,
     ): Promise<unknown> => {
-      if (decision.tool.execution.kind === "pipedream_action") {
-        const execution = await executePipedreamActionTool(
-          decision.tool,
-          mergedArgs,
-          {
-            requestId,
-            externalUserId: request.userId,
-            credentials,
-            env,
-          },
-        );
-        providerRequestId = execution.providerRequestId;
-        return execution.data;
-      }
-
       if (decision.tool.execution.kind === "composio_tool") {
         const execution = await executeComposioTool(
           decision.tool,
@@ -411,8 +413,27 @@ export async function executeToolForUser(
       });
     };
 
+    const runToolWithRetries = async (
+      credentials: Record<string, string>,
+    ): Promise<unknown> => {
+      let attempt = 0;
+
+      while (true) {
+        try {
+          return await runTool(credentials);
+        } catch (error) {
+          if (attempt >= MAX_TRANSIENT_RETRIES || !shouldRetryTransientExecution(error)) {
+            throw error;
+          }
+
+          attempt += 1;
+          await sleep(getTransientRetryDelayMs(attempt, error));
+        }
+      }
+    };
+
     try {
-      const result = await runTool(currentCredentials);
+      const result = await runToolWithRetries(currentCredentials);
 
       await recordConnectionExecutionSuccess(env, resolvedConnectionId);
 
@@ -454,7 +475,7 @@ export async function executeToolForUser(
       currentCredentials = refreshed.credentials;
 
       try {
-        const result = await runTool(currentCredentials);
+        const result = await runToolWithRetries(currentCredentials);
 
         await recordConnectionExecutionSuccess(env, resolvedConnectionId);
 

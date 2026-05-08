@@ -102,6 +102,7 @@ export interface MCPTool {
   askBefore: string[];
   safeDefaults: Record<string, unknown>;
   examples: Array<{ user: string; args: Record<string, unknown> }>;
+  prerequisites?: string[];
   followups: string[];
   requiresScopes: string[];
   idempotent: boolean;

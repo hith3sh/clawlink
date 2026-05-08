@@ -40,11 +40,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (
-      integration.setupMode !== "oauth" &&
-      integration.setupMode !== "pipedream" &&
-      integration.setupMode !== "composio"
-    ) {
+    if (integration.setupMode !== "composio") {
       return NextResponse.json(
         {
           error: `${integration.name} no longer supports manual credential setup. Reconnect it through a hosted provider flow when available.`,
@@ -97,24 +93,8 @@ export async function POST(request: NextRequest) {
 
     const reconnectConnectionId =
       defaultConnection?.authState === "needs_reauth" &&
-      (
-        (
-          integration.setupMode === "oauth" &&
-          defaultConnection.authBackend === "nango" &&
-          defaultConnection.nangoConnectionId &&
-          defaultConnection.nangoProviderConfigKey
-        ) ||
-        (
-          integration.setupMode === "pipedream" &&
-          defaultConnection.authBackend === "pipedream" &&
-          defaultConnection.pipedreamAccountId
-        ) ||
-        (
-          integration.setupMode === "composio" &&
-          defaultConnection.authBackend === "composio" &&
-          defaultConnection.composioConnectedAccountId
-        )
-      )
+      defaultConnection.authBackend === "composio" &&
+      defaultConnection.composioConnectedAccountId
         ? defaultConnection.id
         : null;
     const session =

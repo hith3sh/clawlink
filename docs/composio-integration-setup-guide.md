@@ -2,7 +2,7 @@
 
 How to add a new Composio-backed integration to ClawLink (or expand an existing one to its full tool catalog).
 
-This guide was built from the Instantly pilot. Follow it step-by-step for each new integration (Gmail, Outlook, ClickUp, Apollo, etc.).
+This guide is the canonical path for every active integration.
 
 ---
 
@@ -10,7 +10,7 @@ This guide was built from the Instantly pilot. Follow it step-by-step for each n
 
 Before starting, make sure you have:
 
-- `COMPOSIO_API_KEY` available in `.env.local` (and as a Cloudflare secret for both workers)
+- `COMPOSIO_API_KEY` available in `.env.local` (and as a Cloudflare secret for `clawlink-web`)
 - A Composio auth config created for the integration in the [Composio dashboard](https://dashboard.composio.dev)
   - ClawLink uses **Composio's managed auth** -- Composio owns the OAuth app credentials, redirect URIs, and token exchange. You do not need to register your own OAuth app with providers like Microsoft, Google, etc.
   - For OAuth providers (Gmail, Outlook, ClickUp): create an auth config in Composio's dashboard. Composio provides the managed OAuth app. No redirect URI configuration needed on your side.
@@ -216,15 +216,15 @@ After running, check:
 
 Edit `src/data/integrations.ts` to register (or update) the integration entry.
 
-### If the integration already exists as Pipedream
+### If the integration already exists
 
-Change `setupMode` from `"pipedream"` to `"composio"` and update the tools list.
+Change `setupMode` to `"composio"` and update the tools list.
 
-**Example (Gmail currently uses Pipedream):**
+**Example:**
 
 ```typescript
 gmail: {
-    setupMode: "composio",  // was "pipedream"
+    setupMode: "composio",
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect Gmail through ClawLink's hosted setup...",
@@ -285,7 +285,7 @@ All tools are still available to OpenClaw at runtime regardless of what's listed
 
 ## Step 4: Update Wrangler Environment Configs
 
-Both workers need Composio config for the new integration.
+The worker needs Composio config for the new integration.
 
 ### `wrangler.toml` (frontend worker `clawlink-web`)
 
@@ -383,50 +383,7 @@ The same flow works for API key integrations. Composio shows its own hosted API 
 
 ---
 
-## Step 6: Handle Pipedream-to-Composio Migration (If Applicable)
-
-If the integration previously had a Pipedream manifest, you need to disable it at runtime. A database migration is **not** needed unless you have real users with existing Pipedream connections.
-
-### 6a. Disable Pipedream tools at runtime
-
-Add the integration slug to the disabled set in `worker/integrations/index.ts`:
-
-```typescript
-const disabledPipedreamManifestIntegrations = new Set(["instantly", "gmail"]);
-```
-
-This ensures Pipedream manifest tools are not served for this integration. Only Composio tools will be active.
-
-### 6b. Migrate existing user connections (only if you have real users)
-
-**Skip this step unless you have real users with active Pipedream connections for this integration.** If the product has no external users yet, or if nobody has connected this integration through Pipedream, there is nothing to migrate.
-
-If you do have real users with Pipedream connections that need to be invalidated, create a SQL migration:
-
-```sql
--- Mark existing Pipedream connections as needing reauth
-UPDATE user_integrations
-SET auth_state = 'needs_reauth',
-    auth_error = '<Integration> now connects through ClawLink''s hosted setup. Reconnect to enable the expanded tool catalog.',
-    is_default = 0,
-    updated_at = datetime('now')
-WHERE integration = '<slug>'
-  AND (auth_provider = 'pipedream' OR pipedream_account_id IS NOT NULL);
-```
-
-Run it with:
-
-```bash
-wrangler d1 execute clawlink --file migrations/0XX_composio_<slug>.sql
-```
-
-### 6c. Keep Pipedream manifests on disk
-
-Don't delete the Pipedream generated manifest files. They remain on disk but are disabled at runtime by the `disabledPipedreamManifestIntegrations` set. This allows easy rollback if needed.
-
----
-
-## Step 7: Update Smoke Test Presets
+## Step 6: Update Smoke Test Presets
 
 Create or update `scripts/smoke-presets/<slug>.mjs`:
 
@@ -460,7 +417,7 @@ Focus on:
 
 ---
 
-## Step 8: Deploy
+## Step 7: Deploy
 
 Both workers need redeployment:
 
@@ -471,7 +428,7 @@ npm run build:web && npm run deploy:web
 
 ---
 
-## Step 9: Validate
+## Step 8: Validate
 
 Follow the standard integration MVP testing layers from `AGENTS.md`:
 
@@ -493,8 +450,8 @@ Follow the standard integration MVP testing layers from `AGENTS.md`:
 ### Automated validation
 
 ```bash
-# Static manifest audit
-npm run audit:manifests -- --strict
+# Plugin contract test
+npm run test:openclaw-plugin-contract
 
 # Smoke test (if presets are configured)
 npm run smoke:openclaw-plugin -- --preset <slug>
@@ -511,8 +468,6 @@ npm run smoke:openclaw-plugin -- --preset <slug>
 | `src/data/integrations.ts` | Add/update integration entry with `setupMode: "composio"` and curated tools | Yes |
 | `wrangler.toml` | Add to `COMPOSIO_ENABLED_SLUGS`, `COMPOSIO_TOOLKIT_MAP`, `COMPOSIO_TOOLKIT_VERSION_MAP` | Yes |
 | Cloudflare secrets | Set `COMPOSIO_<SLUG>_AUTH_CONFIG_ID` (or update `COMPOSIO_AUTH_CONFIG_MAP`) | Yes |
-| `worker/integrations/index.ts` | Add to `disabledPipedreamManifestIntegrations` if migrating from Pipedream | Only if migrating |
-| `migrations/0XX_composio_<slug>.sql` | Invalidate old Pipedream connections | Only if you have real users with Pipedream connections |
 | `scripts/smoke-presets/<slug>.mjs` | Create smoke test presets | Recommended |
 
 ---
@@ -563,14 +518,10 @@ npm run import:composio-tools -- --toolkit apollo --integration apollo
 AUTH_CONFIG_ID=$(grep COMPOSIO_APOLLO_AUTH_CONFIG_ID .env.local | cut -d= -f2 | tr -d '"')
 echo "$AUTH_CONFIG_ID" | wrangler secret put COMPOSIO_APOLLO_AUTH_CONFIG_ID
 
-# 7. If migrating from Pipedream:
-#    - Add "apollo" to disabledPipedreamManifestIntegrations in worker/integrations/index.ts
-#    - Only create a migration file if you have real users with Pipedream connections
-
-# 8. Deploy
+# 7. Deploy
 npm run build:web && npm run deploy:web
 
-# 9. Test
+# 8. Test
 #    Connect Apollo through the dashboard
 #    Verify tool execution works
 ```

@@ -3,10 +3,6 @@ import {
   getOAuthProviderDisplayName,
   safeTrim,
 } from "../src/lib/oauth/providers";
-import {
-  mapNangoConnectionToClawLinkCredentials,
-  type NangoConnectionResponse,
-} from "../src/lib/nango/credentials";
 import type { NormalizedToolError } from "../src/lib/runtime/tool-runtime";
 import { decryptCredential, encryptCredential } from "./crypto";
 
@@ -43,9 +39,6 @@ interface StoredIntegrationRow {
   auth_state: ConnectionAuthState;
   auth_error: string | null;
   auth_provider: string;
-  nango_connection_id: string | null;
-  nango_provider_config_key: string | null;
-  pipedream_account_id: string | null;
   composio_connected_account_id: string | null;
   composio_auth_config_id: string | null;
   composio_toolkit: string | null;
@@ -55,13 +48,6 @@ export interface CredentialBridgeEnv {
   DB: D1LikeDatabase;
   CREDENTIALS?: KVLikeNamespace;
   CREDENTIAL_ENCRYPTION_KEY?: string;
-  NANGO_BASE_URL?: string;
-  NANGO_SECRET_KEY?: string;
-  PIPEDREAM_BASE_URL?: string;
-  PIPEDREAM_CLIENT_ID?: string;
-  PIPEDREAM_CLIENT_SECRET?: string;
-  PIPEDREAM_PROJECT_ID?: string;
-  PIPEDREAM_ENVIRONMENT?: string;
   COMPOSIO_API_KEY?: string;
   COMPOSIO_BASE_URL?: string;
   COMPOSIO_TOOLKIT_MAP?: string;
@@ -89,23 +75,6 @@ function isRecordObject(value: unknown): value is Record<string, unknown> {
 
 function getEnvString(env: CredentialBridgeEnv, key: string): string | undefined {
   return safeTrim(env[key]);
-}
-
-function getNangoConfig(
-  env: CredentialBridgeEnv,
-): { baseUrl: string; secretKey: string } | null {
-  const baseUrl = getEnvString(env, "NANGO_BASE_URL")?.replace(/\/+$/, "");
-  const secretKey = getEnvString(env, "NANGO_SECRET_KEY");
-
-  if (!baseUrl || !secretKey) {
-    return null;
-  }
-
-  return { baseUrl, secretKey };
-}
-
-function isOAuthIntegration(integration: string): boolean {
-  return integration === "apollo" || integration === "gmail" || integration === "google-analytics" || integration === "notion" || integration === "outlook" || integration === "postiz";
 }
 
 function buildNeedsReauthMessage(
@@ -264,8 +233,7 @@ async function loadConnectionRecord(
       .prepare(
         `
           SELECT id, credentials_encrypted, auth_state, auth_error,
-                 auth_provider, nango_connection_id, nango_provider_config_key, pipedream_account_id,
-                 composio_connected_account_id, composio_auth_config_id, composio_toolkit
+                 auth_provider, composio_connected_account_id, composio_auth_config_id, composio_toolkit
           FROM user_integrations
           WHERE id = ? AND user_id = ? AND integration = ?
           LIMIT 1
@@ -279,8 +247,7 @@ async function loadConnectionRecord(
     .prepare(
       `
         SELECT id, credentials_encrypted, auth_state, auth_error,
-               auth_provider, nango_connection_id, nango_provider_config_key, pipedream_account_id,
-               composio_connected_account_id, composio_auth_config_id, composio_toolkit
+               auth_provider, composio_connected_account_id, composio_auth_config_id, composio_toolkit
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
         ORDER BY is_default DESC, updated_at DESC, created_at DESC, id DESC
@@ -291,119 +258,8 @@ async function loadConnectionRecord(
     .first<StoredIntegrationRow>();
 }
 
-function isNangoBackedConnection(record: StoredIntegrationRow): boolean {
-  return Boolean(record.nango_connection_id && record.nango_provider_config_key);
-}
-
-function isPipedreamBackedConnection(record: StoredIntegrationRow): boolean {
-  return record.auth_provider === "pipedream" || Boolean(record.pipedream_account_id);
-}
-
 function isComposioBackedConnection(record: StoredIntegrationRow): boolean {
   return record.auth_provider === "composio" || Boolean(record.composio_connected_account_id);
-}
-
-function buildNeedsReauthMessageFromNango(
-  integration: string,
-  detail?: string | null,
-): string {
-  const providerName = getOAuthProviderDisplayName(integration);
-  const reason = safeTrim(detail);
-
-  if (reason) {
-    return `${providerName} needs to be reconnected in Nango. ${reason}`;
-  }
-
-  return `${providerName} needs to be reconnected in Nango before it can be used again.`;
-}
-
-async function markLegacyOAuthConnectionNeedsReauth(
-  env: CredentialBridgeEnv,
-  record: StoredIntegrationRow,
-  integration: string,
-): Promise<never> {
-  const message = `${getOAuthProviderDisplayName(integration)} must be reconnected through the Nango-managed flow.`;
-  await markConnectionNeedsReauth(env, record.id, message);
-  throw new Error(buildNeedsReauthMessageFromNango(integration, message));
-}
-
-async function markDeprecatedLocalConnectionNeedsReauth(
-  env: CredentialBridgeEnv,
-  record: StoredIntegrationRow,
-  integration: string,
-): Promise<never> {
-  const message = `${getOAuthProviderDisplayName(integration)} must be reconnected through a hosted provider flow. Manual credential connections are no longer supported.`;
-  await markConnectionNeedsReauth(env, record.id, message);
-  throw new Error(buildNeedsReauthMessage(integration, message));
-}
-
-async function fetchNangoConnection(
-  env: CredentialBridgeEnv,
-  integration: string,
-  record: StoredIntegrationRow,
-  options: { forceRefresh?: boolean } = {},
-): Promise<Record<string, string>> {
-  const nangoConnectionId = safeTrim(record.nango_connection_id);
-  const providerConfigKey = safeTrim(record.nango_provider_config_key);
-  const config = getNangoConfig(env);
-
-  if (!nangoConnectionId || !providerConfigKey || !config) {
-    throw new Error(`Nango is not configured for ${integration}.`);
-  }
-
-  const params = new URLSearchParams({
-    provider_config_key: providerConfigKey,
-    refresh_token: "true",
-  });
-
-  if (options.forceRefresh) {
-    params.set("force_refresh", "true");
-  }
-
-  const response = await fetch(
-    `${config.baseUrl}/connection/${encodeURIComponent(nangoConnectionId)}?${params.toString()}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${config.secretKey}`,
-        Accept: "application/json",
-      },
-    },
-  );
-
-  const rawPayload = (await response.json().catch(() => null)) as unknown;
-
-  if (!response.ok) {
-    const payloadRecord = isRecordObject(rawPayload) ? rawPayload : null;
-    const errorRecord = payloadRecord && isRecordObject(payloadRecord.error) ? payloadRecord.error : null;
-    const detail =
-      typeof errorRecord?.message === "string"
-        ? errorRecord.message
-        : typeof payloadRecord?.message === "string"
-          ? payloadRecord.message
-          : `${response.status} ${response.statusText}`;
-
-    if (response.status >= 400 && response.status < 500) {
-      await markConnectionNeedsReauth(
-        env,
-        record.id,
-        buildNeedsReauthMessageFromNango(integration, detail),
-      );
-      throw new Error(buildNeedsReauthMessageFromNango(integration, detail));
-    }
-
-    throw new Error(`Failed to fetch Nango connection for ${integration}. ${detail}`);
-  }
-
-  const connection = rawPayload as NangoConnectionResponse;
-  const credentials = mapNangoConnectionToClawLinkCredentials(integration, connection);
-
-  if (!safeTrim(credentials.accessToken) && !safeTrim(credentials.access_token)) {
-    throw new Error(`Nango did not return an access token for ${integration}.`);
-  }
-
-  await persistCredentials(env, record.id, credentials);
-  return credentials;
 }
 
 export async function loadCredentialsForIntegration(
@@ -435,14 +291,10 @@ export async function loadConnectionCredentialsForIntegration(
   }
 
   if (record.auth_state === "needs_reauth") {
-    throw new Error(
-      isOAuthIntegration(integration)
-        ? buildNeedsReauthMessageFromNango(integration, record.auth_error)
-        : buildNeedsReauthMessage(integration, record.auth_error),
-    );
+    throw new Error(buildNeedsReauthMessage(integration, record.auth_error));
   }
 
-  if (isPipedreamBackedConnection(record) || isComposioBackedConnection(record)) {
+  if (isComposioBackedConnection(record)) {
     const cached = await loadCachedCredentials(env, record.id);
 
     if (cached) {
@@ -468,19 +320,9 @@ export async function loadConnectionCredentialsForIntegration(
     };
   }
 
-  if (isOAuthIntegration(integration)) {
-    if (!isNangoBackedConnection(record)) {
-      await markLegacyOAuthConnectionNeedsReauth(env, record, integration);
-    }
-
-    return {
-      connectionId: record.id,
-      credentials: await fetchNangoConnection(env, integration, record),
-    };
-  }
-
-  await markDeprecatedLocalConnectionNeedsReauth(env, record, integration);
-  throw new Error("Unreachable");
+  const message = `${getOAuthProviderDisplayName(integration)} must be reconnected through ClawLink's hosted Composio flow.`;
+  await markConnectionNeedsReauth(env, record.id, message);
+  throw new Error(buildNeedsReauthMessage(integration, message));
 }
 
 export async function refreshCredentialsForIntegration(
@@ -496,14 +338,10 @@ export async function refreshCredentialsForIntegration(
   }
 
   if (record.auth_state === "needs_reauth") {
-    throw new Error(
-      isOAuthIntegration(integration)
-        ? buildNeedsReauthMessageFromNango(integration, record.auth_error)
-        : buildNeedsReauthMessage(integration, record.auth_error),
-    );
+    throw new Error(buildNeedsReauthMessage(integration, record.auth_error));
   }
 
-  if (isPipedreamBackedConnection(record) || isComposioBackedConnection(record)) {
+  if (isComposioBackedConnection(record)) {
     if (!record.credentials_encrypted) {
       throw new Error(`No credentials found for ${integration}. Please connect it first.`);
     }
@@ -520,23 +358,9 @@ export async function refreshCredentialsForIntegration(
     };
   }
 
-  if (isOAuthIntegration(integration)) {
-    if (!isNangoBackedConnection(record)) {
-      await markLegacyOAuthConnectionNeedsReauth(env, record, integration);
-    }
-
-    const credentials = await fetchNangoConnection(env, integration, record, {
-      forceRefresh: true,
-    });
-
-    return {
-      connectionId: record.id,
-      credentials,
-    };
-  }
-
-  await markDeprecatedLocalConnectionNeedsReauth(env, record, integration);
-  throw new Error("Unreachable");
+  const message = `${getOAuthProviderDisplayName(integration)} must be reconnected through ClawLink's hosted Composio flow.`;
+  await markConnectionNeedsReauth(env, record.id, message);
+  throw new Error(buildNeedsReauthMessage(integration, message));
 }
 
 export async function markConnectionNeedsReauthForIntegration(

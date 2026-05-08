@@ -70,20 +70,14 @@ function filterConnectionsForTool(
   tool: IntegrationTool,
   connections: IntegrationConnectionRecord[],
 ): IntegrationConnectionRecord[] {
-  if (tool.execution.kind !== "pipedream_action") {
-    if (tool.execution.kind !== "composio_tool") {
-      return connections;
-    }
-
-    return connections.filter(
-      (connection) =>
-        connection.authBackend === "composio" &&
-        Boolean(connection.composioConnectedAccountId),
-    );
+  if (tool.execution.kind !== "composio_tool") {
+    return connections;
   }
 
   return connections.filter(
-    (connection) => connection.authBackend === "pipedream" && Boolean(connection.pipedreamAccountId),
+    (connection) =>
+      connection.authBackend === "composio" &&
+      Boolean(connection.composioConnectedAccountId),
   );
 }
 

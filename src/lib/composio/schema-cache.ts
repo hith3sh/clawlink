@@ -5,25 +5,133 @@
  * This module lazily fetches schemas from Composio's API per-toolkit and
  * caches them in Cloudflare KV (the shared CREDENTIALS namespace).
  *
- * Cache key format: `composio-schema:<integrationSlug>`
+ * Cache key format: `composio-schema:<integrationSlug>:<toolkitVersion>`
  * TTL: 24 hours (schemas rarely change between toolkit version bumps)
  */
 
-import { fetchComposioToolSchemas } from "./backend-client";
+import { fetchComposioToolSchemas, getComposioToolkitVersion } from "./backend-client";
 
 const CACHE_TTL_SECONDS = 86_400; // 24 hours
+const STALE_AFTER_SECONDS = 21_600; // 6 hours
 const CACHE_KEY_PREFIX = "composio-schema:";
+
+interface SchemaCacheEntry {
+  fetchedAt: number;
+  schemas: Map<string, Record<string, unknown>>;
+}
+
+interface SerializedSchemaCacheEntry {
+  fetchedAt: number;
+  schemas: Record<string, Record<string, unknown>>;
+}
 
 export interface KvNamespaceLike {
   get(key: string, type?: "text"): Promise<string | null>;
   put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
 }
 
-/** In-memory per-request cache so we don't hit KV multiple times in one request. */
-const memoryCache = new Map<string, Map<string, Record<string, unknown>>>();
+/** In-memory process cache so we don't hit KV repeatedly between nearby requests. */
+const memoryCache = new Map<string, SchemaCacheEntry>();
+const refreshInFlight = new Map<string, Promise<Map<string, Record<string, unknown>>>>();
 
-function cacheKey(integrationSlug: string): string {
-  return `${CACHE_KEY_PREFIX}${integrationSlug}`;
+function cacheKey(
+  env: Record<string, unknown> | undefined,
+  integrationSlug: string,
+): string {
+  return `${CACHE_KEY_PREFIX}${integrationSlug}:${getComposioToolkitVersion(env, integrationSlug)}`;
+}
+
+function nowMs(): number {
+  return Date.now();
+}
+
+function isStale(fetchedAt: number): boolean {
+  return nowMs() - fetchedAt >= STALE_AFTER_SECONDS * 1000;
+}
+
+function serializeCacheEntry(entry: SchemaCacheEntry): string {
+  return JSON.stringify({
+    fetchedAt: entry.fetchedAt,
+    schemas: Object.fromEntries(entry.schemas),
+  } satisfies SerializedSchemaCacheEntry);
+}
+
+function parseCacheEntry(stored: string): SchemaCacheEntry {
+  const parsed = JSON.parse(stored) as
+    | SerializedSchemaCacheEntry
+    | Record<string, Record<string, unknown>>;
+
+  if (
+    parsed &&
+    typeof parsed === "object" &&
+    "schemas" in parsed &&
+    parsed.schemas &&
+    typeof parsed.schemas === "object" &&
+    typeof parsed.fetchedAt === "number"
+  ) {
+    return {
+      fetchedAt: parsed.fetchedAt,
+      schemas: new Map(
+        Object.entries(parsed.schemas as Record<string, Record<string, unknown>>),
+      ),
+    };
+  }
+
+  // Backward compatibility for older raw-schema KV entries. Serve them immediately
+  // and force a background refresh because they lack a fetch timestamp.
+  return {
+    fetchedAt: 0,
+    schemas: new Map(Object.entries(parsed as Record<string, Record<string, unknown>>)),
+  };
+}
+
+async function refreshSchemas(
+  kv: KvNamespaceLike | null | undefined,
+  env: Record<string, unknown> | undefined,
+  integrationSlug: string,
+  key: string,
+): Promise<Map<string, Record<string, unknown>>> {
+  const existing = refreshInFlight.get(key);
+  if (existing) {
+    return existing;
+  }
+
+  const refreshPromise = (async () => {
+    const schemas = await fetchComposioToolSchemas(env, integrationSlug);
+    const entry: SchemaCacheEntry = {
+      fetchedAt: nowMs(),
+      schemas,
+    };
+
+    memoryCache.set(key, entry);
+
+    if (kv) {
+      await kv.put(key, serializeCacheEntry(entry), {
+        expirationTtl: CACHE_TTL_SECONDS,
+      });
+    }
+
+    return schemas;
+  })();
+
+  refreshInFlight.set(key, refreshPromise);
+
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshInFlight.delete(key);
+  }
+}
+
+function triggerBackgroundRefresh(
+  kv: KvNamespaceLike | null | undefined,
+  env: Record<string, unknown> | undefined,
+  integrationSlug: string,
+  key: string,
+): void {
+  void refreshSchemas(kv, env, integrationSlug, key).catch(() => {
+    // Best-effort refresh only; stale cache remains usable until TTL expiry.
+  });
 }
 
 /**
@@ -41,21 +149,31 @@ export async function resolveToolSchemas(
   env: Record<string, unknown> | undefined,
   integrationSlug: string,
 ): Promise<Map<string, Record<string, unknown>>> {
-  // 1. Memory cache (avoids repeated KV reads within the same request)
-  const memoryCached = memoryCache.get(integrationSlug);
+  const key = cacheKey(env, integrationSlug);
+
+  // 1. Memory cache
+  const memoryCached = memoryCache.get(key);
   if (memoryCached) {
-    return memoryCached;
+    if (isStale(memoryCached.fetchedAt)) {
+      triggerBackgroundRefresh(kv, env, integrationSlug, key);
+    }
+
+    return memoryCached.schemas;
   }
 
   // 2. KV cache
   if (kv) {
     try {
-      const stored = await kv.get(cacheKey(integrationSlug), "text");
+      const stored = await kv.get(key, "text");
       if (stored) {
-        const parsed = JSON.parse(stored) as Record<string, Record<string, unknown>>;
-        const map = new Map(Object.entries(parsed));
-        memoryCache.set(integrationSlug, map);
-        return map;
+        const entry = parseCacheEntry(stored);
+        memoryCache.set(key, entry);
+
+        if (isStale(entry.fetchedAt)) {
+          triggerBackgroundRefresh(kv, env, integrationSlug, key);
+        }
+
+        return entry.schemas;
       }
     } catch {
       // KV read failed or JSON was corrupt — fall through to API fetch.
@@ -63,23 +181,7 @@ export async function resolveToolSchemas(
   }
 
   // 3. Fetch from Composio API
-  const schemas = await fetchComposioToolSchemas(env, integrationSlug);
-
-  // Write back to memory cache immediately.
-  memoryCache.set(integrationSlug, schemas);
-
-  // Write back to KV asynchronously (best-effort).
-  if (kv) {
-    const serialized = JSON.stringify(Object.fromEntries(schemas));
-    // Fire-and-forget — we don't block the response on KV write.
-    kv.put(cacheKey(integrationSlug), serialized, {
-      expirationTtl: CACHE_TTL_SECONDS,
-    }).catch(() => {
-      // Swallow KV write errors silently.
-    });
-  }
-
-  return schemas;
+  return refreshSchemas(kv, env, integrationSlug, key);
 }
 
 /**
@@ -102,4 +204,5 @@ export function isStubSchema(schema: Record<string, unknown>): boolean {
  */
 export function clearSchemaMemoryCache(): void {
   memoryCache.clear();
+  refreshInFlight.clear();
 }

@@ -55,11 +55,7 @@ function getAddSearchFromParams(searchParams: SearchParamReader): string {
 function hasHostedConnect(integration: Integration): boolean {
   return (
     integration.dashboardStatus === "available" &&
-    (
-      integration.setupMode === "oauth" ||
-      integration.setupMode === "pipedream" ||
-      integration.setupMode === "composio"
-    )
+    integration.setupMode === "composio"
   );
 }
 

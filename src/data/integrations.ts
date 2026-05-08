@@ -1,4 +1,4 @@
-export type IntegrationSetupMode = "oauth" | "pipedream" | "composio" | "coming_soon";
+export type IntegrationSetupMode = "oauth" | "composio" | "coming_soon";
 export type IntegrationDashboardStatus = "available" | "coming-soon";
 export type IntegrationRuntimeStatus = "live" | "planned";
 

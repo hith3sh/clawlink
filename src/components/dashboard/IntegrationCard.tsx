@@ -32,11 +32,7 @@ export function IntegrationCard({
   });
   const hostedConnectEnabled =
     integration.dashboardStatus === "available" &&
-    (
-      integration.setupMode === "oauth" ||
-      integration.setupMode === "pipedream" ||
-      integration.setupMode === "composio"
-    );
+    integration.setupMode === "composio";
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

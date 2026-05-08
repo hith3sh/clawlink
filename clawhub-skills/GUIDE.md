@@ -34,17 +34,13 @@ Because tools are discovered dynamically, **skills do NOT need to list specific 
 
 ## Backend and schema context
 
-ClawLink can expose tools from different backends depending on the provider and connection:
-
-- Pipedream-backed connections use generated Pipedream action manifests with imported LLM-facing schemas, overrides, safe defaults, and hidden internal props.
-- Composio-backed connections use generated Composio manifests. Static manifests may contain empty schema stubs; schemas are hydrated at runtime from Composio and cached in KV.
-- Some legacy Nango/custom paths may still exist, but new skill content should not care which backend is active.
+ClawLink exposes tools via Composio-backed connections using generated Composio manifests. Static manifests may contain empty schema stubs; schemas are hydrated at runtime from Composio and cached in KV.
 
 For a skill, this means:
 
 - Always treat `clawlink_list_tools`, `clawlink_search_tools`, and `clawlink_describe_tool` as the source of truth.
 - Never hardcode provider tool names, argument schemas, required fields, or backend assumptions.
-- Do not copy schemas out of generated manifests into the skill. Pipedream imports and Composio schema hydration can change independently of the skill text.
+- Do not copy schemas out of generated manifests into the skill. Composio schema hydration can change independently of the skill text.
 
 ## File structure
 
@@ -111,7 +107,7 @@ The resulting device credential is stored locally in OpenClaw's plugin config an
 
 ### Connecting {{DISPLAY_NAME}}
 
-Tell the user to open https://claw-link.dev/dashboard?add={{INTEGRATION_SLUG}} and connect {{DISPLAY_NAME}} there. The page opens the add-connection panel filtered to {{DISPLAY_NAME}}. ClawLink's hosted page runs whichever provider flow is needed ({{AUTH_METHOD}}) — the user {{AUTH_USER_ACTION}}. When they confirm it is done, call `clawlink_list_integrations` to verify, then call `clawlink_list_tools` with integration `{{INTEGRATION_SLUG}}`.
+Tell the user to open https://claw-link.dev/dashboard?add={{INTEGRATION_SLUG}} and connect {{DISPLAY_NAME}} there. The page opens the add-connection panel filtered to {{DISPLAY_NAME}}. ClawLink's hosted page runs the Composio provider flow — the user clicks through the login and grant screen. When they confirm it is done, call `clawlink_list_integrations` to verify, then call `clawlink_list_tools` with integration `{{INTEGRATION_SLUG}}`.
 
 ## Using {{DISPLAY_NAME}} tools
 
@@ -193,7 +189,7 @@ Before publishing, verify:
 - [ ] **No stale env requirements** — do not declare `CLAWLINK_API_KEY` or any provider credential in frontmatter. Current setup uses browser pairing, not a user-pasted key.
 - [ ] **No npm promotion** — the user-facing install command is `openclaw plugins install clawhub:clawlink-plugin`.
 - [ ] **No obfuscated shell commands** — ClawHub hard-blocks skills with `curl | sh`, base64-decoded payloads, or obfuscated install commands.
-- [ ] **No hardcoded tool names** — list capabilities in plain English. Tool names and schemas can change between Pipedream manifest imports, override updates, and Composio schema hydration.
+- [ ] **No hardcoded tool names** — list capabilities in plain English. Tool names and schemas can change between Composio schema hydration updates.
 - [ ] **No hardcoded schemas** — the skill must use `clawlink_describe_tool` for current argument shape.
 - [ ] **No secrets in the file** — never include API keys, tokens, provider credentials, or device credentials in `SKILL.md`.
 - [ ] **Dashboard connection flow** — the skill directs new app connections to the filtered dashboard URL (`https://claw-link.dev/dashboard?add=<slug>`) instead of starting connection sessions from chat.

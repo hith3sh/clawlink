@@ -12,7 +12,6 @@ import "./integrations";
 
 import { executeComposioTool } from "../src/lib/composio/tool-executor";
 import { hydrateComposioToolSchemas } from "../src/lib/composio/manifest-registry";
-import { executePipedreamActionTool } from "../src/lib/pipedream/action-executor";
 import {
   buildValidationHint,
   prepareToolArguments,
@@ -47,14 +46,6 @@ export interface Env {
   CREDENTIAL_ENCRYPTION_KEY?: string;
   CLERK_PUBLISHABLE_KEY?: string;
   CLERK_JWT_KEY?: string;
-  NANGO_BASE_URL?: string;
-  NANGO_SECRET_KEY?: string;
-  NANGO_PROVIDER_CONFIG_KEYS?: string;
-  PIPEDREAM_BASE_URL?: string;
-  PIPEDREAM_CLIENT_ID?: string;
-  PIPEDREAM_CLIENT_SECRET?: string;
-  PIPEDREAM_PROJECT_ID?: string;
-  PIPEDREAM_ENVIRONMENT?: string;
   COMPOSIO_API_KEY?: string;
   COMPOSIO_BASE_URL?: string;
   COMPOSIO_TOOLKIT_MAP?: string;
@@ -117,6 +108,32 @@ function safeJsonStringify(value: unknown): string {
   }
 }
 
+const MAX_TRANSIENT_RETRIES = 2;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function shouldRetryTransientExecution(error: unknown): boolean {
+  const classified = classifyIntegrationError(error);
+
+  if (!classified.retryable) {
+    return false;
+  }
+
+  return (
+    classified.type === "rate_limit" ||
+    classified.type === "provider" ||
+    classified.type === "network"
+  );
+}
+
+function getTransientRetryDelayMs(attempt: number, error: unknown): number {
+  const classified = classifyIntegrationError(error);
+  const baseDelayMs = classified.type === "rate_limit" ? 1000 : 500;
+  return baseDelayMs * 2 ** (attempt - 1);
+}
+
 function getClawLinkAppUrl(env: Env): string {
   const configured =
     typeof env.CLAWLINK_APP_URL === "string" && env.CLAWLINK_APP_URL.trim().length > 0
@@ -131,84 +148,13 @@ interface WorkerConnectionRow {
   is_default: number;
   auth_state: string;
   auth_provider: string | null;
-  pipedream_account_id: string | null;
   composio_connected_account_id: string | null;
   updated_at: string | null;
   created_at: string;
 }
 
-function isPipedreamBackedConnection(row: WorkerConnectionRow): boolean {
-  return row.auth_provider === "pipedream" || Boolean(row.pipedream_account_id);
-}
-
 function isComposioBackedConnection(row: WorkerConnectionRow): boolean {
   return row.auth_provider === "composio" || Boolean(row.composio_connected_account_id);
-}
-
-async function resolvePreferredPipedreamConnectionId(
-  env: Env,
-  userId: string,
-  integration: string,
-  preferredConnectionId?: number,
-): Promise<number | null> {
-  if (preferredConnectionId) {
-    const row = await env.DB
-      .prepare(
-        `
-          SELECT id, is_default, auth_state, auth_provider, pipedream_account_id,
-                 composio_connected_account_id, updated_at, created_at
-          FROM user_integrations
-          WHERE id = ? AND user_id = ? AND integration = ?
-          LIMIT 1
-        `,
-      )
-      .bind(preferredConnectionId, userId, integration)
-      .first<WorkerConnectionRow>();
-
-    if (!row) {
-      return null;
-    }
-
-    return isPipedreamBackedConnection(row) ? row.id : null;
-  }
-
-  const result = await env.DB
-    .prepare(
-      `
-        SELECT id, is_default, auth_state, auth_provider, pipedream_account_id,
-               composio_connected_account_id, updated_at, created_at
-        FROM user_integrations
-        WHERE user_id = ? AND integration = ?
-        ORDER BY is_default DESC, updated_at DESC, created_at DESC, id DESC
-      `,
-    )
-    .bind(userId, integration)
-    .all<WorkerConnectionRow>();
-
-  const rows = result.results ?? [];
-
-  const activeDefault =
-    rows.find((row) => row.is_default && row.auth_state === "active" && isPipedreamBackedConnection(row)) ??
-    null;
-
-  if (activeDefault) {
-    return activeDefault.id;
-  }
-
-  const latestActive =
-    rows.find((row) => row.auth_state === "active" && isPipedreamBackedConnection(row)) ??
-    null;
-
-  if (latestActive) {
-    return latestActive.id;
-  }
-
-  const fallback =
-    rows.find((row) => row.is_default && isPipedreamBackedConnection(row)) ??
-    rows.find((row) => isPipedreamBackedConnection(row)) ??
-    null;
-
-  return fallback?.id ?? null;
 }
 
 async function resolvePreferredComposioConnectionId(
@@ -221,7 +167,7 @@ async function resolvePreferredComposioConnectionId(
     const row = await env.DB
       .prepare(
         `
-          SELECT id, is_default, auth_state, auth_provider, pipedream_account_id,
+          SELECT id, is_default, auth_state, auth_provider,
                  composio_connected_account_id, updated_at, created_at
           FROM user_integrations
           WHERE id = ? AND user_id = ? AND integration = ?
@@ -241,7 +187,7 @@ async function resolvePreferredComposioConnectionId(
   const result = await env.DB
     .prepare(
       `
-        SELECT id, is_default, auth_state, auth_provider, pipedream_account_id,
+        SELECT id, is_default, auth_state, auth_provider,
                composio_connected_account_id, updated_at, created_at
         FROM user_integrations
         WHERE user_id = ? AND integration = ?
@@ -431,20 +377,7 @@ async function handleToolCall(
       // Credentials passed in request (already encrypted per-session)
       credentials = params.credentials;
     } else {
-      if (tool.execution.kind === "pipedream_action") {
-        resolvedConnectionId = await resolvePreferredPipedreamConnectionId(
-          env,
-          internalUserId,
-          integration,
-          connectionId,
-        );
-
-        if (!resolvedConnectionId) {
-          throw new Error(
-            `No Pipedream-backed connection found for ${integration}. Please reconnect it through ClawLink.`,
-          );
-        }
-      } else if (tool.execution.kind === "composio_tool") {
+      if (tool.execution.kind === "composio_tool") {
         resolvedConnectionId = await resolvePreferredComposioConnectionId(
           env,
           internalUserId,
@@ -470,17 +403,6 @@ async function handleToolCall(
     const runTool = async (
       current: Record<string, string>,
     ): Promise<unknown> => {
-      if (tool.execution.kind === "pipedream_action") {
-        const execution = await executePipedreamActionTool(tool, toolArgs, {
-          requestId,
-          externalUserId: internalUserId,
-          credentials: current,
-          env: env as Record<string, unknown>,
-        });
-        providerRequestId = execution.providerRequestId;
-        return execution.data;
-      }
-
       if (tool.execution.kind === "composio_tool") {
         const execution = await executeComposioTool(tool, toolArgs, {
           requestId,
@@ -500,8 +422,27 @@ async function handleToolCall(
       });
     };
 
+    const runToolWithRetries = async (
+      current: Record<string, string>,
+    ): Promise<unknown> => {
+      let attempt = 0;
+
+      while (true) {
+        try {
+          return await runTool(current);
+        } catch (error) {
+          if (attempt >= MAX_TRANSIENT_RETRIES || !shouldRetryTransientExecution(error)) {
+            throw error;
+          }
+
+          attempt += 1;
+          await sleep(getTransientRetryDelayMs(attempt, error));
+        }
+      }
+    };
+
     try {
-      const result = await runTool(currentCredentials);
+      const result = await runToolWithRetries(currentCredentials);
 
       const latencyMs = Date.now() - startedAt;
 
@@ -557,7 +498,7 @@ async function handleToolCall(
       currentCredentials = refreshed.credentials;
 
       try {
-        const result = await runTool(currentCredentials);
+        const result = await runToolWithRetries(currentCredentials);
 
         const latencyMs = Date.now() - startedAt;
 

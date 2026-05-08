@@ -9,23 +9,21 @@ This doc is the playbook. When we add a new integration, we follow this end-to-e
 Five layers, in order. An integration is not done until all five pass.
 
 1. **Connect flow** — `claw-link.dev/connect/<slug>` opens, the user finishes the hosted flow, the connection lands as `auth_state = active`. Already covered by the manual flow in `docs/adding-an-integration.md`.
-2. **Tool listing** — `clawlink_list_tools` returns the integration's tools for that user. If the registry doesn't include them (wrong `auth_backend`, manifest not registered, or the Postiz custom handler missing), nothing else matters.
+2. **Tool listing** — `clawlink_list_tools` returns the integration's tools for that user. If the registry doesn't include them (manifest not registered, or the Postiz custom handler missing), nothing else matters.
 3. **Tool describe** — `clawlink_describe_tool` returns the schema. Confirms argument shape is what the model will actually see.
-4. **Read call** — A safe, idempotent read tool actually executes against the provider and returns real data. This is where most regressions show up: missing `pipedreamAccountId` plumbing, wrong slug→app mapping, hidden Pipedream props, scope gaps.
+4. **Read call** — A safe, idempotent read tool actually executes against the provider and returns real data. This catches missing credential plumbing, scope gaps, or schema mismatches.
 5. **Write call (preview or sandboxed)** — Either a `clawlink_preview_tool` call that returns the request payload without side effects, or a low-risk write into a test resource (a draft, a test list, a dummy spreadsheet). This catches issues that don't show up on read paths (write-only scopes, validators that reject empty bodies).
 
 ## How we test today
 
-Three scripts already exist, each covers a different layer:
+Scripts already exist, each covering a different layer:
 
 | Script | What it covers | Talks to live provider? |
 |---|---|---|
-| `npm run audit:manifests -- --strict` | Static check of generated manifests | No |
-| `npm run validate:pipedream-actions -- --integration <slug> --strict` | Runs each manifest action against Pipedream with `safeDefaults` | Yes (Pipedream only) |
 | `npm run test:openclaw-plugin-contract` | Verifies the OpenClaw plugin forwards args correctly | No (mocked fetch) |
 | `npm run smoke:openclaw-plugin -- --preset <preset>` | Loads the actual plugin code, calls live ClawLink API with the user's key, ClawLink calls the live provider | **Yes — full path** |
 
-Only the smoke runner exercises the actual call chain OpenClaw uses in production. It's the right tool. The problem is preset coverage — `scripts/smoke-openclaw-plugin-live.mjs` currently hardcodes two Gmail presets and rejects everything else.
+Only the smoke runner exercises the actual call chain OpenClaw uses in production. It's the right tool. The problem is preset coverage.
 
 ## The wrapper exists and now loads presets
 
@@ -73,7 +71,7 @@ Rules for preset files:
 - **`read` steps must be truly idempotent** — `get_current_user`, `list_*`, `find_*` with `maxResults: 1`. Never anything that touches state.
 - **`preview` steps use `clawlink_preview_tool`**, not `clawlink_call_tool`. This is the contract the OpenClaw plugin already supports for showing the request without executing it.
 - **`write` steps default off**. They run only with `--write` and should target test resources (a folder named `clawlink-smoke`, a list named `ClawLink Test`, etc.). Each step states its cleanup expectation.
-- **Manifest-backed integrations and the Postiz custom handler use the same preset format** — the runner just calls the plugin, which routes appropriately.
+- **Composio integrations and the Postiz custom handler use the same preset format** — the runner just calls the plugin, which routes appropriately.
 
 ### Runner changes
 
@@ -114,19 +112,18 @@ Exit non-zero if any step fails so it can gate a deploy.
 When adding a new integration, do these in order. Don't skip steps.
 
 1. **Connect flow works manually.**
-   - Catalog entry exists in `src/data/integrations.ts` with the right `setupMode`.
-   - For Pipedream: slug is in `PIPEDREAM_CONNECT_SLUGS` in `wrangler.toml`.
-   - For Pipedream with a hyphen in the slug, or a non-matching app name: slug is in `PIPEDREAM_APP_MAP` in `wrangler.toml` (see CLAUDE.md "Pipedream slug → app name mapping").
+   - Catalog entry exists in `src/data/integrations.ts` with `setupMode: "composio"`.
+   - Slug is in `COMPOSIO_ENABLED_SLUGS`, `COMPOSIO_TOOLKIT_MAP`, and `COMPOSIO_TOOLKIT_VERSION_MAP` in `wrangler.toml`.
    - Open `claw-link.dev/connect/<slug>` and finish the flow as a test user.
 2. **Manifest is wired in.**
-   - Pipedream manifest path: `src/generated/pipedream-manifests/<slug>.generated.ts` exists, `index.ts` exports it, `npm run audit:manifests -- --strict` passes, `npm run validate:pipedream-actions -- --integration <slug> --strict` passes.
+   - Composio manifest path: `src/generated/composio-manifests/<slug>.generated.ts` exists and `index.ts` exports it.
    - Do not add a new `worker/integrations/<slug>.ts` handler. `postiz` is the only current custom-handler exception.
 3. **Plugin contract test passes.** `npm run test:openclaw-plugin-contract`.
 4. **Add a smoke preset.** Create `scripts/smoke-presets/<slug>.mjs` with at least one `read` step. Add a `preview` step if the integration has any write tool. The preset must reflect the real tool names the plugin will resolve.
 5. **Smoke read passes.** `npm run smoke:openclaw-plugin -- --integration <slug>` with a real connection on the test account. This is the gate that proves OpenClaw → ClawLink → provider works for this integration.
 6. **Smoke preview passes** (if the integration has writes). `--integration <slug> --preview`.
 7. **Update the per-integration coverage table** in this doc (below).
-8. **Update CLAUDE.md** if the integration introduced anything other agents need to know (a new auth backend, a non-obvious app name, a quirky scope requirement).
+8. **Update CLAUDE.md** if the integration introduced anything other agents need to know (a non-obvious toolkit name, a quirky scope requirement).
 
 ## Per-integration coverage status
 
@@ -136,37 +133,36 @@ Statuses: `pass`, `fail`, `n/a` (no such tool kind for this integration), `untes
 
 | Integration | Auth | Manifest | Connect | List | Read | Preview | Last verified |
 |---|---|---|---|---|---|---|---|
-| gmail | pipedream | yes | pass | pass | pass | pass | 2026-04-29 |
-| google-sheets | pipedream | **no** | n/a | n/a | n/a | n/a | — |
-| slack | pipedream | **no** | n/a | n/a | n/a | n/a | — |
-| google-calendar | pipedream | yes | untested | untested | untested | untested | — |
-| google-drive | pipedream | yes | untested | untested | untested | untested | — |
-| google-docs | pipedream | yes | pass | pass | **fail** (missing `GOOGLE_DOCS_DOCUMENT_ID`) | untested | 2026-04-29 |
-| google-analytics | pipedream | yes | untested | untested | untested | untested | — |
-| google-search-console | pipedream | yes | pass | pass | **fail** (missing `GOOGLE_SEARCH_CONSOLE_SITE_URL`) | untested | 2026-04-29 |
-| google-ads | pipedream | yes | untested | untested | untested | untested | — |
-| notion | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
-| outlook | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
-| onedrive | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
-| facebook | pipedream | yes | untested | untested | untested | untested | — |
-| linkedin | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
-| youtube | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
-| mailchimp | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
-| klaviyo | pipedream | yes | untested | untested | untested | untested | — |
-| instantly | pipedream | yes | untested | untested | untested | untested | — |
-| postiz | pipedream | yes | untested | untested | untested | untested | — |
-| hubspot | pipedream | yes | untested | untested | untested | untested | — |
-| salesforce | pipedream | yes | untested | untested | untested | untested | — |
-| apollo | pipedream | yes | untested | untested | untested | untested | — |
-| airtable | pipedream | yes | untested | untested | untested | untested | — |
-| clickup | pipedream | yes | untested | untested | untested | untested | — |
-| calendly | pipedream | yes | untested | untested | untested | untested | — |
-| xero | pipedream | yes | pass | pass | pass | untested | 2026-04-29 |
+| gmail | composio | yes | pass | pass | pass | pass | 2026-04-29 |
+| google-sheets | composio | **no** | n/a | n/a | n/a | n/a | — |
+| slack | composio | **no** | n/a | n/a | n/a | n/a | — |
+| google-calendar | composio | yes | untested | untested | untested | untested | — |
+| google-drive | composio | yes | untested | untested | untested | untested | — |
+| google-docs | composio | yes | pass | pass | **fail** (missing `GOOGLE_DOCS_DOCUMENT_ID`) | untested | 2026-04-29 |
+| google-analytics | composio | yes | untested | untested | untested | untested | — |
+| google-search-console | composio | yes | pass | pass | **fail** (missing `GOOGLE_SEARCH_CONSOLE_SITE_URL`) | untested | 2026-04-29 |
+| google-ads | composio | yes | untested | untested | untested | untested | — |
+| notion | composio | yes | pass | pass | pass | untested | 2026-04-29 |
+| outlook | composio | yes | pass | pass | pass | untested | 2026-04-29 |
+| onedrive | composio | yes | pass | pass | pass | untested | 2026-04-29 |
+| facebook | composio | yes | untested | untested | untested | untested | — |
+| linkedin | composio | yes | pass | pass | pass | untested | 2026-04-29 |
+| youtube | composio | yes | pass | pass | pass | untested | 2026-04-29 |
+| mailchimp | composio | yes | pass | pass | pass | untested | 2026-04-29 |
+| klaviyo | composio | yes | untested | untested | untested | untested | — |
+| instantly | composio | yes | untested | untested | untested | untested | — |
+| postiz | composio | yes | untested | untested | untested | untested | — |
+| hubspot | composio | yes | untested | untested | untested | untested | — |
+| salesforce | composio | yes | untested | untested | untested | untested | — |
+| apollo | composio | yes | untested | untested | untested | untested | — |
+| airtable | composio | yes | untested | untested | untested | untested | — |
+| clickup | composio | yes | untested | untested | untested | untested | — |
+| calendly | composio | yes | untested | untested | untested | untested | — |
+| xero | composio | yes | pass | pass | pass | untested | 2026-04-29 |
 
 Known migration work right now:
-- **Custom handlers removed except Postiz** — manifest coverage and smoke presets are the source of truth for normal integrations.
-- **`google-sheets` and `slack`** — both have Pipedream connect config but no generated manifest, so they are marked coming soon and currently expose no tools. Import manifests before adding smoke presets or marking tool execution ready.
-- **`apollo`** — now uses the generated manifest path only; validate the manifest-backed tools before marking it ready.
+- **Custom handlers removed except Postiz** — Composio manifest coverage and smoke presets are the source of truth for normal integrations.
+- **`google-sheets` and `slack`** — both have Composio config but no generated manifest, so they are marked coming soon and currently expose no tools. Import manifests before adding smoke presets or marking tool execution ready.
 
 ## Implementation roadmap
 
@@ -174,9 +170,9 @@ This is what someone needs to do to get the runner to the shape this doc describ
 
 1. **Done:** refactor `scripts/smoke-openclaw-plugin-live.mjs` to load presets from `scripts/smoke-presets/*.mjs`.
 2. **Done:** add `--integration`, `--all`, and `--connected` modes with summary table output and non-zero exit on failure.
-3. **Done:** write smoke presets for current manifest-backed integrations and Postiz.
+3. **Done:** write smoke presets for current Composio-backed integrations and Postiz.
 4. **Run `--all` against the production worker once** with a fully-connected test account to fill in the coverage table.
-5. **Import `google-sheets` and `slack` manifests** before adding smoke presets or live verification for those integrations.
+5. **Import `google-sheets` and `slack` Composio manifests** before adding smoke presets or live verification for those integrations.
 6. **Add preview steps** for integrations whose writes are common and safely previewable.
 7. **Wire `--all` (read mode) into a pre-deploy check** — even just a manual command in the deploy runbook is fine to start. Add it to CI later.
 8. **Add this checklist to `CLAUDE.md` / `AGENTS.md`** so future agents follow it without being told.

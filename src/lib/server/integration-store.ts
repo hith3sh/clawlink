@@ -4,8 +4,6 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { ConnectionAuthState } from "@/lib/connection-status";
 import { deleteComposioConnectedAccount } from "@/lib/composio/backend-client";
-import { deleteNangoConnection } from "@/lib/server/nango";
-import { deletePipedreamAccount } from "@/lib/server/pipedream";
 
 export interface D1Statement {
   bind(...values: unknown[]): {
@@ -19,7 +17,7 @@ export interface D1LikeDatabase {
   prepare(query: string): D1Statement;
 }
 
-export type IntegrationAuthProvider = "clawlink" | "nango" | "pipedream" | "composio";
+export type IntegrationAuthProvider = "clawlink" | "composio";
 
 export interface UserRow {
   id: string;
@@ -40,9 +38,6 @@ interface StoredIntegrationRow {
   auth_state: ConnectionAuthState;
   auth_error: string | null;
   auth_provider: string;
-  nango_connection_id: string | null;
-  nango_provider_config_key: string | null;
-  pipedream_account_id: string | null;
   composio_connected_account_id: string | null;
   composio_auth_config_id: string | null;
   composio_toolkit: string | null;
@@ -67,10 +62,7 @@ export interface IntegrationConnectionRecord {
   isDefault: boolean;
   authState: ConnectionAuthState;
   authError: string | null;
-  authBackend: "local" | "nango" | "pipedream" | "composio";
-  nangoConnectionId: string | null;
-  nangoProviderConfigKey: string | null;
-  pipedreamAccountId: string | null;
+  authBackend: "local" | "composio";
   composioConnectedAccountId: string | null;
   composioAuthConfigId: string | null;
   composioToolkit: string | null;
@@ -102,31 +94,6 @@ export interface SaveIntegrationConnectionOptions {
   connectionId?: number;
   setAsDefault?: boolean;
   authProvider?: IntegrationAuthProvider;
-  nangoConnectionId?: string;
-  nangoProviderConfigKey?: string;
-}
-
-export interface SaveNangoIntegrationConnectionOptions {
-  mode?: ConnectionSaveMode;
-  connectionId?: number;
-  setAsDefault?: boolean;
-  providerConfigKey: string;
-  nangoConnectionId: string;
-  connectionLabel?: string | null;
-  accountLabel?: string | null;
-  externalAccountId?: string | null;
-  expiresAt?: string | null;
-}
-
-export interface SavePipedreamIntegrationConnectionOptions {
-  mode?: ConnectionSaveMode;
-  connectionId?: number;
-  setAsDefault?: boolean;
-  pipedreamAccountId: string;
-  connectionLabel?: string | null;
-  accountLabel?: string | null;
-  externalAccountId?: string | null;
-  expiresAt?: string | null;
 }
 
 export interface SaveComposioIntegrationConnectionOptions {
@@ -151,15 +118,7 @@ interface DerivedConnectionMetadata {
 
 function authProviderToBackend(
   authProvider: string | null | undefined,
-): "local" | "nango" | "pipedream" | "composio" {
-  if (authProvider === "nango") {
-    return "nango";
-  }
-
-  if (authProvider === "pipedream") {
-    return "pipedream";
-  }
-
+): "local" | "composio" {
   if (authProvider === "composio") {
     return "composio";
   }
@@ -187,6 +146,12 @@ export function getEnvBinding<T>(key: string): T | undefined {
   }
 
   return (process.env as Record<string, unknown>)[key] as T | undefined;
+}
+
+export function getRuntimeEnv(): Record<string, unknown> {
+  const context = getOptionalRequestContext();
+  const contextEnv = (context?.env as Record<string, unknown> | undefined) ?? {};
+  return { ...(process.env as Record<string, unknown>), ...contextEnv };
 }
 
 export function getDatabase(): D1LikeDatabase | undefined {
@@ -335,9 +300,6 @@ function mapConnection(row: StoredIntegrationRow): IntegrationConnectionRecord {
     authState: row.auth_state,
     authError: row.auth_error,
     authBackend: authProviderToBackend(row.auth_provider),
-    nangoConnectionId: row.nango_connection_id ?? null,
-    nangoProviderConfigKey: row.nango_provider_config_key ?? null,
-    pipedreamAccountId: row.pipedream_account_id ?? null,
     composioConnectedAccountId: row.composio_connected_account_id ?? null,
     composioAuthConfigId: row.composio_auth_config_id ?? null,
     composioToolkit: row.composio_toolkit ?? null,
@@ -378,26 +340,6 @@ async function encryptCredentials(credentials: Record<string, string>): Promise<
   combined.set(new Uint8Array(encrypted), iv.length);
 
   return encodeBase64(combined);
-}
-
-async function encryptNangoPlaceholderCredentials(params: {
-  providerConfigKey: string;
-  connectionId: string;
-}): Promise<string> {
-  return encryptCredentials({
-    managedBy: "nango",
-    providerConfigKey: params.providerConfigKey,
-    nangoConnectionId: params.connectionId,
-  });
-}
-
-async function encryptPipedreamPlaceholderCredentials(params: {
-  pipedreamAccountId: string;
-}): Promise<string> {
-  return encryptCredentials({
-    managedBy: "pipedream",
-    pipedreamAccountId: params.pipedreamAccountId,
-  });
 }
 
 async function encryptComposioPlaceholderCredentials(params: {
@@ -567,7 +509,6 @@ export async function getIntegrationConnectionByIdForUserId(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
                credentials_encrypted, is_default, auth_state, auth_error, auth_provider,
-               nango_connection_id, nango_provider_config_key, pipedream_account_id,
                composio_connected_account_id, composio_auth_config_id, composio_toolkit, expires_at,
                last_used_at, last_success_at, last_error_at, last_error_code, last_error_message,
                scope_snapshot_json, capabilities_json,
@@ -621,48 +562,6 @@ async function hasDefaultConnection(
     .first<{ id: number }>();
 
   return Boolean(row?.id);
-}
-
-async function findConnectionIdByNangoConnectionId(
-  db: D1LikeDatabase,
-  userId: string,
-  slug: string,
-  nangoConnectionId: string,
-): Promise<number | null> {
-  const row = await db
-    .prepare(
-      `
-        SELECT id
-        FROM user_integrations
-        WHERE user_id = ? AND integration = ? AND nango_connection_id = ?
-        LIMIT 1
-      `,
-    )
-    .bind(userId, slug, nangoConnectionId)
-    .first<{ id: number }>();
-
-  return row?.id ?? null;
-}
-
-async function findConnectionIdByPipedreamAccountId(
-  db: D1LikeDatabase,
-  userId: string,
-  slug: string,
-  pipedreamAccountId: string,
-): Promise<number | null> {
-  const row = await db
-    .prepare(
-      `
-        SELECT id
-        FROM user_integrations
-        WHERE user_id = ? AND integration = ? AND pipedream_account_id = ?
-        LIMIT 1
-      `,
-    )
-    .bind(userId, slug, pipedreamAccountId)
-    .first<{ id: number }>();
-
-  return row?.id ?? null;
 }
 
 async function findConnectionIdByComposioConnectedAccountId(
@@ -786,7 +685,6 @@ export async function listIntegrationConnectionsForUserId(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
                credentials_encrypted, is_default, auth_state, auth_error, auth_provider,
-               nango_connection_id, nango_provider_config_key, pipedream_account_id,
                composio_connected_account_id, composio_auth_config_id, composio_toolkit, expires_at,
                last_used_at, last_success_at, last_error_at, last_error_code, last_error_message,
                scope_snapshot_json, capabilities_json,
@@ -873,7 +771,6 @@ export async function listIntegrationConnectionsForSlug(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
                credentials_encrypted, is_default, auth_state, auth_error, auth_provider,
-               nango_connection_id, nango_provider_config_key, pipedream_account_id,
                composio_connected_account_id, composio_auth_config_id, composio_toolkit, expires_at,
                last_used_at, last_success_at, last_error_at, last_error_code, last_error_message,
                scope_snapshot_json, capabilities_json,
@@ -910,7 +807,6 @@ export async function getIntegrationConnectionForUserId(
       `
         SELECT id, integration, connection_label, account_label, external_account_id,
                credentials_encrypted, is_default, auth_state, auth_error, auth_provider,
-               nango_connection_id, nango_provider_config_key, pipedream_account_id,
                composio_connected_account_id, composio_auth_config_id, composio_toolkit, expires_at,
                last_used_at, last_success_at, last_error_at, last_error_code, last_error_message,
                scope_snapshot_json, capabilities_json,
@@ -952,12 +848,6 @@ export async function saveIntegrationConnectionForUserId(
   const mode = options.mode ?? "upsert_default";
   let targetConnectionId = options.connectionId;
   const authProvider = options.authProvider ?? "clawlink";
-  const nangoConnectionId = safeTrim(options.nangoConnectionId) ?? null;
-  const nangoProviderConfigKey = safeTrim(options.nangoProviderConfigKey) ?? null;
-
-  if (!targetConnectionId && nangoConnectionId) {
-    targetConnectionId = await findConnectionIdByNangoConnectionId(db, userId, slug, nangoConnectionId) ?? undefined;
-  }
 
   if (!targetConnectionId && mode === "create_or_match_account" && metadata.externalAccountId) {
     targetConnectionId = await findConnectionIdByExternalAccountId(
@@ -992,9 +882,6 @@ export async function saveIntegrationConnectionForUserId(
               auth_state = 'active',
               auth_error = NULL,
               auth_provider = ?,
-              nango_connection_id = ?,
-              nango_provider_config_key = ?,
-              pipedream_account_id = NULL,
               composio_connected_account_id = NULL,
               composio_auth_config_id = NULL,
               composio_toolkit = NULL,
@@ -1010,8 +897,6 @@ export async function saveIntegrationConnectionForUserId(
         metadata.externalAccountId,
         needsDefault ? 1 : 0,
         authProvider,
-        nangoConnectionId,
-        nangoProviderConfigKey,
         metadata.expiresAt,
         targetConnectionId,
         userId,
@@ -1032,14 +917,11 @@ export async function saveIntegrationConnectionForUserId(
             auth_state,
             auth_error,
             auth_provider,
-            nango_connection_id,
-            nango_provider_config_key,
-            pipedream_account_id,
             expires_at,
             created_at,
             updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, ?, ?, ?, NULL, ?, datetime('now'), datetime('now'))
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, ?, ?, datetime('now'), datetime('now'))
         `,
       )
       .bind(
@@ -1051,15 +933,11 @@ export async function saveIntegrationConnectionForUserId(
         encrypted,
         needsDefault ? 1 : 0,
         authProvider,
-        nangoConnectionId,
-        nangoProviderConfigKey,
         metadata.expiresAt,
       )
       .run();
 
-    if (nangoConnectionId) {
-      targetConnectionId = await findConnectionIdByNangoConnectionId(db, userId, slug, nangoConnectionId) ?? undefined;
-    } else if (metadata.externalAccountId) {
+    if (metadata.externalAccountId) {
       targetConnectionId = await findConnectionIdByExternalAccountId(
         db,
         userId,
@@ -1075,293 +953,6 @@ export async function saveIntegrationConnectionForUserId(
 
   if (!saved) {
     throw new Error("Integration was saved but could not be reloaded");
-  }
-
-  return saved;
-}
-
-export async function saveNangoIntegrationConnectionForUserId(
-  db: D1LikeDatabase,
-  userId: string,
-  slug: string,
-  options: SaveNangoIntegrationConnectionOptions,
-): Promise<IntegrationConnectionRecord> {
-  const placeholderCredentials = await encryptNangoPlaceholderCredentials({
-    providerConfigKey: options.providerConfigKey,
-    connectionId: options.nangoConnectionId,
-  });
-  let targetConnectionId = options.connectionId;
-
-  if (!targetConnectionId) {
-    targetConnectionId =
-      (await findConnectionIdByNangoConnectionId(
-        db,
-        userId,
-        slug,
-        options.nangoConnectionId,
-      )) ?? undefined;
-  }
-
-  if (
-    !targetConnectionId &&
-    options.mode === "create_or_match_account" &&
-    options.externalAccountId
-  ) {
-    targetConnectionId =
-      (await findConnectionIdByExternalAccountId(
-        db,
-        userId,
-        slug,
-        options.externalAccountId,
-      )) ?? undefined;
-  }
-
-  if (!targetConnectionId && options.mode === "upsert_default") {
-    targetConnectionId =
-      (await getIntegrationConnectionForUserId(db, userId, slug))?.id;
-  }
-
-  const shouldBeDefault = options.setAsDefault ?? true;
-  const needsDefault =
-    shouldBeDefault || !(await hasDefaultConnection(db, userId, slug));
-
-  if (needsDefault) {
-    await clearDefaultConnectionFlags(db, userId, slug);
-  }
-
-  if (targetConnectionId) {
-    await db
-      .prepare(
-        `
-          UPDATE user_integrations
-          SET credentials_encrypted = ?,
-              connection_label = ?,
-              account_label = ?,
-              external_account_id = ?,
-              is_default = ?,
-              auth_state = 'active',
-              auth_error = NULL,
-              auth_provider = 'nango',
-              nango_connection_id = ?,
-              nango_provider_config_key = ?,
-              pipedream_account_id = NULL,
-              composio_connected_account_id = NULL,
-              composio_auth_config_id = NULL,
-              composio_toolkit = NULL,
-              expires_at = ?,
-              updated_at = datetime('now')
-          WHERE id = ? AND user_id = ?
-        `,
-      )
-      .bind(
-        placeholderCredentials,
-        options.connectionLabel ?? null,
-        options.accountLabel ?? null,
-        options.externalAccountId ?? null,
-        needsDefault ? 1 : 0,
-        options.nangoConnectionId,
-        options.providerConfigKey,
-        options.expiresAt ?? null,
-        targetConnectionId,
-        userId,
-      )
-      .run();
-  } else {
-    await db
-      .prepare(
-        `
-          INSERT INTO user_integrations (
-            user_id,
-            integration,
-            connection_label,
-            account_label,
-            external_account_id,
-            credentials_encrypted,
-            is_default,
-            auth_state,
-            auth_error,
-            auth_provider,
-            nango_connection_id,
-            nango_provider_config_key,
-            pipedream_account_id,
-            expires_at,
-            created_at,
-            updated_at
-          )
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, 'nango', ?, ?, NULL, ?, datetime('now'), datetime('now'))
-        `,
-      )
-      .bind(
-        userId,
-        slug,
-        options.connectionLabel ?? null,
-        options.accountLabel ?? null,
-        options.externalAccountId ?? null,
-        placeholderCredentials,
-        needsDefault ? 1 : 0,
-        options.nangoConnectionId,
-        options.providerConfigKey,
-        options.expiresAt ?? null,
-      )
-      .run();
-
-    targetConnectionId =
-      (await findConnectionIdByNangoConnectionId(
-        db,
-        userId,
-        slug,
-        options.nangoConnectionId,
-      )) ?? undefined;
-  }
-
-  const saved = targetConnectionId
-    ? await getIntegrationConnectionByIdForUserId(db, userId, targetConnectionId)
-    : await getIntegrationConnectionForUserId(db, userId, slug);
-
-  if (!saved) {
-    throw new Error("Nango connection was saved but could not be reloaded");
-  }
-
-  return saved;
-}
-
-export async function savePipedreamIntegrationConnectionForUserId(
-  db: D1LikeDatabase,
-  userId: string,
-  slug: string,
-  options: SavePipedreamIntegrationConnectionOptions,
-): Promise<IntegrationConnectionRecord> {
-  const placeholderCredentials = await encryptPipedreamPlaceholderCredentials({
-    pipedreamAccountId: options.pipedreamAccountId,
-  });
-  let targetConnectionId = options.connectionId;
-
-  if (!targetConnectionId) {
-    targetConnectionId =
-      (await findConnectionIdByPipedreamAccountId(
-        db,
-        userId,
-        slug,
-        options.pipedreamAccountId,
-      )) ?? undefined;
-  }
-
-  if (
-    !targetConnectionId &&
-    options.mode === "create_or_match_account" &&
-    options.externalAccountId
-  ) {
-    targetConnectionId =
-      (await findConnectionIdByExternalAccountId(
-        db,
-        userId,
-        slug,
-        options.externalAccountId,
-      )) ?? undefined;
-  }
-
-  if (!targetConnectionId && options.mode === "upsert_default") {
-    targetConnectionId =
-      (await getIntegrationConnectionForUserId(db, userId, slug))?.id;
-  }
-
-  const shouldBeDefault = options.setAsDefault ?? true;
-  const needsDefault =
-    shouldBeDefault || !(await hasDefaultConnection(db, userId, slug));
-
-  if (needsDefault) {
-    await clearDefaultConnectionFlags(db, userId, slug);
-  }
-
-  if (targetConnectionId) {
-    await db
-      .prepare(
-        `
-          UPDATE user_integrations
-          SET credentials_encrypted = ?,
-              connection_label = ?,
-              account_label = ?,
-              external_account_id = ?,
-              is_default = ?,
-              auth_state = 'active',
-              auth_error = NULL,
-              auth_provider = 'pipedream',
-              nango_connection_id = NULL,
-              nango_provider_config_key = NULL,
-              pipedream_account_id = ?,
-              composio_connected_account_id = NULL,
-              composio_auth_config_id = NULL,
-              composio_toolkit = NULL,
-              expires_at = ?,
-              updated_at = datetime('now')
-          WHERE id = ? AND user_id = ?
-        `,
-      )
-      .bind(
-        placeholderCredentials,
-        options.connectionLabel ?? null,
-        options.accountLabel ?? null,
-        options.externalAccountId ?? null,
-        needsDefault ? 1 : 0,
-        options.pipedreamAccountId,
-        options.expiresAt ?? null,
-        targetConnectionId,
-        userId,
-      )
-      .run();
-  } else {
-    await db
-      .prepare(
-        `
-          INSERT INTO user_integrations (
-            user_id,
-            integration,
-            connection_label,
-            account_label,
-            external_account_id,
-            credentials_encrypted,
-            is_default,
-            auth_state,
-            auth_error,
-            auth_provider,
-            nango_connection_id,
-            nango_provider_config_key,
-            pipedream_account_id,
-            expires_at,
-            created_at,
-            updated_at
-          )
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, 'pipedream', NULL, NULL, ?, ?, datetime('now'), datetime('now'))
-        `,
-      )
-      .bind(
-        userId,
-        slug,
-        options.connectionLabel ?? null,
-        options.accountLabel ?? null,
-        options.externalAccountId ?? null,
-        placeholderCredentials,
-        needsDefault ? 1 : 0,
-        options.pipedreamAccountId,
-        options.expiresAt ?? null,
-      )
-      .run();
-
-    targetConnectionId =
-      (await findConnectionIdByPipedreamAccountId(
-        db,
-        userId,
-        slug,
-        options.pipedreamAccountId,
-      )) ?? undefined;
-  }
-
-  const saved = targetConnectionId
-    ? await getIntegrationConnectionByIdForUserId(db, userId, targetConnectionId)
-    : await getIntegrationConnectionForUserId(db, userId, slug);
-
-  if (!saved) {
-    throw new Error("Pipedream connection was saved but could not be reloaded");
   }
 
   return saved;
@@ -1430,9 +1021,6 @@ export async function saveComposioIntegrationConnectionForUserId(
               auth_state = 'active',
               auth_error = NULL,
               auth_provider = 'composio',
-              nango_connection_id = NULL,
-              nango_provider_config_key = NULL,
-              pipedream_account_id = NULL,
               composio_connected_account_id = ?,
               composio_auth_config_id = ?,
               composio_toolkit = ?,
@@ -1470,9 +1058,6 @@ export async function saveComposioIntegrationConnectionForUserId(
             auth_state,
             auth_error,
             auth_provider,
-            nango_connection_id,
-            nango_provider_config_key,
-            pipedream_account_id,
             composio_connected_account_id,
             composio_auth_config_id,
             composio_toolkit,
@@ -1480,7 +1065,7 @@ export async function saveComposioIntegrationConnectionForUserId(
             created_at,
             updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, 'composio', NULL, NULL, NULL, ?, ?, ?, ?, datetime('now'), datetime('now'))
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NULL, 'composio', ?, ?, ?, ?, datetime('now'), datetime('now'))
         `,
       )
       .bind(
@@ -1583,32 +1168,6 @@ export async function deleteIntegrationConnectionForUserId(
   await clearConnectionForeignKeyReferences(db, userId, connectionId);
 
   if (
-    connection.authBackend === "nango" &&
-    connection.nangoProviderConfigKey &&
-    connection.nangoConnectionId
-  ) {
-    try {
-      await deleteNangoConnection(
-        connection.nangoProviderConfigKey,
-        connection.nangoConnectionId,
-      );
-    } catch (error) {
-      console.error("Failed to delete Nango connection:", error);
-    }
-  }
-
-  if (
-    connection.authBackend === "pipedream" &&
-    connection.pipedreamAccountId
-  ) {
-    try {
-      await deletePipedreamAccount(connection.pipedreamAccountId);
-    } catch (error) {
-      console.error("Failed to delete Pipedream connection:", error);
-    }
-  }
-
-  if (
     connection.authBackend === "composio" &&
     connection.composioConnectedAccountId
   ) {
@@ -1630,44 +1189,6 @@ export async function deleteIntegrationConnectionForUserId(
   if (connection.isDefault) {
     await promoteLatestConnectionToDefault(db, userId, slug);
   }
-}
-
-export async function markIntegrationConnectionNeedsReauthByNangoConnectionId(
-  db: D1LikeDatabase,
-  nangoConnectionId: string,
-  authError: string,
-): Promise<void> {
-  await db
-    .prepare(
-      `
-        UPDATE user_integrations
-        SET auth_state = 'needs_reauth',
-            auth_error = ?,
-            updated_at = datetime('now')
-        WHERE nango_connection_id = ?
-      `,
-    )
-    .bind(authError, nangoConnectionId)
-    .run();
-}
-
-export async function markIntegrationConnectionNeedsReauthByPipedreamAccountId(
-  db: D1LikeDatabase,
-  pipedreamAccountId: string,
-  authError: string,
-): Promise<void> {
-  await db
-    .prepare(
-      `
-        UPDATE user_integrations
-        SET auth_state = 'needs_reauth',
-            auth_error = ?,
-            updated_at = datetime('now')
-        WHERE pipedream_account_id = ?
-      `,
-    )
-    .bind(authError, pipedreamAccountId)
-    .run();
 }
 
 export async function markIntegrationConnectionNeedsReauthByComposioConnectedAccountId(

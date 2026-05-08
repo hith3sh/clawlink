@@ -9,8 +9,8 @@ import {
   type NormalizedToolError,
   type ToolMode,
   type ToolRisk,
+  type ToolExecutionSpec,
 } from "../../src/lib/runtime/tool-runtime";
-import type { ToolExecutionSpec } from "../../src/lib/pipedream/manifest-types";
 
 export type ToolAccessLevel = ToolMode;
 
@@ -33,6 +33,7 @@ export interface IntegrationTool {
   askBefore: string[];
   safeDefaults: Record<string, unknown>;
   examples: IntegrationToolExample[];
+  prerequisites?: string[];
   followups: string[];
   requiresScopes: string[];
   idempotent: boolean;
@@ -54,6 +55,7 @@ export interface DefineIntegrationToolOptions {
   askBefore?: string[];
   safeDefaults?: Record<string, unknown>;
   examples?: IntegrationToolExample[];
+  prerequisites?: string[];
   followups?: string[];
   requiresScopes?: string[];
   idempotent?: boolean;
@@ -82,6 +84,7 @@ export function defineTool(
     askBefore: options.askBefore ?? [],
     safeDefaults: options.safeDefaults ?? {},
     examples: options.examples ?? [],
+    prerequisites: options.prerequisites ?? [],
     followups: options.followups ?? [],
     requiresScopes: options.requiresScopes ?? [],
     idempotent: options.idempotent ?? options.accessLevel === "read",
@@ -132,7 +135,15 @@ export interface IntegrationHandler {
 
 }
 
-export type IntegrationRequestErrorKind = "validation" | "provider" | "auth";
+export type IntegrationRequestErrorKind =
+  | "validation"
+  | "provider"
+  | "auth"
+  | "rate_limit"
+  | "scope_missing"
+  | "account_inactive"
+  | "not_found"
+  | "transient";
 
 export class IntegrationRequestError extends Error {
   readonly status: number;
@@ -222,7 +233,7 @@ export function classifyIntegrationError(error: unknown): NormalizedToolError {
       };
     }
 
-    if (error.status === 401) {
+    if (error.kind === "account_inactive" || error.kind === "auth" || error.status === 401) {
       return {
         type: "reauth_required",
         code: error.code,
@@ -231,7 +242,7 @@ export function classifyIntegrationError(error: unknown): NormalizedToolError {
       };
     }
 
-    if (error.status === 429) {
+    if (error.kind === "rate_limit" || error.status === 429) {
       return {
         type: "rate_limit",
         code: error.code,
@@ -240,7 +251,10 @@ export function classifyIntegrationError(error: unknown): NormalizedToolError {
       };
     }
 
-    if (error.status === 403 && isMissingScopeFailure(error)) {
+    if (
+      error.kind === "scope_missing" ||
+      (error.status === 403 && isMissingScopeFailure(error))
+    ) {
       return {
         type: "missing_scopes",
         code: error.code,
@@ -253,7 +267,7 @@ export function classifyIntegrationError(error: unknown): NormalizedToolError {
       type: "provider",
       code: error.code,
       message: error.message,
-      retryable: error.status >= 500,
+      retryable: error.kind === "transient" || error.status >= 500,
     };
   }
 

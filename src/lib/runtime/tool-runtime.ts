@@ -57,3 +57,18 @@ export function requiresToolConfirmation(tool: {
   const risk = tool.risk ?? inferToolRisk(tool.mode);
   return tool.mode === "destructive" || risk === "high_impact";
 }
+
+export interface CustomToolExecutionSpec {
+  kind: "custom";
+}
+
+export interface ComposioToolExecutionSpec {
+  kind: "composio_tool";
+  toolkit: string;
+  toolSlug: string;
+  version?: string;
+}
+
+export type ToolExecutionSpec =
+  | CustomToolExecutionSpec
+  | ComposioToolExecutionSpec;

@@ -47,11 +47,14 @@ function getStatusCode(payload: Awaited<ReturnType<typeof previewToolForUser>>):
 
   switch (payload.error?.code) {
     case "tool_not_found":
+    case "not_found":
       return 404;
     case "ambiguous_connection":
       return 409;
     case "needs_connection":
       return 409;
+    case "provider_unavailable":
+      return 503;
     default:
       break;
   }

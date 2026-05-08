@@ -1,5 +1,5 @@
 import type { IntegrationTool } from "../../../worker/integrations/base";
-import type { ComposioToolExecutionSpec } from "../pipedream/manifest-types";
+import type { ComposioToolExecutionSpec } from "../runtime/tool-runtime";
 import { IntegrationRequestError } from "../../../worker/integrations/base";
 import { executeComposioToolRequest } from "./backend-client";
 

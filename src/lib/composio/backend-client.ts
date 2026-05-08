@@ -1,4 +1,6 @@
+import type { IntegrationTool, IntegrationToolExample } from "../../../worker/integrations/base";
 import { IntegrationRequestError } from "../../../worker/integrations/base";
+import composioToolOverrides from "../../../config/composio-tool-overrides.mjs";
 
 const DEFAULT_BASE_URL = "https://backend.composio.dev/api/v3.1";
 const DEFAULT_INSTANTLY_TOOLKIT_VERSION = "20260429_00";
@@ -139,6 +141,19 @@ function getSlugEnvKey(prefix: string, slug: string, suffix: string): string {
   return `${prefix}_${slug.replace(/[^a-zA-Z0-9]+/g, "_").toUpperCase()}_${suffix}`;
 }
 
+export function getComposioToolkitVersion(
+  env: Record<string, unknown> | undefined,
+  integrationSlug: string,
+): string {
+  const versionMap = parseMap(getEnvValue(env, "COMPOSIO_TOOLKIT_VERSION_MAP"));
+
+  return (
+    versionMap.get(integrationSlug) ??
+    getEnvValue(env, getSlugEnvKey("COMPOSIO", integrationSlug, "TOOLKIT_VERSION")) ??
+    (integrationSlug === "instantly" ? DEFAULT_INSTANTLY_TOOLKIT_VERSION : "latest")
+  );
+}
+
 export function getComposioConfig(
   env: Record<string, unknown> | undefined,
   integrationSlug: string,
@@ -152,7 +167,6 @@ export function getComposioConfig(
 
   const toolkitMap = parseMap(getEnvValue(env, "COMPOSIO_TOOLKIT_MAP"));
   const authConfigMap = parseMap(getEnvValue(env, "COMPOSIO_AUTH_CONFIG_MAP"));
-  const versionMap = parseMap(getEnvValue(env, "COMPOSIO_TOOLKIT_VERSION_MAP"));
   const authConfigId =
     authConfigIdOverride ??
     authConfigMap.get(integrationSlug) ??
@@ -171,11 +185,141 @@ export function getComposioConfig(
     baseUrl: normalizeBaseUrl(getEnvValue(env, "COMPOSIO_BASE_URL")),
     toolkit,
     authConfigId,
-    toolkitVersion:
-      versionMap.get(integrationSlug) ??
-      getEnvValue(env, getSlugEnvKey("COMPOSIO", integrationSlug, "TOOLKIT_VERSION")) ??
-      (integrationSlug === "instantly" ? DEFAULT_INSTANTLY_TOOLKIT_VERSION : undefined),
+    toolkitVersion: getComposioToolkitVersion(env, integrationSlug),
   };
+}
+
+interface ComposioToolOverrideExample {
+  label?: string;
+  user?: string;
+  args?: Record<string, unknown>;
+}
+
+interface ComposioToolOverride {
+  descriptionPrefix?: string;
+  descriptionSuffix?: string;
+  fieldDescriptions?: Record<string, string>;
+  prerequisites?: string[];
+  whenToUse?: string[];
+  askBefore?: string[];
+  safeDefaults?: Record<string, unknown>;
+  examples?: ComposioToolOverrideExample[];
+  followups?: string[];
+  requiresScopes?: string[];
+}
+
+function uniqueStrings(values: Array<string | null | undefined>): string[] {
+  return [
+    ...new Set(
+      values
+        .map((value) => safeTrim(value))
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ];
+}
+
+function getComposioToolOverride(toolSlug: string | null | undefined): ComposioToolOverride | null {
+  if (!toolSlug) {
+    return null;
+  }
+
+  const override = (composioToolOverrides as Record<string, ComposioToolOverride | undefined>)[
+    toolSlug
+  ];
+  return override ?? null;
+}
+
+function appendDescription(
+  current: string,
+  value: string | null | undefined,
+  { prepend = false }: { prepend?: boolean } = {},
+): string {
+  const trimmed = safeTrim(value);
+
+  if (!trimmed) {
+    return current;
+  }
+
+  if (!current) {
+    return trimmed;
+  }
+
+  return prepend ? `${trimmed} ${current}` : `${current} ${trimmed}`;
+}
+
+function toExampleList(
+  examples: ComposioToolOverrideExample[] | undefined,
+): IntegrationToolExample[] {
+  if (!Array.isArray(examples)) {
+    return [];
+  }
+
+  return examples
+    .filter(
+      (example) =>
+        example &&
+        typeof example === "object" &&
+        example.args &&
+        typeof example.args === "object",
+    )
+    .map((example) => ({
+      user: safeTrim(example.user) ?? safeTrim(example.label) ?? "Example",
+      args: example.args as Record<string, unknown>,
+    }));
+}
+
+function mergeToolExamples(
+  existing: IntegrationToolExample[],
+  additions: IntegrationToolExample[],
+): IntegrationToolExample[] {
+  if (additions.length === 0) {
+    return existing;
+  }
+
+  const merged = [...existing];
+  const seen = new Set(existing.map((example) => JSON.stringify(example)));
+
+  for (const example of additions) {
+    const key = JSON.stringify(example);
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    merged.push(example);
+  }
+
+  return merged;
+}
+
+export function applyComposioToolMetadataOverrides(tool: IntegrationTool): void {
+  const override =
+    tool.execution.kind === "composio_tool"
+      ? getComposioToolOverride(tool.execution.toolSlug)
+      : null;
+
+  if (!override) {
+    tool.prerequisites ??= [];
+    return;
+  }
+
+  tool.description = appendDescription(tool.description, override.descriptionPrefix, {
+    prepend: true,
+  });
+  tool.description = appendDescription(tool.description, override.descriptionSuffix);
+  tool.whenToUse = uniqueStrings([...tool.whenToUse, ...(override.whenToUse ?? [])]);
+  tool.askBefore = uniqueStrings([...tool.askBefore, ...(override.askBefore ?? [])]);
+  tool.followups = uniqueStrings([...tool.followups, ...(override.followups ?? [])]);
+  tool.requiresScopes = uniqueStrings([...tool.requiresScopes, ...(override.requiresScopes ?? [])]);
+  tool.prerequisites = uniqueStrings([
+    ...(tool.prerequisites ?? []),
+    ...(override.prerequisites ?? []),
+  ]);
+  tool.safeDefaults = {
+    ...override.safeDefaults,
+    ...tool.safeDefaults,
+  };
+  tool.examples = mergeToolExamples(tool.examples, toExampleList(override.examples));
 }
 
 interface ParsedComposioValidationError {
@@ -237,6 +381,46 @@ function parseComposioValidationError(message: string): ParsedComposioValidation
   return { isValidation, missingFields, invalidFields };
 }
 
+function isComposioRateLimit(message: string, status: number): boolean {
+  return (
+    status === 429 ||
+    /\brate.?limit|too many requests|retry-after|userratelimitexceeded|ratelimitexceeded\b/i.test(
+      message,
+    )
+  );
+}
+
+function isComposioMissingScope(message: string, status: number): boolean {
+  return (
+    status === 403 &&
+    /\binsufficient permissions?|insufficient[_\s-]?scope|missing[_\s-]?scope|forbidden|permission denied\b/i.test(
+      message,
+    )
+  );
+}
+
+function isComposioAccountInactive(message: string, status: number): boolean {
+  return (
+    status === 401 ||
+    /\breauth required|re-auth required|connected account not active|account inactive|token expired|invalid[_\s-]?token|unauthorized\b/i.test(
+      message,
+    )
+  );
+}
+
+function isComposioNotFound(message: string, status: number): boolean {
+  return status === 404 || /\bnot found|does not exist|unknown resource\b/i.test(message);
+}
+
+function isComposioTransient(message: string, status: number): boolean {
+  return (
+    status >= 500 ||
+    /\btimeout|timed out|temporar(?:y|ily)|unavailable|try again|network|socket hang up|econnreset|etimedout\b/i.test(
+      message,
+    )
+  );
+}
+
 function stringifyComposioError(payload: unknown, fallback: string): string {
   if (typeof payload === "string" && payload.trim()) {
     return payload.trim();
@@ -290,6 +474,46 @@ function toComposioRequestError(
       code: "invalid_arguments",
       missingFields: parsed.missingFields,
       invalidFields: parsed.invalidFields,
+    });
+  }
+
+  if (isComposioRateLimit(message, status)) {
+    return new IntegrationRequestError(message, {
+      status: 429,
+      kind: "rate_limit",
+      code: "rate_limit",
+    });
+  }
+
+  if (isComposioMissingScope(message, status)) {
+    return new IntegrationRequestError(message, {
+      status: 403,
+      kind: "scope_missing",
+      code: "missing_scopes",
+    });
+  }
+
+  if (isComposioAccountInactive(message, status)) {
+    return new IntegrationRequestError(message, {
+      status: 401,
+      kind: "account_inactive",
+      code: "reauth_required",
+    });
+  }
+
+  if (isComposioNotFound(message, status)) {
+    return new IntegrationRequestError(message, {
+      status: 404,
+      kind: "not_found",
+      code: "not_found",
+    });
+  }
+
+  if (isComposioTransient(message, status)) {
+    return new IntegrationRequestError(message, {
+      status: status >= 500 ? status : 502,
+      kind: "transient",
+      code: "provider_unavailable",
     });
   }
 
@@ -570,12 +794,18 @@ function simplifySchemaNode(node: unknown): Record<string, unknown> {
 
   if (record.description) result.description = record.description;
   if (record.enum) result.enum = record.enum;
+  if (Array.isArray(record.examples) && record.examples.length > 0) {
+    result.examples = record.examples;
+  } else if (record.example !== undefined) {
+    result.examples = [record.example];
+  }
 
   return result;
 }
 
 function convertInputSchema(
   inputParams: Record<string, unknown> | null | undefined,
+  toolSlug?: string,
 ): Record<string, unknown> {
   if (!inputParams || typeof inputParams !== "object") {
     return { type: "object", additionalProperties: true, properties: {} };
@@ -584,6 +814,8 @@ function convertInputSchema(
   const properties: Record<string, unknown> = {};
   const required: string[] = [];
   const rawProps = (inputParams.properties ?? {}) as Record<string, Record<string, unknown>>;
+  const override = getComposioToolOverride(toolSlug);
+  const fieldDescriptionOverrides = override?.fieldDescriptions ?? {};
 
   for (const [name, prop] of Object.entries(rawProps)) {
     const schema: Record<string, unknown> = {};
@@ -618,6 +850,16 @@ function convertInputSchema(
 
     if (prop.description) schema.description = prop.description;
     if (prop.enum) schema.enum = prop.enum;
+    if (Array.isArray(prop.examples) && prop.examples.length > 0) {
+      schema.examples = prop.examples;
+    } else if (prop.example !== undefined) {
+      schema.examples = [prop.example];
+    }
+
+    const descriptionOverride = safeTrim(fieldDescriptionOverrides[name]);
+    if (descriptionOverride) {
+      schema.description = descriptionOverride;
+    }
 
     properties[name] = schema;
   }
@@ -661,28 +903,21 @@ export async function fetchComposioToolSchemas(
   }
 
   const toolkitMap = parseMap(getEnvValue(env, "COMPOSIO_TOOLKIT_MAP"));
-  const versionMap = parseMap(getEnvValue(env, "COMPOSIO_TOOLKIT_VERSION_MAP"));
   const toolkit =
     toolkitMap.get(integrationSlug) ??
     getEnvValue(env, getSlugEnvKey("COMPOSIO", integrationSlug, "TOOLKIT")) ??
     integrationSlug.replace(/-/g, "_");
-  const version =
-    versionMap.get(integrationSlug) ??
-    getEnvValue(env, getSlugEnvKey("COMPOSIO", integrationSlug, "TOOLKIT_VERSION"));
+  const version = getComposioToolkitVersion(env, integrationSlug);
 
-  const url = new URL(`${baseUrl}/tools`);
-  url.searchParams.set("toolkit_slug", toolkit);
-  if (version) {
-    url.searchParams.set("toolkit_versions", version);
-  } else {
-    url.searchParams.set("toolkit_versions", "latest");
-  }
-  url.searchParams.set("limit", "1000");
-  url.searchParams.set("include_deprecated", "false");
+  const params = new URLSearchParams();
+  params.set("toolkit_slug", toolkit);
+  params.set("toolkit_versions", version ?? "latest");
+  params.set("limit", "1000");
+  params.set("include_deprecated", "false");
 
   const response = await composioFetch<ComposioToolsResponse>(
     { apiKey, baseUrl },
-    url.pathname + url.search,
+    `/tools?${params.toString()}`,
     { method: "GET" },
   );
 
@@ -692,7 +927,7 @@ export async function fetchComposioToolSchemas(
     if (!item.slug) continue;
     schemas.set(
       item.slug,
-      convertInputSchema(item.input_parameters as Record<string, unknown> | null),
+      convertInputSchema(item.input_parameters as Record<string, unknown> | null, item.slug),
     );
   }
 

@@ -390,7 +390,7 @@ function buildToolListText(payload) {
   return [
     tools.length > 0 ? heading : emptyHeading,
     "",
-    "List and search results include each tool's live inputSchema. Use clawlink_describe_tool for safety guidance, examples, and follow-up hints before unfamiliar or write calls.",
+    "Bias toward action: use the live inputSchema in these results, pick the best matching tool, and call it. Use clawlink_describe_tool when you need more safety guidance or examples. If ClawLink rejects the arguments, read the returned missingFields and inputSchema, then retry with corrections.",
     "",
     stringifyPayload(
       tools.map((tool) => ({
@@ -1164,7 +1164,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_list_tools",
-      description: "List available tools for one connected integration, including each tool's live inputSchema. Always pass the integration slug from clawlink_list_integrations, for example youtube, gmail, slack, notion, or github. Use clawlink_search_tools when the user describes a capability but you are unsure which exact tool name matches.",
+      description: "List the live ClawLink tools for one connected integration so you can act instead of guessing. Results include each tool's current inputSchema. Pass the integration slug from clawlink_list_integrations, then choose the best tool and call it.",
       parameters: Type.Object({
         integration: Type.String({
           description: "Required integration slug to list only that app's tools, for example youtube, gmail, slack, notion, or github. Call clawlink_list_integrations first if you do not know the slug.",
@@ -1188,7 +1188,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_search_tools",
-      description: "Search the user's connected ClawLink tools by capability or keyword without dumping the full tool catalog. Results include the live inputSchema for each match. Use this after clawlink_list_integrations when the user asks for an operation like playlists, send email, create ticket, calendar invite, or upload file. Pass integration when the app is known.",
+      description: "Search the user's connected ClawLink tools by capability or keyword when you know the goal but not the exact tool name. Results include the live inputSchema for each match. Pick the best match and call it rather than asking the user to translate provider docs into arguments.",
       parameters: Type.Object({
         query: Type.String({
           description: "Capability or keyword to search for, for example playlist, send email, channel statistics, create event, upload file, or list records.",
@@ -1231,7 +1231,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_describe_tool",
-      description: "Get the input schema, safety guidance, examples, and follow-up hints for a ClawLink tool before calling it. Use this to verify how a specific live tool should be used instead of inferring provider behavior from memory.",
+      description: "Get the live recipe card for one ClawLink tool: inputSchema, safety guidance, examples, prerequisites, and follow-up hints. Use this when a tool is unfamiliar or the call is write-like, then execute with your best guess.",
       parameters: Type.Object({
         tool: Type.String({
           description: "ClawLink tool name, for example notion_search or gmail_find_email.",
@@ -1252,7 +1252,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_preview_tool",
-      description: "Preview a ClawLink tool call before executing it. Use this for writes or anything that may require explicit confirmation.",
+      description: "Preview a ClawLink tool call without side effects. Use this when a write tool feels risky or the arguments are still uncertain. Preview returns the same validation shape as a real call, so you can correct fields before executing.",
       parameters: Type.Object({
         tool: Type.String({
           description: "ClawLink tool name, for example notion_create_page or gmail_send_email.",
@@ -1296,7 +1296,7 @@ const clawlinkPlugin = {
 
     api.registerTool({
       name: "clawlink_call_tool",
-      description: "Execute an action on a connected external app or service through ClawLink. Use app-scoped clawlink_list_tools or clawlink_search_tools to discover the live tool catalog and inputSchema first, then clawlink_describe_tool for safety guidance when needed. If ClawLink rejects the arguments, inspect the returned inputSchema and retry with corrected fields.",
+      description: "Run a ClawLink tool aggressively using the live tool catalog and inputSchema as your source of truth. Do not ask the user which fields to use when the schema already tells you. If ClawLink rejects the arguments, the error includes missingFields and the full inputSchema, so inspect that payload and retry with corrected fields.",
       parameters: Type.Object({
         tool: Type.String({
           description: "ClawLink tool name, for example notion_search or github_list_issues.",

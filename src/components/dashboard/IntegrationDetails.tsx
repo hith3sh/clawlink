@@ -77,11 +77,7 @@ export default function IntegrationDetails({ integration }: Props) {
   const needsReauth = connection?.authState === "needs_reauth";
   const hostedConnectEnabled =
     integration.dashboardStatus === "available" &&
-    (
-      integration.setupMode === "oauth" ||
-      integration.setupMode === "pipedream" ||
-      integration.setupMode === "composio"
-    );
+    integration.setupMode === "composio";
 
   const { refetch: refetchDashboard } = useDashboardConnections();
 
