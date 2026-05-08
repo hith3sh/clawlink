@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 const PLUGIN_ID = "clawlink-plugin";
 const LEGACY_PLUGIN_IDS = ["clawlink", "openclaw-plugin"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.41";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.42";
 const DEFAULT_PAIRING_POLL_INTERVAL_MS = 3000;
 const DEFAULT_PAIRING_WAIT_TIMEOUT_MS = 5 * 60 * 1000;
 
