@@ -292,6 +292,28 @@ function mergeToolExamples(
   return merged;
 }
 
+export function applyComposioToolFieldDescriptionOverrides(tool: IntegrationTool): void {
+  if (tool.execution.kind !== "composio_tool") return;
+
+  const override = getComposioToolOverride(tool.execution.toolSlug);
+  const fieldDescriptions = override?.fieldDescriptions;
+
+  if (!fieldDescriptions) return;
+
+  const properties = (tool.inputSchema as { properties?: Record<string, unknown> }).properties;
+  if (!properties || typeof properties !== "object") return;
+
+  for (const [name, descriptionOverride] of Object.entries(fieldDescriptions)) {
+    const trimmed = safeTrim(descriptionOverride);
+    if (!trimmed) continue;
+
+    const property = properties[name];
+    if (!property || typeof property !== "object") continue;
+
+    (property as Record<string, unknown>).description = trimmed;
+  }
+}
+
 export function applyComposioToolMetadataOverrides(tool: IntegrationTool): void {
   const override =
     tool.execution.kind === "composio_tool"

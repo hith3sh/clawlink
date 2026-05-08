@@ -1,3 +1,80 @@
+const FIGMA_FILE_KEY_DESCRIPTION =
+  "Required Figma file or branch key. Extract it from the Figma URL: it is the alphanumeric segment between `design/` or `file/` and the next slash, e.g. `https://www.figma.com/design/<FILE_KEY>/...` or `https://www.figma.com/file/<FILE_KEY>/...`. If you don't have the URL yet, ask the user for any Figma file URL before calling.";
+
+const FIGMA_TEAM_ID_DESCRIPTION =
+  "Required Figma team ID. Figma does not expose team IDs through any read API, so you cannot discover this — you must ask the user for their Figma team page URL (`https://www.figma.com/files/team/<TEAM_ID>/...`) and extract the segment after `team/`.";
+
+const FIGMA_FILE_KEY_ASK_BEFORE = [
+  "Ask the user for the Figma file URL if you don't already have one — the file_key is extracted from it (e.g. https://www.figma.com/design/<FILE_KEY>/...).",
+];
+
+const FIGMA_TEAM_ID_ASK_BEFORE = [
+  "Ask the user for their Figma team page URL — Figma does not expose team IDs through any read API, so this cannot be discovered automatically.",
+];
+
+const FIGMA_FILE_KEY_TOOL_SLUGS = [
+  "FIGMA_ADD_A_COMMENT_TO_A_FILE",
+  "FIGMA_ADD_A_REACTION_TO_A_COMMENT",
+  "FIGMA_DELETE_A_COMMENT",
+  "FIGMA_DELETE_A_REACTION",
+  "FIGMA_DETECT_BACKGROUND",
+  "FIGMA_DOWNLOAD_FIGMA_IMAGES",
+  "FIGMA_EXTRACT_DESIGN_TOKENS",
+  "FIGMA_EXTRACT_PROTOTYPE_INTERACTIONS",
+  "FIGMA_GET_COMMENTS_IN_A_FILE",
+  "FIGMA_GET_FILE_COMPONENT_SETS",
+  "FIGMA_GET_FILE_COMPONENTS",
+  "FIGMA_GET_FILE_JSON",
+  "FIGMA_GET_FILE_METADATA",
+  "FIGMA_GET_FILE_NODES",
+  "FIGMA_GET_FILE_STYLES",
+  "FIGMA_GET_IMAGE_FILLS",
+  "FIGMA_GET_REACTIONS_FOR_A_COMMENT",
+  "FIGMA_GET_VERSIONS_OF_A_FILE",
+  "FIGMA_RENDER_IMAGES_OF_FILE_NODES",
+];
+
+const FIGMA_TEAM_ID_TOOL_SLUGS = [
+  "FIGMA_GET_PROJECTS_IN_A_TEAM",
+  "FIGMA_GET_TEAM_COMPONENT_SETS",
+  "FIGMA_GET_TEAM_COMPONENTS",
+  "FIGMA_GET_TEAM_STYLES",
+];
+
+function buildFigmaFileKeyOverrides() {
+  const entries = {};
+
+  for (const slug of FIGMA_FILE_KEY_TOOL_SLUGS) {
+    entries[slug] = {
+      descriptionPrefix:
+        "Requires `file_key`. Extract it from the user's Figma file URL (the segment after `design/` or `file/`); ask for the URL if you don't have one yet.",
+      fieldDescriptions: {
+        file_key: FIGMA_FILE_KEY_DESCRIPTION,
+      },
+      askBefore: FIGMA_FILE_KEY_ASK_BEFORE,
+    };
+  }
+
+  return entries;
+}
+
+function buildFigmaTeamIdOverrides() {
+  const entries = {};
+
+  for (const slug of FIGMA_TEAM_ID_TOOL_SLUGS) {
+    entries[slug] = {
+      descriptionPrefix:
+        "Requires `team_id`. Figma does not expose team IDs through any read API, so ask the user for their Figma team page URL (`https://www.figma.com/files/team/<TEAM_ID>/...`) and extract the segment after `team/`.",
+      fieldDescriptions: {
+        team_id: FIGMA_TEAM_ID_DESCRIPTION,
+      },
+      askBefore: FIGMA_TEAM_ID_ASK_BEFORE,
+    };
+  }
+
+  return entries;
+}
+
 const composioToolOverrides = {
   GMAIL_GET_PROFILE: {
     descriptionPrefix:
@@ -671,6 +748,8 @@ const composioToolOverrides = {
       "Use this for Page-level analytics after resolving the managed Page you want to inspect.",
     prerequisites: ["facebook_list_managed_pages"],
   },
+  ...buildFigmaFileKeyOverrides(),
+  ...buildFigmaTeamIdOverrides(),
 };
 
 export default composioToolOverrides;

@@ -77,22 +77,6 @@ export const hubspotComposioTools: IntegrationTool[] = [
     ],
   }),
   composioTool({
-    name: "hubspot_archive_batch_of_feedback_submissions",
-    description: "Asynchronously archives a batch of HubSpot feedback submissions using their unique IDs, which must correspond to valid and existing submissions; the operation is queued, and submissions are moved from active views without being deleted.",
-    toolSlug: "HUBSPOT_ARCHIVE_BATCH_OF_FEEDBACK_SUBMISSIONS",
-    mode: "write",
-    risk: "confirm",
-    tags: [
-      "composio",
-      "hubspot",
-      "write",
-      "batch",
-    ],
-    askBefore: [
-      "Confirm the parameters before executing Archive batch of feedback submissions by id.",
-    ],
-  }),
-  composioTool({
     name: "hubspot_archive_batch_of_line_items",
     description: "Archives a batch of existing line items by their unique IDs in HubSpot CRM; this operation is irreversible via the API.",
     toolSlug: "HUBSPOT_ARCHIVE_BATCH_OF_LINE_ITEMS",
@@ -1351,22 +1335,6 @@ export const hubspotComposioTools: IntegrationTool[] = [
     ],
   }),
   composioTool({
-    name: "hubspot_delete_schema",
-    description: "Deletes a HubSpot custom object schema by `objectType`. With `archived=false` (default), it archives the schema (soft delete). With `archived=true`, it permanently deletes an already-archived schema (hard delete). Prerequisites: All object instances, associations, and properties must be deleted first.",
-    toolSlug: "HUBSPOT_DELETE_SCHEMA",
-    mode: "write",
-    risk: "high_impact",
-    tags: [
-      "composio",
-      "hubspot",
-      "write",
-      "core",
-    ],
-    askBefore: [
-      "This action is destructive and cannot be undone. Confirm before executing Delete schema by object type.",
-    ],
-  }),
-  composioTool({
     name: "hubspot_delete_timeline_event_template",
     description: "Permanently and irreversibly deletes a specific timeline event template, identified by its `eventTemplateId`, from the application `appId`.",
     toolSlug: "HUBSPOT_DELETE_TIMELINE_EVENT_TEMPLATE",
@@ -1441,19 +1409,6 @@ export const hubspotComposioTools: IntegrationTool[] = [
       "hubspot",
       "read",
       "recording_settings",
-    ],
-  }),
-  composioTool({
-    name: "hubspot_fetch_revenue",
-    description: "Fetches a revenue attribution report for a specified, existing marketing campaign, optionally using a specific attribution model and date range; if both start and end dates are given, `endDate` must not be earlier than `startDate`.",
-    toolSlug: "HUBSPOT_FETCH_REVENUE",
-    mode: "read",
-    risk: "safe",
-    tags: [
-      "composio",
-      "hubspot",
-      "read",
-      "reports",
     ],
   }),
   composioTool({
@@ -1535,45 +1490,6 @@ export const hubspotComposioTools: IntegrationTool[] = [
     ],
   }),
   composioTool({
-    name: "hubspot_get_campaign",
-    description: "Retrieves a HubSpot campaign by its ID.",
-    toolSlug: "HUBSPOT_GET_CAMPAIGN",
-    mode: "read",
-    risk: "safe",
-    tags: [
-      "composio",
-      "hubspot",
-      "read",
-      "marketing",
-    ],
-  }),
-  composioTool({
-    name: "hubspot_get_campaign_metrics",
-    description: "Retrieves key attribution metrics for an existing marketing campaign, identified by its `campaignGuid`, within an optional date range.",
-    toolSlug: "HUBSPOT_GET_CAMPAIGN_METRICS",
-    mode: "read",
-    risk: "safe",
-    tags: [
-      "composio",
-      "hubspot",
-      "read",
-      "reports",
-    ],
-  }),
-  composioTool({
-    name: "hubspot_get_campaigns",
-    description: "Retrieves multiple HubSpot campaigns.",
-    toolSlug: "HUBSPOT_GET_CAMPAIGNS",
-    mode: "read",
-    risk: "safe",
-    tags: [
-      "composio",
-      "hubspot",
-      "read",
-      "marketing",
-    ],
-  }),
-  composioTool({
     name: "hubspot_get_company",
     description: "Retrieves a HubSpot company by its ID.",
     toolSlug: "HUBSPOT_GET_COMPANY",
@@ -1636,19 +1552,6 @@ export const hubspotComposioTools: IntegrationTool[] = [
       "hubspot",
       "read",
       "batch",
-    ],
-  }),
-  composioTool({
-    name: "hubspot_get_event_template",
-    description: "Retrieves detailed information about a specific event template for a given application in HubSpot's CRM timeline.",
-    toolSlug: "HUBSPOT_GET_EVENT_TEMPLATE",
-    mode: "read",
-    risk: "safe",
-    tags: [
-      "composio",
-      "hubspot",
-      "read",
-      "templates",
     ],
   }),
   composioTool({
@@ -1949,19 +1852,6 @@ export const hubspotComposioTools: IntegrationTool[] = [
       "hubspot",
       "read",
       "templates",
-    ],
-  }),
-  composioTool({
-    name: "hubspot_list_feedback_submissions",
-    description: "Retrieves a paginated list of feedback submissions from HubSpot, allowing specification of properties (including history), associated object IDs, and filtering by archive status.",
-    toolSlug: "HUBSPOT_LIST_FEEDBACK_SUBMISSIONS",
-    mode: "read",
-    risk: "safe",
-    tags: [
-      "composio",
-      "hubspot",
-      "read",
-      "basic",
     ],
   }),
   composioTool({

@@ -23,6 +23,7 @@ import type {
   ToolExecutionResult,
 } from "@/lib/runtime/tool-runtime";
 import { executeComposioTool } from "@/lib/composio/tool-executor";
+import { isStubSchema } from "@/lib/composio/schema-cache";
 import {
   classifyIntegrationError,
   getAllHandlers,
@@ -296,6 +297,38 @@ export async function executeToolForUser(
     confirmed: request.confirmed,
     executionMode: mode,
   });
+
+  // Guard: if a Composio-backed tool's schema is still the empty stub after
+  // hydration, the schema fetch silently failed (KV miss + Composio API blip).
+  // Forwarding empty/unvalidated args to Composio in that state produces the
+  // confusing pydantic "field required" error from inside Mercury, so refuse
+  // and surface a retryable error instead.
+  if (
+    decision.tool.execution.kind === "composio_tool" &&
+    isStubSchema(decision.tool.inputSchema)
+  ) {
+    const payload: ToolExecutionPayload = {
+      ok: false,
+      toolName: decision.tool.name,
+      integration: decision.tool.integration,
+      connectionId: decision.connectionId,
+      mode,
+      tool: describedTool,
+      args: request.args,
+      requiresConfirmation: policy.requiresConfirmation,
+      policyReason: policy.reason,
+      error: {
+        type: "provider",
+        code: "schema_unavailable",
+        message: `Tool schema for ${decision.tool.name} is not loaded yet. Retry the call in a moment.`,
+        retryable: true,
+      },
+      meta: toMeta(startedAt, requestId),
+    };
+    await logExecutionResult(db, request, payload);
+    return payload;
+  }
+
   const preparedArgs = prepareToolArguments({
     toolName: decision.tool.name,
     schema: decision.tool.inputSchema,

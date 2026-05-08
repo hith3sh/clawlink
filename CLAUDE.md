@@ -106,6 +106,32 @@ Rules:
 - Adding a new Composio integration only requires committing a small (~10-20 KB) manifest file. No schema data in the repo.
 - The `convertInputSchema()` logic in `backend-client.ts` mirrors what the import script previously used, so runtime schemas are identical to what was previously statically generated.
 
+## Composio Managed OAuth Scope Limits
+
+Composio offers two OAuth modes per auth config: **Managed** (the default — Composio's shared OAuth client) and **Bring-Your-Own** ("Use your own developer credentials" — our `client_id` + `client_secret`). Composio's docs explicitly recommend BYO for production use.
+
+The Managed client is registered with each provider for a fixed, minimal scope set, while Composio's tool catalog publishes every tool they have ever built for the toolkit regardless of which scopes the Managed client requests. The catalog is **not** intersected with the auth config's granted scopes — neither on Composio's side nor ours. So tools that need scopes the Managed client doesn't have appear in `clawlink_list_tools` and fail at runtime with a provider scope error like "Missing required scope: …".
+
+Worked example (Figma, May 2026 — auth config `ac_2Ktp_uQWykTF` `figma-clawlink`):
+- Composio publishes 53 Figma tools.
+- Their Managed Figma OAuth client is registered for 12 scopes (file content/metadata/versions/comments, library content, projects, current user, webhooks).
+- 15 tools fail at runtime even with a healthy connection: `file_variables:*` (3 tools — also Figma Enterprise-only), `file_dev_resources:*` (4 tools), `library_analytics:read` (6 tools — Figma Enterprise-only), `org:activity_log_read` (1 tool — Enterprise org admin only), and `figma_get_payments` (different auth model entirely).
+- Confirmed by calling `POST https://backend.composio.dev/api/v3.1/tools/execute/FIGMA_GET_LOCAL_VARIABLES` directly with Composio's API key — same scope error, so the limitation is upstream of ClawLink.
+- Composio's auth-config scope picker accepts arbitrary scope names typed in, but adding scopes the Managed client isn't registered for breaks the OAuth consent flow at connect time.
+- Composio's per-tool `scopes` metadata is in places stale (e.g. claims `files:read` for tools that actually work fine with the modern `file_content:read`). Always verify by calling the tool directly through Composio's `/tools/execute/<slug>` before assuming a scope mismatch is real.
+
+Important second source of scope mismatch: **provider tier-gates**. `file_variables:*`, `library_analytics:read`, and `org:activity_log_read` are documented Enterprise-plan-only by Figma. Even a BYO OAuth app cannot register those scopes unless the app owner's Figma account is on Enterprise — and the connecting user also needs Enterprise for the granted scope to actually return data. So those tools are effectively un-shippable to non-Enterprise customers, regardless of OAuth strategy.
+
+Resolution committed 2026-05-08: 15 unsupported Figma tools dropped from `src/generated/composio-manifests/figma.generated.ts` and matching entries cleaned from `config/composio-tool-overrides.mjs`. Remaining 22-ish tools are all verified callable with the 12 Managed scopes. BYO migration deferred — minimal upside (only the 4 dev_resources tools become reachable; the rest are Enterprise-locked anyway).
+
+Mitigations, in order of preference:
+
+1. **BYO OAuth credentials (production answer).** Register our own OAuth app with the provider, request all needed scopes upfront, then create a Composio auth config with "Use your own developer credentials" + our `client_id`/`client_secret`. Update `COMPOSIO_AUTH_CONFIG_MAP` to point the integration slug at the new auth config id. Existing connected accounts on the old Managed config continue to work; affected users reconnect to pick up the new scopes.
+2. **Trim the manifest (stopgap only).** Remove the unsupported tools from the integration's `*.generated.ts` and any matching entries in `config/composio-tool-overrides.mjs` so the LLM never sees them. Loses functionality, but better than runtime scope errors.
+3. **Per-tool `requiresScopes` + per-connection `scopeSnapshot`.** Long-term: populate `requiresScopes` at import time from Composio's tool docs and read the granted scopes back from Composio per connection so `findMissingScopes` in `src/lib/server/router.ts` can filter tools at list time. Not implemented yet.
+
+When adding a new Composio integration, default to (1) — BYO credentials from day one. Treat the Managed mode as a prototype convenience, not a production answer.
+
 ## Flows And Triggers
 
 The repo now includes flow and trigger runtime support in addition to direct tool calls.
@@ -144,3 +170,11 @@ For OpenClaw plugin releases, follow the tag-based npm publish workflow document
 **Every plugin version must be published to BOTH npm AND ClawHub.** The plugin uses two different names by design: npm publishes as `@useclawlink/openclaw-plugin` (existing scope) and ClawHub publishes as `clawlink-plugin` (so OpenClaw users can install via `clawhub:clawlink-plugin`). The plugin id in `openclaw.plugin.json` is `clawlink-plugin` to match the ClawHub name.
 
 The two registries do not sync, but a tag push now publishes to BOTH automatically via `.github/workflows/publish-openclaw-plugin.yml`. The workflow runs npm publish (with provenance) followed by `scripts/publish-clawhub-plugin.mjs`, both attested through GitHub Actions Trusted Publishing (OIDC). **Do NOT run `npm run publish:clawhub-plugin` manually after a tag push** — CI handles it, and re-running locally will fail with "version already exists" since ClawHub releases are immutable. The npm script is reserved for dry runs (`-- --dry-run`) and recovery scenarios. Full rules are in `AGENTS.md` under "ClawHub Publishing".
+
+If the GitHub Actions ClawHub publish step fails but npm already released the version, the approved recovery path is a direct local publish through the helper script, not a hand-rolled `clawhub package publish` call:
+
+```bash
+npm run publish:clawhub-plugin -- --manual-override-reason "Recovery publish for clawlink-plugin <version> after GitHub Actions ClawHub step failed on openclaw-plugin-v<version>"
+```
+
+ClawHub requires `--manual-override-reason` for manual publishes when trusted publisher config exists. After the recovery publish, verify with `npx clawhub package inspect clawlink-plugin --json` and confirm `latestVersion` matches the intended release.

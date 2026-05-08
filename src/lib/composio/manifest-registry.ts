@@ -1,6 +1,9 @@
 import type { IntegrationTool } from "../../../worker/integrations/base";
 import { composioToolManifests } from "@/generated/composio-manifests";
-import { applyComposioToolMetadataOverrides } from "./backend-client";
+import {
+  applyComposioToolFieldDescriptionOverrides,
+  applyComposioToolMetadataOverrides,
+} from "./backend-client";
 import {
   type KvNamespaceLike,
   resolveToolSchemas,
@@ -229,6 +232,7 @@ export async function hydrateComposioToolSchemas(
     const schema = schemas.get(tool.execution.toolSlug);
     if (schema) {
       tool.inputSchema = schema;
+      applyComposioToolFieldDescriptionOverrides(tool);
       applyDiscoveryHints(tool, toolsByIntegration.get(tool.integration) ?? []);
     }
   }
