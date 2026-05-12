@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Script from "next/script";
+import { AnimatedWords } from "@/components/AnimatedWords";
 import AudienceTabs from "@/components/AudienceTabs";
 import { PricingCard } from "@/components/PricingCard";
 import { MarketingIntegrationGrid } from "@/components/MarketingIntegrationGrid";
@@ -9,6 +10,19 @@ export default function Home() {
     <main className="flex-1">
       {/* ───── Hero ───── */}
       <section className="relative mx-auto max-w-[1120px] px-6 pt-14 pb-24 text-center">
+        {/* Decorative doodle arrows */}
+        <img
+          src="/images/doodle-arrow-left.svg"
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute top-24 -left-32 hidden w-[200px] opacity-20 lg:block"
+        />
+        <img
+          src="/images/doodle-arrow-right.svg"
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute top-24 -right-32 hidden w-[200px] opacity-20 lg:block"
+        />
         {/* Eyebrow pill */}
         <span
           className="mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold"
@@ -34,12 +48,11 @@ export default function Home() {
             color: "var(--mk-fg)",
           }}
         >
-          Plug your Openclaw into the{" "}
-          <span className="mk-marked">rest of your stack</span>
+          Plug your Openclaw into <AnimatedWords />
         </h1>
 
         <p
-          className="mx-auto mt-6 max-w-[600px] text-[16.5px] leading-relaxed"
+          className="mx-auto mt-12 max-w-[600px] text-[16.5px] leading-relaxed"
           style={{ color: "var(--mk-fg-muted)" }}
         >
           ClawLink connects Gmail, Slack, Notion, GitHub, and 100+ apps to your
@@ -48,10 +61,10 @@ export default function Home() {
 
         {/* Tabs + panels */}
         <div className="mt-10">
-          {/* Hand-drawn annotation (desktop only, shown next to AI panel) */}
-          <div className="pointer-events-none absolute -left-8 top-[400px] hidden w-[260px] text-left xl:block">
+          {/* Hand-drawn annotation (desktop only, points toward copy button) */}
+          <div className="pointer-events-none absolute -right-8 top-[440px] hidden w-[260px] text-right xl:block">
             <span
-              className="block max-w-[200px] text-[26px] leading-tight"
+              className="block ml-auto max-w-[220px] text-[26px] leading-tight"
               style={{
                 fontFamily: "var(--font-caveat), cursive",
                 fontWeight: 600,
@@ -68,7 +81,7 @@ export default function Home() {
               strokeLinecap="round"
               strokeLinejoin="round"
               aria-hidden="true"
-              className="mt-2 ml-16 h-[84px] w-[154px]"
+              className="mt-2 mr-16 ml-auto h-[84px] w-[154px] scale-x-[-1]"
             >
               <path d="M6 6 Q 18 12 26 26 Q 32 38 50 42 Q 70 46 92 38" />
               <path d="M84 30 Q 90 35 94 38 Q 89 42 84 47" />

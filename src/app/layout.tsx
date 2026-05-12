@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono, Caveat, Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/ui/themes";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -83,6 +84,11 @@ export default function RootLayout({
         className={`${inter.variable} ${geistMono.variable} ${caveat.variable} ${plusJakartaSans.variable} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col">
+          <Script
+            src="https://app.rybbit.io/api/script.js"
+            data-site-id="179055470d9e"
+            strategy="afterInteractive"
+          />
           <TooltipProvider>
             {children}
           </TooltipProvider>

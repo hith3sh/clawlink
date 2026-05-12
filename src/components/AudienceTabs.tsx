@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "motion/react";
 import { Bot, User, Check, Copy } from "lucide-react";
 import {
   CLAWLINK_VERIFY_URL,
@@ -72,37 +73,39 @@ function TabButton({
       role="tab"
       aria-selected={active}
       onClick={onClick}
-      className="inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all"
-      style={
-        active
-          ? {
-              background: "var(--brand)",
-              color: "#fff",
-              boxShadow: "0 8px 20px rgba(224,53,43,0.35)",
-            }
-          : {
-              background: "transparent",
-              color: "rgba(255,255,255,0.72)",
-              border: "1px solid transparent",
-            }
-      }
+      className="relative inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold"
     >
-      {icon}
-      {label}
+      {active && (
+        <motion.div
+          layoutId="activeTab"
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: "var(--brand)",
+            boxShadow: "0 8px 20px rgba(224,53,43,0.35)",
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 28,
+          }}
+        />
+      )}
+      <span
+        className="relative z-10 inline-flex items-center gap-2 transition-colors duration-300"
+        style={{
+          color: active ? "#fff" : "rgba(255,255,255,0.72)",
+        }}
+      >
+        {icon}
+        {label}
+      </span>
     </button>
   );
 }
 
 function HumanPanel() {
   return (
-    <div
-      className="rounded-3xl p-5 text-left sm:p-8"
-      style={{
-        background: "var(--mk-elev)",
-        border: "1px solid rgba(255,255,255,0.10)",
-        boxShadow: "0 18px 50px rgba(0,0,0,0.55)",
-      }}
-    >
+    <div className="rounded-3xl p-5 text-left sm:p-8">
       <h2
         className="mb-5 text-center text-2xl font-bold tracking-tight"
         style={{
@@ -145,7 +148,7 @@ function HumanPanel() {
         </Step>
       </ol>
 
-      <p className="mt-4 text-center text-xs" style={{ color: "var(--mk-fg-faint)" }}>
+      <p className="mt-8 text-center text-xs" style={{ color: "var(--mk-fg-faint)" }}>
         <a
           href={CLAWLINK_VERIFY_URL}
           target="_blank"
@@ -227,14 +230,7 @@ function SetupCard({
 
 function AgentPanel() {
   return (
-    <div
-      className="rounded-3xl p-5 text-left sm:p-8"
-      style={{
-        background: "var(--mk-elev)",
-        border: "1px solid rgba(255,255,255,0.10)",
-        boxShadow: "0 18px 50px rgba(0,0,0,0.55)",
-      }}
-    >
+    <div className="rounded-3xl p-5 text-left sm:p-8">
       <h2
         className="mb-5 text-center text-2xl font-bold tracking-tight"
         style={{
@@ -248,40 +244,22 @@ function AgentPanel() {
 
       {/* Code card */}
       <div
-        className="overflow-hidden rounded-2xl"
+        className="flex items-start gap-4 rounded-2xl px-6 py-5"
         style={{
-          background: "var(--mk-tile)",
-          border: "1px solid var(--mk-border)",
+          background: "rgba(255,255,255,0.07)",
+          border: "1px solid rgba(255,255,255,0.12)",
         }}
       >
-        <div
-          className="flex items-center gap-2.5 px-3.5 py-3"
-          style={{ borderBottom: "1px solid var(--mk-border-card)" }}
-        >
-          <div className="flex gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#ED6A5E" }} />
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#F4BE4F" }} />
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#61C554" }} />
-          </div>
-          <span
-            className="ml-1 text-[11px] font-medium uppercase tracking-[0.10em]"
-            style={{ color: "var(--mk-fg-faint)" }}
-          >
-            prompt
-          </span>
-          <div className="ml-auto">
-            <CopyButton text={AGENT_PROMPT} />
-          </div>
-        </div>
         <AgentPromptText
-          containerClassName="px-5 py-5 text-[13px] leading-[1.65]"
+          containerClassName="flex-1 text-[13.5px] leading-[1.7]"
           containerStyle={{
             fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-            color: "rgba(255,255,255,0.92)",
+            color: "rgba(255,255,255,0.88)",
           }}
           linkClassName="underline decoration-[var(--brand)]/40 underline-offset-4 hover:decoration-[var(--brand)]"
           linkStyle={{ color: "#FF9A78" }}
         />
+        <CopyButton text={AGENT_PROMPT} />
       </div>
 
       <ol className="mt-6 space-y-3">
@@ -338,23 +316,15 @@ function CopyButton({ text }: { text: string }) {
       type="button"
       onClick={copy}
       aria-label="Copy prompt to clipboard"
-      className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors"
+      className="mt-0.5 inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md p-2 transition-colors hover:bg-white/10"
       style={{
-        background: "rgba(255,255,255,0.06)",
-        border: "1px solid rgba(255,255,255,0.1)",
-        color: "rgba(255,255,255,0.85)",
+        color: "rgba(255,255,255,0.5)",
       }}
     >
       {copied ? (
-        <>
-          <Check className="h-3 w-3" aria-hidden />
-          Copied
-        </>
+        <Check className="h-4 w-4" aria-hidden />
       ) : (
-        <>
-          <Copy className="h-3 w-3" aria-hidden />
-          Copy
-        </>
+        <Copy className="h-4 w-4" aria-hidden />
       )}
     </button>
   );

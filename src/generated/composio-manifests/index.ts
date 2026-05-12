@@ -65,7 +65,6 @@ import { shopifyComposioTools } from "./shopify.generated";
 import { slackComposioTools } from "./slack.generated";
 import { snapchatComposioTools } from "./snapchat.generated";
 import { stripeComposioTools } from "./stripe.generated";
-import { tiktokComposioTools } from "./tiktok.generated";
 import { trelloComposioTools } from "./trello.generated";
 import { twilioComposioTools } from "./twilio.generated";
 import { twitterComposioTools } from "./twitter.generated";
@@ -143,7 +142,6 @@ export const composioToolManifests: IntegrationTool[] = [
   ...slackComposioTools,
   ...snapchatComposioTools,
   ...stripeComposioTools,
-  ...tiktokComposioTools,
   ...trelloComposioTools,
   ...twilioComposioTools,
   ...twitterComposioTools,

@@ -13,7 +13,7 @@ import { fetchComposioToolSchemas, getComposioToolkitVersion } from "./backend-c
 
 const CACHE_TTL_SECONDS = 86_400; // 24 hours
 const STALE_AFTER_SECONDS = 21_600; // 6 hours
-const CACHE_KEY_PREFIX = "composio-schema:";
+const CACHE_KEY_PREFIX = "composio-schema:v2:";
 
 interface SchemaCacheEntry {
   fetchedAt: number;

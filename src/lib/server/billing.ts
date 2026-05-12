@@ -359,9 +359,13 @@ async function upsertBillingAccount(
     canceledAt?: string | null;
   },
 ): Promise<void> {
-  const normalizedStatus = values.subscriptionStatus === undefined
-    ? null
-    : normalizeSubscriptionStatus(values.subscriptionStatus);
+  const hasSubscriptionStatus = values.subscriptionStatus !== undefined;
+  const hasCurrentPeriodEnd = values.currentPeriodEnd !== undefined;
+  const hasCancelAtPeriodEnd = values.cancelAtPeriodEnd !== undefined;
+  const hasCanceledAt = values.canceledAt !== undefined;
+  const normalizedStatus = hasSubscriptionStatus
+    ? normalizeSubscriptionStatus(values.subscriptionStatus)
+    : "free";
 
   await db
     .prepare(
@@ -387,12 +391,24 @@ async function upsertBillingAccount(
           polar_external_customer_id = excluded.polar_external_customer_id,
           polar_checkout_id = COALESCE(excluded.polar_checkout_id, billing_accounts.polar_checkout_id),
           polar_subscription_id = COALESCE(excluded.polar_subscription_id, billing_accounts.polar_subscription_id),
-          subscription_status = COALESCE(excluded.subscription_status, billing_accounts.subscription_status),
+          subscription_status = CASE
+            WHEN ? THEN excluded.subscription_status
+            ELSE billing_accounts.subscription_status
+          END,
           product_id = COALESCE(excluded.product_id, billing_accounts.product_id),
           product_name = COALESCE(excluded.product_name, billing_accounts.product_name),
-          current_period_end = excluded.current_period_end,
-          cancel_at_period_end = excluded.cancel_at_period_end,
-          canceled_at = excluded.canceled_at,
+          current_period_end = CASE
+            WHEN ? THEN excluded.current_period_end
+            ELSE billing_accounts.current_period_end
+          END,
+          cancel_at_period_end = CASE
+            WHEN ? THEN excluded.cancel_at_period_end
+            ELSE billing_accounts.cancel_at_period_end
+          END,
+          canceled_at = CASE
+            WHEN ? THEN excluded.canceled_at
+            ELSE billing_accounts.canceled_at
+          END,
           updated_at = datetime('now')
       `,
     )
@@ -408,6 +424,10 @@ async function upsertBillingAccount(
       values.currentPeriodEnd ?? null,
       values.cancelAtPeriodEnd ? 1 : 0,
       values.canceledAt ?? null,
+      hasSubscriptionStatus ? 1 : 0,
+      hasCurrentPeriodEnd ? 1 : 0,
+      hasCancelAtPeriodEnd ? 1 : 0,
+      hasCanceledAt ? 1 : 0,
     )
     .run();
 }

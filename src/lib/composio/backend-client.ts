@@ -112,6 +112,87 @@ function normalizeBaseUrl(value: unknown): string {
   return (safeTrim(value) ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
 }
 
+const NOTION_ID_FIELDS = new Set([
+  "page_id",
+  "block_id",
+  "database_id",
+  "row_id",
+  "data_source_id",
+  "parent_id",
+]);
+
+function hyphenateUuid(value: string): string {
+  const normalized = value.replace(/-/g, "").toLowerCase();
+  return [
+    normalized.slice(0, 8),
+    normalized.slice(8, 12),
+    normalized.slice(12, 16),
+    normalized.slice(16, 20),
+    normalized.slice(20, 32),
+  ].join("-");
+}
+
+function normalizeFacebookPageIdValue(value: unknown): unknown {
+  const trimmed = safeTrim(value);
+  if (!trimmed) {
+    return value;
+  }
+
+  const candidate = trimmed.replace(/^page_id:/i, "").trim();
+  if (/^[0-9]+$/.test(candidate)) {
+    return candidate;
+  }
+
+  if (/^[0-9-]+$/.test(candidate)) {
+    return candidate.replace(/-/g, "");
+  }
+
+  return value;
+}
+
+function normalizeNotionObjectIdValue(value: unknown): unknown {
+  const trimmed = safeTrim(value);
+  if (!trimmed) {
+    return value;
+  }
+
+  const matches = [
+    ...trimmed.matchAll(
+      /\b([0-9a-f]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/gi,
+    ),
+  ];
+  const rawMatch = matches.at(-1)?.[1];
+
+  if (!rawMatch) {
+    return value;
+  }
+
+  return hyphenateUuid(rawMatch);
+}
+
+function preprocessComposioArguments(
+  toolSlug: string,
+  args: Record<string, unknown>,
+): Record<string, unknown> {
+  const normalizedArgs = { ...args };
+
+  if ("page_id" in normalizedArgs && toolSlug.startsWith("FACEBOOK_")) {
+    normalizedArgs.page_id = normalizeFacebookPageIdValue(normalizedArgs.page_id);
+  }
+
+  if (toolSlug.startsWith("NOTION_")) {
+    for (const fieldName of NOTION_ID_FIELDS) {
+      if (!(fieldName in normalizedArgs)) {
+        continue;
+      }
+
+      normalizedArgs[fieldName] = normalizeNotionObjectIdValue(normalizedArgs[fieldName]);
+    }
+  }
+
+  return normalizedArgs;
+}
+
 function parseMap(value: unknown): Map<string, string> {
   const map = new Map<string, string>();
   const raw = safeTrim(value);
@@ -569,6 +650,47 @@ async function composioFetch<T>(
   return { data: payload, headers: response.headers };
 }
 
+async function executeComposioToolRequestOnce(
+  config: ComposioConfig,
+  params: ExecuteComposioToolParams,
+  args: Record<string, unknown>,
+): Promise<ExecuteComposioToolResult> {
+  const response = await composioFetch<{
+    data?: unknown;
+    error?: unknown;
+    successful?: boolean;
+    log_id?: string;
+  }>(
+    config,
+    `/tools/execute/${encodeURIComponent(params.toolSlug)}`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        connected_account_id: params.connectedAccountId,
+        user_id: params.userId,
+        version: params.version ?? config.toolkitVersion,
+        arguments: args,
+      }),
+    },
+  );
+
+  if (response.data.successful === false) {
+    throw toComposioRequestError(
+      response.data,
+      `${params.toolSlug} failed in Composio.`,
+      502,
+    );
+  }
+
+  return {
+    data: response.data.data ?? response.data,
+    providerRequestId:
+      safeTrim(response.data.log_id) ??
+      safeTrim(response.headers.get("x-request-id")) ??
+      undefined,
+  };
+}
+
 export async function createComposioConnectLink(
   params: CreateComposioConnectLinkParams,
 ): Promise<ComposioConnectLink> {
@@ -730,40 +852,8 @@ export async function executeComposioToolRequest(
     params.integrationSlug ?? params.toolkit.replace(/_/g, "-"),
     params.authConfigId,
   );
-  const response = await composioFetch<{
-    data?: unknown;
-    error?: unknown;
-    successful?: boolean;
-    log_id?: string;
-  }>(
-    config,
-    `/tools/execute/${encodeURIComponent(params.toolSlug)}`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        connected_account_id: params.connectedAccountId,
-        user_id: params.userId,
-        version: params.version ?? config.toolkitVersion,
-        arguments: params.arguments,
-      }),
-    },
-  );
-
-  if (response.data.successful === false) {
-    throw toComposioRequestError(
-      response.data,
-      `${params.toolSlug} failed in Composio.`,
-      502,
-    );
-  }
-
-  return {
-    data: response.data.data ?? response.data,
-    providerRequestId:
-      safeTrim(response.data.log_id) ??
-      safeTrim(response.headers.get("x-request-id")) ??
-      undefined,
-  };
+  const normalizedArgs = preprocessComposioArguments(params.toolSlug, params.arguments);
+  return executeComposioToolRequestOnce(config, params, normalizedArgs);
 }
 
 // ---------------------------------------------------------------------------
@@ -780,6 +870,46 @@ interface ComposioToolsResponse {
   total_items?: number;
 }
 
+function simplifyUnionNode(variants: unknown[]): Record<string, unknown> | null {
+  const normalizedVariants = variants.filter(
+    (variant): variant is Record<string, unknown> =>
+      Boolean(variant) &&
+      typeof variant === "object" &&
+      (variant as Record<string, unknown>).type !== "null",
+  );
+
+  if (normalizedVariants.length === 0) {
+    return null;
+  }
+
+  const objectVariants = normalizedVariants.filter(
+    (variant) =>
+      variant.type === "object" ||
+      typeof variant.properties === "object" ||
+      Array.isArray(variant.required),
+  );
+
+  if (objectVariants.length > 0) {
+    if (objectVariants.length === 1) {
+      return simplifySchemaNode(objectVariants[0]);
+    }
+
+    return { type: "object", additionalProperties: true };
+  }
+
+  const arrayVariant = normalizedVariants.find((variant) => variant.type === "array");
+  if (arrayVariant) {
+    return simplifySchemaNode(arrayVariant);
+  }
+
+  const typedVariant = normalizedVariants.find((variant) => typeof variant.type === "string");
+  if (typedVariant) {
+    return simplifySchemaNode(typedVariant);
+  }
+
+  return { type: "string" };
+}
+
 function simplifySchemaNode(node: unknown): Record<string, unknown> {
   if (!node || typeof node !== "object") {
     return { type: "string" };
@@ -789,6 +919,14 @@ function simplifySchemaNode(node: unknown): Record<string, unknown> {
 
   if (record.$ref) {
     return { type: "object", additionalProperties: true };
+  }
+
+  if (Array.isArray(record.oneOf)) {
+    return simplifyUnionNode(record.oneOf) ?? { type: "string" };
+  }
+
+  if (Array.isArray(record.anyOf)) {
+    return simplifyUnionNode(record.anyOf) ?? { type: "string" };
   }
 
   const result: Record<string, unknown> = {};
@@ -808,6 +946,14 @@ function simplifySchemaNode(node: unknown): Record<string, unknown> {
       }
       result.properties = simplified;
     }
+  } else if (record.properties && typeof record.properties === "object") {
+    result.type = "object";
+    result.additionalProperties = true;
+    const simplified: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(record.properties as Record<string, unknown>)) {
+      simplified[key] = simplifySchemaNode(value);
+    }
+    result.properties = simplified;
   } else if (record.type) {
     result.type = record.type;
   } else {
@@ -840,43 +986,7 @@ function convertInputSchema(
   const fieldDescriptionOverrides = override?.fieldDescriptions ?? {};
 
   for (const [name, prop] of Object.entries(rawProps)) {
-    const schema: Record<string, unknown> = {};
-    const propType = prop.type;
-
-    if (propType === "array") {
-      schema.type = "array";
-      schema.items = prop.items
-        ? simplifySchemaNode(prop.items)
-        : { type: "object", additionalProperties: true };
-    } else if (propType === "object") {
-      schema.type = "object";
-      schema.additionalProperties = true;
-      if (prop.properties && typeof prop.properties === "object") {
-        const nested: Record<string, unknown> = {};
-        for (const [nestedName, nestedProp] of Object.entries(
-          prop.properties as Record<string, unknown>,
-        )) {
-          nested[nestedName] = simplifySchemaNode(nestedProp);
-        }
-        schema.properties = nested;
-      }
-    } else if (propType === "integer") {
-      schema.type = "integer";
-    } else if (propType === "number") {
-      schema.type = "number";
-    } else if (propType === "boolean") {
-      schema.type = "boolean";
-    } else {
-      schema.type = "string";
-    }
-
-    if (prop.description) schema.description = prop.description;
-    if (prop.enum) schema.enum = prop.enum;
-    if (Array.isArray(prop.examples) && prop.examples.length > 0) {
-      schema.examples = prop.examples;
-    } else if (prop.example !== undefined) {
-      schema.examples = [prop.example];
-    }
+    const schema: Record<string, unknown> = simplifySchemaNode(prop);
 
     const descriptionOverride = safeTrim(fieldDescriptionOverrides[name]);
     if (descriptionOverride) {
