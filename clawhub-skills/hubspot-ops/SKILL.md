@@ -1,5 +1,5 @@
 ---
-name: clawlink-hubspot-crm
+name: hubspot-ops
 description: Manage contacts, deals, companies, campaigns, and CRM workflows in HubSpot — powered by ClawLink.
 ---
 

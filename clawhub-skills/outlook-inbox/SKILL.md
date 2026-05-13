@@ -1,5 +1,5 @@
 ---
-name: clawlink-outlook-email
+name: outlook-inbox
 description: Search Outlook mail, read threads, manage drafts, and send or reply to email — powered by ClawLink.
 ---
 

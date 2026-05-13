@@ -1,5 +1,5 @@
 ---
-name: clawlink-resend-email
+name: resend-mail
 description: Inspect transactional email sends, domains, audiences, and email workflows in Resend — powered by ClawLink.
 ---
 
