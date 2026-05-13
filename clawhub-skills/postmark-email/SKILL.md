@@ -3,7 +3,7 @@ name: postmark-email
 description: Inspect transactional email activity, templates, messages, and delivery workflows in Postmark — powered by ClawLink.
 ---
 
-# Postmark via ClawLink
+# Postmark
 
 Work with Postmark from chat — inspect transactional email activity, templates, messages, and delivery workflows.
 

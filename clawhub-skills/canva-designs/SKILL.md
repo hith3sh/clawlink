@@ -3,7 +3,7 @@ name: canva-designs
 description: Create designs, upload assets, export content, and manage brand templates in Canva — powered by ClawLink.
 ---
 
-# Canva via ClawLink
+# Canva
 
 Work with Canva from chat — create designs, upload assets, export content, and manage brand templates.
 

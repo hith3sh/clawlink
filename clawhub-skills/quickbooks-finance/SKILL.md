@@ -3,7 +3,7 @@ name: quickbooks-finance
 description: Manage accounts, customers, payments, and finance workflows in QuickBooks — powered by ClawLink.
 ---
 
-# QuickBooks via ClawLink
+# QuickBooks
 
 Work with QuickBooks from chat — manage accounts, customers, payments, and finance workflows.
 

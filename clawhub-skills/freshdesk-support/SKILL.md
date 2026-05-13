@@ -3,7 +3,7 @@ name: freshdesk-support
 description: Manage tickets, notes, watchers, conversations, and support workflows in Freshdesk — powered by ClawLink.
 ---
 
-# Freshdesk via ClawLink
+# Freshdesk
 
 Work with Freshdesk from chat — manage tickets, notes, conversations, watchers, and support workflows.
 

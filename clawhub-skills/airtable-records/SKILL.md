@@ -3,7 +3,7 @@ name: airtable-records
 description: Browse Airtable bases and tables, inspect records, create records, and manage fields, comments, and table actions — powered by ClawLink.
 ---
 
-# Airtable via ClawLink
+# Airtable
 
 Work with Airtable from chat — browse bases and tables, read and create records, manage fields, comments, and table operations when supported.
 

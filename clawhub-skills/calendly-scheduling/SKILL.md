@@ -3,7 +3,7 @@ name: calendly-scheduling
 description: Inspect Calendly events, invitees, availability schedules, and webhook subscriptions, and perform scheduling actions — powered by ClawLink.
 ---
 
-# Calendly via ClawLink
+# Calendly
 
 Work with Calendly from chat — view events, check invitees, inspect availability schedules, manage webhooks, and create scheduling links when supported.
 

@@ -3,7 +3,7 @@ name: linkedin-social
 description: Post updates, manage pages, grow your network, and analyze engagement on LinkedIn — powered by ClawLink.
 ---
 
-# LinkedIn via ClawLink
+# LinkedIn
 
 Work with LinkedIn from chat — post updates, manage pages, grow your network, and analyze engagement.
 

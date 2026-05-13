@@ -3,7 +3,7 @@ name: figma-design
 description: Read files, manage comments, extract design tokens, download images, and create webhooks in Figma — powered by ClawLink.
 ---
 
-# Figma via ClawLink
+# Figma
 
 Work with Figma from chat — read files, manage comments, extract design tokens, download images, and create webhooks.
 

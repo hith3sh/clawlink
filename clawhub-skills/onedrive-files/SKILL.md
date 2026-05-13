@@ -3,7 +3,7 @@ name: onedrive-files
 description: Browse, search, download, and share OneDrive files, create folders, upload files, and manage file actions — powered by ClawLink.
 ---
 
-# OneDrive via ClawLink
+# OneDrive
 
 Work with OneDrive from chat — browse files, search folders, inspect details, create folders, share links, and upload files when supported.
 

@@ -3,7 +3,7 @@ name: pandadoc-documents
 description: Create and organize documents, folders, attachments, and document workflows in PandaDoc — powered by ClawLink.
 ---
 
-# PandaDoc via ClawLink
+# PandaDoc
 
 Work with PandaDoc from chat — create documents, manage folders and attachments, and coordinate document workflows.
 

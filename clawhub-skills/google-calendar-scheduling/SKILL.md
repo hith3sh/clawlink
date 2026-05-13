@@ -3,7 +3,7 @@ name: google-calendar-scheduling
 description: Review calendars, inspect events, find free time, and coordinate calendar changes with confirmation — powered by ClawLink.
 ---
 
-# Google Calendar via ClawLink
+# Google Calendar
 
 Work with Google Calendar from chat — review calendars, inspect events, find free time, and coordinate event changes when needed.
 

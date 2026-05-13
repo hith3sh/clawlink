@@ -3,7 +3,7 @@ name: google-analytics-reporting
 description: Run GA4 reports, inspect properties, list audiences and data streams, and analyze traffic and conversion data — powered by ClawLink.
 ---
 
-# Google Analytics via ClawLink
+# Google Analytics
 
 Work with Google Analytics from chat — run GA4 reports, inspect properties, list audiences and data streams, and analyze traffic and conversion data.
 

@@ -3,7 +3,7 @@ name: dataforseo-reporting
 description: Run SEO, SERP, keyword, and search intelligence workflows with DataForSEO — powered by ClawLink.
 ---
 
-# DataForSEO via ClawLink
+# DataForSEO
 
 Work with DataForSEO from chat — run SEO, SERP, keyword, and search intelligence workflows.
 

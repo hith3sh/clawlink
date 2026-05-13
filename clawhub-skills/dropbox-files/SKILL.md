@@ -3,7 +3,7 @@ name: dropbox-files
 description: Browse, search, upload, download, and manage files and folders in Dropbox — powered by ClawLink.
 ---
 
-# Dropbox via ClawLink
+# Dropbox
 
 Work with Dropbox from chat — browse, search, upload, download, and manage files and folders.
 

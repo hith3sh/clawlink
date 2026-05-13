@@ -66,7 +66,7 @@ name: {{SLUG}}
 description: {{ONE_LINE_DESCRIPTION}} — powered by ClawLink.
 ---
 
-# {{DISPLAY_NAME}} via ClawLink
+# {{DISPLAY_NAME}}
 
 Work with {{DISPLAY_NAME}} from chat — {{SHORT_CAPABILITIES_SUMMARY}}.
 

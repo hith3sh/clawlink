@@ -3,7 +3,7 @@ name: google-search-console-seo
 description: Query search performance, inspect indexing status, review sitemaps, and manage verified Search Console sites — powered by ClawLink.
 ---
 
-# Google Search Console via ClawLink
+# Google Search Console
 
 Work with Google Search Console from chat — query search performance, inspect indexing status, review sitemaps, and manage verified sites.
 

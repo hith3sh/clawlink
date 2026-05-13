@@ -3,7 +3,7 @@ name: google-drive-files
 description: Search Drive, inspect metadata, and coordinate file or sharing changes with confirmation — powered by ClawLink.
 ---
 
-# Google Drive via ClawLink
+# Google Drive
 
 Work with Google Drive from chat — search files, inspect metadata, review collaboration details, and coordinate file changes when needed.
 

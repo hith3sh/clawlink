@@ -3,7 +3,7 @@ name: gmail-email
 description: Search Gmail messages, read threads, manage drafts and labels, and send or reply to email — powered by ClawLink.
 ---
 
-# Gmail via ClawLink
+# Gmail
 
 Work with Gmail from chat — search messages, read threads, manage drafts and labels, and send or reply to email.
 

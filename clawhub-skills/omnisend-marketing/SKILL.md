@@ -3,7 +3,7 @@ name: omnisend-marketing
 description: Manage contacts, campaigns, automations, and ecommerce marketing workflows in Omnisend — powered by ClawLink.
 ---
 
-# Omnisend via ClawLink
+# Omnisend
 
 Work with Omnisend from chat — manage contacts, campaigns, automations, and ecommerce marketing workflows.
 

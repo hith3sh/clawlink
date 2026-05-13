@@ -3,7 +3,7 @@ name: google-sheets-spreadsheets
 description: Create spreadsheets, read and update ranges, append rows, manage sheets, and automate spreadsheet workflows — powered by ClawLink.
 ---
 
-# Google Sheets via ClawLink
+# Google Sheets
 
 Work with Google Sheets from chat — create spreadsheets, read and update ranges, append rows, manage worksheets, and automate spreadsheet workflows.
 

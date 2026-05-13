@@ -3,7 +3,7 @@ name: zendesk-support
 description: Search users and tickets, review macros, and manage support workflows in Zendesk — powered by ClawLink.
 ---
 
-# Zendesk via ClawLink
+# Zendesk
 
 Work with Zendesk from chat — search users and tickets, review macros, and manage support workflows.
 

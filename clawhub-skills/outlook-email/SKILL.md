@@ -3,7 +3,7 @@ name: clawlink-outlook-email
 description: Search Outlook mail, read threads, manage drafts, and send or reply to email — powered by ClawLink.
 ---
 
-# Outlook Email via ClawLink
+# Outlook Email
 
 Work with Outlook from chat — search mail, read threads, manage drafts, and send or reply to email.
 

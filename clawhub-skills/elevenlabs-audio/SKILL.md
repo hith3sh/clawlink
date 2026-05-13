@@ -3,7 +3,7 @@ name: elevenlabs-audio
 description: Create and manage voices, speech, audio projects, and voice workflow assets in ElevenLabs — powered by ClawLink.
 ---
 
-# ElevenLabs via ClawLink
+# ElevenLabs
 
 Work with ElevenLabs from chat — manage voices, speech assets, audio projects, and voice workflow tasks.
 

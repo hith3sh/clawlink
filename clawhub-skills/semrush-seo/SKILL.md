@@ -3,7 +3,7 @@ name: semrush-seo
 description: Inspect keyword, domain, traffic, and SEO research data from Semrush — powered by ClawLink.
 ---
 
-# Semrush via ClawLink
+# Semrush
 
 Work with Semrush from chat — inspect keyword, domain, traffic, and SEO research data.
 

@@ -3,7 +3,7 @@ name: clawlink-trello-projects
 description: Manage Trello boards, lists, cards, comments, labels, checklists, and project workflows — powered by ClawLink.
 ---
 
-# Trello Projects via ClawLink
+# Trello Projects
 
 Work with Trello from chat — manage boards, lists, cards, comments, labels, checklists, and project workflows.
 

@@ -3,7 +3,7 @@ name: salesforce-ops
 description: Search Salesforce records, inspect objects, query CRM data, and work with accounts, contacts, leads, opportunities, and cases — powered by ClawLink.
 ---
 
-# Salesforce via ClawLink
+# Salesforce
 
 Work with Salesforce CRM from chat — search records, manage contacts, leads, accounts, opportunities, cases, and more.
 

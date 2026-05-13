@@ -3,7 +3,7 @@ name: clawlink-notion-workspace
 description: Browse databases, search pages, create and update content, and manage workspace data — powered by ClawLink.
 ---
 
-# Notion Workspace via ClawLink
+# Notion Workspace
 
 Work with Notion from chat — browse databases, search pages, create and update content, and manage workspace data.
 

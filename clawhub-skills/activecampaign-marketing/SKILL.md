@@ -3,7 +3,7 @@ name: activecampaign-marketing
 description: Manage contacts, campaigns, automations, lists, and marketing workflows in ActiveCampaign — powered by ClawLink.
 ---
 
-# ActiveCampaign via ClawLink
+# ActiveCampaign
 
 Work with ActiveCampaign from chat — manage contacts, campaigns, automations, lists, and marketing workflows.
 

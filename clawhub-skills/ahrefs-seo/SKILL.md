@@ -3,7 +3,7 @@ name: ahrefs-seo
 description: Inspect backlink, keyword, ranking, and SEO research data from Ahrefs — powered by ClawLink.
 ---
 
-# Ahrefs via ClawLink
+# Ahrefs
 
 Work with Ahrefs from chat — inspect backlink, keyword, ranking, and SEO research data.
 

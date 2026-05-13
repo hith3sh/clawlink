@@ -3,7 +3,7 @@ name: intercom-support
 description: Manage contacts, conversations, tags, subscriptions, and support or messaging workflows in Intercom — powered by ClawLink.
 ---
 
-# Intercom via ClawLink
+# Intercom
 
 Work with Intercom from chat — manage contacts, conversations, tags, subscriptions, and support workflows.
 

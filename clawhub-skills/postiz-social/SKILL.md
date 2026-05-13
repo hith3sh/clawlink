@@ -3,7 +3,7 @@ name: postiz-social
 description: Manage social publishing, scheduled posts, and content workflows in Postiz — powered by ClawLink.
 ---
 
-# Postiz via ClawLink
+# Postiz
 
 Work with Postiz from chat — manage social publishing, scheduled posts, and content workflows.
 

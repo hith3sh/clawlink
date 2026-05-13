@@ -3,7 +3,7 @@ name: box-files
 description: Browse files and folders, manage sharing and collaboration, inspect enterprise content, and coordinate file workflows — powered by ClawLink.
 ---
 
-# Box via ClawLink
+# Box
 
 Work with Box from chat — browse files, inspect metadata, manage sharing and collaboration, and coordinate file workflows.
 

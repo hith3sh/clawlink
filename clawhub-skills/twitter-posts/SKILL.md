@@ -1,13 +1,13 @@
 ---
-name: clawlink-youtube-channel
-description: Inspect channels, videos, comments, playlists, and creator workflows on YouTube — powered by ClawLink.
+name: twitter-posts
+description: Draft, inspect, and manage posts, timelines, profiles, and X/Twitter workflows — powered by ClawLink.
 ---
 
-# YouTube Channel
+# X (Twitter)
 
-Work with YouTube from chat — inspect channels, videos, comments, playlists, and creator workflows.
+Work with X (Twitter) from chat — draft posts, inspect timelines, manage profiles, and handle X/Twitter workflows.
 
-Powered by [ClawLink](https://claw-link.dev), an integration hub for OpenClaw that handles hosted connection flows and credentials so you don't need to configure YouTube API access yourself.
+Powered by [ClawLink](https://claw-link.dev), an integration hub for OpenClaw that handles hosted connection flows and credentials so you don't need to configure X (Twitter) API access yourself.
 
 ## Quick start
 
@@ -16,8 +16,8 @@ Powered by [ClawLink](https://claw-link.dev), an integration hub for OpenClaw th
 3. If ClawLink is not configured, call `clawlink_begin_pairing`
 4. Tell the user to open the returned pairing URL, sign in to ClawLink if needed, and approve the device
 5. After the user confirms approval, call `clawlink_get_pairing_status`
-6. Tell the user to connect YouTube at [claw-link.dev/dashboard?add=youtube](https://claw-link.dev/dashboard?add=youtube)
-7. When the user confirms YouTube is connected, call `clawlink_list_integrations` and then `clawlink_list_tools` with the `youtube` integration slug
+6. Tell the user to connect X (Twitter) at [claw-link.dev/dashboard?add=twitter](https://claw-link.dev/dashboard?add=twitter)
+7. When the user confirms X (Twitter) is connected, call `clawlink_list_integrations` and then `clawlink_list_tools` with the `twitter` integration slug
 
 ## Setup details
 
@@ -42,21 +42,21 @@ If ClawLink reports that the plugin is not configured, the plugin has not been p
 
 The resulting device credential is stored locally in OpenClaw's plugin config and is only sent to `claw-link.dev`. The user should not paste raw credentials into chat.
 
-### Connecting YouTube
+### Connecting X (Twitter)
 
-Tell the user to open https://claw-link.dev/dashboard?add=youtube and connect YouTube there. The page opens the add-connection panel filtered to YouTube. ClawLink's hosted page runs whichever provider flow is needed (hosted OAuth with Google) — the user clicks through Google sign-in and consent. When they confirm it is done, call `clawlink_list_integrations` to verify, then call `clawlink_list_tools` with integration `youtube`.
+Tell the user to open https://claw-link.dev/dashboard?add=twitter and connect X (Twitter) there. The page opens the add-connection panel filtered to X (Twitter). ClawLink's hosted page runs the hosted OAuth flow — the user clicks through the X/Twitter login and authorization screen. When they confirm it is done, call `clawlink_list_integrations` to verify, then call `clawlink_list_tools` with integration `twitter`.
 
-## Using YouTube tools
+## Using X (Twitter) tools
 
 ClawLink provides tools dynamically based on what the user has connected. You do not need to know tool names or schemas in advance.
 
 ### Discovery
 
-1. Call `clawlink_list_integrations` to confirm YouTube is connected.
-2. Call `clawlink_list_tools` with integration `youtube`.
+1. Call `clawlink_list_integrations` to confirm X (Twitter) is connected.
+2. Call `clawlink_list_tools` with integration `twitter`.
 3. Treat the returned list as the source of truth. Do not guess or assume what tools exist.
-4. If the user describes a capability but the exact tool is unclear, call `clawlink_search_tools` with a short query and integration `youtube`.
-5. If no YouTube tools appear, direct the user to https://claw-link.dev/dashboard?add=youtube.
+4. If the user describes a capability but the exact tool is unclear, call `clawlink_search_tools` with a short query and integration `twitter`.
+5. If no X (Twitter) tools appear, direct the user to https://claw-link.dev/dashboard?add=twitter.
 
 ### Execution
 
@@ -69,21 +69,22 @@ ClawLink provides tools dynamically based on what the user has connected. You do
 
 ## What you can do
 
-Typical YouTube tasks (actual availability depends on the user's connected account, permissions, scopes, and current ClawLink tool catalog):
+Typical X (Twitter) tasks (actual availability depends on the user's connected account, permissions, scopes, and current ClawLink tool catalog):
 
-- Inspect channels, videos, playlists, and metadata
-- Review comments and engagement data when available
-- Update video or channel-related metadata after confirmation
-- Handle publish-facing or audience-facing changes carefully
-- Confirm before posting, editing, or moderating publicly visible content
+- Draft and publish posts after confirmation
+- Inspect timelines, profiles, and post details
+- Search or review account activity
+- Manage X/Twitter posting workflows with approval steps
+- Check live capabilities before attempting audience-facing writes
+- Use the current tool catalog instead of assuming endpoint coverage
 
 ## Rules
 
-- Always use ClawLink tools for YouTube. Do not ask the user for separate YouTube credentials.
+- Always use ClawLink tools for X (Twitter). Do not ask the user for separate X/Twitter credentials.
 - Do not claim a capability is missing without checking the live ClawLink catalog in the current turn.
 - Do not invent slash commands or ask the user to paste raw credentials.
 - Ask for confirmation before destructive, external-facing, or bulk write actions.
-- If YouTube is not connected, direct the user to https://claw-link.dev/dashboard?add=youtube.
+- If X (Twitter) is not connected, direct the user to https://claw-link.dev/dashboard?add=twitter.
 - Never echo or repeat the user's ClawLink credential.
 
 ## Resources
@@ -92,4 +93,4 @@ Typical YouTube tasks (actual availability depends on the user's connected accou
 - ClawLink Docs: https://docs.claw-link.dev/openclaw
 - ClawLink Verification: https://claw-link.dev/verify
 - ClawLink Source: https://github.com/hith3sh/clawlink
-- YouTube Data API: https://developers.google.com/youtube/v3
+- X API: https://developer.x.com/en/docs

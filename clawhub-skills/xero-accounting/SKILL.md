@@ -1,13 +1,13 @@
 ---
-name: clawlink-youtube-channel
-description: Inspect channels, videos, comments, playlists, and creator workflows on YouTube — powered by ClawLink.
+name: xero-accounting
+description: Work with invoices, contacts, accounting records, and finance workflows in Xero — powered by ClawLink.
 ---
 
-# YouTube Channel
+# Xero
 
-Work with YouTube from chat — inspect channels, videos, comments, playlists, and creator workflows.
+Work with Xero from chat — inspect invoices, manage contacts, review accounting records, and coordinate finance workflows.
 
-Powered by [ClawLink](https://claw-link.dev), an integration hub for OpenClaw that handles hosted connection flows and credentials so you don't need to configure YouTube API access yourself.
+Powered by [ClawLink](https://claw-link.dev), an integration hub for OpenClaw that handles hosted connection flows and credentials so you don't need to configure Xero API access yourself.
 
 ## Quick start
 
@@ -16,8 +16,8 @@ Powered by [ClawLink](https://claw-link.dev), an integration hub for OpenClaw th
 3. If ClawLink is not configured, call `clawlink_begin_pairing`
 4. Tell the user to open the returned pairing URL, sign in to ClawLink if needed, and approve the device
 5. After the user confirms approval, call `clawlink_get_pairing_status`
-6. Tell the user to connect YouTube at [claw-link.dev/dashboard?add=youtube](https://claw-link.dev/dashboard?add=youtube)
-7. When the user confirms YouTube is connected, call `clawlink_list_integrations` and then `clawlink_list_tools` with the `youtube` integration slug
+6. Tell the user to connect Xero at [claw-link.dev/dashboard?add=xero](https://claw-link.dev/dashboard?add=xero)
+7. When the user confirms Xero is connected, call `clawlink_list_integrations` and then `clawlink_list_tools` with the `xero` integration slug
 
 ## Setup details
 
@@ -42,21 +42,21 @@ If ClawLink reports that the plugin is not configured, the plugin has not been p
 
 The resulting device credential is stored locally in OpenClaw's plugin config and is only sent to `claw-link.dev`. The user should not paste raw credentials into chat.
 
-### Connecting YouTube
+### Connecting Xero
 
-Tell the user to open https://claw-link.dev/dashboard?add=youtube and connect YouTube there. The page opens the add-connection panel filtered to YouTube. ClawLink's hosted page runs whichever provider flow is needed (hosted OAuth with Google) — the user clicks through Google sign-in and consent. When they confirm it is done, call `clawlink_list_integrations` to verify, then call `clawlink_list_tools` with integration `youtube`.
+Tell the user to open https://claw-link.dev/dashboard?add=xero and connect Xero there. The page opens the add-connection panel filtered to Xero. ClawLink's hosted page runs the hosted OAuth flow — the user clicks through the Xero login and authorization screen. When they confirm it is done, call `clawlink_list_integrations` to verify, then call `clawlink_list_tools` with integration `xero`.
 
-## Using YouTube tools
+## Using Xero tools
 
 ClawLink provides tools dynamically based on what the user has connected. You do not need to know tool names or schemas in advance.
 
 ### Discovery
 
-1. Call `clawlink_list_integrations` to confirm YouTube is connected.
-2. Call `clawlink_list_tools` with integration `youtube`.
+1. Call `clawlink_list_integrations` to confirm Xero is connected.
+2. Call `clawlink_list_tools` with integration `xero`.
 3. Treat the returned list as the source of truth. Do not guess or assume what tools exist.
-4. If the user describes a capability but the exact tool is unclear, call `clawlink_search_tools` with a short query and integration `youtube`.
-5. If no YouTube tools appear, direct the user to https://claw-link.dev/dashboard?add=youtube.
+4. If the user describes a capability but the exact tool is unclear, call `clawlink_search_tools` with a short query and integration `xero`.
+5. If no Xero tools appear, direct the user to https://claw-link.dev/dashboard?add=xero.
 
 ### Execution
 
@@ -69,21 +69,22 @@ ClawLink provides tools dynamically based on what the user has connected. You do
 
 ## What you can do
 
-Typical YouTube tasks (actual availability depends on the user's connected account, permissions, scopes, and current ClawLink tool catalog):
+Typical Xero tasks (actual availability depends on the user's connected account, permissions, scopes, and current ClawLink tool catalog):
 
-- Inspect channels, videos, playlists, and metadata
-- Review comments and engagement data when available
-- Update video or channel-related metadata after confirmation
-- Handle publish-facing or audience-facing changes carefully
-- Confirm before posting, editing, or moderating publicly visible content
+- Review invoices, contacts, and accounting records
+- Inspect finance data before making changes
+- Help prepare or confirm accounting workflow actions
+- Preview write operations before updating records
+- Use live tool discovery for the current Xero catalog
+- Keep user approval in the loop for finance-impacting changes
 
 ## Rules
 
-- Always use ClawLink tools for YouTube. Do not ask the user for separate YouTube credentials.
+- Always use ClawLink tools for Xero. Do not ask the user for separate Xero credentials.
 - Do not claim a capability is missing without checking the live ClawLink catalog in the current turn.
 - Do not invent slash commands or ask the user to paste raw credentials.
 - Ask for confirmation before destructive, external-facing, or bulk write actions.
-- If YouTube is not connected, direct the user to https://claw-link.dev/dashboard?add=youtube.
+- If Xero is not connected, direct the user to https://claw-link.dev/dashboard?add=xero.
 - Never echo or repeat the user's ClawLink credential.
 
 ## Resources
@@ -92,4 +93,4 @@ Typical YouTube tasks (actual availability depends on the user's connected accou
 - ClawLink Docs: https://docs.claw-link.dev/openclaw
 - ClawLink Verification: https://claw-link.dev/verify
 - ClawLink Source: https://github.com/hith3sh/clawlink
-- YouTube Data API: https://developers.google.com/youtube/v3
+- Xero API: https://developer.xero.com/documentation/api/

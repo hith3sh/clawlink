@@ -3,7 +3,7 @@ name: mailerlite-email-marketing
 description: Manage subscribers, groups, campaigns, and email marketing workflows in MailerLite — powered by ClawLink.
 ---
 
-# MailerLite via ClawLink
+# MailerLite
 
 Work with MailerLite from chat — manage subscribers, groups, campaigns, and email marketing workflows.
 

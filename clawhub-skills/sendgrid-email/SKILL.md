@@ -3,7 +3,7 @@ name: sendgrid-email
 description: Inspect email activity, contacts, templates, and messaging workflows in SendGrid — powered by ClawLink.
 ---
 
-# SendGrid via ClawLink
+# SendGrid
 
 Work with SendGrid from chat — inspect email activity, contacts, templates, and messaging workflows.
 

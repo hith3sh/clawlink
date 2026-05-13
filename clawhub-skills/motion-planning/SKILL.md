@@ -3,7 +3,7 @@ name: motion-planning
 description: Review tasks, projects, schedules, and planning workflows in Motion — powered by ClawLink.
 ---
 
-# Motion via ClawLink
+# Motion
 
 Work with Motion from chat — review tasks, projects, schedules, and planning workflows.
 

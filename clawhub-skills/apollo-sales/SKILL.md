@@ -3,7 +3,7 @@ name: apollo-sales
 description: Search prospects, accounts, contacts, and outreach data in Apollo — powered by ClawLink.
 ---
 
-# Apollo via ClawLink
+# Apollo
 
 Work with Apollo from chat — search prospects, accounts, contacts, and outreach data.
 

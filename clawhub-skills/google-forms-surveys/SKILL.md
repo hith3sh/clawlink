@@ -3,7 +3,7 @@ name: google-forms-surveys
 description: Create forms, inspect structure, review responses, change publishing settings, and manage response watches — powered by ClawLink.
 ---
 
-# Google Forms via ClawLink
+# Google Forms
 
 Work with Google Forms from chat — create forms, inspect structure, review responses, change publishing settings, and manage response watches.
 

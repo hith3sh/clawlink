@@ -3,7 +3,7 @@ name: instantly-campaigns
 description: Manage cold email campaigns, leads, analytics, tags, and workspace actions in Instantly — powered by ClawLink.
 ---
 
-# Instantly via ClawLink
+# Instantly
 
 Work with Instantly cold email outreach from chat — manage campaigns, leads, analytics, tags, and workspace operations when supported.
 

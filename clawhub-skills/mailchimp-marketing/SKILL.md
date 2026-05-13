@@ -3,7 +3,7 @@ name: mailchimp-marketing
 description: Manage audiences, campaigns, subscriber data, and email marketing workflows in Mailchimp — powered by ClawLink.
 ---
 
-# Mailchimp via ClawLink
+# Mailchimp
 
 Work with Mailchimp from chat — manage audiences, campaigns, subscriber data, and email marketing workflows.
 

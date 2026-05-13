@@ -3,7 +3,7 @@ name: clawlink-hubspot-crm
 description: Manage contacts, deals, companies, campaigns, and CRM workflows in HubSpot — powered by ClawLink.
 ---
 
-# HubSpot CRM via ClawLink
+# HubSpot CRM
 
 Work with HubSpot from chat — manage contacts, deals, companies, campaigns, and CRM workflows.
 

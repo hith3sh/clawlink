@@ -3,7 +3,7 @@ name: clawlink-slack-messaging
 description: Send and manage messages, channels, and files in Slack workspaces — powered by ClawLink.
 ---
 
-# Slack Messaging via ClawLink
+# Slack Messaging
 
 Work with Slack from chat — send messages, search conversations, manage channels, upload files, schedule messages, and more.
 

@@ -3,7 +3,7 @@ name: zoom-meetings
 description: Manage meetings, webinars, registrants, collaborators, and event workflows in Zoom — powered by ClawLink.
 ---
 
-# Zoom via ClawLink
+# Zoom
 
 Work with Zoom from chat — manage meetings, webinars, registrants, collaborators, and event workflows.
 

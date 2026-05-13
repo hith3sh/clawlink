@@ -3,7 +3,7 @@ name: instagram-posts
 description: Publish content, manage comments, get insights, and handle messaging on Instagram — powered by ClawLink.
 ---
 
-# Instagram via ClawLink
+# Instagram
 
 Work with Instagram from chat — publish content, manage comments, get insights, and handle messaging.
 

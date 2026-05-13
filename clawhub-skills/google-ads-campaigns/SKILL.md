@@ -3,7 +3,7 @@ name: google-ads-campaigns
 description: Inspect accounts and campaigns, run GAQL reports, and coordinate campaign or audience changes with confirmation — powered by ClawLink.
 ---
 
-# Google Ads via ClawLink
+# Google Ads
 
 Work with Google Ads from chat — inspect accounts and campaigns, run GAQL reports, and coordinate campaign or audience changes when needed.
 

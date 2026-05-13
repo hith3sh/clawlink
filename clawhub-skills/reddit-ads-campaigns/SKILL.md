@@ -3,7 +3,7 @@ name: reddit-ads-campaigns
 description: Inspect Reddit Ads campaigns, ad groups, creatives, and reporting data — powered by ClawLink.
 ---
 
-# Reddit Ads via ClawLink
+# Reddit Ads
 
 Work with Reddit Ads from chat — inspect campaigns, ad groups, creatives, and reporting data.
 

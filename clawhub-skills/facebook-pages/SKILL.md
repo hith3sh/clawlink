@@ -3,7 +3,7 @@ name: facebook-pages
 description: Post content, read engagement, manage comments and messages, and view insights on Facebook Pages — powered by ClawLink.
 ---
 
-# Facebook via ClawLink
+# Facebook
 
 Work with Facebook Pages from chat — post content, read engagement, manage comments and messages, and view insights.
 

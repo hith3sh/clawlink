@@ -3,7 +3,7 @@ name: google-docs-documents
 description: Search documents, read document text, create docs from text or Markdown, and update document content and structure — powered by ClawLink.
 ---
 
-# Google Docs via ClawLink
+# Google Docs
 
 Work with Google Docs from chat — search documents, read document text, create new docs, and update existing document content and structure.
 

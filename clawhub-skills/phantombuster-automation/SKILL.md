@@ -3,7 +3,7 @@ name: phantombuster-automation
 description: Inspect agents, automations, launches, and workflow data in PhantomBuster — powered by ClawLink.
 ---
 
-# PhantomBuster via ClawLink
+# PhantomBuster
 
 Work with PhantomBuster from chat — inspect agents, automations, launches, and workflow data.
 

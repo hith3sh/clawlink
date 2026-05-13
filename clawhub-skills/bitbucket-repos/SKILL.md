@@ -3,7 +3,7 @@ name: bitbucket-repos
 description: Browse repositories, manage branches, review pull requests, and work with source code and repository workflows — powered by ClawLink.
 ---
 
-# Bitbucket via ClawLink
+# Bitbucket
 
 Work with Bitbucket from chat — browse repositories, inspect files, manage branches, review pull requests, and coordinate repository workflows.
 

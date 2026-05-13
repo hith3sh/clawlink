@@ -3,7 +3,7 @@ name: monday-workflows
 description: Manage boards, items, subscribers, users, and workflow operations in monday.com — powered by ClawLink.
 ---
 
-# Monday via ClawLink
+# Monday
 
 Work with Monday from chat — manage boards, items, users, subscribers, and workflow operations.
 

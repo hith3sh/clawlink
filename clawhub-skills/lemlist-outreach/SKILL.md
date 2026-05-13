@@ -3,7 +3,7 @@ name: lemlist-outreach
 description: Manage outreach campaigns, prospects, sequences, and lead activity in Lemlist — powered by ClawLink.
 ---
 
-# Lemlist via ClawLink
+# Lemlist
 
 Work with Lemlist from chat — manage outreach campaigns, prospects, sequences, and lead activity.
 

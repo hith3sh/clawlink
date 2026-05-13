@@ -3,7 +3,7 @@ name: kit-email-marketing
 description: Manage subscribers, forms, broadcasts, tags, and creator email workflows in Kit — powered by ClawLink.
 ---
 
-# Kit via ClawLink
+# Kit
 
 Work with Kit from chat — manage subscribers, forms, broadcasts, tags, and creator email workflows.
 
