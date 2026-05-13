@@ -14,6 +14,7 @@ const TITLES: Array<{ match: (p: string) => boolean; title: string }> = [
   { match: (p) => p === "/dashboard/integrations", title: "Connections" },
   { match: (p) => p.startsWith("/dashboard/integrations/"), title: "Connection Setup" },
   { match: (p) => p === "/dashboard/logs", title: "Usage" },
+  { match: (p) => p === "/dashboard/admin" || p === "/dashboard/admin/activation", title: "Activation" },
   { match: (p) => p === "/dashboard/settings", title: "Settings" },
   { match: (p) => p === "/dashboard/feedback", title: "Feedback" },
   { match: (p) => p === "/dashboard/request-app", title: "Request App" },
