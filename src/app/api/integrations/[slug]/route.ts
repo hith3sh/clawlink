@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getIntegrationBySlug } from "@/data/integrations";
+import { getCanonicalIntegration } from "@/lib/clawlink-spec/api";
 import { getLatestActiveConnectionSessionForUser } from "@/lib/server/connection-sessions";
 import {
   deleteIntegrationConnection,
@@ -55,6 +56,9 @@ export async function GET(
     const tools = user
       ? await listToolDescriptionsForIntegration(user.id, slug)
       : [];
+    const canonical = user
+      ? await getCanonicalIntegration(user, { integration_id: slug })
+      : null;
 
     return NextResponse.json({
       integration: slug,
@@ -64,6 +68,7 @@ export async function GET(
       connectionCount: connections.length,
       activeSession,
       tools,
+      canonical,
     });
   } catch (error) {
     console.error(`Error fetching integration ${slug}:`, error);
