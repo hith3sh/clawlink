@@ -6,9 +6,9 @@ import {
   getConnectionSessionById,
   getLatestActiveConnectionSessionForUser,
 } from "@/lib/server/connection-sessions";
+import { toCanonicalActionSummary, toCanonicalExecutionSummary } from "@/lib/clawlink-spec/compat";
 import {
   executeToolForUser,
-  type ToolExecutionPayload,
 } from "@/lib/server/executor";
 import {
   getDatabase,
@@ -143,51 +143,6 @@ function toConnectionState(connection: IntegrationConnectionRecord | null | unde
   }
 }
 
-function toolToSideEffectLevel(tool: Pick<ToolDescription | ToolListItem, "mode" | "risk" | "name">): ClawLinkActionSummary["side_effect_level"] {
-  const loweredName = tool.name.toLowerCase();
-
-  if (tool.risk === "high_impact" && (loweredName.includes("delete") || loweredName.includes("remove") || loweredName.includes("archive"))) {
-    return "delete";
-  }
-
-  if (tool.mode === "write") {
-    return "write";
-  }
-
-  return "read";
-}
-
-function toolToActionSummary(tool: ToolDescription | ToolListItem): ClawLinkActionSummary {
-  const required =
-    typeof tool.inputSchema?.required === "object" && Array.isArray(tool.inputSchema.required)
-      ? tool.inputSchema.required.filter((item): item is string => typeof item === "string")
-      : undefined;
-
-  const properties =
-    tool.inputSchema && typeof tool.inputSchema.properties === "object" && tool.inputSchema.properties
-      ? Object.keys(tool.inputSchema.properties as Record<string, unknown>)
-      : [];
-
-  return {
-    action_id: tool.name.startsWith(`${tool.integration}_`)
-      ? tool.name.slice(tool.integration.length + 1)
-      : tool.name,
-    title: tool.name,
-    description: tool.description,
-    side_effect_level: toolToSideEffectLevel(tool),
-    requires_confirmation: tool.requiresConfirmation,
-    idempotent: "idempotent" in tool ? Boolean(tool.idempotent) : false,
-    supports_async: false,
-    input_summary: {
-      required,
-      optional: properties.filter((property) => !required?.includes(property)),
-    },
-    input_schema: tool.inputSchema,
-    output_schema: "outputSchema" in tool ? tool.outputSchema : undefined,
-    examples: "examples" in tool ? tool.examples : undefined,
-    tags: "tags" in tool ? tool.tags : undefined,
-  };
-}
 
 function toIntegrationSummary(
   integrationSlug: string,
@@ -335,7 +290,7 @@ export async function getCanonicalIntegration(
       state: toConnectionState(defaultConnection),
     },
     actions: actions.map((action) => {
-      const summary = toolToActionSummary(action);
+      const summary = toCanonicalActionSummary(action);
       return {
         action_id: summary.action_id,
         title: summary.title,
@@ -364,7 +319,7 @@ export async function listCanonicalActions(
 
   return {
     integration_id: integration.slug,
-    items: tools.map(toolToActionSummary),
+    items: tools.map(toCanonicalActionSummary),
   };
 }
 
@@ -381,7 +336,7 @@ export async function getCanonicalAction(
     return null;
   }
 
-  const summary = toolToActionSummary(tool);
+  const summary = toCanonicalActionSummary(tool);
 
   return {
     ...summary,
@@ -477,60 +432,6 @@ export async function beginCanonicalConnection(
   };
 }
 
-function mapExecutionPayload(payload: ToolExecutionPayload): ClawLinkExecutionSummary {
-  const blockedCodes = new Set([
-    "needs_connection",
-    "needs_reauth",
-    "needs_scope_upgrade",
-    "confirmation_required",
-    "ambiguous_connection",
-  ]);
-
-  if (!payload.ok) {
-    const blocked = blockedCodes.has(payload.error?.code ?? "");
-    const recommendedIntegration = payload.integration;
-
-    return {
-      execution_id: blocked ? null : payload.meta.requestId,
-      status: blocked ? "blocked" : "failed",
-      integration_id: payload.integration,
-      action_id: payload.toolName.startsWith(`${payload.integration}_`)
-        ? payload.toolName.slice(payload.integration.length + 1)
-        : payload.toolName,
-      started_at: payload.meta.startedAt,
-      finished_at: payload.meta.endedAt,
-      display: {
-        title: blocked ? "Execution blocked" : "Execution failed",
-        summary: payload.error?.message ?? "Tool execution failed.",
-      },
-      error_code: payload.error?.code as ClawLinkExecutionSummary["error_code"],
-      message: payload.error?.message,
-      recommended_next_action:
-        payload.error?.code === "needs_connection"
-          ? {
-              tool: "clawlink.begin_connection",
-              input: { integration_id: recommendedIntegration },
-            }
-          : undefined,
-    };
-  }
-
-  return {
-    execution_id: payload.meta.requestId,
-    status: "succeeded",
-    integration_id: payload.integration,
-    action_id: payload.toolName.startsWith(`${payload.integration}_`)
-      ? payload.toolName.slice(payload.integration.length + 1)
-      : payload.toolName,
-    started_at: payload.meta.startedAt,
-    finished_at: payload.meta.endedAt,
-    output: payload.data ?? payload.result,
-    display: {
-      title: `${payload.toolName} succeeded`,
-      summary: `Executed ${payload.toolName} successfully.`,
-    },
-  };
-}
 
 export async function createCanonicalExecution(
   user: UserRow,
@@ -550,7 +451,7 @@ export async function createCanonicalExecution(
     confirmed: input.confirm === true,
   });
 
-  return mapExecutionPayload(payload);
+  return toCanonicalExecutionSummary(payload);
 }
 
 async function loadExecutionRow(db: D1LikeDatabase, userId: string, executionId: string) {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { toCompatibilityTool } from "@/lib/clawlink-spec/compat";
 import { resolveRequestActor } from "@/lib/server/request-auth";
 import { listToolsForUser } from "@/lib/server/tooling";
 
@@ -16,10 +17,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const integration = searchParams.get("integration")?.trim().toLowerCase() || undefined;
     const tools = await listToolsForUser(actor.user.id, { integration });
+    const compatibilityTools = tools.map(toCompatibilityTool);
 
     return NextResponse.json({
-      tools,
-      count: tools.length,
+      tools: compatibilityTools,
+      count: compatibilityTools.length,
       integration: integration ?? null,
     });
   } catch (error) {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { toCanonicalExecutionSummary } from "@/lib/clawlink-spec/compat";
 import { resolveRequestActor } from "@/lib/server/request-auth";
 import { executeToolForUser } from "@/lib/server/tooling";
 
@@ -110,7 +111,10 @@ export async function POST(
       },
     );
 
-    return NextResponse.json(execution, {
+    return NextResponse.json({
+      ...execution,
+      canonical: toCanonicalExecutionSummary(execution),
+    }, {
       status: getStatusCode(execution),
     });
   } catch (error) {
