@@ -1,0 +1,28 @@
+{
+  "name": "clawlink-blog",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "build:worker": "opennextjs-cloudflare build --config wrangler.toml",
+    "deploy": "opennextjs-cloudflare build --config wrangler.toml && wrangler deploy",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.3.0",
+    "@opennextjs/cloudflare": "^1.18.0",
+    "next": "^15.5.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^4.80.0",
+    "@tailwindcss/postcss": "^4.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}
