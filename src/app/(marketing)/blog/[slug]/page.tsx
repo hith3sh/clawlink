@@ -51,14 +51,14 @@ export default async function BlogPostPage({ params }: PageProps) {
     <div className="mx-auto max-w-[720px] px-5 py-16 sm:py-24">
       <Link
         href="/blog"
-        className="inline-flex items-center gap-1.5 text-xs transition-colors"
-        style={{ color: "var(--mk-fg-faint)" }}
+        className="inline-flex items-center gap-1.5 text-xs transition-colors hover:opacity-80"
+        style={{ color: "var(--blog-fg-faint)" }}
       >
         &larr; All posts
       </Link>
 
       <header className="mt-6">
-        <div className="text-xs" style={{ color: "var(--mk-fg-faint)" }}>
+        <div className="text-xs" style={{ color: "var(--blog-fg-faint)" }}>
           {new Date(post.publishedAt).toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
@@ -68,14 +68,14 @@ export default async function BlogPostPage({ params }: PageProps) {
         </div>
         <h1
           className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl"
-          style={{ color: "var(--mk-fg)", letterSpacing: "-0.03em" }}
+          style={{ color: "var(--blog-fg)", letterSpacing: "-0.03em" }}
         >
           {post.title}
         </h1>
         {post.description && (
           <p
             className="mt-3 text-lg leading-relaxed"
-            style={{ color: "var(--mk-fg-muted)" }}
+            style={{ color: "var(--blog-fg-muted)" }}
           >
             {post.description}
           </p>
@@ -87,8 +87,8 @@ export default async function BlogPostPage({ params }: PageProps) {
                 key={tag}
                 className="rounded-full px-2.5 py-0.5 text-[11px] font-medium"
                 style={{
-                  background: "var(--mk-surface-raised)",
-                  color: "var(--mk-fg-muted)",
+                  background: "var(--blog-surface)",
+                  color: "var(--blog-fg-muted)",
                 }}
               >
                 {tag}
