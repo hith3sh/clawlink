@@ -1,6 +1,14 @@
 export type IntegrationSetupMode = "oauth" | "composio" | "coming_soon";
 export type IntegrationDashboardStatus = "available" | "coming-soon";
 export type IntegrationRuntimeStatus = "live" | "planned";
+export type IntegrationAuthScheme =
+  | "oauth2"
+  | "oauth1"
+  | "api_key"
+  | "basic"
+  | "basic_with_jwt"
+  | "bearer_token"
+  | "no_auth";
 
 export interface IntegrationCredentialField {
   key: string;
@@ -27,18 +35,20 @@ export interface Integration {
   dashboardStatus: IntegrationDashboardStatus;
   runtimeStatus: IntegrationRuntimeStatus;
   setupGuide: string;
+  setupVideoUrl?: string;
+  authScheme?: IntegrationAuthScheme;
   credentialFields: IntegrationCredentialField[];
   tools: IntegrationToolDefinition[];
 }
 
 type BaseIntegration = Omit<
   Integration,
-  "setupMode" | "dashboardStatus" | "runtimeStatus" | "setupGuide" | "credentialFields" | "tools"
+  "setupMode" | "dashboardStatus" | "runtimeStatus" | "setupGuide" | "setupVideoUrl" | "credentialFields" | "tools"
 >;
 
 type IntegrationMetadata = Pick<
   Integration,
-  "setupMode" | "dashboardStatus" | "runtimeStatus" | "setupGuide" | "credentialFields" | "tools"
+  "setupMode" | "dashboardStatus" | "runtimeStatus" | "setupGuide" | "setupVideoUrl" | "credentialFields" | "tools"
 >;
 
 const apiKeyField = (
@@ -240,6 +250,7 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "Spotify", slug: "spotify", description: "Manage playlists, tracks, and podcast episodes", category: "Social Media", icon: "SiSpotify", color: "#1DB954" },
   { name: "Tally", slug: "tally", description: "Create forms and collect responses", category: "Productivity", icon: "TbPlugConnected", color: "#000000" },
   { name: "Tavily", slug: "tavily", description: "Search the web and retrieve structured AI research data", category: "Data & Analytics", icon: "TbPlugConnected", color: "#4F46E5" },
+  { name: "Firecrawl", slug: "firecrawl", description: "Scrape websites, crawl pages, extract structured data, and search the web", category: "Data & Analytics", icon: "TbPlugConnected", color: "#FF6B00" },
   { name: "Telegram Bot", slug: "telegram", description: "Automate Telegram chats and channels through a Telegram Bot. Requires a bot token from @BotFather.", category: "Communication", icon: "SiTelegram", color: "#26A5E4" },
   { name: "TinyPNG", slug: "tinypng", description: "Compress and optimize images via the TinyPNG API", category: "Developer Tools", icon: "TbPlugConnected", color: "#2563EB" },
   { name: "Twilio", slug: "twilio", description: "Send SMS, make calls, and manage phone numbers", category: "Communication", icon: "TbPlugConnected", color: "#F22F46" },
@@ -1963,6 +1974,30 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
       { name: "figma_design_tokens_to_tailwind", description: "Convert design tokens to Tailwind CSS config" },
     ],
   },
+  firecrawl: {
+    setupMode: "composio",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect Firecrawl through ClawLink's hosted setup to scrape websites, crawl pages, extract structured data, and search the web.",
+    credentialFields: [],
+    tools: [
+      { name: "firecrawl_scrape", description: "Scrape a publicly accessible URL and retrieve content in specified formats" },
+      { name: "firecrawl_crawl", description: "Initiate a web crawl from a given URL with filtering and extraction rules" },
+      { name: "firecrawl_crawl_v2", description: "Initiate a Firecrawl v2 web crawl with enhanced features and natural language configuration" },
+      { name: "firecrawl_search", description: "Search the web and scrape content from top results" },
+      { name: "firecrawl_extract", description: "Extract structured data from web pages using natural language or a JSON schema" },
+      { name: "firecrawl_batch_scrape", description: "Scrape multiple URLs in batch with concurrent processing" },
+      { name: "firecrawl_map_multiple_urls_based_on_options", description: "Map a website by discovering URLs from a starting base URL" },
+      { name: "firecrawl_start_agent", description: "Start an agent job for agentic web extraction with multi-page navigation" },
+      { name: "firecrawl_get_agent_status", description: "Get the status and results of an agent job" },
+      { name: "firecrawl_llms_txt_generate", description: "Generate an LLMs.txt file for a website" },
+      { name: "firecrawl_crawl_get", description: "Retrieve the status and results of a crawl job" },
+      { name: "firecrawl_extract_get", description: "Retrieve the status and results of an extract job" },
+      { name: "firecrawl_credit_usage_get", description: "Get current team credit usage information" },
+      { name: "firecrawl_crawl_cancel", description: "Cancel an active or queued web crawl job" },
+      { name: "firecrawl_batch_scrape_cancel", description: "Cancel a running batch scrape job" },
+    ],
+  },
   pandadoc: {
     setupMode: "composio",
     dashboardStatus: "available",
@@ -2529,7 +2564,8 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     setupMode: "composio",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Connect heygen through ClawLink's hosted Composio setup.",
+    setupGuide: "Connect HeyGen by pasting your API key. Watch the short video on the connect page if you need help finding it in HeyGen's dashboard.",
+    setupVideoUrl: "https://www.youtube.com/embed/M7lc1UVf-VE",
     credentialFields: [],
     tools: [
       { name: "heygen_add_looks_to_photo_avatar_group", description: "Tool to add additional looks (images) to an existing photo avatar group. Use when you need to expand an avatar group with new image variations. Maximum 4 image keys can be added per request." },
@@ -3210,10 +3246,121 @@ const defaultMetadata: IntegrationMetadata = {
   tools: [],
 };
 
-export const integrations: Integration[] = baseIntegrations.map((integration) => ({
-  ...integration,
-  ...(integrationMetadata[integration.slug] ?? defaultMetadata),
-}));
+// Generated by scripts/import-composio-auth-schemes.mjs +
+// scripts/cross-ref-auth-schemes.mjs from Composio's /auth_configs API.
+// Re-run those scripts to refresh after adding new Composio integrations.
+const composioAuthSchemes: Partial<Record<string, IntegrationAuthScheme>> = {
+  "activecampaign": "api_key",
+  "affinity": "api_key",
+  "agencyzoom": "basic_with_jwt",
+  "agent-mail": "api_key",
+  "ahrefs": "api_key",
+  "airtable": "oauth2",
+  "apollo": "api_key",
+  "bitbucket": "oauth2",
+  "box": "oauth2",
+  "cal": "oauth2",
+  "calendly": "oauth2",
+  "canva": "oauth2",
+  "clickup": "oauth2",
+  "cloudflare": "api_key",
+  "dataforseo": "basic",
+  "discord": "oauth2",
+  "dropbox": "oauth2",
+  "dynamics-365": "oauth2",
+  "elevenlabs": "api_key",
+  "eventbrite": "oauth2",
+  "facebook": "oauth2",
+  "figma": "oauth2",
+  "firecrawl": "api_key",
+  "freeagent": "oauth2",
+  "freshbooks": "oauth2",
+  "freshdesk": "api_key",
+  "github": "oauth2",
+  "gitlab": "oauth2",
+  "gmail": "oauth2",
+  "google-ads": "oauth2",
+  "google-analytics": "oauth2",
+  "google-bigquery": "oauth2",
+  "google-calendar": "oauth2",
+  "google-classroom": "oauth2",
+  "google-docs": "oauth2",
+  "google-drive": "oauth2",
+  "google-maps": "oauth2",
+  "google-meet": "oauth2",
+  "google-search-console": "oauth2",
+  "google-sheets": "oauth2",
+  "google-slides": "oauth2",
+  "google-tasks": "oauth2",
+  "googlephotos": "oauth2",
+  "gumroad": "oauth2",
+  "heygen": "api_key",
+  "hubspot": "oauth2",
+  "humanloop": "api_key",
+  "instagram": "oauth2",
+  "instantly": "api_key",
+  "intercom": "oauth2",
+  "jotform": "api_key",
+  "kibana": "basic",
+  "kit": "oauth2",
+  "lemlist": "api_key",
+  "linear": "oauth2",
+  "linkedin": "oauth2",
+  "lmnt": "api_key",
+  "mailchimp": "oauth2",
+  "mailerlite": "api_key",
+  "mem0": "api_key",
+  "microsoft-excel": "oauth2",
+  "miro": "oauth2",
+  "monday": "oauth2",
+  "motion": "api_key",
+  "new-relic": "api_key",
+  "notion": "oauth2",
+  "omnisend": "oauth2",
+  "onedrive": "oauth2",
+  "openai": "api_key",
+  "outlook": "oauth2",
+  "pagerduty": "oauth2",
+  "pandadoc": "api_key",
+  "perplexity-ai": "api_key",
+  "phantombuster": "api_key",
+  "postiz": "api_key",
+  "postmark": "api_key",
+  "quickbooks": "oauth2",
+  "recallai": "api_key",
+  "reddit": "oauth2",
+  "reddit-ads": "oauth2",
+  "replicate": "api_key",
+  "resend": "api_key",
+  "retellai": "api_key",
+  "salesforce": "oauth2",
+  "semrush": "api_key",
+  "sendgrid": "api_key",
+  "serpapi": "api_key",
+  "shopify": "oauth2",
+  "tavily": "api_key",
+  "telegram": "api_key",
+  "tinypng": "api_key",
+  "trello": "oauth1",
+  "whatsapp": "oauth2",
+  "xero": "oauth2",
+  "yandex": "oauth2",
+  "youtube": "oauth2",
+  "zendesk": "oauth2",
+  "zoho-books": "oauth2",
+  "zoom": "oauth2",
+};
+
+export const integrations: Integration[] = baseIntegrations.map((integration) => {
+  const metadata = integrationMetadata[integration.slug] ?? defaultMetadata;
+  return {
+    ...integration,
+    ...metadata,
+    authScheme: metadata.setupMode === "composio"
+      ? composioAuthSchemes[integration.slug]
+      : undefined,
+  };
+});
 
 export const categories = [...new Set(integrations.map((integration) => integration.category))];
 

@@ -1,0 +1,463 @@
+import type { IntegrationTool } from "../../../worker/integrations/base";
+
+function composioTool(
+  partial: Omit<IntegrationTool, "integration" | "inputSchema" | "accessLevel" | "tags" | "whenToUse" | "askBefore" | "safeDefaults" | "examples" | "followups" | "requiresScopes" | "idempotent" | "supportsBatch" | "supportsDryRun" | "execution"> & {
+    accessLevel?: IntegrationTool["accessLevel"];
+    tags?: string[];
+    whenToUse?: string[];
+    askBefore?: string[];
+    safeDefaults?: Record<string, unknown>;
+    examples?: IntegrationTool["examples"];
+    requiresScopes?: string[];
+    idempotent?: boolean;
+    supportsDryRun?: boolean;
+    supportsBatch?: boolean;
+    toolSlug: string;
+  },
+): IntegrationTool {
+  return {
+    integration: "firecrawl",
+    name: partial.name,
+    description: partial.description,
+    inputSchema: { type: "object", properties: {} },
+    outputSchema: partial.outputSchema,
+    accessLevel: partial.accessLevel ?? partial.mode,
+    mode: partial.mode,
+    risk: partial.risk,
+    tags: partial.tags ?? [],
+    whenToUse: partial.whenToUse ?? [],
+    askBefore: partial.askBefore ?? [],
+    safeDefaults: partial.safeDefaults ?? {},
+    examples: partial.examples ?? [],
+    followups: [],
+    requiresScopes: partial.requiresScopes ?? [],
+    idempotent: partial.idempotent ?? partial.mode === "read",
+    supportsDryRun: partial.supportsDryRun ?? false,
+    supportsBatch: partial.supportsBatch ?? false,
+    execution: {
+      kind: "composio_tool",
+      toolkit: "firecrawl",
+      toolSlug: partial.toolSlug,
+      version: "20260506_00",
+    },
+  };
+}
+
+export const firecrawlComposioTools: IntegrationTool[] = [
+  composioTool({
+    name: "firecrawl_agent_cancel",
+    description: "Tool to cancel an in-progress agent job by its ID. Use when you need to terminate an active agent operation. The API returns a success boolean upon cancellation.",
+    toolSlug: "FIRECRAWL_AGENT_CANCEL",
+    mode: "write",
+    risk: "high_impact",
+    tags: [
+      "composio",
+      "firecrawl",
+      "write",
+      "agent_jobs",
+    ],
+    askBefore: [
+      "This action is destructive and cannot be undone. Confirm before executing Cancel an agent job.",
+    ],
+    idempotent: true,
+  }),
+  composioTool({
+    name: "firecrawl_batch_scrape",
+    description: "Tool to scrape multiple URLs in batch with concurrent processing. Use when you need to scrape multiple web pages efficiently with customizable formats and content filtering.",
+    toolSlug: "FIRECRAWL_BATCH_SCRAPE",
+    mode: "write",
+    risk: "confirm",
+    tags: [
+      "composio",
+      "firecrawl",
+      "write",
+      "crawl_and_scrape_jobs",
+    ],
+    askBefore: [
+      "Confirm the parameters before executing Batch scrape multiple URLs.",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_batch_scrape_cancel",
+    description: "Tool to cancel a running batch scrape job using its unique identifier. Use when you need to terminate an in-progress batch scrape operation.",
+    toolSlug: "FIRECRAWL_BATCH_SCRAPE_CANCEL",
+    mode: "write",
+    risk: "high_impact",
+    tags: [
+      "composio",
+      "firecrawl",
+      "write",
+      "crawl_and_scrape_jobs",
+    ],
+    askBefore: [
+      "This action is destructive and cannot be undone. Confirm before executing Cancel a batch scrape job.",
+    ],
+    idempotent: true,
+  }),
+  composioTool({
+    name: "firecrawl_batch_scrape_get",
+    description: "Retrieves the current status and results of a batch scrape job using the job ID. Use this to check batch scrape progress and retrieve scraped data.",
+    toolSlug: "FIRECRAWL_BATCH_SCRAPE_GET",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "crawl_and_scrape_jobs",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_batch_scrape_get_errors",
+    description: "Tool to retrieve error details from a batch scrape job, including failed URLs and URLs blocked by robots.txt. Use when you need to debug or understand why certain pages failed to scrape in a batch operation.",
+    toolSlug: "FIRECRAWL_BATCH_SCRAPE_GET_ERRORS",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "crawl_and_scrape_jobs",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_crawl",
+    description: "Initiates a Firecrawl web crawl from a given URL, applying various filtering and content extraction rules, and polls until the job is complete; ensure the URL is accessible and any regex patterns for paths are valid.",
+    toolSlug: "FIRECRAWL_CRAWL",
+    mode: "write",
+    risk: "confirm",
+    tags: [
+      "composio",
+      "firecrawl",
+      "write",
+      "web",
+      "scraping",
+      "crawling",
+    ],
+    askBefore: [
+      "Confirm the parameters before executing Start a web crawl.",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_crawl_cancel",
+    description: "Cancels an active or queued web crawl job using its ID; attempting to cancel completed, failed, or previously canceled jobs will not change their state.",
+    toolSlug: "FIRECRAWL_CRAWL_CANCEL",
+    mode: "write",
+    risk: "high_impact",
+    tags: [
+      "composio",
+      "firecrawl",
+      "write",
+    ],
+    askBefore: [
+      "This action is destructive and cannot be undone. Confirm before executing Cancel a crawl job.",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_crawl_delete",
+    description: "Tool to cancel a running crawl job by its ID. Use when you need to stop an active crawl operation. The API returns a status of 'cancelled' upon successful cancellation.",
+    toolSlug: "FIRECRAWL_CRAWL_DELETE",
+    mode: "write",
+    risk: "high_impact",
+    tags: [
+      "composio",
+      "firecrawl",
+      "write",
+      "crawl_and_scrape_jobs",
+    ],
+    askBefore: [
+      "This action is destructive and cannot be undone. Confirm before executing Cancel a crawl job.",
+    ],
+    idempotent: true,
+  }),
+  composioTool({
+    name: "firecrawl_crawl_get",
+    description: "Tool to retrieve the status and results of a Firecrawl crawl job. Use when you need to check the progress or get data from an ongoing or completed crawl operation. Returns crawl status, progress metrics, credits used, and the crawled page data.",
+    toolSlug: "FIRECRAWL_CRAWL_GET",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "crawl_and_scrape_jobs",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_crawl_get_errors",
+    description: "Tool to retrieve errors from a Firecrawl crawl job. Use when you need to understand why certain pages failed to scrape or which URLs were blocked by robots.txt during a crawl operation.",
+    toolSlug: "FIRECRAWL_CRAWL_GET_ERRORS",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "crawl_and_scrape_jobs",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_crawl_list_active",
+    description: "Tool to retrieve all active crawl jobs for the authenticated team. Use when you need to see which crawl operations are currently running.",
+    toolSlug: "FIRECRAWL_CRAWL_LIST_ACTIVE",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "crawl_and_scrape_jobs",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_crawl_params_preview",
+    description: "Preview crawl parameters before starting a crawl by generating optimal configuration from natural language instructions. Use this tool to understand what crawl settings will be applied based on your requirements before executing a full crawl operation. The endpoint intelligently interprets natural language prompts to configure crawl parameters like include/exclude paths, depth limits, and domain scope.",
+    toolSlug: "FIRECRAWL_CRAWL_PARAMS_PREVIEW",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "crawl_and_scrape_jobs",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_crawl_v2",
+    description: "[NEW v2 API] Initiates a Firecrawl v2 web crawl with enhanced features over v1: natural language prompts for automatic crawler configuration, crawlEntireDomain for sibling/parent page discovery, better depth control with maxDiscoveryDepth, subdomain support, and full webhook configuration. Polls until crawl is complete.",
+    toolSlug: "FIRECRAWL_CRAWL_V2",
+    mode: "write",
+    risk: "confirm",
+    tags: [
+      "composio",
+      "firecrawl",
+      "write",
+      "web",
+      "scraping",
+      "crawling",
+      "v2",
+      "recommended",
+    ],
+    askBefore: [
+      "Confirm the parameters before executing Start a web crawl (v2) [NEW].",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_credit_usage_get",
+    description: "Tool to get current team credit usage information. Use when you need to check remaining credits or billing period details.",
+    toolSlug: "FIRECRAWL_CREDIT_USAGE_GET",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "usage_and_billing",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_credit_usage_get_historical",
+    description: "Tool to retrieve historical team credit usage on a monthly basis. Use when you need to analyze credit consumption patterns over time, optionally segmented by API key.",
+    toolSlug: "FIRECRAWL_CREDIT_USAGE_GET_HISTORICAL",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "usage_and_billing",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_extract",
+    description: "Extracts structured data from web pages by initiating an extraction job and polling for completion; requires a natural language `prompt` or a JSON `schema` (one must be provided).",
+    toolSlug: "FIRECRAWL_EXTRACT",
+    mode: "write",
+    risk: "confirm",
+    tags: [
+      "composio",
+      "firecrawl",
+      "write",
+      "web",
+      "scraping",
+      "extraction",
+    ],
+    askBefore: [
+      "Confirm the parameters before executing Extract structured data.",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_extract_get",
+    description: "Tool to retrieve the status and results of a previously submitted extract job. Use when you need to check the progress or get the final results of an extraction operation.",
+    toolSlug: "FIRECRAWL_EXTRACT_GET",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "crawl_and_scrape_jobs",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_get_agent_status",
+    description: "Tool to get the status and results of an agent job. Use when you need to check if an agent job has completed and retrieve the collected data. Agent jobs autonomously search, navigate, and extract data from the web.",
+    toolSlug: "FIRECRAWL_GET_AGENT_STATUS",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "agent_jobs",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_get_deep_research_status",
+    description: "Retrieves the status and results of a deep research job by its ID. Use when you need to check the progress or retrieve the final analysis of a deep research operation.",
+    toolSlug: "FIRECRAWL_GET_DEEP_RESEARCH_STATUS",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "ai_generation_and_research",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_get_the_status_of_a_crawl_job",
+    description: "Retrieves the current status, progress, and details of a web crawl job, using the job ID obtained when the crawl was initiated.",
+    toolSlug: "FIRECRAWL_GET_THE_STATUS_OF_A_CRAWL_JOB",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_llms_txt_generate",
+    description: "Initiates an async job to generate an LLMs.txt file for a website, converting web content into LLM-friendly format. Returns a job ID to check status and retrieve results. Use when you need to create a standardized, machine-readable representation of website content for language models.",
+    toolSlug: "FIRECRAWL_LLMS_TXT_GENERATE",
+    mode: "write",
+    risk: "confirm",
+    tags: [
+      "composio",
+      "firecrawl",
+      "write",
+      "ai_generation_and_research",
+    ],
+    askBefore: [
+      "Confirm the parameters before executing Generate LLMs.txt for a website.",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_llms_txt_get",
+    description: "Tool to get the status and results of an LLMs.txt generation job. Use when you need to check if a job has completed and retrieve the generated content.",
+    toolSlug: "FIRECRAWL_LLMS_TXT_GET",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "ai_generation_and_research",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_map_multiple_urls_based_on_options",
+    description: "Maps a website by discovering URLs from a starting base URL, with options to customize the crawl via search query, subdomain inclusion, sitemap handling, and result limits; search effectiveness is site-dependent.",
+    toolSlug: "FIRECRAWL_MAP_MULTIPLE_URLS_BASED_ON_OPTIONS",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_queue_get",
+    description: "Tool to retrieve metrics about the team's scrape queue. Use when you need to check queue status, job counts, or concurrency limits.",
+    toolSlug: "FIRECRAWL_QUEUE_GET",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "crawl_and_scrape_jobs",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_scrape",
+    description: "Scrapes a publicly accessible URL, optionally performing pre-scrape browser actions or extracting structured JSON using an LLM, to retrieve content in specified formats.",
+    toolSlug: "FIRECRAWL_SCRAPE",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "web",
+      "scraping",
+      "extraction",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_search",
+    description: "Performs a web search for a query, scrapes content from the top search results using Firecrawl, and returns details in specified formats.",
+    toolSlug: "FIRECRAWL_SEARCH",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_start_agent",
+    description: "Tool to start an agent job for agentic web extraction with multi-page navigation and interaction capabilities. Use when you need to autonomously gather data from the web with complex navigation requirements. The agent can search, navigate, and extract information across multiple pages based on your natural language prompt.",
+    toolSlug: "FIRECRAWL_START_AGENT",
+    mode: "write",
+    risk: "confirm",
+    tags: [
+      "composio",
+      "firecrawl",
+      "write",
+      "agent_jobs",
+    ],
+    askBefore: [
+      "Confirm the parameters before executing Start an agent job.",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_token_usage_get",
+    description: "Tool to retrieve the current team's token usage and balance information for Firecrawl's Extract feature. Use when you need to check remaining token credits, plan allocation, or billing period details.",
+    toolSlug: "FIRECRAWL_TOKEN_USAGE_GET",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "usage_and_billing",
+    ],
+  }),
+  composioTool({
+    name: "firecrawl_token_usage_get_historical",
+    description: "Tool to retrieve historical team token usage on a monthly basis. Use when you need to analyze token consumption patterns over time, optionally segmented by API key.",
+    toolSlug: "FIRECRAWL_TOKEN_USAGE_GET_HISTORICAL",
+    mode: "read",
+    risk: "safe",
+    tags: [
+      "composio",
+      "firecrawl",
+      "read",
+      "usage_and_billing",
+    ],
+  }),
+];

@@ -100,23 +100,6 @@ export default function Home() {
           <HeroProductName /> Bot
         </p>
 
-        {/* Product Hunt badge */}
-        <div className="mt-6 flex justify-center">
-          <a
-            href="https://www.producthunt.com/products/clawlink?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-clawlink"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              alt="ClawLink - Connect OpenClaw/Hermes Agent to 100+ apps in seconds | Product Hunt"
-              width={250}
-              height={54}
-              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1146201&theme=light&t=1778952756480"
-              className="rounded-lg"
-            />
-          </a>
-        </div>
-
         {/* Tabs + panels */}
         <div className="mt-10">
           {/* Hand-drawn annotation (desktop only, points toward copy button) */}
@@ -329,6 +312,23 @@ export default function Home() {
           Join Discord
         </a>
       </section>
+
+      {/* Product Hunt badge */}
+      <div className="flex justify-center pb-12">
+        <a
+          href="https://www.producthunt.com/products/clawlink?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-clawlink"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img
+            alt="ClawLink - Connect OpenClaw/Hermes Agent to 100+ apps in seconds | Product Hunt"
+            width={250}
+            height={54}
+            src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1146201&theme=light&t=1778952756480"
+            className="rounded-lg"
+          />
+        </a>
+      </div>
     </main>
   );
 }
