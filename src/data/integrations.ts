@@ -200,7 +200,7 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "Replicate", slug: "replicate", description: "Run AI models, create predictions, and manage deployments", category: "AI & ML", icon: "SiReplicate", color: "#000000" },
   { name: "Affinity", slug: "affinity", description: "Manage contacts, organizations, and opportunities in Affinity", category: "CRM & Sales", icon: "TbPlugConnected", color: "#000000" },
   { name: "AgencyZoom", slug: "agencyzoom", description: "Manage insurance agency leads, clients, and workflows", category: "CRM & Sales", icon: "TbPlugConnected", color: "#2563EB" },
-  { name: "AgentMail", slug: "agent-mail", description: "Send and manage emails through AgentMail", category: "Communication", icon: "TbPlugConnected", color: "#6366F1" },
+  { name: "AgentMail", slug: "agent-mail", description: "Send and manage emails through AgentMail", category: "Communication", icon: "SiMailgun", color: "#6366F1" },
   { name: "Amplitude", slug: "amplitude", description: "Query product analytics, events, and user behavior", category: "Data & Analytics", icon: "TbPlugConnected", color: "#1E0A3C" },
   { name: "Cal.com", slug: "cal", description: "Schedule and manage bookings through Cal.com", category: "Events & Scheduling", icon: "SiCaldotcom", color: "#292929" },
   { name: "Cloudflare", slug: "cloudflare", description: "Manage DNS, zones, workers, and security settings", category: "Developer Tools", icon: "SiCloudflare", color: "#F38020" },
@@ -236,7 +236,7 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "OpenAI", slug: "openai", description: "Generate text, images, and embeddings via OpenAI API", category: "AI & ML", icon: "TbPlugConnected", color: "#10A37F" },
   { name: "PagerDuty", slug: "pagerduty", description: "Manage incidents, on-call schedules, and services", category: "Developer Tools", icon: "TbPlugConnected", color: "#06AC38" },
   { name: "Paystack", slug: "paystack", description: "Process payments, manage customers, and resolve transactions", category: "Payments & Finance", icon: "TbPlugConnected", color: "#00C3F7" },
-  { name: "Perplexity AI", slug: "perplexity-ai", description: "Run web search and AI-powered answers through Perplexity AI", category: "AI & ML", icon: "TbPlugConnected", color: "#20808D" },
+  { name: "Perplexity AI", slug: "perplexity-ai", description: "Run web search and AI-powered answers through Perplexity AI", category: "AI & ML", icon: "SiPerplexity", color: "#20808D" },
   { name: "Plausible Analytics", slug: "plausible-analytics", description: "Query privacy-focused web analytics and stats", category: "Data & Analytics", icon: "TbPlugConnected", color: "#5850EC" },
   { name: "Razorpay", slug: "razorpay", description: "Process payments, manage orders, and handle refunds", category: "Payments & Finance", icon: "TbPlugConnected", color: "#0D8DF2" },
   { name: "Recall.ai", slug: "recallai", description: "Record, transcribe, and analyze video meeting bots", category: "AI & ML", icon: "TbPlugConnected", color: "#000000" },
@@ -250,10 +250,10 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "Spotify", slug: "spotify", description: "Manage playlists, tracks, and podcast episodes", category: "Social Media", icon: "SiSpotify", color: "#1DB954" },
   { name: "Tally", slug: "tally", description: "Create forms and collect responses", category: "Productivity", icon: "TbPlugConnected", color: "#000000" },
   { name: "Tavily", slug: "tavily", description: "Search the web and retrieve structured AI research data", category: "Data & Analytics", icon: "TbPlugConnected", color: "#4F46E5" },
-  { name: "Firecrawl", slug: "firecrawl", description: "Scrape websites, crawl pages, extract structured data, and search the web", category: "Data & Analytics", icon: "TbPlugConnected", color: "#FF6B00" },
+  { name: "Firecrawl", slug: "firecrawl", description: "Scrape websites, crawl pages, extract structured data, and search the web", category: "Data & Analytics", icon: "FirecrawlIcon", color: "#FF6B00" },
   { name: "Telegram Bot", slug: "telegram", description: "Automate Telegram chats and channels through a Telegram Bot. Requires a bot token from @BotFather.", category: "Communication", icon: "SiTelegram", color: "#26A5E4" },
   { name: "TinyPNG", slug: "tinypng", description: "Compress and optimize images via the TinyPNG API", category: "Developer Tools", icon: "TbPlugConnected", color: "#2563EB" },
-  { name: "Twilio", slug: "twilio", description: "Send SMS, make calls, and manage phone numbers", category: "Communication", icon: "TbPlugConnected", color: "#F22F46" },
+  { name: "Twilio", slug: "twilio", description: "Send SMS, make calls, and manage phone numbers", category: "Communication", icon: "SiTwilio", color: "#F22F46" },
   { name: "WhatsApp Business", slug: "whatsapp", description: "Send messages and manage conversations through the WhatsApp Business API. Requires a Meta developer account and verified business.", category: "Communication", icon: "SiWhatsapp", color: "#25D366" },
   { name: "Yandex", slug: "yandex", description: "Search the web, translate text, and query Yandex services", category: "Data & Analytics", icon: "TbPlugConnected", color: "#FFCC00" },
 ];
@@ -793,7 +793,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   asana: {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect Asana through ClawLink's hosted Composio setup to manage projects, tasks, sections, tags, and portfolios from your Asana workspace.",
     credentialFields: [],
@@ -1812,7 +1812,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   "meta-ads": {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect Meta Ads through ClawLink's hosted Composio setup to manage Facebook and Instagram ad campaigns, ad sets, creatives, custom audiences, and insights.",
     credentialFields: [],
@@ -1876,7 +1876,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   "google-forms": {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect Google Forms through ClawLink's hosted Composio setup to create forms, batch update questions, manage publishing settings, and collect responses.",
     credentialFields: [],
@@ -2015,7 +2015,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   bamboohr: {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect BambooHR through ClawLink's hosted Composio setup to manage employees, time-off requests, hiring, benefits, and company files from your BambooHR account.",
     credentialFields: [],
@@ -2060,7 +2060,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   webflow: {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect Webflow through ClawLink's hosted Composio setup to manage sites, CMS collections, items, assets, and webhooks from your Webflow account.",
     credentialFields: [],
@@ -2565,7 +2565,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect HeyGen by pasting your API key. Watch the short video on the connect page if you need help finding it in HeyGen's dashboard.",
-    setupVideoUrl: "https://www.youtube.com/embed/M7lc1UVf-VE",
+    setupVideoUrl: "https://www.youtube.com/embed/ZVTkrrn50XM",
     credentialFields: [],
     tools: [
       { name: "heygen_add_looks_to_photo_avatar_group", description: "Tool to add additional looks (images) to an existing photo avatar group. Use when you need to expand an avatar group with new image variations. Maximum 4 image keys can be added per request." },
@@ -3185,7 +3185,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
   },
   "twilio": {
     setupMode: "composio",
-    dashboardStatus: "available",
+    dashboardStatus: "coming-soon",
     runtimeStatus: "live",
     setupGuide: "Connect twilio through ClawLink's hosted Composio setup.",
     credentialFields: [],

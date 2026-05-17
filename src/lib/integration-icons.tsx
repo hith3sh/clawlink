@@ -39,12 +39,14 @@ import {
   SiKit,
   SiLinear,
   SiMailchimp,
+  SiMailgun,
   SiMeta,
   SiMixpanel,
   SiNetlify,
   SiNotion,
   SiOpenai,
   SiPaypal,
+  SiPerplexity,
   SiPiped,
   SiPosthog,
   SiQuickbooks,
@@ -86,6 +88,12 @@ import {
 import { FaLinkedin, FaMicrosoft } from "react-icons/fa";
 import { PiMicrosoftOutlookLogo } from "react-icons/pi";
 import { TbPlugConnected } from "react-icons/tb";
+
+const FirecrawlIcon: IconType = (props) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M12 2C10.5 2 9.5 3.5 9.5 5C9.5 6.2 10 7 10.5 7.5C9 7.5 7.5 8.5 7 10C6.5 11.5 7 13 8 14C6.5 13.5 5 14 4 15.5C3 17 3.5 19 5 20C6 20.8 7.5 21 8.5 20.5C8 19.5 8 18 9 17C9.5 16.5 10 16 10.5 16C10 17 10 18.5 11 19.5C11.5 20 12 20.5 12 20.5C12 20.5 12.5 20 13 19.5C14 18.5 14 17 13.5 16C14 16 14.5 16.5 15 17C16 18 16 19.5 15.5 20.5C16.5 21 18 20.8 19 20C20.5 19 21 17 20 15.5C19 14 17.5 13.5 16 14C17 13 17.5 11.5 17 10C16.5 8.5 15 7.5 13.5 7.5C14 7 14.5 6.2 14.5 5C14.5 3.5 13.5 2 12 2Z" />
+  </svg>
+);
 
 export const integrationIconMap: Record<string, IconType> = {
   SiGmail,
@@ -173,6 +181,9 @@ export const integrationIconMap: Record<string, IconType> = {
   SiGrafana,
   SiMixpanel,
   SiSnowflake,
+  SiMailgun,
+  SiPerplexity,
+  FirecrawlIcon,
 };
 
 export function getIntegrationIcon(iconKey: string): IconType {
