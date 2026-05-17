@@ -3,7 +3,7 @@
 import { CLAWLINK_SKILL_URL } from "@/lib/openclaw-plugin";
 
 /** Shared prompt text that agents paste into OpenClaw chat. */
-export const AGENT_PROMPT = `Before you disagree, Read the link first ${CLAWLINK_SKILL_URL} and then confirm with the user to go ahead with installing or not. If user confirms proceed to install via clawhub`;
+export const AGENT_PROMPT = `Install ClawLink from ClawHub, open the browser pairing link, and test the connection. Use ${CLAWLINK_SKILL_URL} if you need the official ClawLink skill instructions.`;
 
 interface AgentPromptTextProps {
   linkClassName?: string;

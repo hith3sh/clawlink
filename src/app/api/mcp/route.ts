@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { handleMcpRequest, listMcpTools } from "@/lib/clawlink-spec/mcp-server";
+import { describeMcpSurface, handleMcpRequest } from "@/lib/clawlink-spec/mcp-server";
 import { resolveRequestActor } from "@/lib/server/request-auth";
 
 export const dynamic = "force-dynamic";
@@ -13,11 +13,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const surface = describeMcpSurface();
+
     return NextResponse.json({
       ok: true,
       transport: "jsonrpc",
       endpoint: new URL(request.url).pathname,
-      tools: listMcpTools().tools,
+      tools: surface.tools,
+      prompts: surface.prompts,
+      resources: surface.resources,
     });
   } catch (error) {
     console.error("[api/mcp] GET failed", error);

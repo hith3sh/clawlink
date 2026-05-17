@@ -115,6 +115,11 @@ body {
   --mk-shadow-pop: 0 24px 60px rgba(0,0,0,0.55);
   --mk-ember: #FF7A4A;
   --mk-amber: #FFB347;
+  --mk-nav-bg: rgba(33, 33, 33, 0.75);
+  --mk-btn-secondary-bg: rgba(255,255,255,0.04);
+  --mk-btn-secondary-bg-hover: rgba(255,255,255,0.10);
+  --mk-btn-secondary-border: rgba(255,255,255,0.20);
+  --mk-btn-secondary-border-hover: rgba(255,255,255,0.30);
 }
 
 .dark {
@@ -240,6 +245,17 @@ body {
   transform: translateY(1px);
 }
 
+/* Marketing pill button — secondary (theme-aware) */
+.mk-btn-secondary {
+  background: var(--mk-btn-secondary-bg);
+  border-color: var(--mk-btn-secondary-border);
+  color: var(--mk-fg);
+}
+.mk-btn-secondary:hover {
+  background: var(--mk-btn-secondary-bg-hover);
+  border-color: var(--mk-btn-secondary-border-hover);
+}
+
 /* Inline code in dark marketing context */
 .mk-code {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
@@ -276,6 +292,33 @@ body {
 
 /* ─── Blog theme toggle ───────────────────────────── */
 
+/*
+ * The blog has its own light/dark toggle (see ThemeToggle.tsx) that flips
+ * `data-blog-theme` on <html>. We propagate that to the marketing chrome
+ * (announcement bar, floating pill nav, body bg, footer) by overriding the
+ * --mk-* variables so the entire visible page switches together.
+ */
+[data-blog-theme="light"] {
+  --mk-bg: #fafafa;
+  --mk-elev: #f0f0f0;
+  --mk-elev-2: #e6e6e6;
+  --mk-tile: #ececec;
+  --mk-fg: #1a1a1a;
+  --mk-fg-muted: rgba(0,0,0,0.70);
+  --mk-fg-dim: rgba(0,0,0,0.50);
+  --mk-fg-faint: rgba(0,0,0,0.40);
+  --mk-border: rgba(0,0,0,0.10);
+  --mk-border-strong: rgba(0,0,0,0.18);
+  --mk-border-card: rgba(0,0,0,0.06);
+  --mk-shadow-card: 0 12px 40px rgba(0,0,0,0.08);
+  --mk-shadow-pop: 0 24px 60px rgba(0,0,0,0.12);
+  --mk-nav-bg: rgba(255,255,255,0.75);
+  --mk-btn-secondary-bg: rgba(0,0,0,0.04);
+  --mk-btn-secondary-bg-hover: rgba(0,0,0,0.08);
+  --mk-btn-secondary-border: rgba(0,0,0,0.14);
+  --mk-btn-secondary-border-hover: rgba(0,0,0,0.22);
+}
+
 .blog-wrapper {
   --blog-bg: var(--mk-bg, #111);
   --blog-fg: var(--mk-fg, #ededed);
@@ -300,9 +343,8 @@ body {
   background: var(--blog-bg);
   color: var(--blog-fg);
   min-height: 50vh;
-  border-radius: 1rem;
   margin: 0 auto;
-  max-width: 860px;
+  width: 100%;
   padding-bottom: 4rem;
 }
 
@@ -310,9 +352,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 720px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 0;
+  padding: 1.5rem 1.5rem 0;
 }
 
 .blog-topbar-home {

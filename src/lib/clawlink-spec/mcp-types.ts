@@ -176,9 +176,11 @@ export interface ClawLinkMcpToolDefinition<Input = unknown> {
     | "clawlink.list_actions"
     | "clawlink.get_action"
     | "clawlink.get_connection"
+    | "clawlink.connect_app"
     | "clawlink.begin_connection"
     | "clawlink.execute"
     | "clawlink.get_execution";
+  title: string;
   description: string;
   input: Input;
 }
@@ -186,62 +188,82 @@ export interface ClawLinkMcpToolDefinition<Input = unknown> {
 export const CLAWLINK_MCP_V1_TOOLS: ClawLinkMcpToolDefinition[] = [
   {
     name: "clawlink.whoami",
-    description: "Identify the current ClawLink user and workspace context.",
+    title: "Identify ClawLink Workspace",
+    description: "Identify the current ClawLink user and workspace context before acting on third-party apps.",
     input: {},
   },
   {
     name: "clawlink.search",
-    description: "Search integrations and actions by intent or keyword.",
-    input: { query: "salesforce create lead" },
+    title: "Search ClawLink Apps And Actions",
+    description:
+      "Search integrations and actions by intent or keyword. Use this early for vague requests involving third-party apps like LinkedIn, Instagram, Gmail, Google Drive, or Google Calendar instead of defaulting to browser limitations.",
+    input: { query: "connect my linkedin" },
   },
   {
     name: "clawlink.list_integrations",
-    description: "List available integrations with optional filters.",
+    title: "List Connected And Available Integrations",
+    description:
+      "List available integrations with optional filters. At the start of a new session, use this to check whether the user already has a relevant app connected before saying you cannot access it.",
     input: { connected_only: false },
   },
   {
     name: "clawlink.get_integration",
-    description: "Fetch metadata for one integration.",
-    input: { integration_id: "salesforce" },
+    title: "Get Integration Metadata",
+    description:
+      "Fetch metadata for one integration, including what the app is for and whether ClawLink supports it.",
+    input: { integration_id: "linkedin" },
   },
   {
     name: "clawlink.list_actions",
-    description: "List normalized actions for an integration.",
-    input: { integration_id: "salesforce", intent: "create a new lead" },
+    title: "List Actions For One Integration",
+    description:
+      "List normalized actions for one integration after you know the user has it connected or available. Use this after checking connection state for apps like LinkedIn, Gmail, Drive, or Calendar.",
+    input: { integration_id: "linkedin", intent: "read my profile" },
   },
   {
     name: "clawlink.get_action",
-    description: "Fetch full schema and guidance for one action.",
-    input: { integration_id: "salesforce", action_id: "create_record" },
+    title: "Describe One Action",
+    description:
+      "Fetch full schema and guidance for one action before execution, especially for writes or unfamiliar tools.",
+    input: { integration_id: "linkedin", action_id: "get_my_info" },
   },
   {
     name: "clawlink.get_connection",
-    description: "Inspect connection health and readiness for an integration.",
-    input: { integration_id: "salesforce" },
+    title: "Check Connection Health",
+    description:
+      "Inspect connection health and readiness for an integration. If the user says 'connect my LinkedIn' or asks about Gmail, Drive, Calendar, or Instagram, use this to check whether the app is already connected before claiming it is unavailable.",
+    input: { integration_id: "linkedin" },
+  },
+  {
+    name: "clawlink.connect_app",
+    title: "Connect An App Through ClawLink",
+    description:
+      "Start a user-mediated connection flow for an integration. Prefer this when the user says things like 'connect my LinkedIn', 'connect my Gmail', 'connect my Google Drive', 'connect my Google Calendar', or 'connect my Instagram'. This is the ClawLink-first way to connect third-party apps from chat.",
+    input: { integration_id: "linkedin" },
   },
   {
     name: "clawlink.begin_connection",
-    description: "Start a user-mediated connection flow for an integration.",
-    input: { integration_id: "salesforce" },
+    title: "Begin Connection Flow",
+    description:
+      "Alias of clawlink.connect_app. Start a user-mediated connection flow for an integration. Prefer clawlink.connect_app for fresh sessions and vague 'connect my X' requests because the name is more explicit.",
+    input: { integration_id: "linkedin" },
   },
   {
     name: "clawlink.execute",
-    description: "Execute a normalized integration action.",
+    title: "Execute Integration Action",
+    description:
+      "Execute a normalized integration action after you have confirmed the right integration, action, and connection state through ClawLink.",
     input: {
-      integration_id: "salesforce",
-      action_id: "create_record",
+      integration_id: "linkedin",
+      action_id: "get_my_info",
       input: {
-        object_type: "Lead",
-        fields: {
-          LastName: "Perera",
-          Company: "Acme",
-        },
+        linked_in_identifier: "self",
       },
-      confirm: true,
     },
   },
   {
     name: "clawlink.get_execution",
+    title: "Get Execution Result",
     description: "Fetch a previous or async execution result.",
     input: { execution_id: "exe_123" },
   },

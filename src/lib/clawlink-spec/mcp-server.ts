@@ -15,6 +15,12 @@ import {
 import {
   CLAWLINK_MCP_V1_TOOLS,
 } from "@/lib/clawlink-spec/mcp-types";
+import {
+  getMcpPrompt,
+  listMcpPrompts,
+  listMcpResources,
+  readMcpResource,
+} from "@/lib/clawlink-spec/mcp-guidance";
 import type {
   ClawLinkBeginConnectionInput,
   ClawLinkExecuteInput,
@@ -52,6 +58,29 @@ interface McpToolListResponse {
     title: string;
     description: string;
     inputSchema: JsonObject;
+  }>;
+}
+
+interface McpPromptListResponse {
+  prompts: Array<{
+    name: string;
+    title: string;
+    description: string;
+    arguments: Array<{
+      name: string;
+      description: string;
+      required?: boolean;
+    }>;
+  }>;
+}
+
+interface McpResourceListResponse {
+  resources: Array<{
+    uri: string;
+    name: string;
+    title: string;
+    description: string;
+    mimeType: string;
   }>;
 }
 
@@ -210,6 +239,7 @@ function toolInputSchema(name: ClawLinkMcpToolDefinition["name"]): JsonObject {
         required: ["integration_id", "action_id"],
       };
     case "clawlink.get_connection":
+    case "clawlink.connect_app":
     case "clawlink.begin_connection":
       return {
         type: "object",
@@ -250,10 +280,22 @@ export function listMcpTools(): McpToolListResponse {
   return {
     tools: CLAWLINK_MCP_V1_TOOLS.map((tool) => ({
       name: tool.name,
-      title: tool.name,
+      title: tool.title,
       description: tool.description,
       inputSchema: toolInputSchema(tool.name),
     })),
+  };
+}
+
+export function describeMcpSurface(): {
+  tools: McpToolListResponse["tools"];
+  prompts: McpPromptListResponse["prompts"];
+  resources: McpResourceListResponse["resources"];
+} {
+  return {
+    tools: listMcpTools().tools,
+    prompts: listMcpPrompts().prompts,
+    resources: listMcpResources().resources,
   };
 }
 
@@ -412,6 +454,7 @@ export async function dispatchMcpToolCall(user: UserRow, request: Request, name:
       return callGetAction(user, args);
     case "clawlink.get_connection":
       return callGetConnection(user, args);
+    case "clawlink.connect_app":
     case "clawlink.begin_connection":
       return callBeginConnection(user, args, request);
     case "clawlink.execute":
@@ -442,6 +485,8 @@ export async function handleMcpRequest(request: Request, user: UserRow, body: un
           },
           capabilities: {
             tools: {},
+            prompts: {},
+            resources: {},
           },
         });
       case "notifications/initialized":
@@ -450,6 +495,32 @@ export async function handleMcpRequest(request: Request, user: UserRow, body: un
         return success(id, {});
       case "tools/list":
         return success(id, listMcpTools());
+      case "prompts/list":
+        return success(id, listMcpPrompts());
+      case "prompts/get": {
+        const params = asObject(rpc.params);
+        const promptName = requireString(params.name, "name");
+        const result = getMcpPrompt(promptName, asObject(params.arguments));
+
+        if (!result) {
+          throw new McpProtocolError(`Prompt not found: ${promptName}`, -32601, { name: promptName });
+        }
+
+        return success(id, result);
+      }
+      case "resources/list":
+        return success(id, listMcpResources());
+      case "resources/read": {
+        const params = asObject(rpc.params);
+        const uri = requireString(params.uri, "uri");
+        const result = readMcpResource(uri);
+
+        if (!result) {
+          throw new McpProtocolError(`Resource not found: ${uri}`, -32601, { uri });
+        }
+
+        return success(id, result);
+      }
       case "tools/call": {
         const params = asObject(rpc.params);
         const toolName = requireString(params.name, "name") as ClawLinkMcpToolDefinition["name"];

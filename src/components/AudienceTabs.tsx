@@ -196,7 +196,7 @@ function HermesPanel() {
           letterSpacing: "-0.02em",
         }}
       >
-        Send this to Hermes in Telegram
+        Point your AI agent at Hermes
       </h2>
 
       <div
@@ -237,9 +237,9 @@ function HermesPanel() {
       </div>
 
       <ol className="mt-6 space-y-3">
-        <Step num={1}>Paste the prompt into your Hermes Telegram chat.</Step>
+        <Step num={1}>Paste the prompt into your Hermes chat.</Step>
         <Step num={2}>Hermes installs the ClawLink plugin and sends you an approval link.</Step>
-        <Step num={3}>Approve from your phone, then Hermes tests the connection before it says setup is done.</Step>
+        <Step num={3}>Approve from browser, then Hermes tests the connection before it says setup is done.</Step>
       </ol>
     </div>
   );

@@ -1,8 +1,17 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Script from "next/script";
 import { getBlogPostBySlug, getBlogPostSlugs } from "@/lib/notion-blog";
 import { NotionRenderer } from "@/components/NotionRenderer";
 import type { Metadata } from "next";
+import {
+  ORGANIZATION_LOGO,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+  toAbsoluteImageUrl,
+  toAbsoluteUrl,
+} from "@/lib/site";
 
 export const revalidate = 60;
 
@@ -15,21 +24,36 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const post = await getBlogPostBySlug(slug);
   if (!post) return {};
 
+  const description = post.description || SITE_DESCRIPTION;
+  const canonicalUrl = toAbsoluteUrl(`/blog/${post.slug}`);
+  const socialImage = toAbsoluteImageUrl(post.coverImage);
+
   return {
     title: `${post.title} | ClawLink Blog`,
-    description: post.description,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title: post.title,
-      description: post.description,
+      description,
       type: "article",
+      url: canonicalUrl,
+      siteName: SITE_NAME,
       publishedTime: post.publishedAt,
-      ...(post.coverImage && { images: [post.coverImage] }),
+      images: [
+        {
+          url: socialImage,
+          alt: post.title,
+        },
+      ],
+      authors: [post.author],
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
-      description: post.description,
-      ...(post.coverImage && { images: [post.coverImage] }),
+      description,
+      images: [socialImage],
     },
   };
 }
@@ -47,8 +71,36 @@ export default async function BlogPostPage({ params }: PageProps) {
     notFound();
   }
 
+  const canonicalUrl = toAbsoluteUrl(`/blog/${post.slug}`);
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description || SITE_DESCRIPTION,
+    datePublished: post.publishedAt,
+    dateModified: post.publishedAt,
+    author: {
+      "@type": "Person",
+      name: post.author,
+    },
+    image: [toAbsoluteImageUrl(post.coverImage)],
+    mainEntityOfPage: canonicalUrl,
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: ORGANIZATION_LOGO,
+      },
+    },
+  };
+
   return (
-    <div className="mx-auto max-w-[720px] px-5 py-16 sm:py-24">
+    <div className="mx-auto max-w-[1080px] px-6 py-16 sm:px-8 sm:py-24">
+      <Script id={`blog-post-schema-${post.id}`} type="application/ld+json">
+        {JSON.stringify(structuredData)}
+      </Script>
       <Link
         href="/blog"
         className="inline-flex items-center gap-1.5 text-xs transition-colors hover:opacity-80"

@@ -4,6 +4,12 @@ import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/ui/themes";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  DEFAULT_OG_IMAGE,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -27,25 +33,23 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-const siteDescription =
-  "Install ClawLink in OpenClaw once, then connect apps with one click. Provider credentials are managed by ClawLink, encrypted at rest, and activation is $2.99/month once access becomes inactive.";
-
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "ClawLink: Plug Anything into OpenClaw",
-  description: siteDescription,
+  description: SITE_DESCRIPTION,
   icons: {
     icon: "/images/logo/link.png",
     apple: "/images/logo/link.png",
   },
   openGraph: {
     title: "ClawLink: Plug Anything into OpenClaw",
-    description: siteDescription,
+    description: SITE_DESCRIPTION,
     type: "website",
-    url: "https://claw-link.dev",
-    siteName: "ClawLink",
+    url: SITE_URL,
+    siteName: SITE_NAME,
     images: [
       {
-        url: "https://claw-link.dev/images/logo/social-card.png",
+        url: DEFAULT_OG_IMAGE,
         width: 1200,
         height: 630,
         alt: "ClawLink — Plug Anything into OpenClaw",
@@ -55,11 +59,11 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "ClawLink: Plug Anything into OpenClaw",
-    description: siteDescription,
-    images: ["https://claw-link.dev/images/logo/social-card.png"],
+    description: SITE_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE],
   },
   alternates: {
-    canonical: "https://claw-link.dev",
+    canonical: SITE_URL,
     types: {
       "text/markdown": "/skill.md",
     },
@@ -89,6 +93,18 @@ export default function RootLayout({
             data-site-id="179055470d9e"
             strategy="afterInteractive"
           />
+          <Script
+            src="https://www.googletagmanager.com/gtag/js?id=AW-18163006664"
+            strategy="afterInteractive"
+          />
+          <Script id="google-ads-gtag" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-18163006664');
+            `}
+          </Script>
           <TooltipProvider>
             {children}
           </TooltipProvider>

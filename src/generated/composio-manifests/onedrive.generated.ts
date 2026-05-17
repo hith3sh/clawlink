@@ -38,7 +38,7 @@ function composioTool(
       kind: "composio_tool",
       toolkit: "one_drive",
       toolSlug: partial.toolSlug,
-      version: "20260429_01",
+      version: "20260512_00",
     },
   };
 }

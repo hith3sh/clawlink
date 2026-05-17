@@ -172,7 +172,7 @@ export function toCanonicalExecutionSummary(payload: ToolExecutionPayload): Claw
       recommended_next_action:
         payload.error?.code === "needs_connection"
           ? {
-              tool: "clawlink.begin_connection",
+              tool: "clawlink.connect_app",
               input: { integration_id: payload.integration },
             }
           : undefined,

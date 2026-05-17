@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getIntegrationBySlug } from "@/data/integrations";
+import { getIntegrationBySlug, integrations } from "@/data/integrations";
 import {
   createConnectionSession,
   getConnectionSessionById,
@@ -20,10 +20,11 @@ import {
 } from "@/lib/server/integration-store";
 import {
   describeToolForUser,
+  buildToolListItem,
+  listToolDefinitionsForIntegration,
   listToolDescriptionsForIntegration,
   listToolsForUser,
   searchToolsForUser,
-  type ToolDescription,
   type ToolListItem,
 } from "@/lib/server/tool-registry";
 import type {
@@ -166,6 +167,12 @@ function toIntegrationSummary(
   };
 }
 
+function listDefinitionActionSummaries(integrationSlug: string): ToolListItem[] {
+  return listToolDefinitionsForIntegration(integrationSlug, {
+    includeComposioManifestTools: true,
+  }).map((tool) => buildToolListItem(tool, []));
+}
+
 export async function getCanonicalWhoAmI(user: UserRow): Promise<ClawLinkWhoAmIResponse> {
   return {
     user_id: user.id,
@@ -215,12 +222,21 @@ export async function listCanonicalIntegrations(
   }
 
   const integrationSlugs = new Set<string>([
+    ...integrations
+      .filter((integration) => integration.dashboardStatus === "available")
+      .map((integration) => integration.slug),
     ...connectionMap.keys(),
     ...toolMap.keys(),
   ]);
 
   const items = Array.from(integrationSlugs)
-    .map((slug) => toIntegrationSummary(slug, connectionMap.get(slug) ?? [], toolMap.get(slug) ?? []))
+    .map((slug) =>
+      toIntegrationSummary(
+        slug,
+        connectionMap.get(slug) ?? [],
+        toolMap.get(slug) ?? listDefinitionActionSummaries(slug),
+      ),
+    )
     .filter((item) => {
       if (connectedOnly && !item.connected) {
         return false;
@@ -268,11 +284,14 @@ export async function getCanonicalIntegration(
     listIntegrationConnectionsForUserId(db, user.id).then((rows) => rows.filter((row) => row.integration === integration.slug)),
     listToolDescriptionsForIntegration(user.id, integration.slug),
   ]);
+  const actionSummaries = actions.length > 0
+    ? actions
+    : listDefinitionActionSummaries(integration.slug);
 
   const defaultConnection = connections.find((connection) => connection.isDefault) ?? connections[0] ?? null;
 
   return {
-    ...toIntegrationSummary(integration.slug, connections, actions),
+    ...toIntegrationSummary(integration.slug, connections, actionSummaries),
     description: integration.description,
     auth: {
       required: true,
@@ -289,7 +308,7 @@ export async function getCanonicalIntegration(
       supported: integration.dashboardStatus === "available",
       state: toConnectionState(defaultConnection),
     },
-    actions: actions.map((action) => {
+    actions: actionSummaries.map((action) => {
       const summary = toCanonicalActionSummary(action);
       return {
         action_id: summary.action_id,
@@ -313,9 +332,12 @@ export async function listCanonicalActions(
     return null;
   }
 
-  const tools = input.intent?.trim()
+  const connectedTools = input.intent?.trim()
     ? await searchToolsForUser(user.id, input.intent, { integration: integration.slug, limit: 50 })
     : await listToolsForUser(user.id, { integration: integration.slug });
+  const tools = connectedTools.length > 0
+    ? connectedTools
+    : listDefinitionActionSummaries(integration.slug);
 
   return {
     integration_id: integration.slug,

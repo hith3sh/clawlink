@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { CLAWLINK_SKILL_URL } from "@/lib/openclaw-plugin";
+import { MarketingThemeProvider } from "@/components/MarketingThemeProvider";
 
 export default function MarketingLayout({
   children,
@@ -8,14 +9,15 @@ export default function MarketingLayout({
   children: React.ReactNode;
 }) {
   return (
+    <MarketingThemeProvider>
     <div className="public-site flex min-h-screen flex-col">
       {/* Announcement bar */}
       <div
         className="border-b text-center text-[13px] font-semibold tracking-[0.005em] py-2.5 px-4"
         style={{
-          background: "#2A2A2D",
+          background: "var(--mk-elev)",
           borderColor: "var(--mk-border)",
-          color: "#fff",
+          color: "var(--mk-fg)",
         }}
       >
         <span className="mr-1">&#9889;</span>
@@ -35,7 +37,7 @@ export default function MarketingLayout({
         <nav
           className="flex w-full max-w-[1080px] items-center justify-between gap-3 rounded-full px-3 py-2 sm:gap-6 sm:px-6"
           style={{
-            background: "rgba(33, 33, 33, 0.75)",
+            background: "var(--mk-nav-bg)",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
             border: "1px solid var(--mk-border)",
@@ -63,15 +65,15 @@ export default function MarketingLayout({
                 ClawLink
               </span>
             </Link>
-            <div className="hidden items-center gap-5 text-[13.5px] font-medium md:flex" style={{ color: "rgba(255,255,255,0.78)" }}>
-              <a href="https://docs.claw-link.dev/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Docs</a>
-              <Link href="/#pricing" className="hover:text-white transition-colors">Pricing</Link>
+            <div className="hidden items-center gap-5 text-[13.5px] font-medium md:flex" style={{ color: "var(--mk-fg-muted)" }}>
+              <a href="https://docs.claw-link.dev/" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[var(--mk-fg)]">Docs</a>
+              <Link href="/#pricing" className="transition-colors hover:text-[var(--mk-fg)]">Pricing</Link>
             </div>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Link
               href="/sign-in"
-              className="mk-btn !px-3 !py-1.5 !text-[12px] border border-white/20 bg-white/[0.04] text-white transition-all hover:border-white/30 hover:bg-white/[0.10] sm:!px-5 sm:!py-2.5 sm:!text-[13.5px]"
+              className="mk-btn mk-btn-secondary !px-3 !py-1.5 !text-[12px] sm:!px-5 sm:!py-2.5 sm:!text-[13.5px]"
             >
               Log in
             </Link>
@@ -156,22 +158,22 @@ export default function MarketingLayout({
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
             <div className="flex flex-col gap-2.5 text-[13.5px]">
               <span className="mb-1 text-[11px] font-semibold uppercase tracking-[0.10em]" style={{ color: "var(--mk-fg-faint)" }}>Product</span>
-              <Link className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href="/dashboard">Dashboard</Link>
-              <a className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href="https://docs.claw-link.dev" target="_blank" rel="noopener noreferrer">Docs</a>
-              <a className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href={CLAWLINK_SKILL_URL} target="_blank" rel="noopener noreferrer">skill.md</a>
+              <Link className="transition-colors hover:text-[var(--mk-fg)]" style={{ color: "var(--mk-fg-muted)" }} href="/dashboard">Dashboard</Link>
+              <a className="transition-colors hover:text-[var(--mk-fg)]" style={{ color: "var(--mk-fg-muted)" }} href="https://docs.claw-link.dev" target="_blank" rel="noopener noreferrer">Docs</a>
+              <a className="transition-colors hover:text-[var(--mk-fg)]" style={{ color: "var(--mk-fg-muted)" }} href={CLAWLINK_SKILL_URL} target="_blank" rel="noopener noreferrer">skill.md</a>
             </div>
             <div className="flex flex-col gap-2.5 text-[13.5px]">
               <span className="mb-1 text-[11px] font-semibold uppercase tracking-[0.10em]" style={{ color: "var(--mk-fg-faint)" }}>Trust</span>
-              <Link className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href="/verify">Verify</Link>
-              <Link className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href="/security">Security</Link>
-              <Link className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href="/privacy">Privacy</Link>
-              <Link className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href="/terms">Terms</Link>
+              <Link className="transition-colors hover:text-[var(--mk-fg)]" style={{ color: "var(--mk-fg-muted)" }} href="/verify">Verify</Link>
+              <Link className="transition-colors hover:text-[var(--mk-fg)]" style={{ color: "var(--mk-fg-muted)" }} href="/security">Security</Link>
+              <Link className="transition-colors hover:text-[var(--mk-fg)]" style={{ color: "var(--mk-fg-muted)" }} href="/privacy">Privacy</Link>
+              <Link className="transition-colors hover:text-[var(--mk-fg)]" style={{ color: "var(--mk-fg-muted)" }} href="/terms">Terms</Link>
             </div>
             <div className="flex flex-col gap-2.5 text-[13.5px]">
               <span className="mb-1 text-[11px] font-semibold uppercase tracking-[0.10em]" style={{ color: "var(--mk-fg-faint)" }}>Source</span>
-              <a className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href="https://github.com/hith3sh/clawlink" target="_blank" rel="noopener noreferrer">GitHub</a>
-              <a className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href="https://www.npmjs.com/package/@useclawlink/openclaw-plugin" target="_blank" rel="noopener noreferrer">npm</a>
-              <a className="hover:text-white transition-colors" style={{ color: "var(--mk-fg-muted)" }} href="https://discord.gg/KjN3xcTvw4" target="_blank" rel="noopener noreferrer">Discord</a>
+              <a className="transition-colors hover:text-[var(--mk-fg)]" style={{ color: "var(--mk-fg-muted)" }} href="https://github.com/hith3sh/clawlink" target="_blank" rel="noopener noreferrer">GitHub</a>
+              <a className="transition-colors hover:text-[var(--mk-fg)]" style={{ color: "var(--mk-fg-muted)" }} href="https://www.npmjs.com/package/@useclawlink/openclaw-plugin" target="_blank" rel="noopener noreferrer">npm</a>
+              <a className="transition-colors hover:text-[var(--mk-fg)]" style={{ color: "var(--mk-fg-muted)" }} href="https://discord.gg/KjN3xcTvw4" target="_blank" rel="noopener noreferrer">Discord</a>
             </div>
           </div>
         </div>
@@ -180,11 +182,12 @@ export default function MarketingLayout({
           style={{ borderTop: "1px solid var(--mk-border-card)", color: "var(--mk-fg-faint)" }}
         >
           <span>&copy; {new Date().getFullYear()} ClawLink. MIT-licensed plugin code.</span>
-          <a className="hover:text-white transition-colors" href="mailto:hello@claw-link.dev">
+          <a className="transition-colors hover:text-[var(--mk-fg)]" href="mailto:hello@claw-link.dev">
             hello@claw-link.dev
           </a>
         </div>
       </footer>
     </div>
+    </MarketingThemeProvider>
   );
 }

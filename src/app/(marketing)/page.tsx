@@ -4,10 +4,50 @@ import { AnimatedWords } from "@/components/AnimatedWords";
 import AudienceTabs from "@/components/AudienceTabs";
 import { PricingCard } from "@/components/PricingCard";
 import { MarketingIntegrationGrid } from "@/components/MarketingIntegrationGrid";
+import { HeroProductName } from "@/components/HeroProductName";
+import {
+  DEFAULT_OG_IMAGE,
+  DOCS_URL,
+  ORGANIZATION_LOGO,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/site";
 
 export default function Home() {
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: SITE_NAME,
+      url: SITE_URL,
+      description: SITE_DESCRIPTION,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: ORGANIZATION_LOGO,
+      sameAs: [DOCS_URL, "https://github.com/hith3sh/clawlink"],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: SITE_NAME,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      description: SITE_DESCRIPTION,
+      url: SITE_URL,
+      image: DEFAULT_OG_IMAGE,
+    },
+  ];
+
   return (
     <main className="flex-1">
+      <Script id="clawlink-home-schema" type="application/ld+json">
+        {JSON.stringify(structuredData)}
+      </Script>
       {/* ───── Hero ───── */}
       <section className="relative mx-auto max-w-[1120px] px-6 pt-14 pb-24 text-center">
         {/* Decorative doodle arrows */}
@@ -27,13 +67,14 @@ export default function Home() {
         <span
           className="mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold"
           style={{
-            background: "rgba(224,53,43,0.10)",
-            border: "1px solid rgba(224,53,43,0.28)",
-            color: "#FFC8B6",
+            background: "rgb(var(--brand-rgb) / 0.10)",
+            border: "1px solid rgb(var(--brand-rgb) / 0.28)",
+            color: "var(--brand-soft)",
           }}
         >
           <Image src="/brand/bento/openclaw.png" alt="OpenClaw" width={18} height={18} priority className="rounded-full" />
-          Built for OpenClaw
+          <Image src="/brand/bento/hermes-agent-light.png" alt="Hermes" width={18} height={18} priority className="rounded-full" />
+          Built for OpenClaw & Hermes
         </span>
 
         {/* Heading */}
@@ -48,16 +89,33 @@ export default function Home() {
             color: "var(--mk-fg)",
           }}
         >
-          Plug your Openclaw into <AnimatedWords />
+          Plug your <HeroProductName /><br /> into <AnimatedWords />
         </h1>
 
         <p
           className="mx-auto mt-12 max-w-[600px] text-[16.5px] leading-relaxed"
           style={{ color: "var(--mk-fg-muted)" }}
         >
-          ClawLink connects Gmail, Slack, Notion, GitHub, and 100+ apps to your
-          Openclaw Bot
+          ClawLink connects Gmail, Slack, Notion, GitHub, and 100+ apps to your{" "}
+          <HeroProductName /> Bot
         </p>
+
+        {/* Product Hunt badge */}
+        <div className="mt-6 flex justify-center">
+          <a
+            href="https://www.producthunt.com/products/clawlink?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-clawlink"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              alt="ClawLink - Connect OpenClaw/Hermes Agent to 100+ apps in seconds | Product Hunt"
+              width={250}
+              height={54}
+              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1146201&theme=light&t=1778952756480"
+              className="rounded-lg"
+            />
+          </a>
+        </div>
 
         {/* Tabs + panels */}
         <div className="mt-10">
@@ -71,7 +129,7 @@ export default function Home() {
                 color: "#fff",
               }}
             >
-              copy &amp; paste this onto openclaw chat
+              copy &amp; paste this into your agent chat
             </span>
             <svg
               viewBox="0 0 110 60"
@@ -97,16 +155,16 @@ export default function Home() {
             style={{
               background: "var(--mk-elev)",
               border: "1.5px solid var(--mk-border)",
-              padding: "75% 0 0 0",
+              padding: "64.75% 0 0 0",
             }}
           >
             <iframe
-              src="https://player.vimeo.com/video/1188813912?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&muted=1"
+              src="https://player.vimeo.com/video/1191844124?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&muted=1"
               frameBorder="0"
               allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
               referrerPolicy="strict-origin-when-cross-origin"
               style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
-              title="clawlink beginning to end"
+              title="clawlink setup"
             />
           </div>
           <Script src="https://player.vimeo.com/api/player.js" strategy="afterInteractive" />
@@ -297,7 +355,7 @@ function PillarCard({
       {/* Hover overlay */}
       <div
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-        style={{ background: "rgba(224,53,43,0.06)" }}
+        style={{ background: "rgb(var(--brand-rgb) / 0.06)" }}
       />
       <div
         className="relative mb-5 flex h-11 w-11 items-center justify-center rounded-xl"
