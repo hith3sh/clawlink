@@ -5,18 +5,29 @@
 const NOTION_API = "https://api.notion.com/v1";
 const NOTION_VERSION = "2022-06-28";
 
-function headers() {
+function getNotionConfig() {
+  const apiKey = process.env.NOTION_API_KEY;
+  const databaseId = process.env.NOTION_DATABASE_ID;
+  if (!apiKey || !databaseId) return null;
+  return { apiKey, databaseId };
+}
+
+function headers(apiKey: string) {
   return {
-    Authorization: `Bearer ${process.env.NOTION_API_KEY}`,
+    Authorization: `Bearer ${apiKey}`,
     "Notion-Version": NOTION_VERSION,
     "Content-Type": "application/json",
   };
 }
 
-async function notionFetch(path: string, body?: Record<string, unknown>) {
+async function notionFetch(
+  apiKey: string,
+  path: string,
+  body?: Record<string, unknown>
+) {
   const res = await fetch(`${NOTION_API}${path}`, {
     method: body ? "POST" : "GET",
-    headers: headers(),
+    headers: headers(apiKey),
     ...(body && { body: JSON.stringify(body) }),
   });
   if (!res.ok) {
@@ -25,8 +36,6 @@ async function notionFetch(path: string, body?: Record<string, unknown>) {
   }
   return res.json();
 }
-
-const databaseId = process.env.NOTION_DATABASE_ID || "";
 
 export interface BlogPost {
   id: string;
@@ -103,21 +112,28 @@ function pageToPost(page: any): BlogPost {
 }
 
 export async function getBlogPosts(): Promise<BlogPost[]> {
+  const config = getNotionConfig();
+  if (!config) return [];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const response: any = await notionFetch(`/databases/${databaseId}/query`, {
-    filter: {
-      property: "Status",
-      select: {
-        equals: "Published",
+  const response: any = await notionFetch(
+    config.apiKey,
+    `/databases/${config.databaseId}/query`,
+    {
+      filter: {
+        property: "Status",
+        select: {
+          equals: "Published",
+        },
       },
-    },
-    sorts: [
-      {
-        property: "Published",
-        direction: "descending",
-      },
-    ],
-  });
+      sorts: [
+        {
+          property: "Published",
+          direction: "descending",
+        },
+      ],
+    }
+  );
 
   return response.results
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -128,30 +144,37 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
 export async function getBlogPostBySlug(
   slug: string
 ): Promise<BlogPostWithContent | null> {
+  const config = getNotionConfig();
+  if (!config) return null;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const response: any = await notionFetch(`/databases/${databaseId}/query`, {
-    filter: {
-      and: [
-        {
-          property: "Slug",
-          rich_text: {
-            equals: slug,
+  const response: any = await notionFetch(
+    config.apiKey,
+    `/databases/${config.databaseId}/query`,
+    {
+      filter: {
+        and: [
+          {
+            property: "Slug",
+            rich_text: {
+              equals: slug,
+            },
           },
-        },
-        {
-          property: "Status",
-          select: {
-            equals: "Published",
+          {
+            property: "Status",
+            select: {
+              equals: "Published",
+            },
           },
-        },
-      ],
-    },
-  });
+        ],
+      },
+    }
+  );
 
   const page = response.results[0];
   if (!page || !("properties" in page)) return null;
 
-  const blocks = await getAllBlocks(page.id);
+  const blocks = await getAllBlocks(config.apiKey, page.id);
 
   return {
     ...pageToPost(page),
@@ -159,7 +182,10 @@ export async function getBlogPostBySlug(
   };
 }
 
-async function getAllBlocks(blockId: string): Promise<NotionBlock[]> {
+async function getAllBlocks(
+  apiKey: string,
+  blockId: string
+): Promise<NotionBlock[]> {
   const blocks: NotionBlock[] = [];
   let cursor: string | undefined;
 
@@ -169,6 +195,7 @@ async function getAllBlocks(blockId: string): Promise<NotionBlock[]> {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response: any = await notionFetch(
+      apiKey,
       `/blocks/${blockId}/children?${params.toString()}`
     );
 
@@ -177,7 +204,7 @@ async function getAllBlocks(blockId: string): Promise<NotionBlock[]> {
         blocks.push(block);
 
         if (block.has_children) {
-          const children = await getAllBlocks(block.id);
+          const children = await getAllBlocks(apiKey, block.id);
           block.children = children;
         }
       }
