@@ -1,0 +1,64 @@
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[project]
+name = "clawlink-hermes-plugin"
+version = "0.1.0"
+description = "ClawLink for Hermes Agent — connect 100+ third-party apps through one MCP server."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "ClawLink", email = "hello@claw-link.dev" }]
+requires-python = ">=3.10"
+keywords = [
+    "clawlink",
+    "hermes",
+    "hermes-agent",
+    "mcp",
+    "integrations",
+    "oauth",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+]
+
+[project.urls]
+Homepage = "https://claw-link.dev"
+Documentation = "https://docs.claw-link.dev/hermes"
+Repository = "https://github.com/claw-link/hermes-plugin"
+Issues = "https://github.com/claw-link/hermes-plugin/issues"
+
+# Hermes auto-discovers plugins registered under this entry-point group.
+# `pip install clawlink-hermes-plugin` is an alternative to
+# `hermes plugins install claw-link/hermes-plugin`.
+[project.entry-points."hermes_agent.plugins"]
+clawlink = "clawlink_hermes_plugin"
+
+[tool.hatch.build.targets.wheel]
+# The package is laid out as a flat directory at the repo root so
+# `hermes plugins install <user>/<repo>` works directly. For PyPI we wrap it
+# under a proper Python package name.
+packages = ["clawlink_hermes_plugin"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"__init__.py" = "clawlink_hermes_plugin/__init__.py"
+"bootstrap.py" = "clawlink_hermes_plugin/bootstrap.py"
+"plugin.yaml" = "clawlink_hermes_plugin/plugin.yaml"
+"skills/clawlink.md" = "clawlink_hermes_plugin/skills/clawlink.md"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/__init__.py",
+    "/bootstrap.py",
+    "/plugin.yaml",
+    "/skills",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+]

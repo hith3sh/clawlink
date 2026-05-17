@@ -1,0 +1,12 @@
+name: clawlink
+version: 0.1.0
+description: Connect 100+ third-party apps to Hermes through ClawLink — Gmail, Slack, Notion, GitHub, Stripe, and more. Manages OAuth and API credentials so the agent does not have to.
+author: ClawLink <hello@claw-link.dev>
+homepage: https://claw-link.dev
+license: MIT
+provides_cli_commands:
+  - clawlink
+provides_commands:
+  - clawlink
+provides_skills:
+  - clawlink
