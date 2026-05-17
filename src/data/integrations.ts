@@ -2110,9 +2110,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "amplitude": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect amplitude through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2173,9 +2173,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "databricks": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect databricks through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2194,9 +2194,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "datadog": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect datadog through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2278,9 +2278,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "freshservice": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect freshservice through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2338,9 +2338,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "google-admin": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect google-admin through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2380,9 +2380,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "google-chat": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect google-chat through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2422,9 +2422,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "google-contacts": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect google-contacts through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2506,9 +2506,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "grafana": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect grafana through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2703,9 +2703,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "mixpanel": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect mixpanel through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2745,9 +2745,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "onenote": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect onenote through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2808,9 +2808,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "paystack": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect paystack through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2847,9 +2847,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "plausible-analytics": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect plausible-analytics through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2868,9 +2868,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "razorpay": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect razorpay through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2952,9 +2952,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "segment": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect segment through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -2994,9 +2994,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "servicenow": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect servicenow through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -3015,9 +3015,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "sharepoint": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect sharepoint through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -3036,9 +3036,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "snowflake": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect snowflake through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -3057,9 +3057,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "spotify": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect spotify through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
@@ -3078,9 +3078,9 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "tally": {
-    setupMode: "composio",
-    dashboardStatus: "available",
-    runtimeStatus: "live",
+    setupMode: "coming_soon",
+    dashboardStatus: "coming-soon",
+    runtimeStatus: "planned",
     setupGuide: "Connect tally through ClawLink's hosted Composio setup.",
     credentialFields: [],
     tools: [
