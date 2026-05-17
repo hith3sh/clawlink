@@ -200,7 +200,7 @@ const baseIntegrations: BaseIntegration[] = [
   { name: "Replicate", slug: "replicate", description: "Run AI models, create predictions, and manage deployments", category: "AI & ML", icon: "SiReplicate", color: "#000000" },
   { name: "Affinity", slug: "affinity", description: "Manage contacts, organizations, and opportunities in Affinity", category: "CRM & Sales", icon: "TbPlugConnected", color: "#000000" },
   { name: "AgencyZoom", slug: "agencyzoom", description: "Manage insurance agency leads, clients, and workflows", category: "CRM & Sales", icon: "TbPlugConnected", color: "#2563EB" },
-  { name: "AgentMail", slug: "agent-mail", description: "Send and manage emails through AgentMail", category: "Communication", icon: "SiMailgun", color: "#6366F1" },
+  { name: "AgentMail", slug: "agent-mail", description: "Send and manage emails through AgentMail", category: "Communication", icon: "TbPlugConnected", color: "#6366F1" },
   { name: "Amplitude", slug: "amplitude", description: "Query product analytics, events, and user behavior", category: "Data & Analytics", icon: "TbPlugConnected", color: "#1E0A3C" },
   { name: "Cal.com", slug: "cal", description: "Schedule and manage bookings through Cal.com", category: "Events & Scheduling", icon: "SiCaldotcom", color: "#292929" },
   { name: "Cloudflare", slug: "cloudflare", description: "Manage DNS, zones, workers, and security settings", category: "Developer Tools", icon: "SiCloudflare", color: "#F38020" },
@@ -1978,7 +1978,8 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     setupMode: "composio",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Connect Firecrawl through ClawLink's hosted setup to scrape websites, crawl pages, extract structured data, and search the web.",
+    setupGuide: "Connect Firecrawl by pasting your API key. Watch the short video on the connect page if you need help finding it in Firecrawl's dashboard.",
+    setupVideoUrl: "https://www.youtube.com/embed/94Ts0VQk7MA",
     credentialFields: [],
     tools: [
       { name: "firecrawl_scrape", description: "Scrape a publicly accessible URL and retrieve content in specified formats" },
