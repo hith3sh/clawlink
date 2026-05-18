@@ -7,7 +7,6 @@ import {
   getIntegrationConnectionForUserId,
   randomToken,
   saveComposioIntegrationConnectionForUserId,
-  type SaveIntegrationConnectionOptions,
   type D1LikeDatabase,
   type IntegrationConnectionRecord,
   type UserRow,

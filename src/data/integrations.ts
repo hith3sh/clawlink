@@ -93,20 +93,6 @@ const textField = (
   description,
 });
 
-const textareaField = (
-  key: string,
-  label: string,
-  placeholder: string,
-  description?: string,
-): IntegrationCredentialField => ({
-  key,
-  label,
-  type: "textarea",
-  placeholder,
-  required: true,
-  description,
-});
-
 const baseIntegrations: BaseIntegration[] = [
   { name: "Gmail", slug: "gmail", description: "Send, read, and manage emails", category: "Communication", icon: "SiGmail", color: "#EA4335" },
   { name: "Slack", slug: "slack", description: "Post messages and browse Slack channels", category: "Communication", icon: "SiSlack", color: "#4A154B" },
@@ -389,6 +375,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect SendGrid through ClawLink's hosted Composio setup to manage contacts, lists, campaigns, templates, and send transactional and marketing emails without manual API key setup.",
+    setupVideoUrl: "https://player.vimeo.com/video/1193204823",
     credentialFields: [],
     tools: [
       { name: "sendgrid_get_a_user_s_account_information", description: "Get SendGrid account information" },
@@ -492,6 +479,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect Apollo through ClawLink's hosted setup to search prospects, enrich contacts, manage accounts and deals, and run sequences without manual API key handling.",
+    setupVideoUrl: "https://player.vimeo.com/video/1193203971",
     credentialFields: [],
     tools: [
       { name: "apollo_get_auth_status", description: "Get the connected Apollo user and team context" },
@@ -1105,6 +1093,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Complete the hosted Instantly setup. ClawLink stores a managed connection and exposes campaign and lead tools to OpenClaw.",
+    setupVideoUrl: "https://player.vimeo.com/video/1193204008",
     credentialFields: [],
     tools: [
       { name: "instantly_get_current_workspace", description: "Get the current Instantly workspace" },
@@ -1444,6 +1433,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect Semrush through ClawLink's hosted setup to research keywords, analyze backlinks, audit sites, compare domains, and explore organic and paid search data.",
+    setupVideoUrl: "https://player.vimeo.com/video/1193203923",
     credentialFields: [],
     tools: [
       { name: "semrush_keyword_overview_one_database", description: "Get keyword overview for a specific database" },
@@ -1636,6 +1626,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect Postmark through ClawLink's hosted setup to send transactional emails, manage templates, message streams, bounces, and inbound rules from your Postmark account.",
+    setupVideoUrl: "https://player.vimeo.com/video/1193204106",
     credentialFields: [],
     tools: [
       { name: "postmark_send_email", description: "Send an email through Postmark" },
@@ -1708,7 +1699,11 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect DataforSEO through ClawLink's hosted setup to access SERP data, keyword research, site audits, backlink analysis, and more from your DataforSEO account.",
-    credentialFields: [],
+    setupVideoUrl: "https://player.vimeo.com/video/1193203737",
+    credentialFields: [
+      textField("apiLogin", "API Login", "Your DataforSEO API login"),
+      apiKeyField("apiPassword", "API Password", "Your DataforSEO API password"),
+    ],
     tools: [
       { name: "dataforseo_get_serp_tasks_ready", description: "List completed DataforSEO SERP tasks" },
       { name: "dataforseo_get_keywords_data_ready_tasks", description: "List completed DataforSEO keywords tasks" },
@@ -1732,6 +1727,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect PhantomBuster through ClawLink's hosted setup to manage agents, scripts, containers, and leads from your PhantomBuster account.",
+    setupVideoUrl: "https://player.vimeo.com/video/1193203795",
     credentialFields: [],
     tools: [
       { name: "phantombuster_get_agent", description: "Get a PhantomBuster agent by ID" },
@@ -1979,7 +1975,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect Firecrawl by pasting your API key. Watch the short video on the connect page if you need help finding it in Firecrawl's dashboard.",
-    setupVideoUrl: "https://www.youtube.com/embed/94Ts0VQk7MA",
+    setupVideoUrl: "https://player.vimeo.com/video/1193204231",
     credentialFields: [],
     tools: [
       { name: "firecrawl_scrape", description: "Scrape a publicly accessible URL and retrieve content in specified formats" },
@@ -2136,6 +2132,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect agent-mail through ClawLink's hosted Composio setup.",
+    setupVideoUrl: "https://player.vimeo.com/video/1193189793",
     credentialFields: [],
     tools: [
       { name: "agent_mail_create_inbox", description: "Create a new AgentMail inbox via API. Returns the inbox_id and email address for sending/receiving messages. Use when provisioning new inboxes for agents or workflows." },
@@ -2566,7 +2563,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect HeyGen by pasting your API key. Watch the short video on the connect page if you need help finding it in HeyGen's dashboard.",
-    setupVideoUrl: "https://www.youtube.com/embed/ZVTkrrn50XM",
+    setupVideoUrl: "https://player.vimeo.com/video/1193204047",
     credentialFields: [],
     tools: [
       { name: "heygen_add_looks_to_photo_avatar_group", description: "Tool to add additional looks (images) to an existing photo avatar group. Use when you need to expand an avatar group with new image variations. Maximum 4 image keys can be added per request." },
@@ -2870,6 +2867,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect perplexity-ai through ClawLink's hosted Composio setup.",
+    setupVideoUrl: "https://player.vimeo.com/video/1193204189",
     credentialFields: [],
     tools: [
       { name: "perplexityai_create_async_chat_completion", description: "Create Async Chat Completion (POST /v1/async/sonar). Submits an asynchronous chat completion request for long-running tasks. Returns immediately with a request ID that can be polled using the Get Async Chat Completion action. Only the 'sonar-deep-research' model is supported for async processing. Async jobs have a 7-day TTL. Deep research generates very long responses (10K-100K+ words) with exhaustive multi-source analysis. Use the idempotency_key to prevent duplicate submissions. Poll with Get Async Chat Completion using the returned request ID to retrieve results when status is COMPLETED." },
@@ -3013,7 +3011,8 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     setupMode: "composio",
     dashboardStatus: "available",
     runtimeStatus: "live",
-    setupGuide: "Connect serpapi through ClawLink's hosted Composio setup.",
+    setupGuide: "Connect SerpApi by pasting your API key. Watch the short video on the connect page if you need help finding it in SerpApi's dashboard.",
+    setupVideoUrl: "https://www.youtube.com/embed/arI6Ju2EGZU",
     credentialFields: [],
     tools: [
       { name: "serpapi_baidu_search", description: "Search Baidu (Chinese search engine) and retrieve search results. Requires a search query string in the 'q' parameter. Returns organic search results, answer boxes, and pagination info in JSON format." },
@@ -3140,6 +3139,7 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     dashboardStatus: "available",
     runtimeStatus: "live",
     setupGuide: "Connect tavily through ClawLink's hosted Composio setup.",
+    setupVideoUrl: "https://player.vimeo.com/video/1193204135",
     credentialFields: [],
     tools: [
       { name: "tavily_crawl", description: "Tool to perform intelligent graph-based website crawling with parallel path exploration and content extraction. Use when you need to traverse and extract content from multiple pages of a website following specific patterns or instructions. Supports depth/breadth controls, domain filtering, and natural language instructions for guided crawling." },

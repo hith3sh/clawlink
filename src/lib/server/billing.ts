@@ -251,26 +251,6 @@ async function countDistinctIntegrationsForUserId(
   return Number(result?.count ?? 0);
 }
 
-async function hasConnectedIntegrationForUserId(
-  db: D1LikeDatabase,
-  userId: string,
-  slug: string,
-): Promise<boolean> {
-  const row = await db
-    .prepare(
-      `
-        SELECT id
-        FROM user_integrations
-        WHERE user_id = ? AND integration = ?
-        LIMIT 1
-      `,
-    )
-    .bind(userId, slug)
-    .first<{ id: number }>();
-
-  return Boolean(row?.id);
-}
-
 export async function getBillingOverviewForCurrentUser(): Promise<BillingOverview> {
   const db = getDatabase();
   const user = await getUserForCurrentIdentity();

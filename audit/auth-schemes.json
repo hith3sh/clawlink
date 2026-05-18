@@ -1,0 +1,997 @@
+[
+  {
+    "slug": "activecampaign",
+    "envKey": "COMPOSIO_ACTIVECAMPAIGN_AUTH_CONFIG_ID",
+    "configId": "ac_upuMQ0ZnboF8",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "active_campaign"
+  },
+  {
+    "slug": "affinity",
+    "envKey": "COMPOSIO_AFFINITY_AUTH_CONFIG_ID",
+    "configId": "ac_ZVfz2jsHyUz5",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "affinity"
+  },
+  {
+    "slug": "agencyzoom",
+    "envKey": "COMPOSIO_AGENCYZOOM_AUTH_CONFIG_ID",
+    "configId": "ac_CPMTdmgpc0xC",
+    "authScheme": "BASIC_WITH_JWT",
+    "managed": false,
+    "toolkitSlug": "agencyzoom"
+  },
+  {
+    "slug": "agent_mail",
+    "envKey": "COMPOSIO_AGENT_MAIL_AUTH_CONFIG_ID",
+    "configId": "ac_C-hxXaR5Xw34",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "agent_mail"
+  },
+  {
+    "slug": "ahrefs",
+    "envKey": "COMPOSIO_AHREFS_AUTH_CONFIG_ID",
+    "configId": "ac_ItWzHypFxUyt",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "ahrefs"
+  },
+  {
+    "slug": "airtable",
+    "envKey": "COMPOSIO_AIRTABLE_AUTH_CONFIG_ID",
+    "configId": "ac_fPStdpu7RjqJ",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "airtable"
+  },
+  {
+    "slug": "amplitude",
+    "envKey": "COMPOSIO_AMPLITUDE_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"f8c9fc21-c5da-4631-a84b-bf9c0ac03bb3\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "apollo",
+    "envKey": "COMPOSIO_APOLLO_AUTH_CONFIG_ID",
+    "configId": "ac_cDyLdMYZKclS",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "apollo"
+  },
+  {
+    "slug": "bitbucket",
+    "envKey": "COMPOSIO_BITBUCKET_AUTH_CONFIG_ID",
+    "configId": "ac_7EPMncK_FDvT",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "bitbucket"
+  },
+  {
+    "slug": "box",
+    "envKey": "COMPOSIO_BOX_AUTH_CONFIG_ID",
+    "configId": "ac_yUx5AwW7ALG4",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "box"
+  },
+  {
+    "slug": "browserbase",
+    "envKey": "COMPOSIO_BROWSERBASE_AUTH_CONFIG_ID",
+    "configId": "ac_GWtPz6tTRMIO",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "browserbase_tool"
+  },
+  {
+    "slug": "cal",
+    "envKey": "COMPOSIO_CAL_AUTH_CONFIG_ID",
+    "configId": "ac_vgmQoGmRjYIN",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "cal"
+  },
+  {
+    "slug": "calendly",
+    "envKey": "COMPOSIO_CALENDLY_AUTH_CONFIG_ID",
+    "configId": "ac_lJZ2jSuZRjJr",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "calendly"
+  },
+  {
+    "slug": "canva",
+    "envKey": "COMPOSIO_CANVA_AUTH_CONFIG_ID",
+    "configId": "ac_5aVm70GBulBw",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "canva"
+  },
+  {
+    "slug": "clickup",
+    "envKey": "COMPOSIO_CLICKUP_AUTH_CONFIG_ID",
+    "configId": "ac_VDh7hg-_y9kk",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "clickup"
+  },
+  {
+    "slug": "cloudflare",
+    "envKey": "COMPOSIO_CLOUDFLARE_AUTH_CONFIG_ID",
+    "configId": "ac_U7G2rHjaUvJZ",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "cloudflare"
+  },
+  {
+    "slug": "confluence",
+    "envKey": "COMPOSIO_CONFLUENCE_AUTH_CONFIG_ID",
+    "configId": "ac_H3nW-wjF7zel",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "confluence"
+  },
+  {
+    "slug": "databricks",
+    "envKey": "COMPOSIO_DATABRICKS_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"36c26274-7f7b-4dda-ab47-83e5618ab7dd\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "datadog",
+    "envKey": "COMPOSIO_DATADOG_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"2411688a-53d5-49f8-a814-ea577678d2db\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "dataforseo",
+    "envKey": "COMPOSIO_DATAFORSEO_AUTH_CONFIG_ID",
+    "configId": "ac_Y_VF8HCFpbb_",
+    "authScheme": "BASIC",
+    "managed": false,
+    "toolkitSlug": "dataforseo"
+  },
+  {
+    "slug": "discord",
+    "envKey": "COMPOSIO_DISCORD_AUTH_CONFIG_ID",
+    "configId": "ac_KwgYqRsefqis",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "discord"
+  },
+  {
+    "slug": "dropbox",
+    "envKey": "COMPOSIO_DROPBOX_AUTH_CONFIG_ID",
+    "configId": "ac_fJxHgS6kBTDS",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "dropbox"
+  },
+  {
+    "slug": "dynamics_365",
+    "envKey": "COMPOSIO_DYNAMICS_365_AUTH_CONFIG_ID",
+    "configId": "ac_nUJle9X93eyh",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "dynamics365"
+  },
+  {
+    "slug": "elevenlabs",
+    "envKey": "COMPOSIO_ELEVENLABS_AUTH_CONFIG_ID",
+    "configId": "ac_IwjGCBNaY-ij",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "elevenlabs"
+  },
+  {
+    "slug": "eventbrite",
+    "envKey": "COMPOSIO_EVENTBRITE_AUTH_CONFIG_ID",
+    "configId": "ac_FZJbQCyeQdbC",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "eventbrite"
+  },
+  {
+    "slug": "facebook",
+    "envKey": "COMPOSIO_FACEBOOK_AUTH_CONFIG_ID",
+    "configId": "ac_rrK7_9ggxQP7",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "facebook"
+  },
+  {
+    "slug": "figma",
+    "envKey": "COMPOSIO_FIGMA_AUTH_CONFIG_ID",
+    "configId": "ac_2Ktp_uQWykTF",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "figma"
+  },
+  {
+    "slug": "firecrawl",
+    "envKey": "COMPOSIO_FIRECRAWL_AUTH_CONFIG_ID",
+    "configId": "ac_Hccf0McbkhQd",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "firecrawl"
+  },
+  {
+    "slug": "freeagent",
+    "envKey": "COMPOSIO_FREEAGENT_AUTH_CONFIG_ID",
+    "configId": "ac_kWBlS4R3i-IT",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "freeagent"
+  },
+  {
+    "slug": "freshbooks",
+    "envKey": "COMPOSIO_FRESHBOOKS_AUTH_CONFIG_ID",
+    "configId": "ac_QG4L5FVyPr4q",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "freshbooks"
+  },
+  {
+    "slug": "freshdesk",
+    "envKey": "COMPOSIO_FRESHDESK_AUTH_CONFIG_ID",
+    "configId": "ac_HcVU7S27X246",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "freshdesk"
+  },
+  {
+    "slug": "freshservice",
+    "envKey": "COMPOSIO_FRESHSERVICE_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"538418e8-9aae-405d-aea2-2a80ec1d396b\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "github",
+    "envKey": "COMPOSIO_GITHUB_AUTH_CONFIG_ID",
+    "configId": "ac_3fxIo04Z_sKm",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "github"
+  },
+  {
+    "slug": "gitlab",
+    "envKey": "COMPOSIO_GITLAB_AUTH_CONFIG_ID",
+    "configId": "ac_-LTTBWV7DPDk",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "gitlab"
+  },
+  {
+    "slug": "gmail",
+    "envKey": "COMPOSIO_GMAIL_AUTH_CONFIG_ID",
+    "configId": "ac_T2phpv5hfYLZ",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "gmail"
+  },
+  {
+    "slug": "google_admin",
+    "envKey": "COMPOSIO_GOOGLE_ADMIN_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"bc20680a-ccde-4d98-8c0e-ca67bac6c87b\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "google_ads",
+    "envKey": "COMPOSIO_GOOGLE_ADS_AUTH_CONFIG_ID",
+    "configId": "ac_vgs4KZ4XMo0U",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "googleads"
+  },
+  {
+    "slug": "google_analytics",
+    "envKey": "COMPOSIO_GOOGLE_ANALYTICS_AUTH_CONFIG_ID",
+    "configId": "ac_Hamj0QKHY0yI",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "google_analytics"
+  },
+  {
+    "slug": "google_bigquery",
+    "envKey": "COMPOSIO_GOOGLE_BIGQUERY_AUTH_CONFIG_ID",
+    "configId": "ac_tjTFp5nj9OIV",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "googlebigquery"
+  },
+  {
+    "slug": "google_calendar",
+    "envKey": "COMPOSIO_GOOGLE_CALENDAR_AUTH_CONFIG_ID",
+    "configId": "ac_YsWVaZ_rWKyt",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "googlecalendar"
+  },
+  {
+    "slug": "google_chat",
+    "envKey": "COMPOSIO_GOOGLE_CHAT_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"e05bf508-8ec7-4d31-b343-b069e47d9993\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "google_classroom",
+    "envKey": "COMPOSIO_GOOGLE_CLASSROOM_AUTH_CONFIG_ID",
+    "configId": "ac__gBAKCWLH3AF",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "google_classroom"
+  },
+  {
+    "slug": "google_contacts",
+    "envKey": "COMPOSIO_GOOGLE_CONTACTS_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"3bef4c94-0cee-4326-a387-dc54df223667\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "google_docs",
+    "envKey": "COMPOSIO_GOOGLE_DOCS_AUTH_CONFIG_ID",
+    "configId": "ac_Tsf6q90QZ2g5",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "googledocs"
+  },
+  {
+    "slug": "google_drive",
+    "envKey": "COMPOSIO_GOOGLE_DRIVE_AUTH_CONFIG_ID",
+    "configId": "ac_0ynGRWVZXDdj",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "googledrive"
+  },
+  {
+    "slug": "google_maps",
+    "envKey": "COMPOSIO_GOOGLE_MAPS_AUTH_CONFIG_ID",
+    "configId": "ac_-0h-G-1DM90u",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "google_maps"
+  },
+  {
+    "slug": "google_meet",
+    "envKey": "COMPOSIO_GOOGLE_MEET_AUTH_CONFIG_ID",
+    "configId": "ac_LS5z7j58ThCp",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "googlemeet"
+  },
+  {
+    "slug": "google_search_console",
+    "envKey": "COMPOSIO_GOOGLE_SEARCH_CONSOLE_AUTH_CONFIG_ID",
+    "configId": "ac_E174VvZZ0XN8",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "google_search_console"
+  },
+  {
+    "slug": "google_sheets",
+    "envKey": "COMPOSIO_GOOGLE_SHEETS_AUTH_CONFIG_ID",
+    "configId": "ac_VbF6GVTbGhFF",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "googlesheets"
+  },
+  {
+    "slug": "google_slides",
+    "envKey": "COMPOSIO_GOOGLE_SLIDES_AUTH_CONFIG_ID",
+    "configId": "ac_UOjbAHilLvpD",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "googleslides"
+  },
+  {
+    "slug": "google_tasks",
+    "envKey": "COMPOSIO_GOOGLE_TASKS_AUTH_CONFIG_ID",
+    "configId": "ac_bldX5HOQgQ1W",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "googletasks"
+  },
+  {
+    "slug": "googlephotos",
+    "envKey": "COMPOSIO_GOOGLEPHOTOS_AUTH_CONFIG_ID",
+    "configId": "ac_8_i0chSiQfrt",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "googlephotos"
+  },
+  {
+    "slug": "grafana",
+    "envKey": "COMPOSIO_GRAFANA_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"d3b1bb9a-9c15-4100-90c6-3b14fa4c1ab7\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "gumroad",
+    "envKey": "COMPOSIO_GUMROAD_AUTH_CONFIG_ID",
+    "configId": "ac_T5SbTYpJSUs_",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "gumroad"
+  },
+  {
+    "slug": "heygen",
+    "envKey": "COMPOSIO_HEYGEN_AUTH_CONFIG_ID",
+    "configId": "ac_GlzUHSFZXToI",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "heygen"
+  },
+  {
+    "slug": "hubspot",
+    "envKey": "COMPOSIO_HUBSPOT_AUTH_CONFIG_ID",
+    "configId": "ac_eW238hW-IAFx",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "hubspot"
+  },
+  {
+    "slug": "humanloop",
+    "envKey": "COMPOSIO_HUMANLOOP_AUTH_CONFIG_ID",
+    "configId": "ac_7UjsBtyOAC3w",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "humanloop"
+  },
+  {
+    "slug": "instagram",
+    "envKey": "COMPOSIO_INSTAGRAM_AUTH_CONFIG_ID",
+    "configId": "ac_jyeeVOjFAuB2",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "instagram"
+  },
+  {
+    "slug": "instantly",
+    "envKey": "COMPOSIO_INSTANTLY_AUTH_CONFIG_ID",
+    "configId": "ac_E81KeI9aFb8N",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "instantly"
+  },
+  {
+    "slug": "intercom",
+    "envKey": "COMPOSIO_INTERCOM_AUTH_CONFIG_ID",
+    "configId": "ac_Yx_a9Nh34AnD",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "intercom"
+  },
+  {
+    "slug": "jotform",
+    "envKey": "COMPOSIO_JOTFORM_AUTH_CONFIG_ID",
+    "configId": "ac_4LRrK-6RwhK4",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "jotform"
+  },
+  {
+    "slug": "kibana",
+    "envKey": "COMPOSIO_KIBANA_AUTH_CONFIG_ID",
+    "configId": "ac_91UNe-alROIc",
+    "authScheme": "BASIC",
+    "managed": false,
+    "toolkitSlug": "kibana"
+  },
+  {
+    "slug": "kit",
+    "envKey": "COMPOSIO_KIT_AUTH_CONFIG_ID",
+    "configId": "ac_l-_u3jZS3-aR",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "kit"
+  },
+  {
+    "slug": "lemlist",
+    "envKey": "COMPOSIO_LEMLIST_AUTH_CONFIG_ID",
+    "configId": "ac_gMBjLxhrIiot",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "lemlist"
+  },
+  {
+    "slug": "linear",
+    "envKey": "COMPOSIO_LINEAR_AUTH_CONFIG_ID",
+    "configId": "ac_3VqEBjKeDZbN",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "linear"
+  },
+  {
+    "slug": "linkedin",
+    "envKey": "COMPOSIO_LINKEDIN_AUTH_CONFIG_ID",
+    "configId": "ac_cbilq2TPjvjU",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "linkedin"
+  },
+  {
+    "slug": "lmnt",
+    "envKey": "COMPOSIO_LMNT_AUTH_CONFIG_ID",
+    "configId": "ac_QQururCkCouV",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "lmnt"
+  },
+  {
+    "slug": "mailchimp",
+    "envKey": "COMPOSIO_MAILCHIMP_AUTH_CONFIG_ID",
+    "configId": "ac_sLMo_nntsZ4a",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "mailchimp"
+  },
+  {
+    "slug": "mailerlite",
+    "envKey": "COMPOSIO_MAILERLITE_AUTH_CONFIG_ID",
+    "configId": "ac_JS261sHcVUDI",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "mailerlite"
+  },
+  {
+    "slug": "mem0",
+    "envKey": "COMPOSIO_MEM0_AUTH_CONFIG_ID",
+    "configId": "ac_Z-zHdqC9adYa",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "mem0"
+  },
+  {
+    "slug": "microsoft_excel",
+    "envKey": "COMPOSIO_MICROSOFT_EXCEL_AUTH_CONFIG_ID",
+    "configId": "ac_j0rWc0a6dhtT",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "excel"
+  },
+  {
+    "slug": "miro",
+    "envKey": "COMPOSIO_MIRO_AUTH_CONFIG_ID",
+    "configId": "ac_V-LObuhIH0-S",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "miro"
+  },
+  {
+    "slug": "mixpanel",
+    "envKey": "COMPOSIO_MIXPANEL_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"cd7f9f35-74ec-474d-87ec-4ef3a25d79d5\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "monday",
+    "envKey": "COMPOSIO_MONDAY_AUTH_CONFIG_ID",
+    "configId": "ac_ionglG6X4GtZ",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "monday"
+  },
+  {
+    "slug": "motion",
+    "envKey": "COMPOSIO_MOTION_AUTH_CONFIG_ID",
+    "configId": "ac_01QhSEWAojYa",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "motion"
+  },
+  {
+    "slug": "new_relic",
+    "envKey": "COMPOSIO_NEW_RELIC_AUTH_CONFIG_ID",
+    "configId": "ac_AbGFHlt6vczi",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "new_relic"
+  },
+  {
+    "slug": "notion",
+    "envKey": "COMPOSIO_NOTION_AUTH_CONFIG_ID",
+    "configId": "ac_yocwOszFqop6",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "notion"
+  },
+  {
+    "slug": "omnisend",
+    "envKey": "COMPOSIO_OMNISEND_AUTH_CONFIG_ID",
+    "configId": "ac_TG-fDBGgv6t0",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "omnisend"
+  },
+  {
+    "slug": "onedrive",
+    "envKey": "COMPOSIO_ONEDRIVE_AUTH_CONFIG_ID",
+    "configId": "ac_g3BsSpElBnDJ",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "one_drive"
+  },
+  {
+    "slug": "onenote",
+    "envKey": "COMPOSIO_ONENOTE_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"922cee67-c169-4cc2-95a7-54d6a7c6152c\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "openai",
+    "envKey": "COMPOSIO_OPENAI_AUTH_CONFIG_ID",
+    "configId": "ac_NpgOpYhhnHRD",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "openai"
+  },
+  {
+    "slug": "outlook",
+    "envKey": "COMPOSIO_OUTLOOK_AUTH_CONFIG_ID",
+    "configId": "ac_r5dUM0i6COQO",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "outlook"
+  },
+  {
+    "slug": "pagerduty",
+    "envKey": "COMPOSIO_PAGERDUTY_AUTH_CONFIG_ID",
+    "configId": "ac_cetSPQwjMcrg",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "pagerduty"
+  },
+  {
+    "slug": "pandadoc",
+    "envKey": "COMPOSIO_PANDADOC_AUTH_CONFIG_ID",
+    "configId": "ac_TxEe2BLhX20P",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "pandadoc"
+  },
+  {
+    "slug": "paystack",
+    "envKey": "COMPOSIO_PAYSTACK_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"789289bd-9de3-4401-9e8a-028ab24823c4\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "perplexity_ai",
+    "envKey": "COMPOSIO_PERPLEXITY_AI_AUTH_CONFIG_ID",
+    "configId": "ac_jQdrCmTl4XLK",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "perplexityai"
+  },
+  {
+    "slug": "phantombuster",
+    "envKey": "COMPOSIO_PHANTOMBUSTER_AUTH_CONFIG_ID",
+    "configId": "ac_RdI226U1f88P",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "phantombuster"
+  },
+  {
+    "slug": "plausible_analytics",
+    "envKey": "COMPOSIO_PLAUSIBLE_ANALYTICS_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"8cf2428f-c33b-4d3b-a966-ce0417b04679\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "postiz",
+    "envKey": "COMPOSIO_POSTIZ_AUTH_CONFIG_ID",
+    "configId": "ac_mLaC72sDlGAO",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "postiz_mcp"
+  },
+  {
+    "slug": "postmark",
+    "envKey": "COMPOSIO_POSTMARK_AUTH_CONFIG_ID",
+    "configId": "ac_EDp35eWqObnx",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "postmark"
+  },
+  {
+    "slug": "quickbooks",
+    "envKey": "COMPOSIO_QUICKBOOKS_AUTH_CONFIG_ID",
+    "configId": "ac_i9NsTF7D0Opn",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "quickbooks"
+  },
+  {
+    "slug": "razorpay",
+    "envKey": "COMPOSIO_RAZORPAY_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"99ce85be-56b6-4653-a3f1-edd105d6c938\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "recallai",
+    "envKey": "COMPOSIO_RECALLAI_AUTH_CONFIG_ID",
+    "configId": "ac_2t_cdfuhxS7m",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "recallai"
+  },
+  {
+    "slug": "reddit",
+    "envKey": "COMPOSIO_REDDIT_AUTH_CONFIG_ID",
+    "configId": "ac_Iifxp4BLPhLC",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "reddit"
+  },
+  {
+    "slug": "reddit_ads",
+    "envKey": "COMPOSIO_REDDIT_ADS_AUTH_CONFIG_ID",
+    "configId": "ac_sF3f4bJq6Z5i",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "reddit_ads"
+  },
+  {
+    "slug": "replicate",
+    "envKey": "COMPOSIO_REPLICATE_AUTH_CONFIG_ID",
+    "configId": "ac_-42SAF9S3vkM",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "replicate"
+  },
+  {
+    "slug": "resend",
+    "envKey": "COMPOSIO_RESEND_AUTH_CONFIG_ID",
+    "configId": "ac_jPHWPSutkOX1",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "resend"
+  },
+  {
+    "slug": "retellai",
+    "envKey": "COMPOSIO_RETELLAI_AUTH_CONFIG_ID",
+    "configId": "ac_nUUiaPXfvYb8",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "retellai"
+  },
+  {
+    "slug": "salesforce",
+    "envKey": "COMPOSIO_SALESFORCE_AUTH_CONFIG_ID",
+    "configId": "ac_dkxcI5zojFOo",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "salesforce"
+  },
+  {
+    "slug": "segment",
+    "envKey": "COMPOSIO_SEGMENT_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"78eba201-a34c-449a-bef3-a8478e7491a2\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "semrush",
+    "envKey": "COMPOSIO_SEMRUSH_AUTH_CONFIG_ID",
+    "configId": "ac_ykUTrP7llDMI",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "semrush"
+  },
+  {
+    "slug": "sendgrid",
+    "envKey": "COMPOSIO_SENDGRID_AUTH_CONFIG_ID",
+    "configId": "ac_tQ0YpfJjxVZ0",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "sendgrid"
+  },
+  {
+    "slug": "serpapi",
+    "envKey": "COMPOSIO_SERPAPI_AUTH_CONFIG_ID",
+    "configId": "ac_WX7XAoIq0lFD",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "serpapi"
+  },
+  {
+    "slug": "servicenow",
+    "envKey": "COMPOSIO_SERVICENOW_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"57de0b72-4c90-49b8-bba2-183089a352cb\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "sharepoint",
+    "envKey": "COMPOSIO_SHAREPOINT_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"2706413f-c1c4-4b57-9624-e31ac9aba5f1\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "shopify",
+    "envKey": "COMPOSIO_SHOPIFY_AUTH_CONFIG_ID",
+    "configId": "ac_L2CDirqQivx_",
+    "authScheme": "OAUTH2",
+    "managed": false,
+    "toolkitSlug": "shopify"
+  },
+  {
+    "slug": "snowflake",
+    "envKey": "COMPOSIO_SNOWFLAKE_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"aa63e829-ba1f-45da-a29f-1ab0acd21536\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "spotify",
+    "envKey": "COMPOSIO_SPOTIFY_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"a3fa5716-4179-4d11-9e10-72a73ea191ae\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "supabase",
+    "envKey": "COMPOSIO_SUPABASE_AUTH_CONFIG_ID",
+    "configId": "ac_EDrYjMOmNpD1",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "supabase"
+  },
+  {
+    "slug": "tally",
+    "envKey": "COMPOSIO_TALLY_AUTH_CONFIG_ID",
+    "configId": "ac_...",
+    "authScheme": null,
+    "managed": null,
+    "toolkitSlug": null,
+    "error": "Composio /auth_configs/ac_... → 400: {\"error\":{\"message\":\"Auth config not found\",\"code\":302,\"slug\":\"Auth_Config_NotFound\",\"status\":400,\"request_id\":\"10a51b19-32dc-47c8-846c-48a500c1dbb8\",\"suggested_fix\":\"\"}}"
+  },
+  {
+    "slug": "tavily",
+    "envKey": "COMPOSIO_TAVILY_AUTH_CONFIG_ID",
+    "configId": "ac_-QWwm2rNKVRF",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "tavily"
+  },
+  {
+    "slug": "telegram",
+    "envKey": "COMPOSIO_TELEGRAM_AUTH_CONFIG_ID",
+    "configId": "ac_vYKa5og9Tpmk",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "telegram"
+  },
+  {
+    "slug": "tinypng",
+    "envKey": "COMPOSIO_TINYPNG_AUTH_CONFIG_ID",
+    "configId": "ac_gIC-vHLWUKsk",
+    "authScheme": "API_KEY",
+    "managed": false,
+    "toolkitSlug": "tinypng"
+  },
+  {
+    "slug": "trello",
+    "envKey": "COMPOSIO_TRELLO_AUTH_CONFIG_ID",
+    "configId": "ac_vw3OlJfCHUpo",
+    "authScheme": "OAUTH1",
+    "managed": true,
+    "toolkitSlug": "trello"
+  },
+  {
+    "slug": "twitter",
+    "envKey": "COMPOSIO_TWITTER_AUTH_CONFIG_ID",
+    "configId": "ac_ydMsPuaQ86U9",
+    "authScheme": "OAUTH2",
+    "managed": false,
+    "toolkitSlug": "twitter"
+  },
+  {
+    "slug": "whatsapp",
+    "envKey": "COMPOSIO_WHATSAPP_AUTH_CONFIG_ID",
+    "configId": "ac_pXGYVSLZfIQ5",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "whatsapp"
+  },
+  {
+    "slug": "xero",
+    "envKey": "COMPOSIO_XERO_AUTH_CONFIG_ID",
+    "configId": "ac_VHWOdEDCPoIB",
+    "authScheme": "OAUTH2",
+    "managed": false,
+    "toolkitSlug": "xero"
+  },
+  {
+    "slug": "yandex",
+    "envKey": "COMPOSIO_YANDEX_AUTH_CONFIG_ID",
+    "configId": "ac_DWPhaeoyvlKe",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "yandex"
+  },
+  {
+    "slug": "youtube",
+    "envKey": "COMPOSIO_YOUTUBE_AUTH_CONFIG_ID",
+    "configId": "ac_7MRxBS8AZaqP",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "youtube"
+  },
+  {
+    "slug": "zendesk",
+    "envKey": "COMPOSIO_ZENDESK_AUTH_CONFIG_ID",
+    "configId": "ac_fTJUNoDwG9j0",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "zendesk"
+  },
+  {
+    "slug": "zoho_books",
+    "envKey": "COMPOSIO_ZOHO_BOOKS_AUTH_CONFIG_ID",
+    "configId": "ac_Wf49ENoySq2S",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "zoho_books"
+  },
+  {
+    "slug": "zoom",
+    "envKey": "COMPOSIO_ZOOM_AUTH_CONFIG_ID",
+    "configId": "ac_xJRzOCEepQEL",
+    "authScheme": "OAUTH2",
+    "managed": true,
+    "toolkitSlug": "zoom"
+  }
+]

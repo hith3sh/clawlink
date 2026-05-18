@@ -1,0 +1,42 @@
+diff --git a/node_modules/@base-ui/react/esm/floating-ui-react/middleware/arrow.js b/node_modules/@base-ui/react/esm/floating-ui-react/middleware/arrow.js
+index 6d72afc..c6d494e 100644
+--- a/node_modules/@base-ui/react/esm/floating-ui-react/middleware/arrow.js
++++ b/node_modules/@base-ui/react/esm/floating-ui-react/middleware/arrow.js
+@@ -88,7 +88,11 @@ export const baseArrow = options => ({
+  * This wraps the core `arrow` middleware to allow React refs as the element.
+  * @see https://floating-ui.com/docs/arrow
+  */
+-export const arrow = (options, deps) => ({
+-  ...baseArrow(options),
+-  options: [options, deps]
+-});
+\ No newline at end of file
++export const arrow = (options, deps) => {
++  const baseMiddleware = baseArrow(options);
++  return {
++    name: baseMiddleware.name,
++    fn: baseMiddleware.fn,
++    options: [options, deps]
++  };
++};
+diff --git a/node_modules/@base-ui/react/floating-ui-react/middleware/arrow.js b/node_modules/@base-ui/react/floating-ui-react/middleware/arrow.js
+index e228afa..67621aa 100644
+--- a/node_modules/@base-ui/react/floating-ui-react/middleware/arrow.js
++++ b/node_modules/@base-ui/react/floating-ui-react/middleware/arrow.js
+@@ -95,8 +95,12 @@ const baseArrow = options => ({
+  * @see https://floating-ui.com/docs/arrow
+  */
+ exports.baseArrow = baseArrow;
+-const arrow = (options, deps) => ({
+-  ...baseArrow(options),
+-  options: [options, deps]
+-});
++const arrow = (options, deps) => {
++  const baseMiddleware = baseArrow(options);
++  return {
++    name: baseMiddleware.name,
++    fn: baseMiddleware.fn,
++    options: [options, deps]
++  };
++};
+ exports.arrow = arrow;

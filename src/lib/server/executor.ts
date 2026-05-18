@@ -24,6 +24,7 @@ import type {
 } from "@/lib/runtime/tool-runtime";
 import { executeComposioTool } from "@/lib/composio/tool-executor";
 import { isStubSchema } from "@/lib/composio/schema-cache";
+import { detectPlaceholderArgs } from "@/lib/server/arg-guards";
 import {
   classifyIntegrationError,
   getAllHandlers,
@@ -359,6 +360,35 @@ export async function executeToolForUser(
       invalidFields: preparedArgs.invalidFields,
       inputSchema: decision.tool.inputSchema,
       hint: preparedArgs.hint,
+      meta: toMeta(startedAt, requestId),
+    };
+    await logExecutionResult(db, request, payload);
+    return payload;
+  }
+
+  const placeholderCheck = detectPlaceholderArgs(decision.tool.name, mergedArgs);
+  if (placeholderCheck.errors.length > 0) {
+    const payload: ToolExecutionPayload = {
+      ok: false,
+      toolName: decision.tool.name,
+      integration: decision.tool.integration,
+      connectionId: decision.connectionId,
+      mode,
+      tool: describedTool,
+      args: mergedArgs,
+      requiresConfirmation: policy.requiresConfirmation,
+      policyReason: policy.reason,
+      error: {
+        type: "validation",
+        code: "placeholder_argument",
+        message: placeholderCheck.errors[0],
+        retryable: false,
+      },
+      details: placeholderCheck.errors,
+      missingFields: placeholderCheck.missingFields,
+      invalidFields: placeholderCheck.invalidFields,
+      inputSchema: decision.tool.inputSchema,
+      hint: placeholderCheck.hint,
       meta: toMeta(startedAt, requestId),
     };
     await logExecutionResult(db, request, payload);

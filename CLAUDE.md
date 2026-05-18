@@ -132,6 +132,20 @@ Mitigations, in order of preference:
 
 When adding a new Composio integration, default to (1) — BYO credentials from day one. Treat the Managed mode as a prototype convenience, not a production answer.
 
+## LLM Placeholder-Argument Traps
+
+Not every provider 4xx is a scope or auth bug. A common failure mode is an LLM substituting a placeholder string for a structured identifier the provider then rejects with a misleading error. Worked example (LinkedIn, May 2026): an agent sent `"author": "urn:li:person:self"` to `LINKEDIN_CREATE_LINKED_IN_POST`. LinkedIn rejected it with `403 "Forbidden. You don't have permission to create posts"` — text indistinguishable from a real scope error. Same connection, same `w_member_social` scope, posts fine once the real `urn:li:person:<id>` from `LINKEDIN_GET_MY_INFO` is passed.
+
+Why ClawLink's existing self-correction loop misses these: `prepareToolArguments` only catches JSON-schema violations (missing fields, wrong types). `urn:li:person:self` is a structurally valid string, so it sails through and the upstream 403 lands in the generic `type: "provider"` branch of `classifyIntegrationError` — raw message passed through, no hint, no actionable guidance, agent retries blind.
+
+Mitigations:
+
+1. **Tighten tool descriptions in `config/composio-tool-overrides.mjs`.** Use `descriptionPrefix` to name the failure mode explicitly and `fieldDescriptions` to forbid known-bad values on the specific field. Helps the LLM avoid the trap on the first call. Already applied to `LINKEDIN_CREATE_LINKED_IN_POST` and `LINKEDIN_CREATE_ARTICLE_OR_URL_SHARE` (2026-05-18).
+2. **Boundary-guard at the executor (planned).** Add `validateArgsAgainstGuards` in `src/lib/server/executor.ts` between `prepareToolArguments` and the upstream call. Two layers: a generic placeholder detector (catches `<id>`, `{user_id}`, `YOUR_*`, `REPLACE_ME`, etc. across all integrations with zero config), plus optional per-tool `fieldValidators` registered in `composio-tool-overrides.mjs` for sneaky traps like `urn:li:person:self` that the generic layer can't recognise. Failures are classified `type: "validation"` so the existing hint + invalidFields + inputSchema response path enables true self-correction on retry.
+3. **Production log mining (planned).** `tool_execution_log` already records every failure. A small script can rank tools by repeat 4xx failures and surface common arg patterns, turning real user pain into a prioritised list of per-tool validators to write.
+
+When a user reports a confusing provider 4xx and the connection looks healthy, suspect a placeholder/format trap before assuming scope, then verify by calling the same tool directly through Composio's `/tools/execute/<slug>` with the same args.
+
 ## Flows And Triggers
 
 The repo now includes flow and trigger runtime support in addition to direct tool calls.

@@ -148,6 +148,7 @@ export default function FeedbackPage() {
             <Label>Screenshot (optional)</Label>
             {image ? (
               <div className="relative inline-block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={image}
                   alt="Selected"

@@ -50,19 +50,6 @@ export default function Home() {
       </Script>
       {/* ───── Hero ───── */}
       <section className="relative mx-auto max-w-[1120px] px-6 pt-14 pb-24 text-center">
-        {/* Decorative doodle arrows */}
-        <img
-          src="/images/doodle-arrow-left.svg"
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute top-24 -left-32 hidden w-[200px] opacity-20 lg:block"
-        />
-        <img
-          src="/images/doodle-arrow-right.svg"
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute top-24 -right-32 hidden w-[200px] opacity-20 lg:block"
-        />
         {/* Eyebrow pill */}
         <span
           className="mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold"
@@ -134,23 +121,22 @@ export default function Home() {
         {/* 🎬 Demo video */}
         <div className="mx-auto mt-14 w-full max-w-[900px]">
           <div
-            className="relative overflow-hidden rounded-2xl"
+            className="overflow-hidden rounded-2xl"
             style={{
               background: "var(--mk-elev)",
               border: "1.5px solid var(--mk-border)",
-              padding: "64.75% 0 0 0",
+              aspectRatio: "833/540",
             }}
           >
             <iframe
-              src="https://player.vimeo.com/video/1191844124?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&muted=1"
+              src="https://player.mux.com/00HGUs00024Fjxz025Bc7hTaEqiXprIbl42esm3u602ymcpk?metadata-video-title=ClawLink+Introductory+Video&video-title=ClawLink+Introductory+Video"
               frameBorder="0"
-              allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
-              title="clawlink setup"
+              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+              allowFullScreen
+              style={{ width: "100%", height: "100%", border: "none" }}
+              title="ClawLink Introductory Video"
             />
           </div>
-          <Script src="https://player.vimeo.com/api/player.js" strategy="afterInteractive" />
         </div>
         {/* End demo video */}
       </section>
@@ -320,14 +306,35 @@ export default function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          <img
+          <Image
             alt="ClawLink - Connect OpenClaw/Hermes Agent to 100+ apps in seconds | Product Hunt"
             width={250}
             height={54}
             src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1146201&theme=light&t=1778952756480"
             className="rounded-lg"
+            unoptimized
           />
         </a>
+      </div>
+
+      {/* Decorative doodle arrows — bottom of page */}
+      <div className="relative mx-auto hidden h-[220px] max-w-[1120px] lg:block">
+        <Image
+          src="/images/doodle-arrow-left.svg"
+          alt=""
+          aria-hidden="true"
+          width={200}
+          height={200}
+          className="pointer-events-none absolute bottom-0 -left-32 w-[200px] opacity-20"
+        />
+        <Image
+          src="/images/doodle-arrow-right.svg"
+          alt=""
+          aria-hidden="true"
+          width={200}
+          height={200}
+          className="pointer-events-none absolute bottom-0 -right-32 w-[200px] opacity-20"
+        />
       </div>
     </main>
   );

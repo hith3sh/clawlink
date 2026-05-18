@@ -17,10 +17,20 @@ interface SessionStatusResponse {
   };
 }
 
-function buildPopupFeatures() {
-  const width = 540;
+function buildPopupFeatures(integration: Integration) {
+  const hasVideo =
+    integration.authScheme === "api_key" && Boolean(integration.setupVideoUrl);
+  const width = hasVideo ? 760 : 540;
   const height = 720;
-  const left = Math.max(0, Math.round((window.screen.width - width) / 2));
+  const screenWidth = window.screen.width;
+  const childPopupWidth = 540;
+  const gap = 8;
+  let left: number;
+  if (hasVideo && screenWidth >= width + childPopupWidth + gap) {
+    left = Math.max(0, Math.round((screenWidth - (width + childPopupWidth + gap)) / 2));
+  } else {
+    left = Math.max(0, Math.round((screenWidth - width) / 2));
+  }
   const top = Math.max(0, Math.round((window.screen.height - height) / 2));
 
   return [
@@ -120,7 +130,7 @@ export function useOAuthConnect(integration: Integration, onConnected?: () => vo
       return;
     }
 
-    const popup = window.open("about:blank", "clawlink-oauth", buildPopupFeatures());
+    const popup = window.open("about:blank", "clawlink-oauth", buildPopupFeatures(integration));
 
     if (!popup) {
       window.alert("Popup blocked. Allow popups for claw-link.dev and try again.");
@@ -128,19 +138,29 @@ export function useOAuthConnect(integration: Integration, onConnected?: () => vo
     }
 
     try {
+      const integrationName = integration.name.replace(/[<>&"']/g, "");
       popup.document.write(`<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <title>Connecting…</title>
 <style>
-  html, body { margin:0; padding:0; height:100%; background:#ffffff; }
-  body { display:flex; align-items:center; justify-content:center; }
+  html, body { margin:0; padding:0; height:100%; background:#ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  body { display:flex; align-items:center; justify-content:center; padding: 24px; }
+  .cl-stack { display:flex; flex-direction:column; align-items:center; gap:16px; max-width:320px; text-align:center; }
   .cl-spinner { width:28px; height:28px; border-radius:999px; border:2.5px solid #e5e7eb; border-top-color:#0f172a; animation: clSpin .8s linear infinite; }
   @keyframes clSpin { to { transform: rotate(360deg) } }
+  .cl-title { color:#0f172a; font-size:15px; font-weight:600; line-height:1.4; }
+  .cl-sub { color:#6b7280; font-size:13px; line-height:1.5; }
 </style>
 </head>
-<body><div class="cl-spinner"></div></body>
+<body>
+  <div class="cl-stack">
+    <div class="cl-spinner"></div>
+    <div class="cl-title">Getting ${integrationName} ready…</div>
+    <div class="cl-sub">This takes a couple of seconds. Please don't close this window.</div>
+  </div>
+</body>
 </html>`);
       popup.document.close();
     } catch {
@@ -184,7 +204,7 @@ export function useOAuthConnect(integration: Integration, onConnected?: () => vo
         setStarting(false);
       }
     })();
-  }, [integration.slug, starting]);
+  }, [integration, starting]);
 
   return { start, starting };
 }

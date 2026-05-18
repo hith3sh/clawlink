@@ -16,6 +16,7 @@ import {
   LogOut,
   MessageSquareText,
   PlusCircle,
+  Download,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -42,6 +43,7 @@ interface NavItem {
 const platformNav: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/dashboard/integrations", label: "Connections", icon: Link2 },
+  { href: "/dashboard/install", label: "Install", icon: Download },
   { href: "/dashboard/logs", label: "Usage", icon: Activity },
   { href: "/dashboard/request-app", label: "Request App", icon: PlusCircle },
 ];

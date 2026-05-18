@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import { getBlogPostBySlug, getBlogPostSlugs } from "@/lib/notion-blog";
 import { NotionRenderer } from "@/components/NotionRenderer";
+import { CopyMarkdownButton } from "@/components/CopyMarkdownButton";
+import { blogPostToMarkdown } from "@/lib/notion-to-md";
 import type { Metadata } from "next";
 import {
   ORGANIZATION_LOGO,
@@ -63,6 +66,49 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({ slug }));
 }
 
+const TAG_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  Integrations: {
+    bg: "rgba(224, 53, 43, 0.10)",
+    text: "#FF9A78",
+    border: "rgba(224, 53, 43, 0.25)",
+  },
+  Tutorial: {
+    bg: "rgba(139, 92, 246, 0.10)",
+    text: "#A78BFA",
+    border: "rgba(139, 92, 246, 0.25)",
+  },
+  Engineering: {
+    bg: "rgba(16, 185, 129, 0.10)",
+    text: "#34D399",
+    border: "rgba(16, 185, 129, 0.25)",
+  },
+  Release: {
+    bg: "rgba(245, 158, 11, 0.10)",
+    text: "#FBBF24",
+    border: "rgba(245, 158, 11, 0.25)",
+  },
+  Updates: {
+    bg: "rgba(59, 130, 246, 0.10)",
+    text: "#60A5FA",
+    border: "rgba(59, 130, 246, 0.25)",
+  },
+};
+
+const DEFAULT_TAG = {
+  bg: "rgba(255, 255, 255, 0.06)",
+  text: "var(--mk-fg-muted, rgba(255,255,255,0.72))",
+  border: "rgba(255, 255, 255, 0.12)",
+};
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
   const post = await getBlogPostBySlug(slug);
@@ -72,6 +118,20 @@ export default async function BlogPostPage({ params }: PageProps) {
   }
 
   const canonicalUrl = toAbsoluteUrl(`/blog/${post.slug}`);
+  const shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(canonicalUrl)}`;
+  const tagColors = post.tags.map(
+    (tag) => TAG_COLORS[tag] ?? DEFAULT_TAG
+  );
+  const postMarkdown = blogPostToMarkdown({
+    title: post.title,
+    description: post.description,
+    author: post.author,
+    publishedAt: post.publishedAt,
+    tags: post.tags,
+    slug: post.slug,
+    blocks: post.blocks,
+  });
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -97,71 +157,113 @@ export default async function BlogPostPage({ params }: PageProps) {
   };
 
   return (
-    <div className="mx-auto max-w-[1080px] px-6 py-16 sm:px-8 sm:py-24">
+    <article className="blog-post-article">
       <Script id={`blog-post-schema-${post.id}`} type="application/ld+json">
         {JSON.stringify(structuredData)}
       </Script>
-      <Link
-        href="/blog"
-        className="inline-flex items-center gap-1.5 text-xs transition-colors hover:opacity-80"
-        style={{ color: "var(--blog-fg-faint)" }}
-      >
-        &larr; All posts
-      </Link>
 
-      <header className="mt-6">
-        <div className="text-xs" style={{ color: "var(--blog-fg-faint)" }}>
-          {new Date(post.publishedAt).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-          {post.author && ` · ${post.author}`}
+      <div className="blog-post-hero">
+        <Link href="/blog" className="blog-post-back">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5" />
+            <path d="M12 19l-7-7 7-7" />
+          </svg>
+          Back
+        </Link>
+
+        <div className="blog-post-tags-row">
+          {post.tags.map((tag, i) => (
+            <span
+              key={tag}
+              className="blog-card-tag"
+              style={{
+                background: tagColors[i].bg,
+                color: tagColors[i].text,
+                borderColor: tagColors[i].border,
+              }}
+            >
+              {tag}
+            </span>
+          ))}
         </div>
-        <h1
-          className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl"
-          style={{ color: "var(--blog-fg)", letterSpacing: "-0.03em" }}
-        >
-          {post.title}
-        </h1>
+
+        <h1 className="blog-post-title">{post.title}</h1>
+
         {post.description && (
-          <p
-            className="mt-3 text-lg leading-relaxed"
-            style={{ color: "var(--blog-fg-muted)" }}
-          >
-            {post.description}
-          </p>
+          <p className="blog-post-description">{post.description}</p>
         )}
-        {post.tags.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {post.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full px-2.5 py-0.5 text-[11px] font-medium"
-                style={{
-                  background: "var(--blog-surface)",
-                  color: "var(--blog-fg-muted)",
-                }}
-              >
-                {tag}
-              </span>
-            ))}
+
+        <div className="blog-post-meta-row">
+          <div className="blog-post-author-block">
+            <div className="blog-post-author-avatar">
+              {getInitials(post.author)}
+            </div>
+            <div className="blog-post-author-info">
+              <span className="blog-post-author-name">{post.author}</span>
+              <time className="blog-post-date">
+                {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </time>
+            </div>
           </div>
-        )}
-      </header>
+
+          <div className="blog-post-share">
+            <CopyMarkdownButton markdown={postMarkdown} />
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="blog-post-share-btn"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              Share
+            </a>
+          </div>
+        </div>
+      </div>
 
       {post.coverImage && (
-        <img
-          src={post.coverImage}
-          alt={post.title}
-          className="mt-8 w-full rounded-xl object-cover"
-          style={{ maxHeight: "400px" }}
-        />
+        <div className="blog-post-cover">
+          <Image
+            src={post.coverImage}
+            alt={post.title}
+            width={1180}
+            height={440}
+            className="blog-post-cover-img"
+            priority
+            sizes="(min-width: 768px) calc(100vw - 4rem), calc(100vw - 3rem)"
+            unoptimized
+          />
+        </div>
       )}
 
-      <div className="mt-10">
+      <div className="blog-post-prose">
         <NotionRenderer blocks={post.blocks} />
       </div>
-    </div>
+
+      <footer className="blog-post-footer">
+        <hr className="blog-post-divider" />
+        <div className="blog-post-footer-inner">
+          <Link href="/blog" className="blog-post-footer-back">
+            &larr; All posts
+          </Link>
+          <div className="blog-post-footer-share">
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="blog-post-share-btn"
+            >
+              Share on X
+            </a>
+          </div>
+        </div>
+      </footer>
+    </article>
   );
 }

@@ -24,6 +24,11 @@ const staticRoutes: Array<{
     priority: 0.7,
   },
   {
+    path: "/integrations/gmail",
+    changeFrequency: "weekly",
+    priority: 0.8,
+  },
+  {
     path: "/use-openclaw-to-triage-email-and-schedule-follow-ups",
     changeFrequency: "monthly",
     priority: 0.7,

@@ -71,7 +71,6 @@ function renderBlock(block: any): string {
 
     case "code": {
       const lang = block.code.language || "plaintext";
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const code = block.code.rich_text
         .map((t: { plain_text: string }) => t.plain_text)
         .join("")

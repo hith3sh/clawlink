@@ -8,7 +8,7 @@
     "build": "next build",
     "build:web": "opennextjs-cloudflare build --config wrangler.toml",
     "migrate:web": "wrangler d1 migrations apply clawlink --remote --config wrangler.toml",
-    "deploy:web": "env $(grep -v '^#' .env.production | grep '=' | xargs) opennextjs-cloudflare build --config wrangler.toml && npm run migrate:web && wrangler deploy",
+    "deploy:web": "node scripts/deploy-web.mjs",
     "import:composio-tools": "node scripts/import-composio-tools.mjs",
     "test:openclaw-plugin-contract": "node --test packages/openclaw-clawlink/index.test.mjs",
     "smoke:openclaw-plugin": "node scripts/smoke-openclaw-plugin-live.mjs",

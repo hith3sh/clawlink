@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const initialized = useRef(false);
 
   // Use a ref + callback to hydrate from localStorage on first render

@@ -600,13 +600,21 @@ const composioToolOverrides = {
   },
   LINKEDIN_CREATE_LINKED_IN_POST: {
     descriptionPrefix:
-      "Use this for a standard LinkedIn feed post once you know the posting identity and any media asset URNs.",
+      "Use this for a standard LinkedIn feed post. REQUIRED FIRST STEP: call `linkedin_get_my_info` and use its `id` field to build the `author` URN as `urn:li:person:<id>` using the actual id value. NEVER pass `urn:li:person:self`, `urn:li:person:me`, or any placeholder — LinkedIn rejects invalid author URNs with a misleading 403 'Forbidden. You don't have permission to create posts' that looks like a scope error but is actually a URN-format error.",
     prerequisites: ["linkedin_get_my_info"],
+    fieldDescriptions: {
+      author:
+        "Required. The exact URN of the posting identity. For a person, format is `urn:li:person:<id>` where `<id>` is the `id` value returned by `linkedin_get_my_info` (NOT `self`, NOT `me`, NOT any placeholder). For an organization, format is `urn:li:organization:<id>`. Passing `urn:li:person:self` will return a 403 that misleadingly reads as a permission error.",
+    },
   },
   LINKEDIN_CREATE_ARTICLE_OR_URL_SHARE: {
     descriptionPrefix:
-      "Use this when the user wants to share an external URL on LinkedIn rather than a plain text status update.",
+      "Use this when the user wants to share an external URL on LinkedIn rather than a plain text status update. REQUIRED FIRST STEP: call `linkedin_get_my_info` and use its `id` field to build the `author` URN as `urn:li:person:<id>`. NEVER pass `urn:li:person:self`, `urn:li:person:me`, or any placeholder — LinkedIn rejects invalid author URNs with a misleading 403 'Forbidden. You don't have permission to create posts'.",
     prerequisites: ["linkedin_get_my_info"],
+    fieldDescriptions: {
+      author:
+        "Required. The exact URN of the posting identity. For a person, format is `urn:li:person:<id>` where `<id>` is the `id` value returned by `linkedin_get_my_info` (NOT `self`, NOT `me`, NOT any placeholder). For an organization, format is `urn:li:organization:<id>`. Passing `urn:li:person:self` will return a 403 that misleadingly reads as a permission error.",
+    },
   },
   LINKEDIN_CREATE_COMMENT_ON_POST: {
     descriptionPrefix:
