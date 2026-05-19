@@ -9,11 +9,31 @@
 
 **Install once. Connect with one click.**
 
-ClawLink is an open-source integration platform that gives [OpenClaw](https://github.com/openclaw/openclaw) instant access to 100+ APIs — Gmail, Slack, Stripe, GitHub, Notion, and more.
+ClawLink is an open-source integration platform that gives [OpenClaw](https://github.com/openclaw/openclaw) / [Hermes](https://hermes-agent.nousresearch.com/) instant access to 100+ APIs — Gmail, Drive, Outlook, Instagram, GitHub, Apollo, Notion, and more.
 
 - **Website:** [claw-link.dev](https://claw-link.dev)
 - **Docs:** [docs.claw-link.dev](https://docs.claw-link.dev)
 - **Verify:** [claw-link.dev/verify](https://claw-link.dev/verify)
+
+<div align="center">
+
+<h3>1. Copy the instruction prompt to your OpenClaw/Hermes agent</h3>
+
+<img src="https://github.com/user-attachments/assets/676b3179-8288-4421-b24c-c323eb5809a5" width="800" />
+
+<br><br>
+
+<h3>2. Create an account and pair</h3>
+
+<img src="https://github.com/user-attachments/assets/4711f4e2-51ef-4775-91b2-dffbd15cc07b" width="800" />
+
+<br><br>
+
+<h3>3. Connect the app you want, literally from a 100+ app list</h3>
+
+<img src="https://github.com/user-attachments/assets/924fc6c7-e1c6-46ae-b521-fc008bdab759" width="800" />
+
+</div>
 
 <p align="left">
   <a href="https://x.com/clawlinkdev">X / Twitter</a> ·
