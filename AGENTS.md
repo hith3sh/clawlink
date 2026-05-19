@@ -229,7 +229,7 @@ ClawHub and npm are **separate registries** — publishing to one does NOT push 
 
 ClawHub enforces that `package.json` `name` equals the published name. Since our npm name and ClawHub name differ, the publish helper at `scripts/publish-clawhub-plugin.mjs` swaps the name to `clawlink-plugin` in place, runs the ClawHub publish, then restores `@useclawlink/openclaw-plugin` regardless of outcome (try/finally). Do NOT commit the swapped name.
 
-**Tag pushes now publish to BOTH registries automatically** via `.github/workflows/publish-openclaw-plugin.yml`. The workflow runs npm publish (with provenance) followed by `node scripts/publish-clawhub-plugin.mjs`, both attested through GitHub Actions Trusted Publishing (OIDC). ClawHub trusted publisher is registered for `hith3sh/clawlink` + `publish-openclaw-plugin.yml`.
+**Tag pushes now publish to BOTH registries automatically** via `.github/workflows/publish-openclaw-plugin.yml`. The workflow runs npm publish (with provenance) followed by `node scripts/publish-clawhub-plugin.mjs`, both attested through GitHub Actions Trusted Publishing (OIDC). ClawHub trusted publisher is registered for `hith3sh/clawlink` + `publish-openclaw-plugin.yml`. The direct helper publish is the supported ClawHub path; GitHub Actions is the tag-triggered automation wrapper around it, not a separate manual publish route.
 
 Rules for agents:
 

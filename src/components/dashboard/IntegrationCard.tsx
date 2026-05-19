@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { createElement, useEffect, useState } from "react";
-import { CheckCircle2, Loader2, Plus } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Plus } from "lucide-react";
 
 import type { Integration } from "@/data/integrations";
 import { getIntegrationIcon } from "@/lib/integration-icons";
@@ -33,6 +33,7 @@ export function IntegrationCard({
   const hostedConnectEnabled =
     integration.dashboardStatus === "available" &&
     integration.setupMode === "composio";
+  const showWhatsAppSetupNote = integration.slug === "whatsapp";
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -105,6 +106,20 @@ export function IntegrationCard({
           <p className="line-clamp-3 max-w-[28ch] text-[0.98rem] leading-7 text-muted-foreground">
             {integration.description}
           </p>
+
+          {showWhatsAppSetupNote ? (
+            <div
+              className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs leading-5 text-amber-700 dark:text-amber-200"
+              title="WhatsApp Business App numbers may need extra Meta setup before they can send through Cloud API."
+            >
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <p>
+                  Sending needs a Cloud API-ready phone number. Business App numbers may need extra Meta setup first.
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
       </CardContent>
     </Card>

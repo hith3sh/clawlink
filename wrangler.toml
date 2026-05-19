@@ -41,6 +41,8 @@ NEXT_PUBLIC_CLERK_SIGN_UP_URL = "/sign-up"
 NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL = "/dashboard"
 NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL = "/dashboard"
 ADMIN_EMAIL_ALLOWLIST = "hithesh0215@gmail.com"
+SUPPORT_EMAIL_FROM = "ClawLink <hello@claw-link.dev>"
+SUPPORT_EMAIL_REPLY_TO = "hello@claw-link.dev"
 # Internal dashboard access:
 # ADMIN_CLERK_ID_ALLOWLIST = "user_123,user_456"
 COMPOSIO_BASE_URL = "https://backend.composio.dev/api/v3.1"
