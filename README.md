@@ -1,4 +1,4 @@
-# ClawLink 
+# ClawLink - Give your AI agent access to real apps
 
 <img width="160" height="160" alt="link logo" src="https://github.com/user-attachments/assets/f2dc1101-eac8-4953-a84f-d27d6addd4f2" />
 
