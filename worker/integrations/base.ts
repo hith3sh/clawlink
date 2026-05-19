@@ -42,6 +42,15 @@ export interface IntegrationTool {
   maxBatchSize?: number;
   recommendedTimeoutMs?: number;
   execution: ToolExecutionSpec;
+  /**
+   * Set to true once the inputSchema has been populated from the upstream
+   * (Composio for `composio_tool` execution). Distinguishes an intentionally
+   * parameterless tool (whose hydrated schema is `{type: "object", properties: {}}`,
+   * indistinguishable from the static stub) from a tool that never got
+   * hydrated. The executor uses this to decide whether to refuse the call
+   * with `schema_unavailable`.
+   */
+  schemaHydrated?: boolean;
 }
 
 export interface DefineIntegrationToolOptions {
@@ -143,6 +152,7 @@ export type IntegrationRequestErrorKind =
   | "scope_missing"
   | "account_inactive"
   | "not_found"
+  | "configuration"
   | "transient";
 
 export class IntegrationRequestError extends Error {
@@ -151,6 +161,7 @@ export class IntegrationRequestError extends Error {
   readonly kind?: IntegrationRequestErrorKind;
   readonly missingFields?: string[];
   readonly invalidFields?: string[];
+  readonly hint?: string;
 
   constructor(
     message: string,
@@ -160,6 +171,7 @@ export class IntegrationRequestError extends Error {
       kind?: IntegrationRequestErrorKind;
       missingFields?: string[];
       invalidFields?: string[];
+      hint?: string;
     },
   ) {
     super(message);
@@ -169,6 +181,7 @@ export class IntegrationRequestError extends Error {
     this.kind = options.kind;
     this.missingFields = options.missingFields;
     this.invalidFields = options.invalidFields;
+    this.hint = options.hint;
   }
 }
 
@@ -224,6 +237,15 @@ function isNetworkFailure(error: unknown): boolean {
 
 export function classifyIntegrationError(error: unknown): NormalizedToolError {
   if (error instanceof IntegrationRequestError) {
+    if (error.kind === "configuration") {
+      return {
+        type: "configuration",
+        code: error.code ?? "integration_misconfigured",
+        message: error.message,
+        retryable: false,
+      };
+    }
+
     if (error.kind === "validation" || error.status === 400) {
       return {
         type: "validation",

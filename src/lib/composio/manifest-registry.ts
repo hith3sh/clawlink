@@ -191,7 +191,7 @@ export async function hydrateComposioToolSchemas(
 
   for (const tool of tools) {
     if (tool.execution.kind !== "composio_tool") continue;
-    if (!isStubSchema(tool.inputSchema)) continue;
+    if (tool.schemaHydrated) continue;
     integrationSlugs.add(tool.integration);
   }
 
@@ -224,7 +224,7 @@ export async function hydrateComposioToolSchemas(
 
   for (const tool of tools) {
     if (tool.execution.kind !== "composio_tool") continue;
-    if (!isStubSchema(tool.inputSchema)) continue;
+    if (tool.schemaHydrated) continue;
 
     const schemas = schemasByIntegration.get(tool.integration);
     if (!schemas) continue;
@@ -232,6 +232,7 @@ export async function hydrateComposioToolSchemas(
     const schema = schemas.get(tool.execution.toolSlug);
     if (schema) {
       tool.inputSchema = schema;
+      tool.schemaHydrated = true;
       applyComposioToolFieldDescriptionOverrides(tool);
       applyDiscoveryHints(tool, toolsByIntegration.get(tool.integration) ?? []);
     }

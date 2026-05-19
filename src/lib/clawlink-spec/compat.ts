@@ -136,6 +136,7 @@ function mapExecutionErrorCode(payload: ToolExecutionPayload): ClawLinkExecution
       return "forbidden";
     case "rate_limit":
       return "rate_limited";
+    case "configuration":
     case "network":
     case "provider":
     case "unknown":

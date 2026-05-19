@@ -75,7 +75,77 @@ function buildFigmaTeamIdOverrides() {
   return entries;
 }
 
-const composioToolOverrides = {
+const GMAIL_USER_ID_DESCRIPTION =
+  'Required by the Gmail API. ALWAYS pass the literal string `"me"` — it refers to the authenticated Gmail account. Do NOT pass an email address, a Gmail user id, or placeholders like `"self"`, `"user"`, or the user\'s own email; the Gmail API rejects every value other than `"me"` (or the authenticated user\'s own exact address) with a misleading `403 "Delegation denied"` error, because reading any other mailbox requires Google Workspace domain-wide delegation which is not configured here.';
+
+const GMAIL_USER_ID_TRAP_PREFIX =
+  'If this tool takes a `user_id` parameter, set it to the literal string `"me"`. Any other value (an email address, a Gmail user id, `"self"`) fails with a 403 "Delegation denied" error.';
+
+const GMAIL_TOOL_SLUGS = [
+  "GMAIL_ADD_LABEL_TO_EMAIL",
+  "GMAIL_BATCH_DELETE_MESSAGES",
+  "GMAIL_BATCH_MODIFY_MESSAGES",
+  "GMAIL_CREATE_EMAIL_DRAFT",
+  "GMAIL_CREATE_FILTER",
+  "GMAIL_CREATE_LABEL",
+  "GMAIL_CREATE_PROMPT_POST",
+  "GMAIL_DELETE_DRAFT",
+  "GMAIL_DELETE_FILTER",
+  "GMAIL_DELETE_LABEL",
+  "GMAIL_DELETE_MESSAGE",
+  "GMAIL_DELETE_THREAD",
+  "GMAIL_FETCH_EMAILS",
+  "GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID",
+  "GMAIL_FETCH_MESSAGE_BY_THREAD_ID",
+  "GMAIL_FORWARD_MESSAGE",
+  "GMAIL_GET_ATTACHMENT",
+  "GMAIL_GET_AUTO_FORWARDING",
+  "GMAIL_GET_CONTACTS",
+  "GMAIL_GET_DRAFT",
+  "GMAIL_GET_FILTER",
+  "GMAIL_GET_LABEL",
+  "GMAIL_GET_LANGUAGE_SETTINGS",
+  "GMAIL_GET_PEOPLE",
+  "GMAIL_GET_PROFILE",
+  "GMAIL_GET_VACATION_SETTINGS",
+  "GMAIL_IMPORT_MESSAGE",
+  "GMAIL_INSERT_MESSAGE",
+  "GMAIL_LIST_CSE_IDENTITIES",
+  "GMAIL_LIST_CSE_KEYPAIRS",
+  "GMAIL_LIST_DRAFTS",
+  "GMAIL_LIST_FILTERS",
+  "GMAIL_LIST_FORWARDING_ADDRESSES",
+  "GMAIL_LIST_HISTORY",
+  "GMAIL_LIST_LABELS",
+  "GMAIL_LIST_SEND_AS",
+  "GMAIL_LIST_SMIME_INFO",
+  "GMAIL_LIST_THREADS",
+  "GMAIL_MODIFY_THREAD_LABELS",
+  "GMAIL_MOVE_THREAD_TO_TRASH",
+  "GMAIL_MOVE_TO_TRASH",
+  "GMAIL_PATCH_LABEL",
+  "GMAIL_PATCH_SEND_AS",
+  "GMAIL_REPLY_TO_THREAD",
+  "GMAIL_SEARCH_PEOPLE",
+  "GMAIL_SEND_DRAFT",
+  "GMAIL_SEND_EMAIL",
+  "GMAIL_SETTINGS_GET_IMAP",
+  "GMAIL_SETTINGS_GET_POP",
+  "GMAIL_SETTINGS_SEND_AS_GET",
+  "GMAIL_STOP_WATCH",
+  "GMAIL_UNTRASH_MESSAGE",
+  "GMAIL_UNTRASH_THREAD",
+  "GMAIL_UPDATE_DRAFT",
+  "GMAIL_UPDATE_IMAP_SETTINGS",
+  "GMAIL_UPDATE_LABEL",
+  "GMAIL_UPDATE_LANGUAGE_SETTINGS",
+  "GMAIL_UPDATE_POP_SETTINGS",
+  "GMAIL_UPDATE_SEND_AS",
+  "GMAIL_UPDATE_USER_ATTRIBUTES_VALUES",
+  "GMAIL_UPDATE_VACATION_SETTINGS",
+];
+
+const GMAIL_MANUAL_OVERRIDES = {
   GMAIL_GET_PROFILE: {
     descriptionPrefix:
       "Use this first when you need to confirm which Gmail account is connected or seed later mailbox sync logic.",
@@ -204,6 +274,131 @@ const composioToolOverrides = {
         "Reply body content. Do not provide a custom subject if you want the reply to remain in the same thread.",
     },
     prerequisites: ["gmail_fetch_emails", "gmail_list_threads"],
+  },
+};
+
+const GMAIL_USER_ID_VALIDATOR = {
+  allow: ["me"],
+  message:
+    'Gmail `user_id` must be the literal string "me" (refers to the authenticated account). Any other value — including the authenticated user\'s own email address — is rejected upstream with a misleading 403 "Delegation denied" error because Gmail requires Google Workspace domain-wide delegation to read other mailboxes.',
+  hint: 'Retry with `user_id: "me"` to read the authenticated mailbox.',
+};
+
+const LINKEDIN_AUTHOR_FIELD_DESCRIPTION =
+  "Required. The exact URN of the posting identity. Must be `urn:li:person:<id>` where `<id>` is the `id` value returned by `linkedin_get_my_info` (NOT `self`, NOT `me`, NOT any placeholder). Organization authors (`urn:li:organization:<id>`) are NOT accepted on this connection — Composio's managed LinkedIn OAuth client lacks `w_organization_social`/Community Management partner access; LinkedIn rejects org-author posts with `400 'Organization Or Events permissions must be used when using organization as author'`. Personal authors only.";
+
+const LINKEDIN_AUTHOR_VALIDATOR = {
+  denyPatterns: [
+    /^urn:li:person:(self|me|user|current[_-]?user)$/i,
+    /^urn:li:organization:/i,
+  ],
+  allowPatterns: [/^urn:li:person:[A-Za-z0-9_-]+$/],
+  message:
+    "LinkedIn `author` must be a concrete person URN like `urn:li:person:<id>`. Placeholder URNs (`self`, `me`, `user`) and organization URNs (`urn:li:organization:<id>`) are both rejected: placeholders are URN-format errors, and organization-author posting needs LinkedIn Community Management partner approval which Composio's managed OAuth client does not grant.",
+  hint:
+    "Call `linkedin_get_my_info` first; use its `id` field as `urn:li:person:<id>` (substitute the real id, never `self`/`me`). To post as an organization you would need a LinkedIn partner OAuth app with `w_organization_social` — not available on the current connection.",
+};
+
+const CANVA_DESIGN_TYPE_DESCRIPTION =
+  "Required. A flat object using ONE of two variants (do NOT send both). PRESET variant: `{\"type\": \"preset\", \"name\": \"<name>\"}` where `<name>` is one of `doc`, `whiteboard`, `presentation`. CUSTOM variant: `{\"type\": \"custom\", \"width\": <int 40-8000>, \"height\": <int 40-8000>}`. NO `DesignTypeCustom`/`DesignTypePreset` envelope keys (those are JSON Schema variant titles, not data field names) and NO `units` field. Sending both variants in the same call causes Pydantic to fail every variant's required-field check and surface a confusing aggregated error.";
+
+const CANVA_EXPORT_FORMAT_DESCRIPTION =
+  "Required. A flat object using ONE of six variants (do NOT send envelope keys like `PngFormat`/`JpgFormat`; those are JSON Schema variant titles, not data field names). PDF: `{\"type\": \"pdf\"}` or `{\"type\": \"pdf\", \"size\": \"a4\"|\"a3\"|\"letter\"|\"legal\"}`. JPG (requires `quality`): `{\"type\": \"jpg\", \"quality\": <int 1-100>}`. PNG: `{\"type\": \"png\"}` (optionally with `lossless: false` for Pro/Enterprise lossy compression). GIF: `{\"type\": \"gif\"}`. PPTX: `{\"type\": \"pptx\"}`. MP4 (requires `quality`): `{\"type\": \"mp4\", \"quality\": \"horizontal_1080p\"}` (or `horizontal_480p|720p|4k`, `vertical_480p|720p|1080p|4k`). All variants accept optional `pages: [<int>, ...]` (1-indexed page numbers; omit for all pages). Not all formats are supported for all design types — call `canva_get_design_export_formats` first if unsure.";
+
+function buildGmailOverrides() {
+  const entries = {};
+
+  for (const slug of GMAIL_TOOL_SLUGS) {
+    const manual = GMAIL_MANUAL_OVERRIDES[slug] ?? {};
+    const manualPrefix = manual.descriptionPrefix ?? "";
+    const combinedPrefix = manualPrefix
+      ? `${GMAIL_USER_ID_TRAP_PREFIX} ${manualPrefix}`
+      : GMAIL_USER_ID_TRAP_PREFIX;
+
+    entries[slug] = {
+      ...manual,
+      descriptionPrefix: combinedPrefix,
+      fieldDescriptions: {
+        user_id: GMAIL_USER_ID_DESCRIPTION,
+        ...(manual.fieldDescriptions ?? {}),
+      },
+      fieldValidators: {
+        user_id: GMAIL_USER_ID_VALIDATOR,
+        ...(manual.fieldValidators ?? {}),
+      },
+    };
+  }
+
+  return entries;
+}
+
+const composioToolOverrides = {
+  ...buildGmailOverrides(),
+
+  CANVA_POST_DESIGNS: {
+    descriptionPrefix:
+      "Use this to create a new Canva design. The `design_type` argument is a FLAT object with one of two variants — pass exactly ONE variant, not both. PRESET: `{type: \"preset\", name: \"doc\"|\"whiteboard\"|\"presentation\"}`. CUSTOM: `{type: \"custom\", width: <int 40-8000>, height: <int 40-8000>}`. DO NOT wrap fields in `DesignTypeCustom`/`DesignTypePreset` envelopes (those are JSON Schema variant titles, not data field names) and DO NOT add a `units` field. Sending both variants in the same call causes Pydantic to fail every variant's required-field check and surface a confusing aggregated error.",
+    fieldDescriptions: {
+      design_type: CANVA_DESIGN_TYPE_DESCRIPTION,
+      title: "Optional. Display title for the new design (1-255 chars).",
+      asset_id:
+        "Optional. Image asset id from a previously uploaded asset, inserted into the new design.",
+    },
+    examples: [
+      {
+        label: "Preset design — presentation",
+        args: {
+          title: "Q4 marketing update",
+          design_type: { type: "preset", name: "presentation" },
+        },
+      },
+      {
+        label: "Preset design — doc",
+        args: {
+          title: "Meeting notes",
+          design_type: { type: "preset", name: "doc" },
+        },
+      },
+      {
+        label: "Custom-sized design (LinkedIn banner)",
+        args: {
+          title: "LinkedIn banner",
+          design_type: { type: "custom", width: 1200, height: 627 },
+        },
+      },
+    ],
+  },
+  CANVA_POST_EXPORTS: {
+    descriptionPrefix:
+      "Use this to export an existing Canva design to PDF/JPG/PNG/GIF/PPTX/MP4. The `format` argument is a FLAT object with one of six variants. DO NOT wrap fields in `PngFormat`/`JpgFormat`/etc. envelope keys (those are JSON Schema variant titles, not data field names). Variants: `{type: \"pdf\"}` (optional `size`), `{type: \"jpg\", quality: <1-100>}` (quality REQUIRED), `{type: \"png\"}` (optional `lossless: false`), `{type: \"gif\"}`, `{type: \"pptx\"}`, `{type: \"mp4\", quality: \"horizontal_1080p\"}` (quality REQUIRED, enum). Not every format is supported for every design type — call `canva_get_design_export_formats` first if unsure.",
+    fieldDescriptions: {
+      design_id:
+        "Required. The Canva design id to export. Obtain it from `canva_post_designs` (`design.id`) or by searching the user's designs.",
+      format: CANVA_EXPORT_FORMAT_DESCRIPTION,
+    },
+    examples: [
+      {
+        label: "Export as PNG (minimal)",
+        args: {
+          design_id: "DAFxxxxxxxx",
+          format: { type: "png" },
+        },
+      },
+      {
+        label: "Export as JPG with quality",
+        args: {
+          design_id: "DAFxxxxxxxx",
+          format: { type: "jpg", quality: 80 },
+        },
+      },
+      {
+        label: "Export as A4 PDF",
+        args: {
+          design_id: "DAFxxxxxxxx",
+          format: { type: "pdf", size: "a4" },
+        },
+      },
+    ],
   },
 
   GOOGLEDRIVE_FIND_FILE: {
@@ -600,20 +795,47 @@ const composioToolOverrides = {
   },
   LINKEDIN_CREATE_LINKED_IN_POST: {
     descriptionPrefix:
-      "Use this for a standard LinkedIn feed post. REQUIRED FIRST STEP: call `linkedin_get_my_info` and use its `id` field to build the `author` URN as `urn:li:person:<id>` using the actual id value. NEVER pass `urn:li:person:self`, `urn:li:person:me`, or any placeholder — LinkedIn rejects invalid author URNs with a misleading 403 'Forbidden. You don't have permission to create posts' that looks like a scope error but is actually a URN-format error.",
+      "Use this for a standard LinkedIn feed post. REQUIRED FIRST STEP: call `linkedin_get_my_info` and use its `id` field to build the `author` URN as `urn:li:person:<id>` using the actual id value. NEVER pass `urn:li:person:self`, `urn:li:person:me`, or any placeholder — LinkedIn rejects invalid author URNs with a misleading 403 'Forbidden. You don't have permission to create posts' that looks like a scope error but is actually a URN-format error. ORGANIZATION POSTING IS NOT SUPPORTED on this connection: posting as `urn:li:organization:<id>` requires LinkedIn's Community Management API partner approval (scope `w_organization_social`), which the default ClawLink/Composio OAuth client does not grant. Use a personal author URN only.",
     prerequisites: ["linkedin_get_my_info"],
     fieldDescriptions: {
-      author:
-        "Required. The exact URN of the posting identity. For a person, format is `urn:li:person:<id>` where `<id>` is the `id` value returned by `linkedin_get_my_info` (NOT `self`, NOT `me`, NOT any placeholder). For an organization, format is `urn:li:organization:<id>`. Passing `urn:li:person:self` will return a 403 that misleadingly reads as a permission error.",
+      author: LINKEDIN_AUTHOR_FIELD_DESCRIPTION,
+    },
+    fieldValidators: {
+      author: LINKEDIN_AUTHOR_VALIDATOR,
     },
   },
   LINKEDIN_CREATE_ARTICLE_OR_URL_SHARE: {
     descriptionPrefix:
-      "Use this when the user wants to share an external URL on LinkedIn rather than a plain text status update. REQUIRED FIRST STEP: call `linkedin_get_my_info` and use its `id` field to build the `author` URN as `urn:li:person:<id>`. NEVER pass `urn:li:person:self`, `urn:li:person:me`, or any placeholder — LinkedIn rejects invalid author URNs with a misleading 403 'Forbidden. You don't have permission to create posts'.",
+      "Use this when the user wants to share an external URL on LinkedIn rather than a plain text status update. REQUIRED FIRST STEP: call `linkedin_get_my_info` and use its `id` field to build the `author` URN as `urn:li:person:<id>`. NEVER pass `urn:li:person:self`, `urn:li:person:me`, or any placeholder — LinkedIn rejects invalid author URNs with a misleading 403 'Forbidden. You don't have permission to create posts'. ORGANIZATION POSTING IS NOT SUPPORTED on this connection: posting as `urn:li:organization:<id>` requires LinkedIn's Community Management API partner approval (scope `w_organization_social`), which the default ClawLink/Composio OAuth client does not grant. Use a personal author URN only.",
     prerequisites: ["linkedin_get_my_info"],
     fieldDescriptions: {
-      author:
-        "Required. The exact URN of the posting identity. For a person, format is `urn:li:person:<id>` where `<id>` is the `id` value returned by `linkedin_get_my_info` (NOT `self`, NOT `me`, NOT any placeholder). For an organization, format is `urn:li:organization:<id>`. Passing `urn:li:person:self` will return a 403 that misleadingly reads as a permission error.",
+      author: LINKEDIN_AUTHOR_FIELD_DESCRIPTION,
+    },
+    fieldValidators: {
+      author: LINKEDIN_AUTHOR_VALIDATOR,
+    },
+  },
+  LINKEDIN_SEARCH_AD_TARGETING_ENTITIES: {
+    descriptionPrefix:
+      "Use this to look up LinkedIn ad-targeting entities by typeahead query (returns autocomplete matches). The underlying LinkedIn endpoint is hardcoded to the `typeahead` finder, which only supports a SPECIFIC subset of facets — not the full `LINKEDIN_GET_AD_TARGETING_FACETS` catalog. To find companies as ad-targeting entities, use `urn:li:adTargetingFacet:employers` (NOT `companies` — that facet is for account-list targeting under a different finder and returns 'Specified facet is not available for the finder being used' here). Typeahead-supported facets include `employers`, `locations`, `industries`, `titles`, `skills`, `degrees`, `fieldsOfStudy`, `schools`, `seniorities`, `staffCountRanges`, `interfaceLocales`.",
+    fieldDescriptions: {
+      facet:
+        "Required. URN of an ad-targeting facet that the typeahead finder supports. Use `urn:li:adTargetingFacet:employers` to search for companies (NOT `urn:li:adTargetingFacet:companies` — that returns a 400 'facet is not available for the finder being used'). Other supported values: `locations`, `industries`, `titles`, `skills`, `degrees`, `fieldsOfStudy`, `schools`, `seniorities`, `staffCountRanges`, `interfaceLocales`.",
+      query:
+        "Required. Free-text autocomplete query, e.g. a company name fragment or a city name.",
+    },
+    fieldValidators: {
+      facet: {
+        deny: [
+          "urn:li:adTargetingFacet:companies",
+          "urn:li:adTargetingFacet:company",
+        ],
+        allowPatterns: [/^urn:li:adTargetingFacet:[A-Za-z][A-Za-z0-9]*$/],
+        message:
+          "LinkedIn's typeahead ad-targeting finder does not support `urn:li:adTargetingFacet:companies`. Use `urn:li:adTargetingFacet:employers` to search for companies, or one of: `locations`, `industries`, `titles`, `skills`, `degrees`, `fieldsOfStudy`, `schools`, `seniorities`, `staffCountRanges`, `interfaceLocales`.",
+        hint:
+          "Retry `linkedin_search_ad_targeting_entities` with `facet: \"urn:li:adTargetingFacet:employers\"` to search for companies as ad-targeting entities.",
+      },
     },
   },
   LINKEDIN_CREATE_COMMENT_ON_POST: {

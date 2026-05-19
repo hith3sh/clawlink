@@ -1,7 +1,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import {
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  truncateSync,
+  writeFileSync,
+} from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 import clawlinkPlugin from "./index.js";
+
+const MAX_FILE_UPLOAD_BYTES = 25 * 1024 * 1024;
 
 function createFakeApi(initialPluginConfig = {
   apiKey: "cllk_test_123",
@@ -60,7 +72,7 @@ async function withFetchMock(handler, run) {
   globalThis.fetch = handler;
 
   try {
-    await run();
+    return await run();
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -73,6 +85,23 @@ function successResponse(payload = {}) {
       "Content-Type": "application/json",
     },
   });
+}
+
+function createUploadFixture(filename = "sample.txt", bytes = Buffer.from("hello file")) {
+  const root = mkdtempSync(path.join(os.tmpdir(), "clawlink-file-upload-"));
+  const mediaDir = path.join(root, ".openclaw", "media", "inbound");
+  mkdirSync(mediaDir, { recursive: true });
+  const filePath = path.join(mediaDir, filename);
+  writeFileSync(filePath, bytes);
+
+  return {
+    root,
+    filePath,
+    bytes,
+    cleanup() {
+      rmSync(root, { recursive: true, force: true });
+    },
+  };
 }
 
 test("clawlink_call_tool forwards nested arguments unchanged", async () => {
@@ -107,10 +136,10 @@ test("clawlink_call_tool forwards nested arguments unchanged", async () => {
     url: "https://claw-link.dev/api/tools/gmail_send_email/execute",
     method: "POST",
     headers: {
-      "X-ClawLink-API-Key": "cllk_test_123",
-      "Content-Type": "application/json",
-      "User-Agent": "@useclawlink/openclaw-plugin/0.1.42",
-    },
+	      "X-ClawLink-API-Key": "cllk_test_123",
+	      "Content-Type": "application/json",
+	      "User-Agent": "@useclawlink/openclaw-plugin/0.2.0",
+	    },
     body: {
       arguments: {
         to: ["person@example.com"],
@@ -121,6 +150,166 @@ test("clawlink_call_tool forwards nested arguments unchanged", async () => {
       confirmed: true,
     },
   });
+});
+
+test("clawlink_call_tool attaches local FileUploadable bytes", async () => {
+  const api = createFakeApi();
+  clawlinkPlugin.register(api);
+  const tool = api.getTool("clawlink_call_tool");
+  const fixture = createUploadFixture("photo.jpg", Buffer.from("image bytes"));
+  let capturedBody = null;
+
+  try {
+    await withFetchMock(async (_url, options) => {
+      capturedBody = JSON.parse(options.body);
+      return successResponse({ ok: true });
+    }, async () => {
+      await tool.execute("test", {
+        tool: "instagram_post_ig_user_media",
+        arguments: {
+          caption: "New product",
+          media: [
+            {
+              image_file: {
+                name: "photo.jpg",
+                mimetype: "image/jpeg",
+                s3key: fixture.filePath,
+              },
+            },
+          ],
+        },
+        confirmed: true,
+      });
+    });
+  } finally {
+    fixture.cleanup();
+  }
+
+  assert.equal(capturedBody.files.length, 1);
+  assert.deepEqual(capturedBody.files[0], {
+    pointer: fixture.filePath,
+    name: "photo.jpg",
+    mimetype: "image/jpeg",
+    md5: createHash("md5").update(fixture.bytes).digest("hex"),
+    dataBase64: fixture.bytes.toString("base64"),
+  });
+});
+
+test("clawlink_preview_tool attaches local FileUploadable bytes", async () => {
+  const api = createFakeApi();
+  clawlinkPlugin.register(api);
+  const tool = api.getTool("clawlink_preview_tool");
+  const fixture = createUploadFixture("preview.txt", Buffer.from("preview bytes"));
+  let capturedBody = null;
+
+  try {
+    await withFetchMock(async (_url, options) => {
+      capturedBody = JSON.parse(options.body);
+      return successResponse({ ok: true });
+    }, async () => {
+      await tool.execute("test", {
+        tool: "slack_upload_file",
+        arguments: {
+          file: {
+            name: "preview.txt",
+            mimetype: "text/plain",
+            s3key: fixture.filePath,
+          },
+        },
+      });
+    });
+  } finally {
+    fixture.cleanup();
+  }
+
+  assert.equal(capturedBody.files.length, 1);
+  assert.equal(capturedBody.files[0].pointer, fixture.filePath);
+  assert.equal(capturedBody.files[0].dataBase64, fixture.bytes.toString("base64"));
+});
+
+test("clawlink_call_tool leaves Apollo s3keys unchanged without reading files", async () => {
+  const api = createFakeApi();
+  clawlinkPlugin.register(api);
+  const tool = api.getTool("clawlink_call_tool");
+  let capturedBody = null;
+
+  await withFetchMock(async (_url, options) => {
+    capturedBody = JSON.parse(options.body);
+    return successResponse({ ok: true });
+  }, async () => {
+    await tool.execute("test", {
+      tool: "instagram_post_ig_user_media",
+      arguments: {
+        image_file: {
+          name: "from-composio.jpg",
+          mimetype: "image/jpeg",
+          s3key: "123/INSTAGRAM/INSTAGRAM_POST_IG_USER_MEDIA/response/file_abc",
+        },
+      },
+    });
+  });
+
+  assert.equal("files" in capturedBody, false);
+  assert.equal(
+    capturedBody.arguments.image_file.s3key,
+    "123/INSTAGRAM/INSTAGRAM_POST_IG_USER_MEDIA/response/file_abc",
+  );
+});
+
+test("clawlink_call_tool refuses path traversal without posting to ClawLink", async () => {
+  const api = createFakeApi();
+  clawlinkPlugin.register(api);
+  const tool = api.getTool("clawlink_call_tool");
+  let fetchCalled = false;
+
+  const result = await withFetchMock(async () => {
+    fetchCalled = true;
+    return successResponse({ ok: true });
+  }, async () => tool.execute("test", {
+    tool: "instagram_post_ig_user_media",
+    arguments: {
+      image_file: {
+        name: "secret.txt",
+        mimetype: "text/plain",
+        s3key: "/data/.openclaw/media/../../../etc/passwd",
+      },
+    },
+  }));
+
+  assert.equal(fetchCalled, false);
+  assert.equal(result.details.error.code, "invalid_file_path");
+  assert.match(result.content[0].text, /outside the permitted OpenClaw attachment roots/);
+});
+
+test("clawlink_call_tool refuses oversize files locally", async () => {
+  const api = createFakeApi();
+  clawlinkPlugin.register(api);
+  const tool = api.getTool("clawlink_call_tool");
+  const fixture = createUploadFixture("big.bin", Buffer.from("x"));
+  truncateSync(fixture.filePath, MAX_FILE_UPLOAD_BYTES + 1);
+  let fetchCalled = false;
+
+  try {
+    const result = await withFetchMock(async () => {
+      fetchCalled = true;
+      return successResponse({ ok: true });
+    }, async () => tool.execute("test", {
+      tool: "drive_upload",
+      arguments: {
+        file: {
+          name: "big.bin",
+          mimetype: "application/octet-stream",
+          s3key: fixture.filePath,
+        },
+      },
+    }));
+
+    assert.equal(fetchCalled, false);
+    assert.equal(result.details.error.code, "file_too_large");
+    assert.match(result.content[0].text, /exceeding the 26214400-byte cap/);
+  } finally {
+    fixture.cleanup();
+  }
 });
 
 test("clawlink_call_tool falls back to top-level tool args", async () => {

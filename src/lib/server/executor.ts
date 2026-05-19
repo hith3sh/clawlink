@@ -24,7 +24,13 @@ import type {
 } from "@/lib/runtime/tool-runtime";
 import { executeComposioTool } from "@/lib/composio/tool-executor";
 import { isStubSchema } from "@/lib/composio/schema-cache";
-import { detectPlaceholderArgs } from "@/lib/server/arg-guards";
+import { detectPlaceholderArgs, validateFieldArgs } from "@/lib/server/arg-guards";
+import {
+  collectFileUploadablePaths,
+  resolveFileUploadables,
+  type FileUploadAttachment,
+  type UploadedFileMetadata,
+} from "@/lib/server/file-upload-relay";
 import {
   classifyIntegrationError,
   getAllHandlers,
@@ -50,6 +56,15 @@ export interface ExecuteToolRequest {
   confirmed?: boolean;
   flowId?: string;
   stepId?: string;
+  /**
+   * Optional file attachments for tools whose schema declares
+   * `file_uploadable: true` properties. The OpenClaw plugin (>= 0.2.0) walks
+   * the agent's arguments and includes one entry per FileUploadable shape
+   * found, with `pointer` matching the FileUploadable's s3key value. The
+   * executor's relay stage uploads each file to Composio and rewrites the
+   * matching s3key argument before forwarding to the upstream tool.
+   */
+  files?: FileUploadAttachment[];
 }
 
 export interface ToolExecutionPayload<T = unknown> extends ToolExecutionResult<T> {
@@ -63,6 +78,13 @@ export interface ToolExecutionPayload<T = unknown> extends ToolExecutionResult<T
   invalidFields?: string[];
   inputSchema?: Record<string, unknown>;
   hint?: string;
+  /**
+   * Metadata for any FileUploadable arguments that were resolved through the
+   * Composio file-upload relay. Populated when the tool's hydrated schema
+   * declared `file_uploadable: true` paths AND the agent attached matching
+   * bytes via the request's `files` envelope. Empty/absent otherwise.
+   */
+  uploadedFiles?: UploadedFileMetadata[];
 }
 
 function getCredentialBridgeEnv(): CredentialBridgeEnv | null {
@@ -161,6 +183,13 @@ async function logExecutionResult(
       args: request.args,
       connectionId: request.connectionId ?? null,
       confirmed: request.confirmed ?? false,
+      filePointers: request.files?.map((file) => ({
+        pointer: file.pointer,
+        name: file.name,
+        mimetype: file.mimetype,
+        md5: file.md5,
+      })) ?? [],
+      uploadedFiles: payload.uploadedFiles ?? [],
     }),
     responseJson: payload.ok ? safeJsonStringify(payload.data ?? payload.result ?? null) : null,
     latencyMs: payload.meta.durationMs,
@@ -197,17 +226,27 @@ async function buildDecisionFailurePayload(
   } satisfies Omit<ToolExecutionPayload, "error">;
 
   switch (decision.kind) {
-    case "tool_not_found":
+    case "tool_not_found": {
+      const requested = request.toolName ? `'${request.toolName}'` : "the requested tool";
+      const suggestionMessage =
+        decision.suggestions.length > 0
+          ? ` Did you mean: ${decision.suggestions.slice(0, 3).map((s) => `'${s}'`).join(", ")}?`
+          : "";
       return {
         ...base,
         error: {
           type: "unknown",
           code: "tool_not_found",
-          message: "Tool not found",
+          message: `Tool ${requested} not found.${suggestionMessage}`,
           retryable: false,
         },
         details: decision.suggestions,
+        hint:
+          decision.suggestions.length > 0
+            ? `Retry with one of: ${decision.suggestions.slice(0, 3).join(", ")}.`
+            : "Use `clawlink_search_tools` to discover available tool names.",
       };
+    }
     case "needs_connection":
       return {
         ...base,
@@ -299,13 +338,15 @@ export async function executeToolForUser(
     executionMode: mode,
   });
 
-  // Guard: if a Composio-backed tool's schema is still the empty stub after
-  // hydration, the schema fetch silently failed (KV miss + Composio API blip).
-  // Forwarding empty/unvalidated args to Composio in that state produces the
-  // confusing pydantic "field required" error from inside Mercury, so refuse
-  // and surface a retryable error instead.
+  // Guard: a Composio tool whose schema was never hydrated would forward
+  // unvalidated args to Composio and trip a confusing pydantic "field required"
+  // error from inside Mercury — refuse and surface a retryable error instead.
+  // Use the explicit `schemaHydrated` flag rather than `isStubSchema` because
+  // genuinely parameterless tools (e.g. LINKEDIN_GET_MY_INFO) have a hydrated
+  // schema indistinguishable from the static stub.
   if (
     decision.tool.execution.kind === "composio_tool" &&
+    !decision.tool.schemaHydrated &&
     isStubSchema(decision.tool.inputSchema)
   ) {
     const payload: ToolExecutionPayload = {
@@ -336,7 +377,7 @@ export async function executeToolForUser(
     defaults: decision.tool.safeDefaults,
     args: request.args,
   });
-  const mergedArgs = preparedArgs.args;
+  let mergedArgs = preparedArgs.args;
 
   if (preparedArgs.errors.length > 0) {
     const payload: ToolExecutionPayload = {
@@ -395,6 +436,43 @@ export async function executeToolForUser(
     return payload;
   }
 
+  const composioToolSlug =
+    decision.tool.execution.kind === "composio_tool"
+      ? decision.tool.execution.toolSlug
+      : undefined;
+  const fieldValidatorCheck = validateFieldArgs(
+    composioToolSlug,
+    decision.tool.name,
+    mergedArgs,
+  );
+  if (fieldValidatorCheck.errors.length > 0) {
+    const payload: ToolExecutionPayload = {
+      ok: false,
+      toolName: decision.tool.name,
+      integration: decision.tool.integration,
+      connectionId: decision.connectionId,
+      mode,
+      tool: describedTool,
+      args: mergedArgs,
+      requiresConfirmation: policy.requiresConfirmation,
+      policyReason: policy.reason,
+      error: {
+        type: "validation",
+        code: "invalid_field_value",
+        message: fieldValidatorCheck.errors[0],
+        retryable: false,
+      },
+      details: fieldValidatorCheck.errors,
+      missingFields: fieldValidatorCheck.missingFields,
+      invalidFields: fieldValidatorCheck.invalidFields,
+      inputSchema: decision.tool.inputSchema,
+      hint: fieldValidatorCheck.hint,
+      meta: toMeta(startedAt, requestId),
+    };
+    await logExecutionResult(db, request, payload);
+    return payload;
+  }
+
   if (mode === "preview") {
     const payload: ToolExecutionPayload = {
       ok: true,
@@ -421,6 +499,89 @@ export async function executeToolForUser(
     };
     await logExecutionResult(db, request, payload);
     return payload;
+  }
+
+  // File-upload relay: when the tool's hydrated schema declares any
+  // `file_uploadable: true` paths and the agent's args contain a
+  // FileUploadable shape there, upload the bytes attached on the request's
+  // `files` envelope to Composio's `/files/upload/request` endpoint and
+  // rewrite the s3key with the returned Apollo key. This converts an
+  // OpenClaw-local path (which Mercury cannot resolve) into a real Composio
+  // storage reference before forwarding the tool call. No-op when the schema
+  // has no uploadable paths, when the args have no FileUploadable shapes, or
+  // when every shape already carries an Apollo-key s3key (idempotent against
+  // retry).
+  let uploadedFiles: UploadedFileMetadata[] = [];
+  if (
+    decision.tool.execution.kind === "composio_tool" &&
+    decision.tool.schemaHydrated === true &&
+    collectFileUploadablePaths(decision.tool.inputSchema).length > 0
+  ) {
+    try {
+      const composioExecution = decision.tool.execution;
+      const runRelayWithRetries = async () => {
+        let attempt = 0;
+
+        while (true) {
+          try {
+            return await resolveFileUploadables({
+              toolSlug: composioExecution.toolSlug,
+              toolkitSlug: composioExecution.toolkit,
+              args: mergedArgs,
+              files: request.files ?? [],
+              schema: decision.tool.inputSchema,
+              env,
+            });
+          } catch (error) {
+            if (attempt >= MAX_TRANSIENT_RETRIES || !shouldRetryTransientExecution(error)) {
+              throw error;
+            }
+
+            attempt += 1;
+            await sleep(getTransientRetryDelayMs(attempt, error));
+          }
+        }
+      };
+
+      const relayResult = await runRelayWithRetries();
+      mergedArgs = relayResult.rewrittenArgs;
+      uploadedFiles = relayResult.uploadedFiles;
+    } catch (error) {
+      const classified = classifyIntegrationError(error);
+      const requestErr = error instanceof IntegrationRequestError ? error : null;
+      const isValidationError = classified.type === "validation";
+      const validationDetails = isValidationError ? [classified.message] : undefined;
+      const validationHint = isValidationError
+        ? requestErr?.hint ?? buildValidationHint(
+            decision.tool.name,
+            requestErr?.missingFields ?? [],
+            requestErr?.invalidFields ?? [],
+          )
+        : undefined;
+
+      const payload: ToolExecutionPayload = {
+        ok: false,
+        toolName: decision.tool.name,
+        integration: decision.tool.integration,
+        connectionId: decision.connectionId,
+        mode,
+        tool: describedTool,
+        args: mergedArgs,
+        requiresConfirmation: policy.requiresConfirmation,
+        policyReason: policy.reason,
+        error: classified,
+        ...(isValidationError && {
+          details: validationDetails,
+          missingFields: requestErr?.missingFields,
+          invalidFields: requestErr?.invalidFields,
+          inputSchema: decision.tool.inputSchema,
+          hint: validationHint,
+        }),
+        meta: toMeta(startedAt, requestId),
+      };
+      await logExecutionResult(db, request, payload);
+      return payload;
+    }
   }
 
   const action = decision.tool.name.startsWith(`${decision.tool.integration}_`)
@@ -520,6 +681,7 @@ export async function executeToolForUser(
         data: result,
         result,
         meta: toMeta(startedAt, requestId, providerRequestId),
+        ...(uploadedFiles.length > 0 && { uploadedFiles }),
       };
       await logExecutionResult(db, request, payload);
       return payload;
@@ -562,6 +724,7 @@ export async function executeToolForUser(
           data: result,
           result,
           meta: toMeta(startedAt, requestId, providerRequestId),
+          ...(uploadedFiles.length > 0 && { uploadedFiles }),
         };
         await logExecutionResult(db, request, payload);
         return payload;
@@ -592,9 +755,10 @@ export async function executeToolForUser(
 
     const requestErr = error instanceof IntegrationRequestError ? error : null;
     const isValidationError = classified.type === "validation";
+    const isConfigurationError = classified.type === "configuration";
     const validationDetails = isValidationError ? [classified.message] : undefined;
     const validationHint = isValidationError
-      ? buildValidationHint(
+      ? requestErr?.hint ?? buildValidationHint(
           decision.tool.name,
           requestErr?.missingFields ?? [],
           requestErr?.invalidFields ?? [],
@@ -618,6 +782,10 @@ export async function executeToolForUser(
         invalidFields: requestErr?.invalidFields,
         inputSchema: decision.tool.inputSchema,
         hint: validationHint,
+      }),
+      ...(isConfigurationError && {
+        details: [classified.message],
+        hint: requestErr?.hint,
       }),
       meta: toMeta(startedAt, requestId),
     };

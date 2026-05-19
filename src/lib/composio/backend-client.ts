@@ -484,6 +484,44 @@ function parseComposioValidationError(message: string): ParsedComposioValidation
   return { isValidation, missingFields, invalidFields };
 }
 
+interface ComposioConfigurationError {
+  code: string;
+  message: string;
+  hint: string;
+}
+
+/**
+ * Detects upstream-provider errors that signal a one-time setup step the
+ * customer (not the agent) must complete on the provider's side. These look
+ * like ordinary 400s to Composio, but reconnecting/retrying/fixing args won't
+ * change anything until the provider account is reconfigured. We classify
+ * them as `configuration` so the executor surfaces an actionable hint and
+ * the agent stops retrying.
+ *
+ * Add new entries here when we discover similar provider-setup-required
+ * errors elsewhere in the catalog. Match on stable provider error codes, not
+ * free-form wording.
+ */
+function detectComposioConfigurationError(
+  message: string,
+): ComposioConfigurationError | null {
+  // WhatsApp Cloud API #133010: phone number exists on the WhatsApp Business
+  // Account but has not been registered for Cloud API sending (requires a
+  // 6-digit PIN + a one-time POST to /{phone_number_id}/register on Meta's
+  // side). Connection itself is healthy; reconnecting does not fix it.
+  if (/\(#?133010\)|\bAccount not registered\b/i.test(message)) {
+    return {
+      code: "whatsapp_phone_not_registered",
+      message:
+        "WhatsApp phone number is not registered for Cloud API. Account owner must set a 6-digit two-step verification PIN in Meta Business Manager and register the number on Meta before any messages can be sent. Reconnecting in ClawLink will not fix this — it is a one-time Meta-side setup.",
+      hint:
+        "Tell the user this requires a one-time setup on their WhatsApp Business Account in Meta Business Manager: (1) WhatsApp Manager → Phone Numbers → select the number → set a 6-digit two-step verification PIN, (2) register the number via POST https://graph.facebook.com/v22.0/{phone_number_id}/register with {messaging_product: \"whatsapp\", pin: \"<PIN>\"}. Docs: https://developers.facebook.com/docs/whatsapp/cloud-api/get-started#register-a-phone-number. Do not retry the tool call — the connection itself is healthy but the provider account needs configuration.",
+    };
+  }
+
+  return null;
+}
+
 function isComposioRateLimit(message: string, status: number): boolean {
   return (
     status === 429 ||
@@ -568,6 +606,17 @@ function toComposioRequestError(
   status: number,
 ): IntegrationRequestError {
   const message = stringifyComposioError(payload, fallback);
+
+  const configurationError = detectComposioConfigurationError(message);
+  if (configurationError) {
+    return new IntegrationRequestError(configurationError.message, {
+      status: 422,
+      kind: "configuration",
+      code: configurationError.code,
+      hint: configurationError.hint,
+    });
+  }
+
   const parsed = parseComposioValidationError(message);
 
   if (parsed.isValidation || status === 400) {
@@ -857,6 +906,139 @@ export async function executeComposioToolRequest(
 }
 
 // ---------------------------------------------------------------------------
+// File upload relay
+// ---------------------------------------------------------------------------
+
+export interface RequestComposioFileUploadParams {
+  env?: Record<string, unknown>;
+  toolkitSlug: string;
+  toolSlug: string;
+  filename: string;
+  mimetype: string;
+  md5: string;
+}
+
+export interface ComposioFileUploadRequest {
+  /** Composio file record id. */
+  id: string;
+  /** The Apollo s3key to plug into the FileUploadable's s3key field. */
+  key: string;
+  /** Presigned PUT URL. Empty string when type === "existing". */
+  presignedUrl: string;
+  /** "new" → caller must PUT bytes to presignedUrl. "existing" → md5 dedup hit, skip the PUT. */
+  type: "new" | "existing";
+}
+
+/**
+ * Request a presigned upload URL from Composio for a file_uploadable argument.
+ *
+ * Composio dedup happens on md5: if the same hash already exists for the same
+ * (toolkit, tool) pair, `type === "existing"` and `presignedUrl` is empty —
+ * caller skips the PUT step and uses the returned `key` directly.
+ */
+export async function requestComposioFileUpload(
+  params: RequestComposioFileUploadParams,
+): Promise<ComposioFileUploadRequest> {
+  const apiKey = getEnvValue(params.env, "COMPOSIO_API_KEY");
+
+  if (!apiKey) {
+    throw new Error("COMPOSIO_API_KEY is not configured.");
+  }
+
+  const baseUrl = normalizeBaseUrl(getEnvValue(params.env, "COMPOSIO_BASE_URL"));
+  const response = await composioFetch<{
+    id?: unknown;
+    key?: unknown;
+    new_presigned_url?: unknown;
+    newPresignedUrl?: unknown;
+    type?: unknown;
+  }>({ apiKey, baseUrl }, "/files/upload/request", {
+    method: "POST",
+    body: JSON.stringify({
+      toolkit_slug: params.toolkitSlug,
+      tool_slug: params.toolSlug,
+      filename: params.filename,
+      mimetype: params.mimetype,
+      md5: params.md5,
+    }),
+  });
+
+  const id = safeTrim(response.data.id);
+  const key = safeTrim(response.data.key);
+  const presignedUrl =
+    safeTrim(response.data.new_presigned_url) ?? safeTrim(response.data.newPresignedUrl) ?? "";
+  const rawType = safeTrim(response.data.type);
+  const type = rawType === "existing" ? "existing" : "new";
+
+  if (!id || !key) {
+    throw new IntegrationRequestError(
+      "Composio upload-request response was missing id or key.",
+      { status: 502, kind: "transient", code: "provider_unavailable" },
+    );
+  }
+
+  if (type === "new" && !presignedUrl) {
+    throw new IntegrationRequestError(
+      "Composio upload-request response was missing presigned URL.",
+      { status: 502, kind: "transient", code: "provider_unavailable" },
+    );
+  }
+
+  return { id, key, presignedUrl, type };
+}
+
+/**
+ * Upload raw file bytes to a Composio presigned URL via PUT.
+ *
+ * The presigned URL bakes the Content-Type into its query string, so the
+ * Content-Type header on the PUT must match the mimetype passed to
+ * `requestComposioFileUpload`. Network errors and 5xx responses bubble up as
+ * transient IntegrationRequestErrors so the executor's retry loop applies.
+ */
+export async function putComposioFile(
+  presignedUrl: string,
+  mimetype: string,
+  bytes: ArrayBuffer,
+): Promise<void> {
+  let response: Response;
+
+  try {
+    response = await fetch(presignedUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": mimetype,
+      },
+      body: bytes,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Network error during file upload.";
+    throw new IntegrationRequestError(`File upload PUT failed: ${message}`, {
+      status: 502,
+      kind: "transient",
+      code: "provider_unavailable",
+    });
+  }
+
+  if (!response.ok) {
+    const status = response.status;
+    const text = await response.text().catch(() => "");
+    const detail = text.slice(0, 500);
+    const messageBase = `File upload PUT returned ${status}`;
+    const message = detail ? `${messageBase}: ${detail}` : messageBase;
+
+    if (status >= 500) {
+      throw new IntegrationRequestError(message, {
+        status,
+        kind: "transient",
+        code: "provider_unavailable",
+      });
+    }
+
+    throw new IntegrationRequestError(message, { status });
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Runtime schema fetching
 // ---------------------------------------------------------------------------
 
@@ -967,6 +1149,14 @@ function simplifySchemaNode(node: unknown): Record<string, unknown> {
   } else if (record.example !== undefined) {
     result.examples = [record.example];
   }
+
+  // Preserve the `file_uploadable: true` marker so the executor's file-upload
+  // relay can identify which arguments paths require relay handling. The raw
+  // Composio schema marks affected properties with this boolean (e.g.
+  // `INSTAGRAM_POST_IG_USER_MEDIA.image_file`). Without preservation here, the
+  // simplified schema strips the marker and the relay cannot find uploadable
+  // paths without re-fetching the raw schema.
+  if (record.file_uploadable === true) result.file_uploadable = true;
 
   return result;
 }

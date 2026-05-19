@@ -240,11 +240,12 @@ function scoreTool(tool: IntegrationTool, query: string, integration?: string): 
     .join(" ")
     .toLowerCase();
 
+  const toolNameLower = tool.name.toLowerCase();
   let score = 0;
 
-  if (tool.name.toLowerCase() === normalizedQuery) {
+  if (toolNameLower === normalizedQuery) {
     score += 100;
-  } else if (tool.name.toLowerCase().includes(normalizedQuery)) {
+  } else if (toolNameLower.includes(normalizedQuery)) {
     score += 60;
   }
 
@@ -256,12 +257,22 @@ function scoreTool(tool: IntegrationTool, query: string, integration?: string): 
     score += 15;
   }
 
-  for (const token of normalizedQuery.split(/\s+/)) {
-    if (token.length < 2) {
-      continue;
-    }
+  // Tokenize on whitespace AND on tool-name separators (underscore, hyphen)
+  // so a hallucinated slug like `googlecalendar_calendar_list_list` can score
+  // against the real `googlecalendar_list_calendars` via shared tokens
+  // ["googlecalendar", "calendar", "list", "list"] vs
+  // ["googlecalendar", "list", "calendars"].
+  const queryTokens = normalizedQuery.split(/[\s_-]+/).filter((t) => t.length >= 2);
+  const toolNameTokens = toolNameLower.split(/[_-]+/);
+  const queryTokenSet = new Set(queryTokens);
 
-    if (tool.name.toLowerCase().includes(token)) {
+  for (const token of queryTokens) {
+    if (toolNameTokens.includes(token)) {
+      // Exact token match is the strongest signal — gives us order-independent
+      // alignment of slug components even when the agent inverts them.
+      score += 12;
+    } else if (toolNameLower.includes(token)) {
+      // Fall back to substring (catches plurals: "calendar" inside "calendars").
       score += 8;
     }
 
@@ -272,6 +283,19 @@ function scoreTool(tool: IntegrationTool, query: string, integration?: string): 
     if (tool.description.toLowerCase().includes(token)) {
       score += 2;
     }
+  }
+
+  // Penalize tool-name tokens that have no presence in the query at all. This
+  // tips ties toward concise matches: `googlecalendar_list_calendars` (every
+  // token aligns with the query) beats `googlecalendar_calendar_list_insert`
+  // (a write tool whose `insert` token isn't in the user's query).
+  for (const toolToken of toolNameTokens) {
+    if (toolToken.length < 2) continue;
+    if (queryTokenSet.has(toolToken)) continue;
+    // Allow substring backoff (e.g. tool token `calendars` vs query token
+    // `calendar`). Without this, plural/singular variants are double-penalized.
+    if ([...queryTokenSet].some((q) => toolToken.includes(q) || q.includes(toolToken))) continue;
+    score -= 3;
   }
 
   return score;

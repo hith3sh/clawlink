@@ -1,11 +1,18 @@
+import { createHash } from "node:crypto";
+import { readFileSync, statSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { Type } from "@sinclair/typebox";
 
 const PLUGIN_ID = "clawlink-plugin";
 const LEGACY_PLUGIN_IDS = ["clawlink", "openclaw-plugin"];
 const DEFAULT_BASE_URL = "https://claw-link.dev";
-const USER_AGENT = "@useclawlink/openclaw-plugin/0.1.42";
+const USER_AGENT = "@useclawlink/openclaw-plugin/0.2.0";
 const DEFAULT_PAIRING_POLL_INTERVAL_MS = 3000;
 const DEFAULT_PAIRING_WAIT_TIMEOUT_MS = 5 * 60 * 1000;
+const MAX_FILE_UPLOAD_BYTES = 25 * 1024 * 1024;
+const APOLLO_S3KEY_PATTERN =
+  /^\d+\/[A-Z0-9_]+\/[A-Z0-9_]+\/(request|response)\/[A-Za-z0-9_-]+$/;
 
 function safeTrim(value) {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : "";
@@ -125,6 +132,204 @@ function stringifyPayload(payload) {
 
 function isPlainObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+class ClawLinkPluginValidationError extends Error {
+  constructor(message, { code, invalidFields = [], hint } = {}) {
+    super(message);
+    this.name = "ClawLinkPluginValidationError";
+    this.code = code;
+    this.invalidFields = invalidFields;
+    this.hint = hint;
+  }
+}
+
+function isFileUploadableShape(value) {
+  return (
+    isPlainObject(value) &&
+    isNonEmptyString(value.name) &&
+    isNonEmptyString(value.mimetype) &&
+    isNonEmptyString(value.s3key)
+  );
+}
+
+function collectFileUploadables(value, pathPrefix = "arguments") {
+  const matches = [];
+
+  function walk(current, currentPath) {
+    if (isFileUploadableShape(current)) {
+      matches.push({ path: currentPath, value: current });
+      return;
+    }
+
+    if (Array.isArray(current)) {
+      current.forEach((item, index) => walk(item, `${currentPath}[${index}]`));
+      return;
+    }
+
+    if (!isPlainObject(current)) {
+      return;
+    }
+
+    for (const [key, child] of Object.entries(current)) {
+      walk(child, `${currentPath}.${key}`);
+    }
+  }
+
+  walk(value, pathPrefix);
+  return matches;
+}
+
+function expandHomePath(filePath) {
+  if (filePath === "~") {
+    return os.homedir();
+  }
+
+  if (filePath.startsWith("~/")) {
+    return path.join(os.homedir(), filePath.slice(2));
+  }
+
+  return filePath;
+}
+
+function hasTraversalSegment(filePath) {
+  return filePath.split(/[\\/]+/).includes("..");
+}
+
+function permittedMediaRoots() {
+  return [
+    "/data/.openclaw/media",
+    path.join(os.homedir(), ".openclaw", "media"),
+    path.resolve(process.cwd(), ".openclaw", "media"),
+  ].map((root) => path.resolve(root));
+}
+
+function isInsidePath(root, candidate) {
+  const relative = path.relative(root, candidate);
+  return relative.length > 0 && !relative.startsWith("..") && !path.isAbsolute(relative);
+}
+
+function resolvePermittedMediaPath(s3key) {
+  if (!isNonEmptyString(s3key) || hasTraversalSegment(s3key)) {
+    return null;
+  }
+
+  const normalized = path.resolve(expandHomePath(s3key));
+  const roots = permittedMediaRoots();
+  if (roots.some((root) => isInsidePath(root, normalized))) {
+    return normalized;
+  }
+
+  const mediaSegment = `${path.sep}.openclaw${path.sep}media${path.sep}`;
+  if (normalized.includes(mediaSegment)) {
+    return normalized;
+  }
+
+  return null;
+}
+
+function readFileForUpload(fileUploadable, fieldPath) {
+  const filePath = resolvePermittedMediaPath(fileUploadable.s3key);
+  if (!filePath) {
+    throw new ClawLinkPluginValidationError(
+      `The file for ${fieldPath} is outside the permitted OpenClaw attachment roots.`,
+      {
+        code: "invalid_file_path",
+        invalidFields: [`${fieldPath}.s3key`],
+        hint:
+          "Re-attach the file through OpenClaw so it is stored under an OpenClaw media directory before retrying.",
+      },
+    );
+  }
+
+  let stats;
+  try {
+    stats = statSync(filePath);
+  } catch (error) {
+    throw new ClawLinkPluginValidationError(
+      `The file for ${fieldPath} could not be read: ${error instanceof Error ? error.message : "unknown read error"}.`,
+      {
+        code: "file_read_failed",
+        invalidFields: [`${fieldPath}.s3key`],
+        hint: "Re-attach the file through OpenClaw and retry the tool call.",
+      },
+    );
+  }
+
+  if (!stats.isFile()) {
+    throw new ClawLinkPluginValidationError(
+      `The file for ${fieldPath} is not a regular file.`,
+      {
+        code: "file_read_failed",
+        invalidFields: [`${fieldPath}.s3key`],
+        hint: "Re-attach a regular file through OpenClaw and retry the tool call.",
+      },
+    );
+  }
+
+  if (stats.size > MAX_FILE_UPLOAD_BYTES) {
+    throw new ClawLinkPluginValidationError(
+      `The file for ${fieldPath} is ${stats.size} bytes, exceeding the ${MAX_FILE_UPLOAD_BYTES}-byte cap (${MAX_FILE_UPLOAD_BYTES / (1024 * 1024)} MB).`,
+      {
+        code: "file_too_large",
+        invalidFields: [`${fieldPath}.s3key`],
+        hint: "Use a public URL field for this media when the tool supports one, or attach a smaller file.",
+      },
+    );
+  }
+
+  let bytes;
+  try {
+    bytes = readFileSync(filePath);
+  } catch (error) {
+    throw new ClawLinkPluginValidationError(
+      `The file for ${fieldPath} could not be read: ${error instanceof Error ? error.message : "unknown read error"}.`,
+      {
+        code: "file_read_failed",
+        invalidFields: [`${fieldPath}.s3key`],
+        hint: "Re-attach the file through OpenClaw and retry the tool call.",
+      },
+    );
+  }
+
+  if (bytes.byteLength > MAX_FILE_UPLOAD_BYTES) {
+    throw new ClawLinkPluginValidationError(
+      `The file for ${fieldPath} is ${bytes.byteLength} bytes, exceeding the ${MAX_FILE_UPLOAD_BYTES}-byte cap (${MAX_FILE_UPLOAD_BYTES / (1024 * 1024)} MB).`,
+      {
+        code: "file_too_large",
+        invalidFields: [`${fieldPath}.s3key`],
+        hint: "Use a public URL field for this media when the tool supports one, or attach a smaller file.",
+      },
+    );
+  }
+
+  return {
+    pointer: fileUploadable.s3key,
+    name: fileUploadable.name,
+    mimetype: fileUploadable.mimetype,
+    md5: createHash("md5").update(bytes).digest("hex"),
+    dataBase64: bytes.toString("base64"),
+  };
+}
+
+function buildFilesEnvelope(args) {
+  const files = [];
+  const seenPointers = new Set();
+
+  for (const match of collectFileUploadables(args)) {
+    if (APOLLO_S3KEY_PATTERN.test(match.value.s3key)) {
+      continue;
+    }
+
+    if (seenPointers.has(match.value.s3key)) {
+      continue;
+    }
+
+    files.push(readFileForUpload(match.value, match.path));
+    seenPointers.add(match.value.s3key);
+  }
+
+  return files;
 }
 
 function collectErrorFields(value) {
@@ -446,6 +651,26 @@ function buildToolErrorText(toolName, error) {
       ? error.message
       : `ClawLink request failed${status ? ` with status ${status}` : ""}.`;
   return [`ClawLink tool failed: ${toolName}`, "", formatted].join("\n");
+}
+
+function buildPluginValidationResult(toolName, error) {
+  const payload = {
+    ok: false,
+    error: {
+      type: "validation",
+      code: error.code ?? "invalid_file_upload",
+      message: error.message,
+      retryable: false,
+    },
+    details: [error.message],
+    missingFields: [],
+    invalidFields: error.invalidFields ?? [],
+    hint: error.hint,
+  };
+  const formattedError = new Error(formatStructuredClawLinkError(payload, 400));
+  formattedError.clawlinkPayload = payload;
+  formattedError.clawlinkStatus = 400;
+  return textResult(buildToolErrorText(toolName, formattedError), payload);
 }
 
 async function callToolWithErrorContent(toolName, api, path, options) {
@@ -1277,6 +1502,16 @@ const clawlinkPlugin = {
           throw new Error("tool is required");
         }
 
+        let files;
+        try {
+          files = buildFilesEnvelope(args);
+        } catch (error) {
+          if (error instanceof ClawLinkPluginValidationError) {
+            return buildPluginValidationResult(tool, error);
+          }
+          throw error;
+        }
+
         return callToolWithErrorContent(
           tool,
           api,
@@ -1288,6 +1523,7 @@ const clawlinkPlugin = {
               ...(Number.isInteger(params.connectionId)
                 ? { connectionId: params.connectionId }
                 : {}),
+              ...(files.length > 0 ? { files } : {}),
             },
           },
         );
@@ -1326,6 +1562,16 @@ const clawlinkPlugin = {
 
         const confirmed = params.confirmed !== false;
 
+        let files;
+        try {
+          files = buildFilesEnvelope(args);
+        } catch (error) {
+          if (error instanceof ClawLinkPluginValidationError) {
+            return buildPluginValidationResult(tool, error);
+          }
+          throw error;
+        }
+
         return callToolWithErrorContent(
           tool,
           api,
@@ -1338,6 +1584,7 @@ const clawlinkPlugin = {
                 ? { connectionId: params.connectionId }
                 : {}),
               confirmed,
+              ...(files.length > 0 ? { files } : {}),
             },
           },
         );

@@ -9,6 +9,7 @@ export type ToolExecutionErrorType =
   | "rate_limit"
   | "provider"
   | "network"
+  | "configuration"
   | "unknown";
 
 export interface NormalizedToolError {

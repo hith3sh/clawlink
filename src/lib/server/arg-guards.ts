@@ -1,17 +1,25 @@
 /**
- * Cross-cutting boundary guard that rejects obviously hallucinated placeholder
- * arguments before they reach the upstream provider. Returns the same
- * `{errors, missingFields, invalidFields, hint}` shape as
- * `prepareToolArguments` so the executor can build a `type: "validation"`
- * error payload through the existing self-correction path.
+ * Boundary guards that reject obviously bad arguments before they reach the
+ * upstream provider. Returns the same `{errors, missingFields, invalidFields,
+ * hint}` shape as `prepareToolArguments` so the executor can build a
+ * `type: "validation"` error payload through the existing self-correction path.
  *
- * Generic layer only: catches the universal patterns an LLM tends to invent
- * (angle-bracket templates, curly-brace templates, `YOUR_X` / `REPLACE_ME` /
- * `PLACEHOLDER` keywords) across every integration with zero per-tool config.
- * Tool-specific traps like LinkedIn's `urn:li:person:self` — which look like
- * valid strings — are handled by per-tool `fieldValidators` registered in
- * `config/composio-tool-overrides.mjs` (separate follow-up).
+ * Two layers live here:
+ *
+ * 1. Generic placeholder detector (`detectPlaceholderArgs`) — catches universal
+ *    patterns an LLM tends to invent (angle-bracket templates, curly-brace
+ *    templates, `YOUR_X` / `REPLACE_ME` / `PLACEHOLDER` keywords) across every
+ *    integration with zero per-tool config.
+ *
+ * 2. Per-tool field validator (`validateFieldArgs`) — catches tool-specific
+ *    traps that look like legitimate strings (e.g. LinkedIn's
+ *    `urn:li:person:self`, Gmail's `user_id: "<email>"`). Rules are declared as
+ *    data on the `fieldValidators` property of each entry in
+ *    `config/composio-tool-overrides.mjs` so the trap warning sits next to the
+ *    LLM-facing description that already names it.
  */
+
+import composioToolOverrides from "../../../config/composio-tool-overrides.mjs";
 
 // Whole-string angle-bracket template: `<id>`, `<user_id>`, `<your-shop>`.
 // Whole-string match avoids false-positives on HTML content (`<p>`, `<div>`)
@@ -143,5 +151,109 @@ export function detectPlaceholderArgs(
     missingFields: [],
     hint: buildHint(toolName, violations),
     violations,
+  };
+}
+
+/**
+ * Per-tool field validator rule. Declared as data inside
+ * `config/composio-tool-overrides.mjs` under each tool's `fieldValidators`
+ * property. All fields are optional, but a useful rule needs at least one of
+ * `allow`/`allowPatterns`/`deny`/`denyPatterns`.
+ *
+ * Semantics: a value is rejected if it matches any `deny`/`denyPattern`, OR if
+ * an allowlist is declared and the value matches none of its entries.
+ */
+export interface FieldValidatorRule {
+  allow?: string[];
+  allowPatterns?: RegExp[];
+  deny?: string[];
+  denyPatterns?: RegExp[];
+  message: string;
+  hint?: string;
+}
+
+interface OverrideWithValidators {
+  fieldValidators?: Record<string, FieldValidatorRule>;
+}
+
+export interface FieldValidationResult {
+  errors: string[];
+  invalidFields: string[];
+  missingFields: string[];
+  hint?: string;
+}
+
+function getFieldValidators(
+  toolSlug: string | undefined,
+): Record<string, FieldValidatorRule> | null {
+  if (!toolSlug) return null;
+  const override = (composioToolOverrides as Record<string, OverrideWithValidators | undefined>)[
+    toolSlug
+  ];
+  const validators = override?.fieldValidators;
+  if (!validators || typeof validators !== "object") return null;
+  return validators;
+}
+
+function isStringValueRejected(value: string, rule: FieldValidatorRule): boolean {
+  if (rule.deny && rule.deny.includes(value)) return true;
+  if (rule.denyPatterns?.some((re) => re.test(value))) return true;
+
+  const hasAllowlist =
+    (rule.allow?.length ?? 0) > 0 || (rule.allowPatterns?.length ?? 0) > 0;
+  if (hasAllowlist) {
+    const matchesAllow = rule.allow?.includes(value) ?? false;
+    const matchesAllowPattern = rule.allowPatterns?.some((re) => re.test(value)) ?? false;
+    if (!matchesAllow && !matchesAllowPattern) return true;
+  }
+
+  return false;
+}
+
+export function validateFieldArgs(
+  toolSlug: string | undefined,
+  toolName: string | undefined,
+  args: Record<string, unknown>,
+): FieldValidationResult {
+  const validators = getFieldValidators(toolSlug);
+  if (!validators) {
+    return { errors: [], invalidFields: [], missingFields: [] };
+  }
+
+  const errors: string[] = [];
+  const invalidFields: string[] = [];
+  const hints: string[] = [];
+
+  for (const [field, rule] of Object.entries(validators)) {
+    if (!rule || typeof rule !== "object") continue;
+    const value = args[field];
+    if (value === undefined || value === null) continue;
+    if (typeof value !== "string") continue;
+
+    if (isStringValueRejected(value, rule)) {
+      errors.push(
+        `arguments.${field} = ${JSON.stringify(value)} is not allowed. ${rule.message}`,
+      );
+      invalidFields.push(`arguments.${field}`);
+      if (rule.hint) hints.push(rule.hint);
+    }
+  }
+
+  if (errors.length === 0) {
+    return { errors: [], invalidFields: [], missingFields: [] };
+  }
+
+  const uniqueHints = Array.from(new Set(hints));
+  const hint = uniqueHints.length > 0
+    ? uniqueHints.join(" ")
+    : toolName
+      ? `Retry ${toolName} with corrected arguments.`
+      : "Retry the tool call with corrected arguments.";
+
+  return {
+    errors,
+    invalidFields: Array.from(new Set(invalidFields)),
+    missingFields: [],
+    hint,
   };
 }

@@ -3,25 +3,40 @@ import { NextResponse } from "next/server";
 import { toCanonicalExecutionSummary } from "@/lib/clawlink-spec/compat";
 import { resolveRequestActor } from "@/lib/server/request-auth";
 import { executeToolForUser } from "@/lib/server/tooling";
+import type { FileUploadAttachment } from "@/lib/server/file-upload-relay";
 
 export const dynamic = "force-dynamic";
+
+const MAX_TOTAL_FILE_BYTES = 100 * 1024 * 1024;
 
 interface ExecuteToolRequestBody {
   arguments?: Record<string, unknown>;
   connectionId?: number | string;
   confirmed?: boolean;
+  files?: unknown;
 }
 
 function normalizeArgs(payload: unknown): {
   args: Record<string, unknown>;
   connectionId?: number;
   confirmed?: boolean;
+  files: FileUploadAttachment[];
+  fileError?: { message: string; status: number };
 } {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-    return { args: {} };
+    return { args: {}, files: [] };
   }
 
   const body = payload as ExecuteToolRequestBody & Record<string, unknown>;
+  const parsedFiles = parseFilesEnvelope(body.files);
+  if (parsedFiles.error) {
+    return {
+      args: {},
+      files: [],
+      fileError: parsedFiles.error,
+    };
+  }
+
   const rawConnectionId = body.connectionId;
   const parsedConnectionId =
     typeof rawConnectionId === "number"
@@ -36,17 +51,95 @@ function normalizeArgs(payload: unknown): {
       args: body.arguments,
       connectionId,
       confirmed: body.confirmed === true,
+      files: parsedFiles.files,
     };
   }
 
   const args = { ...body };
   delete args.connectionId;
   delete args.confirmed;
+  delete args.files;
   return {
     args,
     connectionId,
     confirmed: body.confirmed === true,
+    files: parsedFiles.files,
   };
+}
+
+function approxByteLengthFromBase64(base64: string): number {
+  const trimmed = base64.replace(/=+$/, "");
+  return Math.floor((trimmed.length * 3) / 4);
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function parseFilesEnvelope(value: unknown): {
+  files: FileUploadAttachment[];
+  error?: { message: string; status: number };
+} {
+  if (value === undefined || value === null) {
+    return { files: [] };
+  }
+
+  if (!Array.isArray(value)) {
+    return {
+      files: [],
+      error: { status: 400, message: "`files` must be an array when provided." },
+    };
+  }
+
+  const files: FileUploadAttachment[] = [];
+  let totalBytes = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    const item = value[index];
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      return {
+        files: [],
+        error: { status: 400, message: `files[${index}] must be an object.` },
+      };
+    }
+
+    const record = item as Record<string, unknown>;
+    const missing = ["pointer", "name", "mimetype", "md5", "dataBase64"].filter(
+      (field) => !isNonEmptyString(record[field]),
+    );
+
+    if (missing.length > 0) {
+      return {
+        files: [],
+        error: {
+          status: 400,
+          message: `files[${index}] is missing required string field(s): ${missing.join(", ")}.`,
+        },
+      };
+    }
+
+    const dataBase64 = record.dataBase64 as string;
+    totalBytes += approxByteLengthFromBase64(dataBase64);
+    if (totalBytes > MAX_TOTAL_FILE_BYTES) {
+      return {
+        files: [],
+        error: {
+          status: 413,
+          message: `The files envelope exceeds the ${MAX_TOTAL_FILE_BYTES}-byte request cap.`,
+        },
+      };
+    }
+
+    files.push({
+      pointer: record.pointer as string,
+      name: record.name as string,
+      mimetype: record.mimetype as string,
+      md5: record.md5 as string,
+      dataBase64,
+    });
+  }
+
+  return { files };
 }
 
 function getStatusCode(payload: Awaited<ReturnType<typeof executeToolForUser>>): number {
@@ -78,6 +171,8 @@ function getStatusCode(payload: Awaited<ReturnType<typeof executeToolForUser>>):
       return 401;
     case "missing_scopes":
       return 403;
+    case "configuration":
+      return 422;
     case "rate_limit":
       return 429;
     default:
@@ -100,7 +195,11 @@ export async function POST(
 
     const { name } = await context.params;
     const payload = await request.json().catch(() => ({}));
-    const { args, connectionId, confirmed } = normalizeArgs(payload);
+    const { args, connectionId, confirmed, files, fileError } = normalizeArgs(payload);
+    if (fileError) {
+      return NextResponse.json({ error: fileError.message }, { status: fileError.status });
+    }
+
     const execution = await executeToolForUser(
       {
         userId: actor.user.id,
@@ -108,6 +207,7 @@ export async function POST(
         args,
         connectionId,
         confirmed,
+        files,
       },
     );
 

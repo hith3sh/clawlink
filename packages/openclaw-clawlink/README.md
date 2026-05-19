@@ -49,6 +49,12 @@ The plugin registers ten tools. OpenClaw's assistant discovers available integra
 - `clawlink_preview_tool` — preview a tool call before execution, especially for writes
 - `clawlink_call_tool` — execute a tool against a connected app
 
+## File Arguments
+
+Some ClawLink tools accept file arguments shaped as `{ name, mimetype, s3key }`. When OpenClaw attaches a local file, the plugin reads files only from OpenClaw media directories, rejects path traversal and files over 25 MB, then sends the file bytes to ClawLink in the request's `files` envelope. ClawLink stages those bytes with Composio before executing the provider tool, so local OpenClaw attachment paths are not forwarded directly to providers.
+
+If a tool accepts a public URL alternative such as `image_url` or `video_url`, agents may use that instead of a local file attachment.
+
 ## Support Commands
 
 Normal onboarding should happen through tools and browser pairing. These commands remain as support/debug escape hatches:
