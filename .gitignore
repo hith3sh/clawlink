@@ -24,6 +24,17 @@
 # misc
 .DS_Store
 *.pem
+*.key
+*.cert
+*.p12
+*.pfx
+*.jks
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
 
 # debug
 npm-debug.log*
@@ -58,7 +69,8 @@ packages/*/node_modules
 /skills/
 /skills-lock.json
 
-# local / scratch content
+# temporary / scratch
+/tmp/
 /matona/
 /playwright-signin-snapshot*.md
 public/figma/
@@ -68,6 +80,9 @@ public/figma/
 
 # built package tarballs
 *.tgz
+
+# ad-hoc test scripts (use npm run smoke:* instead)
+scripts/test-*.py
 
 # stray root-level files
 /Microsoft_Outlook-Logo.wine.png
