@@ -2539,10 +2539,10 @@ const integrationMetadata: Record<string, IntegrationMetadata> = {
     ],
   },
   "grafana": {
-    setupMode: "coming_soon",
-    dashboardStatus: "coming-soon",
-    runtimeStatus: "planned",
-    setupGuide: "Connect grafana through ClawLink's hosted Composio setup.",
+    setupMode: "composio",
+    dashboardStatus: "available",
+    runtimeStatus: "live",
+    setupGuide: "Connect Grafana through ClawLink's hosted Composio setup to query public dashboards, send OTLP logs to Loki, and inspect server health, ring topology, and license status across Grafana, Loki, and Mimir.",
     credentialFields: [],
     tools: [
       { name: "grafana_create_otlp_v1_logs", description: "Tool to create OTLP v1 logs in Grafana Loki. Use when you need to send OpenTelemetry Protocol logs to Grafana for ingestion and storage." },
