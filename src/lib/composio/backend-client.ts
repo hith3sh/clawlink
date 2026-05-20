@@ -531,6 +531,19 @@ function isComposioRateLimit(message: string, status: number): boolean {
   );
 }
 
+/**
+ * Detects rate-limit failures that are long-lived (recover on the next UTC day,
+ * not in seconds). LinkedIn's "APPLICATION DAY limit", Twitter's "Daily Tweet
+ * limit", Google's "per day" quota messages all share this pattern: retrying
+ * within minutes will not succeed and just burns more of the same exhausted
+ * pool. Used to flag the error as non-retryable so the LLM stops looping.
+ */
+function isLongLivedRateLimit(message: string): boolean {
+  return /\bAPPLICATION DAY|DAY limit|daily.{0,30}(quota|limit|cap|exceeded)|per[\s-]?day\b/i.test(
+    message,
+  );
+}
+
 function isComposioMissingScope(message: string, status: number): boolean {
   return (
     status === 403 &&
@@ -560,6 +573,29 @@ function isComposioTransient(message: string, status: number): boolean {
       message,
     )
   );
+}
+
+function extractUpstreamStatus(payload: unknown): number | undefined {
+  if (!payload || typeof payload !== "object") return undefined;
+  const top = payload as {
+    mercury_last_http_status_code?: unknown;
+    data?: unknown;
+  };
+
+  const mercuryStatus = top.mercury_last_http_status_code;
+  if (typeof mercuryStatus === "number" && mercuryStatus >= 100 && mercuryStatus < 600) {
+    return mercuryStatus;
+  }
+
+  const data = top.data;
+  if (data && typeof data === "object") {
+    const dataStatus = (data as { status_code?: unknown }).status_code;
+    if (typeof dataStatus === "number" && dataStatus >= 100 && dataStatus < 600) {
+      return dataStatus;
+    }
+  }
+
+  return undefined;
 }
 
 function stringifyComposioError(payload: unknown, fallback: string): string {
@@ -633,7 +669,7 @@ function toComposioRequestError(
     return new IntegrationRequestError(message, {
       status: 429,
       kind: "rate_limit",
-      code: "rate_limit",
+      code: isLongLivedRateLimit(message) ? "rate_limit_day" : "rate_limit",
     });
   }
 
@@ -709,6 +745,7 @@ async function executeComposioToolRequestOnce(
     error?: unknown;
     successful?: boolean;
     log_id?: string;
+    mercury_last_http_status_code?: number;
   }>(
     config,
     `/tools/execute/${encodeURIComponent(params.toolSlug)}`,
@@ -727,7 +764,7 @@ async function executeComposioToolRequestOnce(
     throw toComposioRequestError(
       response.data,
       `${params.toolSlug} failed in Composio.`,
-      502,
+      extractUpstreamStatus(response.data) ?? 502,
     );
   }
 

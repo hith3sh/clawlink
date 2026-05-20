@@ -269,7 +269,7 @@ export function classifyIntegrationError(error: unknown): NormalizedToolError {
         type: "rate_limit",
         code: error.code,
         message: error.message,
-        retryable: true,
+        retryable: error.code !== "rate_limit_day",
       };
     }
 

@@ -299,6 +299,52 @@ const LINKEDIN_AUTHOR_VALIDATOR = {
     "Call `linkedin_get_my_info` first; use its `id` field as `urn:li:person:<id>` (substitute the real id, never `self`/`me`). To post as an organization you would need a LinkedIn partner OAuth app with `w_organization_social` — not available on the current connection.",
 };
 
+const FACEBOOK_PAGE_ID_FIELD_DESCRIPTION =
+  "Required. Numeric Facebook Page ID (e.g., '678594635343968') — the `id` value returned by `facebook_list_managed_pages`. NEVER pass `me`, `self`, the literal placeholder `<page_id>`, a page-name slug, or any non-numeric string. The Graph API's `/me` shortcut resolves to the User node, never to a Page; Composio rejects non-numeric `page_id` with `\"Value error, Invalid page_id format\"`.";
+
+const FACEBOOK_PAGE_ID_VALIDATOR = {
+  denyPatterns: [
+    /^(me|self|current[_-]?user|user|page|my[_-]?page)$/i,
+    /^<.*>$/,
+    /^\{.*\}$/,
+    /placeholder|your[_-]?page[_-]?id|insert.*id|replace.*id/i,
+  ],
+  allowPatterns: [/^\d+$/],
+  message:
+    "Facebook `page_id` must be a numeric Page ID (e.g., '678594635343968'). Placeholders like `me`, `self`, `<page_id>`, or page-name slugs are rejected — `/me` refers to the user node, never to a Page.",
+  hint:
+    "Call `facebook_list_managed_pages` first and use the `id` field (a numeric string) of the target Page. Do not pass `me`, `self`, or any non-numeric value.",
+};
+
+const INSTAGRAM_FEED_IMAGE_URL_FIELD_DESCRIPTION =
+  "Required. Public HTTP/HTTPS URL that serves the raw image bytes directly. The dominant Instagram failure mode is the **file-share/temp host trap**: `temp.sh`, `transfer.sh`, `file.io`, `tempfile.io`, `anonfiles.com`, `we.tl`/WeTransfer, `mega.nz`, `mediafire.com`, `sendspace.com` return HTML download pages or block Facebook's crawler, so Instagram cannot fetch the bytes and fails with `\"The image format is not supported... the URL returned an error page instead of an image\"`. Same for Google Drive `/file/`/`/open`/`/uc` share links and Dropbox `?dl=0` URLs. Other gotchas: some otherwise-legit CDNs (notably `upload.wikimedia.org`) block the `facebookexternalhit` user-agent and fail similarly. Use a CDN you control (S3, Cloudflare R2, Cloudinary, imgix) or a host that's known to serve images to Meta. Format-wise, JPEG and PNG both work for feed posts; Composio's docs say JPEG but empirically PNG creates and publishes fine.";
+
+const INSTAGRAM_FEED_IMAGE_URL_VALIDATOR = {
+  denyPatterns: [
+    /\b(temp|transfer|tempfile)\.(sh|io)\b/i,
+    /\b(file\.io|anonfiles\.com|wetransfer\.com|we\.tl|mega\.nz|sendspace\.com|mediafire\.com)\b/i,
+    /drive\.google\.com\/(file|open|uc)/i,
+    /dropbox\.com\/.*[?&]dl=0/i,
+  ],
+  message:
+    "Instagram cannot fetch from transient file-share hosts (temp.sh, transfer.sh, file.io, WeTransfer, etc.) or non-direct cloud share links (Google Drive `/file/`, Dropbox `?dl=0`) — they return HTML download pages or block Facebook's crawler. The user's URL needs to come from a host that serves the raw image bytes to Meta's fetcher.",
+  hint:
+    "Re-host the image on a permanent CDN you control (S3, Cloudflare R2, Cloudinary, imgix) or a host known to serve images to Meta (e.g. picsum.photos, placehold.co). JPEG and PNG both work — no format conversion needed.",
+};
+
+const INSTAGRAM_DM_IMAGE_URL_VALIDATOR = {
+  denyPatterns: [
+    /\b(temp|transfer|tempfile)\.(sh|io)\b/i,
+    /\b(file\.io|anonfiles\.com|wetransfer\.com|we\.tl|mega\.nz|sendspace\.com|mediafire\.com)\b/i,
+    /drive\.google\.com\/(file|open|uc)/i,
+    /dropbox\.com\/.*[?&]dl=0/i,
+  ],
+  message:
+    "Instagram DM images require a public HTTPS URL that returns the raw image bytes. Transient file-share hosts (temp.sh, transfer.sh, file.io, WeTransfer, etc.) and non-direct share links (Google Drive `/file/`, Dropbox `?dl=0`) return HTML or block automated fetches.",
+  hint:
+    "Re-host the image on a permanent CDN (S3, Cloudflare R2, Cloudinary) that serves the raw bytes directly. JPEG, PNG, and GIF are all accepted for DMs.",
+};
+
 const CANVA_DESIGN_TYPE_DESCRIPTION =
   "Required. A flat object using ONE of two variants (do NOT send both). PRESET variant: `{\"type\": \"preset\", \"name\": \"<name>\"}` where `<name>` is one of `doc`, `whiteboard`, `presentation`. CUSTOM variant: `{\"type\": \"custom\", \"width\": <int 40-8000>, \"height\": <int 40-8000>}`. NO `DesignTypeCustom`/`DesignTypePreset` envelope keys (those are JSON Schema variant titles, not data field names) and NO `units` field. Sending both variants in the same call causes Pydantic to fail every variant's required-field check and surface a confusing aggregated error.";
 
@@ -780,7 +826,7 @@ const composioToolOverrides = {
 
   LINKEDIN_GET_MY_INFO: {
     descriptionPrefix:
-      "Use this first to confirm the connected LinkedIn member identity before creating posts or inspecting profile-specific data.",
+      "Use this ONCE per session to get the connected LinkedIn member's `id` for building the `urn:li:person:<id>` author URN required by post/share tools. **Cache the result for the rest of the session — do not re-call before every post.** This endpoint is throttled at the OAuth-application level by LinkedIn (`/v2/userinfo` and `/v2/me`), and on Composio Managed mode every ClawLink user shares the same daily quota on Composio's LinkedIn app. Repeated calls across users exhaust the pool and trigger `429 \"Resource level throttle APPLICATION DAY limit\"` errors that do NOT recover until UTC midnight — Composio's connector also auto-retries 3× on 429, multiplying the strain. If you've already called this in the current session, reuse the cached `id` directly.",
   },
   LINKEDIN_GET_COMPANY_INFO: {
     descriptionPrefix:
@@ -884,7 +930,13 @@ const composioToolOverrides = {
   },
   INSTAGRAM_POST_IG_USER_MEDIA: {
     descriptionPrefix:
-      "Use this to create the Instagram publish container first. Publishing is a separate follow-up step.",
+      "Use this to create the Instagram publish container first. Publishing is a separate follow-up step. CRITICAL `image_url` rule: the URL must serve the raw image bytes directly to Instagram's fetcher. The dominant failure mode is file-share/temp hosts (`temp.sh`, `transfer.sh`, `file.io`, WeTransfer, `mega.nz`) that return HTML download pages — Instagram fails with `\"The image format is not supported... the URL returned an error page instead of an image\"`. Same for Google Drive `/file/`/`/open`/`/uc` share links and Dropbox `?dl=0` URLs. JPEG and PNG both work for feed posts; format conversion is NOT needed.",
+    fieldDescriptions: {
+      image_url: INSTAGRAM_FEED_IMAGE_URL_FIELD_DESCRIPTION,
+    },
+    fieldValidators: {
+      image_url: INSTAGRAM_FEED_IMAGE_URL_VALIDATOR,
+    },
     followups: [
       "Capture the returned creation/container ID and pass it to `instagram_post_ig_user_media_publish`.",
     ],
@@ -898,6 +950,17 @@ const composioToolOverrides = {
         "Required Instagram media container ID returned by `instagram_post_ig_user_media`.",
     },
     prerequisites: ["instagram_post_ig_user_media"],
+  },
+  INSTAGRAM_SEND_IMAGE: {
+    descriptionPrefix:
+      "Use this to send an image attachment via Instagram DM. `image_url` must be a public HTTPS URL serving the raw image bytes (JPEG, PNG, or GIF — DMs are more lenient than feed posts). NEVER use file-share/temp hosts (`temp.sh`, `transfer.sh`, `file.io`, WeTransfer, Google Drive `/file/` share links, Dropbox `?dl=0`) — those return HTML download pages that Instagram's fetcher cannot resolve.",
+    fieldDescriptions: {
+      image_url:
+        "Required. Public HTTPS URL returning raw image bytes (JPEG, PNG, or GIF). DMs accept the same formats as the Messenger Send API. NEVER use transient file-share hosts (`temp.sh`, `transfer.sh`, `file.io`, `wetransfer.com`, `mega.nz`) or non-direct share URLs (`drive.google.com/file/`, `dropbox.com/...?dl=0`) — Instagram's fetcher gets HTML or is blocked. Re-host to a CDN (S3, Cloudflare R2, Cloudinary) if needed.",
+    },
+    fieldValidators: {
+      image_url: INSTAGRAM_DM_IMAGE_URL_VALIDATOR,
+    },
   },
   INSTAGRAM_GET_IG_USER_CONTENT_PUBLISHING_LIMIT: {
     descriptionPrefix:
@@ -925,28 +988,34 @@ const composioToolOverrides = {
   },
   FACEBOOK_GET_PAGE_DETAILS: {
     descriptionPrefix:
-      "Use this after listing managed pages to confirm the exact Page before posting, messaging, or changing settings.",
+      "Use this after listing managed pages to confirm the exact Page before posting, messaging, or changing settings. REQUIRED FIRST STEP: call `facebook_list_managed_pages` and pass the numeric `id` field as `page_id`. NEVER pass `me`, `self`, or any placeholder — unlike `/me` for the User node, Facebook Pages must be referenced by their numeric ID; Composio rejects non-numeric `page_id` with `\"Value error, Invalid page_id format: 'me'. Facebook Page IDs must be numeric strings\"`.",
     fieldDescriptions: {
-      page_id:
-        "Required Facebook Page ID. Get it from `facebook_list_managed_pages` first when unknown.",
+      page_id: FACEBOOK_PAGE_ID_FIELD_DESCRIPTION,
+    },
+    fieldValidators: {
+      page_id: FACEBOOK_PAGE_ID_VALIDATOR,
     },
     prerequisites: ["facebook_list_managed_pages"],
   },
   FACEBOOK_GET_PAGE_POSTS: {
     descriptionPrefix:
-      "Use this to inspect recent Page posts or discover concrete post IDs before comment, insight, or update actions.",
+      "Use this to inspect recent Page posts or discover concrete post IDs before comment, insight, or update actions. Pass the numeric `page_id` returned by `facebook_list_managed_pages` — never `me`, `self`, or a page-name slug.",
     fieldDescriptions: {
-      page_id:
-        "Required Facebook Page ID. Discover it with `facebook_list_managed_pages` first.",
+      page_id: FACEBOOK_PAGE_ID_FIELD_DESCRIPTION,
+    },
+    fieldValidators: {
+      page_id: FACEBOOK_PAGE_ID_VALIDATOR,
     },
     prerequisites: ["facebook_list_managed_pages"],
   },
   FACEBOOK_CREATE_POST: {
     descriptionPrefix:
-      "Use this for Page text or link posts after you know the target Page ID. Use the photo or video tools for media posts instead.",
+      "Use this for Page text or link posts after you know the target Page ID. Use the photo or video tools for media posts instead. Pass the numeric `page_id` returned by `facebook_list_managed_pages` — never `me`, `self`, or a page-name slug.",
     fieldDescriptions: {
-      page_id:
-        "Required Facebook Page ID that owns the post. Get it from `facebook_list_managed_pages` first.",
+      page_id: FACEBOOK_PAGE_ID_FIELD_DESCRIPTION,
+    },
+    fieldValidators: {
+      page_id: FACEBOOK_PAGE_ID_VALIDATOR,
     },
     prerequisites: ["facebook_list_managed_pages"],
   },
@@ -961,10 +1030,12 @@ const composioToolOverrides = {
   },
   FACEBOOK_GET_PAGE_CONVERSATIONS: {
     descriptionPrefix:
-      "Use this before reading specific messages or sending replies through Facebook Page messaging flows.",
+      "Use this before reading specific messages or sending replies through Facebook Page messaging flows. Pass the numeric `page_id` returned by `facebook_list_managed_pages` — never `me`, `self`, or a page-name slug.",
     fieldDescriptions: {
-      page_id:
-        "Required Facebook Page ID for the messaging inbox. Discover it with `facebook_list_managed_pages` first.",
+      page_id: FACEBOOK_PAGE_ID_FIELD_DESCRIPTION,
+    },
+    fieldValidators: {
+      page_id: FACEBOOK_PAGE_ID_VALIDATOR,
     },
     prerequisites: ["facebook_list_managed_pages"],
   },
@@ -975,8 +1046,30 @@ const composioToolOverrides = {
   },
   FACEBOOK_GET_PAGE_INSIGHTS: {
     descriptionPrefix:
-      "Use this for Page-level analytics after resolving the managed Page you want to inspect.",
+      "Use this for Page-level analytics after resolving the managed Page you want to inspect. Pass the numeric `page_id` returned by `facebook_list_managed_pages` — never `me`, `self`, or a page-name slug.",
+    fieldDescriptions: {
+      page_id: FACEBOOK_PAGE_ID_FIELD_DESCRIPTION,
+    },
+    fieldValidators: {
+      page_id: FACEBOOK_PAGE_ID_VALIDATOR,
+    },
     prerequisites: ["facebook_list_managed_pages"],
+  },
+  REDDIT_LIST_SUBREDDIT_POST_FLAIRS: {
+    descriptionPrefix:
+      "Use this to discover valid `flair_template_id` values BEFORE creating a post in a subreddit that requires flair. IMPORTANT: this endpoint (`/r/<sub>/api/link_flair_v2`) is **moderator-only** on Reddit's API — non-mod accounts get `403 Forbidden` even when the OAuth connection is healthy and has all standard scopes. No Reddit OAuth scope unlocks this for non-mods (the gate is the subreddit-role check, not a scope). If you 403, do NOT retry — the connected account simply isn't a mod of that subreddit. Fallback strategy: ask the user for the flair text/ID they want to use, or attempt `reddit_create_reddit_post` without flair first (some subs require it, some don't).",
+    followups: [
+      "If 403: ask the user for the desired flair text or `flair_template_id`. Do not retry; the account is not a moderator of this subreddit.",
+      "If empty array returned: the subreddit either has no flairs or restricts visibility; proceed without flair.",
+    ],
+  },
+  REDDIT_CREATE_REDDIT_POST: {
+    descriptionPrefix:
+      "Creates a public Reddit post — always confirm subreddit, title, and body with the user first. Flair handling: many subreddits enforce flair via `POST_GUIDANCE_VALIDATION_FAILED` or `SUBMIT_VALIDATION_BODY_BLACKLISTED_STRING`. If the user hasn't specified a flair, attempt the post without one first; only call `reddit_list_subreddit_post_flairs` if the first attempt fails with a flair-required error. Note that `reddit_list_subreddit_post_flairs` is mod-only — it returns 403 for non-mod accounts (no scope fixes it), so if listing 403s, ask the user for the flair text/ID directly rather than looping. Also: posts can be silently removed by automoderator after a successful submit; verify visibility via the returned permalink before declaring success.",
+    followups: [
+      "Verify the returned permalink is still live — automoderator can remove posts silently within seconds of submit.",
+      "If the post is rejected for missing flair and `reddit_list_subreddit_post_flairs` returns 403, ask the user for the desired flair text/ID instead of retrying.",
+    ],
   },
   ...buildFigmaFileKeyOverrides(),
   ...buildFigmaTeamIdOverrides(),

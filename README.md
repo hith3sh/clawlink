@@ -53,21 +53,30 @@ ClawLink handles the messy parts so you don't have to:
 - **Managed credentials** — ClawLink stores provider OAuth tokens and API keys encrypted at rest, then uses them only to execute and maintain the integrations you authorize
 - **Request logs** — see every API call, success, failure, and latency from the dashboard
 - **Built-in reliability** — rate limiting, retries, and edge caching included
-- **Clear pricing** — your first connected app is free; ClawLink Pro is $4.99/month for the full integration catalog
+- **Clear pricing** — your first connected app is free; ClawLink Pro is $2.99/month for the full integration catalog
 
-## Get started in 30 seconds
+## Get started
 
-1. **Install** the plugin in OpenClaw:
+### OpenClaw
+
+1. **Install** the plugin:
    ```bash
    openclaw plugins install @useclawlink/openclaw-plugin
    ```
-2. **Pair** ClawLink with this OpenClaw device:
+2. **Pair** ClawLink with your OpenClaw device:
    - ask OpenClaw to set up ClawLink or start pairing
-   - if the plugin was just installed and the tools are not visible yet, start a fresh chat and ask again
+   - if the plugin was just installed and the tools aren't visible yet, start a fresh chat and ask again
 3. **Approve** the pairing prompt in your browser
-4. **Connect** an integration in the ClawLink dashboard and start using it
+4. **Connect** an integration in the [ClawLink dashboard](https://claw-link.dev/dashboard) and start using it
 
-Then just ask OpenClaw to do things:
+### Hermes
+
+1. **Copy** the Hermes setup prompt from the [Install page](https://claw-link.dev/dashboard/install)
+2. **Paste** it into a Hermes chat — Hermes will install the plugin and walk through setup
+3. **Approve** the link Hermes gives you in your browser
+4. **Connect** an integration in the [ClawLink dashboard](https://claw-link.dev/dashboard) and start using it
+
+Then just ask your agent to do things:
 
 - "Send an email to sarah@example.com"
 - "Create a Slack message in #general"
@@ -91,7 +100,7 @@ Then just ask OpenClaw to do things:
 | E-commerce | Shopify, WooCommerce |
 | AI & ML | OpenAI, Replicate, ElevenLabs |
 
-> ClawLink is a **third-party** integration hub for OpenClaw — not affiliated with or endorsed by the OpenClaw project.
+> ClawLink is a **third-party** integration hub for OpenClaw and Hermes — not affiliated with or endorsed by the OpenClaw or Nous Research projects.
 
 ## Contributing
 
